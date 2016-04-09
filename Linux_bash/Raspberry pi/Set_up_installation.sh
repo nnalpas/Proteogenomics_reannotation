@@ -110,3 +110,55 @@ network={
 # Reboot the Raspberry
 sudo reboot
 
+
+
+################
+# Install Kodi #
+################
+
+# Update and install Kodi app
+sudo apt-get update
+sudo apt-get install kodi
+
+# Include kodi user in input users
+sudo usermod -a -G input kodi
+
+
+
+######################
+# Install other apps #
+######################
+
+# Install locate
+sudo apt-get install mlocate
+sudo updatedb
+
+
+
+#############################
+# Mount external hard drive #
+#############################
+
+# Check connected drives
+sudo blkid
+
+# Check partitions
+sudo fdisk -l
+
+# Install require package for 4Tb drive mounting
+sudo apt-get install ntfs-3g
+
+# Mount the external hard drive
+sudo mount -t ntfs-3g /dev/sda1 /mnt
+
+# Set permissions
+sudo chmod 775 /mnt
+
+# Automounting drive at start-up
+sudo nano /etc/fstab
+# add line	/dev/sda1	/mnt	ntfs-3g	auto,user,rw,exec	0	0
+
+# Reboot to see if changes have been saved
+sudo reboot
+
+
