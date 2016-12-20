@@ -1,5 +1,5 @@
 
-
+rm(list = ls())
 
 setwd("F:/data/Vaishnavi/combined - 6 frame translation/txt")
 
@@ -42,6 +42,7 @@ evid <- maxquant.read(path = ".", name = "evidence.txt")
 evid.filt <- evid
 evid.filt$group <- "Known"
 evid.filt[grep(pattern = "^seq_\\d+(;seq_\\d+)*$", x = evid.filt$Proteins), "group"] <- "Novel"
+evid.filt[evid.filt$Reverse == "+", "group"] <- "Reverse"
 
 # 
 pdf(file = "Potential_novel_feature.pdf", width = 12, height = 10)
@@ -304,8 +305,13 @@ tmp %>%
     dplyr::summarise(., median(peptide), quantile(peptide, 0.75), quantile(peptide, 0.9))
 
 #
+known.med.pep <- evid.filt %>%
+    dplyr::select(., Sequence, PEP) %>%
+    unique(.) %>%
+    dplyr::summarise(., median(PEP)) %>%
+    as.numeric(.)
 prot <- tmp %>%
-    dplyr::filter(., group == "Novel" & PEP <= 0.0001 & peptide >= 3) %>%
+    dplyr::filter(., group == "Novel" & PEP <= known.med.pep & peptide >= 3) %>%
     dplyr::select(., `Protein group IDs`) %>%
     unique(.)
 
@@ -351,6 +357,22 @@ dev.off()
 write.table(
     x = pg.filt,
     file = "Potential_novel.txt",
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE)
+
+out <- evid.filt %>%
+    dplyr::filter(., PEP <= known.med.pep, group == "Novel") %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+length(unique(out$Sequence))
+
+out.format <- out %>%
+    
+
+write.table(
+    x = out,
+    file = "Peptide_novel_PEP_knownMedian.txt",
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
