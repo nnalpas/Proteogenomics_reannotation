@@ -75,7 +75,8 @@ for (x in names(path.list)) {
     # Read in and select required data
     tmp <- maxquant.read(
             path = path.list[[x]],
-            name = "proteinGroups.txt")
+            name = "proteinGroups.txt",
+            integer64 = "double")
     
     # Check whether reverse and contaminant should be filtered out
     if (RevCon) {
