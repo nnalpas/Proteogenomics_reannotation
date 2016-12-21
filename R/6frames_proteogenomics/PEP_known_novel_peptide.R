@@ -36,7 +36,10 @@ loadpackage(VariantAnnotation)
 loadpackage(cgdsr)
 loadpackage(bit64)
 
-evid <- maxquant.read(path = ".", name = "evidence.txt")
+evid <- maxquant.read(
+    path = ".",
+    name = "evidence.txt",
+    integer64 = "double")
 
 # 
 evid.filt <- evid
@@ -377,5 +380,87 @@ write.table(
     sep = "\t",
     row.names = FALSE,
     col.names = TRUE)
+
+
+
+### Novel peptide identification -----------------------------------------
+
+# 
+fasta.file <- c(
+    "F:/data/Vaishnavi/Databases/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta",
+    "F:/data/Vaishnavi/Databases/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta",
+    "G:/MaxQuant/MaxQuant_1.5.1.0/bin/conf/contaminants.fasta"
+)
+
+# 
+fasta.6frame <- read.fasta(file = fasta.file[1], seqtype = "AA", as.string = TRUE)
+fasta.ref <- read.fasta(file = fasta.file[2], seqtype = "AA", as.string = TRUE)
+fasta.cont <- read.fasta(file = fasta.file[3], seqtype = "AA", as.string = TRUE)
+
+
+#
+data <- base::data.frame(
+    Sequence = unique(evid$Sequence),
+    group = NA_character_,
+    stringsAsFactors = FALSE)
+
+# 
+na.val <- 0
+for (x in 1:nrow(data)) {
+    if (length(grep(pattern = data$Sequence[x], x = fasta.ref)) > 0) {
+        data$group[x] <- "Known"
+    } else if (length(grep(pattern = data$Sequence[x], x = fasta.cont)) > 0) {
+        data$group[x] <- "Contaminant"
+    } else if (length(grep(pattern = data$Sequence[x], x = fasta.6frame)) > 0) {
+        data$group[x] <- "Novel"
+    } else {
+        na.val <- na.val + 1
+    }
+}
+
+# 
+print(paste(
+    "There are", na.val, " NA values, these need to be checked!", sep = " "))
+
+
+#data <- rbind(data, data.orig[!is.na(data.orig$group), ])
+
+#
+saveRDS(object = data, file = "Sequence_group_mapping.RDS")
+
+# 
+evid.match <- base::merge(x = evid, y = data, by = "Sequence", all = TRUE)
+
+# 
+evid.match[evid.match$Reverse == "+", "group"] <- "Reverse"
+
+#
+saveRDS(object = evid.match, file = "evid_match.RDS")
+
+tmp <- evid.match[evid.match$group == "Novel", "Sequence"] %>% unique(.)
+
+# 
+leven.data <- base::data.frame()
+for (x in 1:length(tmp)) {
+    
+    # 
+    dist.name <- adist(
+        x = tmp[x],
+        y = fasta.ref,
+        partial = TRUE,
+        ignore.case = TRUE) %>%
+        t(.) %>%
+        base::data.frame(
+            id = rownames(.),
+            leven = .,
+            Sequence = tmp[x],
+            stringsAsFactors = FALSE)
+    
+    # 
+    leven.data <- rbind(
+        leven.data,
+        dist.name[dist.name$leven == min(dist.name$leven), ])
+    
+}
 
 
