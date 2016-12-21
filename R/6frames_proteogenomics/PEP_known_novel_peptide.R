@@ -365,22 +365,6 @@ write.table(
     row.names = FALSE,
     col.names = TRUE)
 
-out <- evid.filt %>%
-    dplyr::filter(., PEP <= known.med.pep, group == "Novel") %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-length(unique(out$Sequence))
-
-out.format <- out %>%
-    
-
-write.table(
-    x = out,
-    file = "Peptide_novel_PEP_knownMedian.txt",
-    quote = FALSE,
-    sep = "\t",
-    row.names = FALSE,
-    col.names = TRUE)
-
 
 
 ### Novel peptide identification -----------------------------------------
@@ -462,5 +446,243 @@ for (x in 1:length(tmp)) {
         dist.name[dist.name$leven == min(dist.name$leven), ])
     
 }
+
+#
+known.med.pep <- evid.match %>%
+    dplyr::filter(., group == "Known") %>%
+    dplyr::select(., Sequence, PEP) %>%
+    dplyr::summarise(., median(PEP)) %>%
+    as.numeric(.)
+
+# Keep novel peptides with median PEP (based on known)
+candidates <- evid.match %>%
+    dplyr::filter(., PEP <= known.med.pep, group == "Novel") %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# 
+candidate.orf <- data.frame()
+for (x in unique(evid.match[evid.match$group == "Novel", "Sequence"])) {
+    
+    orfs <- grep(pattern = x, x = fasta.6frame) %>%
+        names(fasta.6frame)[.]
+    candidate.orf %<>%
+        rbind(
+            ., data.frame(Sequence = x, ORF = orfs, stringsAsFactors = FALSE))
+    
+}
+
+# Get position of the novel peptide within ORF
+candidate.pos <- data.frame()
+for (x in 1:nrow(candidate.orf)) {
+    
+    tmp <- str_locate_all(
+        string = fasta.6frame[candidate.orf$ORF[x]],
+        pattern = candidate.orf$Sequence[x]) %>%
+        set_names(names(fasta.6frame[candidate.orf$ORF[x]])) %>%
+        ldply(., data.frame) %>%
+        set_colnames(c("ORF", "start", "end"))
+    candidate.pos %<>%
+        rbind(., data.frame(
+            Sequence = candidate.orf$Sequence[x],
+            tmp, stringsAsFactors = TRUE))
+}
+rm(candidate.orf)
+
+# Export the list of ORF identified by a novel peptide
+write.table(
+    x = candidate.pos[
+        candidate.pos$Sequence %in% unique(candidates$Sequence),
+        "ORF"],
+    file = "Novel_pep_orfs.txt",
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = FALSE)
+
+# Read blast result from top candidates matched ORF against
+# the reference proteome used in this study
+blast.bsu <- read.table(
+    file = "../blastp_BsuRef_novel_candidates_21122016",
+    header = FALSE, sep = "\t", quote = "",
+    col.names = c(
+        "qseqid", "sseqid", "pident", "nident", "mismatch", "length",
+        "gapopen", "qstart", "qend", "sstart", "send", "evalue",
+        "bitscore", "score"),
+    as.is = TRUE)
+
+# Get the best blastp match for each query
+blast.bsu.final <- data.frame()
+for (id in unique(blast.bsu$qseqid)) {
+    
+    tmp <- blast.bsu[blast.bsu$qseqid == id, ] %>%
+        unique(.)
+    min.eval <- min(tmp$evalue)
+    tmp <- tmp[tmp$evalue == min.eval, ]
+        
+    if (nrow(tmp) == 1) {
+        blast.bsu.final <- rbind(blast.bsu.final, tmp)
+    } else {
+        max.score <- max(tmp$score)
+        tmp <- tmp[tmp$score == max.score, ]
+        if (nrow(tmp) == 1) {
+            blast.bsu.final <- rbind(blast.bsu.final, tmp)
+        } else {
+            max.pident <- max(tmp$pident)
+            tmp <- tmp[tmp$pident == max.pident, ]
+            if (nrow(tmp) == 1) {
+                blast.bsu.final <- rbind(blast.bsu.final, tmp)
+            } else {
+                print(paste("Cannot determine best match for: ", id, sep = ""))
+            }
+        }
+    }
+    
+}
+
+# Filter out the best match that have e-value above 0.0001
+blast.bsu.final <- blast.bsu.final[blast.bsu.final$evalue < 0.0001, ]
+blast.bsu.final$qseqid <- gsub(
+    pattern = "^lcl\\|", replacement = "", x = blast.bsu.final$qseqid)
+
+# Read blast result from top candidates matched ORF against
+# all bacteria proteomes from uniprot
+blast.allbact <- read.table(
+    file = "../blastp_allprot_novel_candidates_21122016",
+    header = FALSE, sep = "\t", quote = "",
+    col.names = c(
+        "qseqid", "sseqid", "pident", "nident", "mismatch", "length",
+        "gapopen", "qstart", "qend", "sstart", "send", "evalue",
+        "bitscore", "score"),
+    as.is = TRUE)
+
+# Get the best blastp match for each query
+blast.allbact.final <- data.frame()
+for (id in unique(blast.allbact$qseqid)) {
+    
+    tmp <- blast.allbact[blast.allbact$qseqid == id, ] %>%
+        unique(.)
+    min.eval <- min(tmp$evalue)
+    tmp <- tmp[tmp$evalue == min.eval, ]
+    
+    if (nrow(tmp) == 1) {
+        blast.allbact.final <- rbind(blast.allbact.final, tmp)
+    } else {
+        max.score <- max(tmp$score)
+        tmp <- tmp[tmp$score == max.score, ]
+        if (nrow(tmp) == 1) {
+            blast.allbact.final <- rbind(blast.allbact.final, tmp)
+        } else {
+            max.pident <- max(tmp$pident)
+            tmp <- tmp[tmp$pident == max.pident, ]
+            blast.allbact.final <- rbind(blast.allbact.final, tmp)
+            if (nrow(tmp) != 1) {
+                print(paste("Cannot determine best match for: ", id, sep = ""))
+            }
+        }
+    }
+    
+}
+
+# Filter out the best match that have e-value above 0.0001
+blast.allbact.final <- blast.allbact.final[blast.allbact.final$evalue < 0.0001, ]
+blast.allbact.final$qseqid <- gsub(
+    pattern = "^lcl\\|", replacement = "", x = blast.allbact.final$qseqid)
+
+# Define the reason for novel peptide, first add the peptide that
+# were filtered due to high PEP
+candidate.pos$ReasonNovel <- NA
+candidate.pos[
+    !(candidate.pos$Sequence %in% unique(candidates$Sequence)),
+    "ReasonNovel"] <- "PEPfilter"
+
+# Define the reason for novel peptide, second add the peptide that
+# are novel due to SAV
+for (x in 1:nrow(candidate.pos)) {
+    
+    # Process only peptide with no reasons for novelty
+    if (is.na(candidate.pos$ReasonNovel[x])) {
+        
+        seq.pep <- candidate.pos$Sequence[x] %>% as.character(.)
+        start.pep <- candidate.pos$start[x]
+        end.pep <- candidate.pos$end[x]
+        orf.pep <- candidate.pos$ORF[x]
+        
+        tmp.blast.bsu <- blast.bsu.final[
+            blast.bsu.final$qseqid == orf.pep, ]
+        tmp.blast.allbact <- blast.allbact.final[
+            blast.allbact.final$qseqid == orf.pep, ]
+        tmp.leven.data <- leven.data[
+            leven.data$Sequence == seq.pep & leven.data$leven == 1, ]
+        
+        reason.pep <- ""
+        
+        # Check whether there are Bsu blast info for current entry
+        if (nrow(tmp.blast.bsu) > 0) {
+            for (y in 1:nrow(tmp.blast.bsu)) {
+                
+                # Check if novel peptide is SAV
+                if (
+                    start.pep >= tmp.blast.bsu$qstart &
+                    start.pep <= tmp.blast.bsu$qend &
+                    end.pep >= tmp.blast.bsu$qstart &
+                    end.pep <= tmp.blast.bsu$qend) {
+                    
+                    reason.pep <- "Potential SAV"
+                    
+                    if (
+                        nrow(tmp.leven.data) > 0 &
+                        any(tmp.leven.data$id %in% tmp.blast.bsu$sseqid)) {
+                        
+                        reason.pep <- "SAV"
+                        
+                    }
+                    
+                    # Check if novel peptide is novel start site
+                } else if (
+                    (start.pep < tmp.blast.bsu$qstart &
+                     end.pep >= tmp.blast.bsu$qstart) |
+                    (start.pep < tmp.blast.bsu$qstart &
+                     end.pep < tmp.blast.bsu$qstart)) {
+                    
+                    reason.pep <- "New start site"
+                    
+                    # Check if novel peptide is novel stop site
+                } else if (
+                    (start.pep <= tmp.blast.bsu$qend &
+                     end.pep > tmp.blast.bsu$qend) |
+                    (start.pep > tmp.blast.bsu$qend &
+                     end.pep > tmp.blast.bsu$qend)) {
+                    
+                    reason.pep <- "New stop site"
+                    
+                }
+                
+            }
+            
+            # Check whether there are allbact blast info for current entry
+        } else if (nrow(tmp.blast.allbact) > 0) {
+            
+            reason.pep <- "Known other bacteria"
+            
+            # If no blast info consider peptide as novel
+        } else {
+            
+            reason.pep <- "Potentially novel"
+            
+        }
+        
+        candidate.pos$ReasonNovel[x] <- reason.pep
+        
+    }
+    
+}
+
+# Investigate the potentially novel
+filt <- candidate.pos[candidate.pos$ReasonNovel == "Novel", "ORF"]
+tmp <- candidate.pos[candidate.pos$ORF %in% filt, ]
+data <- table(tmp$ORF) %>%
+    base::as.data.frame(., stringsAsFActors = FALSE)
+
+
 
 
