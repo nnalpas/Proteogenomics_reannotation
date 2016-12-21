@@ -12,7 +12,7 @@ blastdbcmd -db "/media/sf_F_DRIVE/Nicolas/Proteome/Bacillus_subtilis/Bsu_genome_
 
 
 # Multi entries retrieval and blasting against uniprot reference proteome for Bsu
-blastdbcmd -db "/media/sf_F_DRIVE/Nicolas/Proteome/Bacillus_subtilis/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta" -dbtype 'prot' -entry_batch '/media/sf_E_DRIVE/processing/Nicolas/Data/Vaishnavi/combined - 6 frame translation/txt/Novel_pep_orfs.txt' | blastp -query - -task 'blastp' -db "nr" -out "blastp_allprot_novel_candidates_21122016" -evalue 0.01 -num_alignments 30 -num_threads 5 -outfmt '6 qseqid sseqid pident nident mismatch length gapopen qstart qend sstart send evalue bitscore score'
+blastdbcmd -db "/media/sf_F_DRIVE/Nicolas/Proteome/Bacillus_subtilis/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta" -dbtype 'prot' -entry_batch '/media/sf_E_DRIVE/processing/Nicolas/Data/Vaishnavi/combined - 6 frame translation/txt/Novel_pep_orfs.txt' | blastp -query - -task 'blastp' -db '/media/sf_E_DRIVE/processing/Nicolas/Local_databases/Database_bacteria/uniprot_taxonomy_allBact/uniprot_bacteria.fasta' -out "blastp_allprot_novel_candidates_21122016" -evalue 0.01 -num_alignments 30 -num_threads 5 -outfmt '6 qseqid sseqid pident nident mismatch length gapopen qstart qend sstart send evalue bitscore score'
 
 
 
