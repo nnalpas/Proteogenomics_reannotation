@@ -18,8 +18,7 @@ ids <- "uniprot"
 setwd(wkdir)
 
 # Get current date
-date.str <- Sys.time() %>%
-    format(., "%Y-%m-%d")
+date.str <- format(Sys.time(), "%Y-%m-%d")
 
 # Define the user
 user <- Sys.info()[["user"]]
