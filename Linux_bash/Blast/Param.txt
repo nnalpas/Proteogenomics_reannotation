@@ -1,0 +1,35 @@
+# GeneralParam
+ProjectName="Bsu_6frame"
+MultiThreads=5
+
+# WorkingPaths
+MainDir="/media/sf_F_DRIVE/Nicolas"
+
+# ProcessSteps
+MakeBlastDb=1
+
+# ReferenceDatabase
+RefProteome="/media/sf_F_DRIVE/Nicolas/Proteome/Bacillus_subtilis/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta"
+frameProteome="/media/sf_F_DRIVE/Nicolas/Proteome/Bacillus_subtilis/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta"
+
+# TrimmomaticParam
+#TrimTrail="TRAILING:20"
+#TrimLead="LEADING:20"
+#MinLength="MINLEN:40"
+
+# AlignmentParam
+#AlignParam="--no-spliced-alignment --very-sensitive-local"
+
+# GroupingParam
+#SampleCode=( 'GS150691' 'GS150692' )
+#SamplePlatform=( 'illumina' 'illumina' )
+#SampleBarcode=( 'ACAGCAGA' 'CATACCAA' )
+#SampleName=( 'A375_S' 'A375_R' )
+
+# SamtoolsParam
+#VariantFilt=""
+
+# SnpeffParam
+#VersionParam="-classic"
+#SnpeffDir="/opt/snpEff_4.0"
+#DatabVersion="GRCh38.76"
