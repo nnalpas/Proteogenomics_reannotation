@@ -1,10 +1,19 @@
 
+
+
+# Start with clean environment
 rm(list = ls())
 
-setwd("F:/data/Vaishnavi/combined - 6 frame translation/txt")
+# Define the work space
+setwd(choose.dir())
 
+# Define the current user
 user <- Sys.info()[["user"]]
 
+# Define current time
+date.str <- format(Sys.time(), "%Y-%m-%d")
+
+# Source the custom user functions
 source(
     file = paste(
         "C:/Users/",
@@ -36,338 +45,28 @@ loadpackage(VariantAnnotation)
 loadpackage(cgdsr)
 loadpackage(bit64)
 
+# Import the maxquant evidence table
 evid <- maxquant.read(
     path = ".",
     name = "evidence.txt",
     integer64 = "double")
 
 # 
-evid.filt <- evid
-evid.filt$group <- "Known"
-evid.filt[grep(pattern = "^seq_\\d+(;seq_\\d+)*$", x = evid.filt$Proteins), "group"] <- "Novel"
-evid.filt[evid.filt$Reverse == "+", "group"] <- "Reverse"
-
-# 
-pdf(file = "Potential_novel_feature.pdf", width = 12, height = 10)
-
-# Calculate quantile values of number of protein per groups field
-data.filt <- evid.filt %>%
-    dplyr::select(., group, PEP) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-
-# Create the boxplot using ggplot
-textsize <- 15
-ggplot(data = data.filt, mapping = aes(x = factor(group), y = PEP)) +
-    geom_boxplot() +
-    xlab(label = "Evidence group") +
-    ylab(label = "PEP") +
-    ggtitle(label = "PEP per evidence category") +
-    theme(
-        legend.position = "bottom",
-        title = element_text(
-            face = "bold",
-            size = (textsize * 1.25)),
-        text = element_text(size = textsize),
-        plot.title = element_text(
-            face = "bold",
-            size = (textsize * 1.5)),
-        axis.text.x = element_text(
-            angle = 0, vjust = 1, hjust = 0))
-
-# 
-ggplot(
-    data = data.filt,
-    mapping = aes(x = PEP, fill = factor(group), colour = factor(group))) +
-    geom_density(alpha = 0.1) +
-    xlab(label = "Evidence PEP") +
-    ylab(label = "Density") +
-    ggtitle(label = "Density of evidence PEP") +
-    xlim(0, 0.05)
-
-# 
-data <- table(evid.filt$group) %>%
-    data.frame(., type = "evidence", stringsAsFactors = FALSE) %>%
-    set_names(c("group", "Freq", "type"))
-
-# 
-data <- evid.filt %>%
-    dplyr::select(., Sequence, group) %>%
-    dplyr::group_by(., group) %>%
-    dplyr::summarise(., Freq = n_distinct(Sequence)) %>%
-    data.frame(., type = "peptide", stringsAsFactors = FALSE) %>%
-    rbind(data, .)
-
-# 
-data <- evid.filt %>%
-    dplyr::select(., `Protein group IDs`, group) %>%
-    cSplit(
-        indt = ., splitCols = "Protein group IDs",
-        sep = ";", direction = "long") %>%
-    dplyr::group_by(., group) %>%
-    dplyr::summarise(., Freq = n_distinct(`Protein group IDs`)) %>%
-    data.frame(., type = "protein group", stringsAsFactors = FALSE) %>%
-    rbind(data, .)
-
-tmp <- evid.filt %>%
-    dplyr::select(., `Protein group IDs`, group) %>%
-    cSplit(
-        indt = ., splitCols = "Protein group IDs",
-        sep = ";", direction = "long") %>%
-    unique(.) %>%
-    dplyr::count(`Protein group IDs`) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-
-# 
-textsize <- 15
-ggplot(
-    data = data,
-    mapping = aes(
-        x = type, y = Freq, group = group, fill = group),
-    environment = .GlobalEnv) +
-    geom_bar(
-        stat = "identity", position = "dodge",
-        colour = "black") +
-    geom_text(
-        mapping = aes(label = Freq),
-        position = position_dodge(width = 0.9),
-        vjust = -0.25, size = (textsize * 0.25)) +
-    ggtitle("Features identification") +
-    xlab(label = "Feature type") +
-    ylab(label = "Feature count (log10)") +
-    theme(
-        legend.position = "bottom",
-        plot.background = element_rect(fill = "#f2f2f2"),
-        panel.background = element_rect(fill = "white"),
-        panel.grid.major = element_line(colour = "grey40"),
-        title = element_text(
-            face = "bold",
-            size = (textsize * 1.25)),
-        text = element_text(size = textsize),
-        plot.title = element_text(
-            face = "bold",
-            size = (textsize * 1.5)),
-        axis.text.x = element_text(
-            angle = -45, vjust = 1, hjust = 0)) +
-    scale_y_log10() +
-    scale_fill_grey(start = 0.2, end = 0.8)
-
-# Calculate quantile values of number of protein per groups field
-data <- evid.filt %>%
-    dplyr::select(., group, `Mass Error [ppm]`) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-
-# Create the boxplot using ggplot
-textsize <- 15
-ggplot(data = data, mapping = aes(x = factor(group), y = `Mass Error [ppm]`)) +
-    geom_boxplot() +
-    xlab(label = "Evidence group") +
-    ylab(label = "Mass Error (ppm)") +
-    ggtitle(label = "Mass Error per evidence category") +
-    theme(
-        legend.position = "bottom",
-        title = element_text(
-            face = "bold",
-            size = (textsize * 1.25)),
-        text = element_text(size = textsize),
-        plot.title = element_text(
-            face = "bold",
-            size = (textsize * 1.5)),
-        axis.text.x = element_text(
-            angle = 0, vjust = 1, hjust = 0))
-
-# 
-ggplot(
-    data = data,
-    mapping = aes(
-        x = `Mass Error [ppm]`,
-        fill = factor(group),
-        colour = factor(group))) +
-    xlab(label = "Evidence mass error (ppm)") +
-    ylab(label = "Density") +
-    ggtitle(label = "Density of evidence mass error") +
-    geom_density(alpha = 0.1)
-
-# Calculate quantile values of number of protein per groups field
-data <- evid.filt %>%
-    dplyr::select(., group, Sequence, `Protein group IDs`) %>%
-    cSplit(
-        indt = ., splitCols = "Protein group IDs",
-        sep = ";", direction = "long") %>%
-    dplyr::group_by(., group, `Protein group IDs`) %>%
-    dplyr::summarise(., n(), n_distinct(Sequence)) %>%
-    tidyr::gather(
-        data = .,
-        key = "type",
-        value = "count",
-        `n()`,
-        `n_distinct(Sequence)`) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-data[data$type == "n()", "type"] <- "evidence"
-data[data$type == "n_distinct(Sequence)", "type"] <- "peptide"
-
-# Create the boxplot using ggplot
-textsize <- 15
-ggplot(
-    data = data,
-    mapping = aes(
-        x = factor(type),
-        y = count,
-        fill = factor(group))) +
-    geom_boxplot() +
-    xlab(label = "Feature type") +
-    ylab(label = "Number of feature per protein group") +
-    ggtitle(label = "Feature group per protein group (zoom -1 to 5000)") +
-    theme(
-        legend.position = "bottom",
-        title = element_text(
-            face = "bold",
-            size = (textsize * 1.25)),
-        text = element_text(size = textsize),
-        plot.title = element_text(
-            face = "bold",
-            size = (textsize * 1.5)),
-        axis.text.x = element_text(
-            angle = 0, vjust = 1, hjust = 0)) +
-    ylim(-1, 5000)
-
-ggplot(
-    data = data,
-    mapping = aes(
-        x = factor(type),
-        y = count,
-        fill = factor(group))) +
-    geom_boxplot() +
-    xlab(label = "Feature type") +
-    ylab(label = "Number of feature per protein group") +
-    ggtitle(label = "Feature group per protein group (zoom -1 to 50)") +
-    theme(
-        legend.position = "bottom",
-        title = element_text(
-            face = "bold",
-            size = (textsize * 1.25)),
-        text = element_text(size = textsize),
-        plot.title = element_text(
-            face = "bold",
-            size = (textsize * 1.5)),
-        axis.text.x = element_text(
-            angle = 0, vjust = 1, hjust = 0)) +
-    ylim(-1, 50)
-
-# 
-ggplot(
-    data = data[data$type == "evidence", ],
-    mapping = aes(
-        x = `count`,
-        fill = factor(group),
-        colour = factor(group))) +
-    geom_density(alpha = 0.1) +
-    xlab(label = "Evidence count per protein group") +
-    ylab(label = "Density") +
-    ggtitle(label = "Density of evidence per protein group") +
-    xlim(-1, 100)
-
-# 
-ggplot(
-    data = data[data$type == "peptide", ],
-    mapping = aes(
-        x = `count`,
-        fill = factor(group),
-        colour = factor(group))) +
-    geom_density(alpha = 0.1) +
-    xlab(label = "Peptide count per protein group") +
-    ylab(label = "Density") +
-    ggtitle(label = "Density of peptide per protein group") +
-    xlim(-1, 50)
-
-#
-tmp <- evid.filt %>%
-    cSplit(
-        indt = ., splitCols = "Protein group IDs",
-        sep = ";", direction = "long") %>%
-    base::merge(
-        x = .,
-        y = data %>%
-            tidyr::spread(data = ., key = type, value = count) %>%
-            dplyr::filter(., group == "Novel") %>%
-            dplyr::select(., -group),
-        by = "Protein group IDs",
-        all.x = TRUE) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-
-#
-evid.filt %>%
-    dplyr::select(., group, PEP, peptide) %>%
-    dplyr::group_by(., group) %>%
-    dplyr::summarise(., median(PEP), quantile(PEP, 0.25)) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-
-tmp %>%
-    dplyr::select(., group, `Protein group IDs`, peptide) %>%
-    dplyr::filter(., group == "Novel") %>%
-    unique(.) %>%
-    dplyr::summarise(., median(peptide), quantile(peptide, 0.75), quantile(peptide, 0.9))
-
-#
-known.med.pep <- evid.filt %>%
-    dplyr::select(., Sequence, PEP) %>%
-    unique(.) %>%
-    dplyr::summarise(., median(PEP)) %>%
-    as.numeric(.)
-prot <- tmp %>%
-    dplyr::filter(., group == "Novel" & PEP <= known.med.pep & peptide >= 3) %>%
-    dplyr::select(., `Protein group IDs`) %>%
-    unique(.)
-
-# 
-pg <- maxquant.read(path = ".", name = "proteinGroups.txt")
-
-# 
-pg.filt <- pg %>%
-    dplyr::filter(., id %in% prot$`Protein group IDs`) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-
-# 
-pg.filt[, c(1:10,133:134)]
-tmp[tmp$`Protein group IDs` == 3636 & tmp$group == "Novel", "Sequence"] %>%
-    unique(.)
-
-# 
-pg.filt$novelReason <- NA
-pg.filt[1, "novelReason"] <- "SAV"
-pg.filt[2, "novelReason"] <- "SAV"
-pg.filt[3, "novelReason"] <- "SAV"
-pg.filt[4, "novelReason"] <- "Uncharacterised protein (L8ADC1) in B. subtilis BEST7613"
-pg.filt[5, "novelReason"] <- "Novel start site for C0SPC1"
-pg.filt[6, "novelReason"] <- "Novel start site for P50730"
-pg.filt[7, "novelReason"] <- "Uncharacterized protein (A0A125UG60) B. sp. LM 4-2"
-pg.filt[8, "novelReason"] <- "Novel start site for O31451"
-pg.filt[9, "novelReason"] <- "Novel start site for P23449"
-pg.filt[10, "novelReason"] <- "Novel start site for O31771"
-pg.filt[11, "novelReason"] <- "SAV"
-pg.filt[12, "novelReason"] <- "SAV"
-
-#
-grid.newpage()
-grid.table(
-    pg.filt[, c(
-        "Protein IDs", "Peptide counts (all)",
-        "Q-value", "novelReason")])
-
-#
-dev.off()
-
-#
-write.table(
-    x = pg.filt,
-    file = "Potential_novel.txt",
-    quote = FALSE,
-    sep = "\t",
-    row.names = FALSE,
-    col.names = TRUE)
+#evid.filt <- evid
+#evid.filt$group <- "Known"
+#evid.filt[
+#    grep(pattern = "^seq_\\d+(;seq_\\d+)*$", x = evid.filt$Proteins),
+#    "group"] <- "Novel"
+#evid.filt[evid.filt$Reverse == "+", "group"] <- "Reverse"
 
 
 
 ### Novel peptide identification -----------------------------------------
+
+# 
+pdf(
+    file = paste("Potential_novel_feature_", date.str, ".pdf", sep = ""),
+    width = 12, height = 10)
 
 # 
 fasta.file <- c(
@@ -377,10 +76,12 @@ fasta.file <- c(
 )
 
 # 
-fasta.6frame <- read.fasta(file = fasta.file[1], seqtype = "AA", as.string = TRUE)
-fasta.ref <- read.fasta(file = fasta.file[2], seqtype = "AA", as.string = TRUE)
-fasta.cont <- read.fasta(file = fasta.file[3], seqtype = "AA", as.string = TRUE)
-
+fasta.6frame <- read.fasta(
+    file = fasta.file[1], seqtype = "AA", as.string = TRUE)
+fasta.ref <- read.fasta(
+    file = fasta.file[2], seqtype = "AA", as.string = TRUE)
+fasta.cont <- read.fasta(
+    file = fasta.file[3], seqtype = "AA", as.string = TRUE)
 
 #
 data <- base::data.frame(
@@ -391,11 +92,14 @@ data <- base::data.frame(
 # 
 na.val <- 0
 for (x in 1:nrow(data)) {
-    if (length(grep(pattern = data$Sequence[x], x = fasta.ref)) > 0) {
+    if (length(
+        grep(pattern = data$Sequence[x], x = fasta.ref)) > 0) {
         data$group[x] <- "Known"
-    } else if (length(grep(pattern = data$Sequence[x], x = fasta.cont)) > 0) {
+    } else if (length(
+        grep(pattern = data$Sequence[x], x = fasta.cont)) > 0) {
         data$group[x] <- "Contaminant"
-    } else if (length(grep(pattern = data$Sequence[x], x = fasta.6frame)) > 0) {
+    } else if (length(
+        grep(pattern = data$Sequence[x], x = fasta.6frame)) > 0) {
         data$group[x] <- "Novel"
     } else {
         na.val <- na.val + 1
@@ -405,7 +109,6 @@ for (x in 1:nrow(data)) {
 # 
 print(paste(
     "There are", na.val, " NA values, these need to be checked!", sep = " "))
-
 
 #data <- rbind(data, data.orig[!is.na(data.orig$group), ])
 
@@ -421,7 +124,70 @@ evid.match[evid.match$Reverse == "+", "group"] <- "Reverse"
 #
 saveRDS(object = evid.match, file = "evid_match.RDS")
 
-tmp <- evid.match[evid.match$group == "Novel", "Sequence"] %>% unique(.)
+# 
+data <- table(evid.match$group) %>%
+    data.frame(., type = "evidence", stringsAsFactors = FALSE) %>%
+    set_names(c("group", "Freq", "type"))
+
+# 
+data <- evid.match %>%
+    dplyr::select(., Sequence, group) %>%
+    dplyr::group_by(., group) %>%
+    dplyr::summarise(., Freq = n_distinct(Sequence)) %>%
+    data.frame(., type = "peptide", stringsAsFactors = FALSE) %>%
+    rbind(data, .)
+
+# 
+histPlots(
+    data = data,
+    key = "type",
+    value = "Freq",
+    group = "group",
+    fill = "group",
+    main = "Number of evidence/peptide",
+    transf = "log10")
+
+
+# Calculate quantile values of evidence PEP
+data <- evid.match %>%
+    dplyr::select(., group, PEP) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# 
+boxPlots(
+    data = data,
+    key = "group",
+    value = "PEP",
+    main = "PEP comparison")
+
+# Calculate quantile values of evidence Score
+data <- evid.match %>%
+    dplyr::select(., group, Score) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# 
+boxPlots(
+    data = data,
+    key = "group",
+    value = "Score",
+    main = "Score comparison")
+
+# Calculate quantile values of evidence mass error
+data <- evid.match %>%
+    dplyr::select(., group, `Mass Error [ppm]`) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE) %>%
+    set_colnames(c("group", "mass_error"))
+
+# 
+boxPlots(
+    data = data,
+    key = "group",
+    value = "mass_error",
+    main = "Mass error (ppm) comparison")
+
+# 
+tmp <- evid.match[evid.match$group == "Novel", "Sequence"] %>%
+    unique(.)
 
 # 
 leven.data <- base::data.frame()
@@ -459,7 +225,7 @@ candidates <- evid.match %>%
     dplyr::filter(., PEP <= known.med.pep, group == "Novel") %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
-# 
+# Find the ORF where novel peptide map to
 candidate.orf <- data.frame()
 for (x in unique(evid.match[evid.match$group == "Novel", "Sequence"])) {
     
@@ -493,11 +259,44 @@ write.table(
     x = candidate.pos[
         candidate.pos$Sequence %in% unique(candidates$Sequence),
         "ORF"],
-    file = "Novel_pep_orfs.txt",
+    file = paste("Novel_pep_orfs_", date.str, ".txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
     col.names = FALSE)
+
+# 
+data <- candidate.pos %>%
+    dplyr::summarise(
+        .,
+        type = "All novel",
+        Number_peptide = n_distinct(Sequence),
+        Number_ORF = n_distinct(ORF)) %>%
+    tidyr::gather(
+        data = ., key = "feature", value = "Count", -type) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# 
+data <- candidate.pos %>%
+    dplyr::filter(., ReasonNovel != "PEPfilter") %>%
+    dplyr::summarise(
+        .,
+        type = "PEP filtered",
+        Number_peptide = n_distinct(Sequence),
+        Number_ORF = n_distinct(ORF)) %>%
+    tidyr::gather(
+        data = ., key = "feature", value = "Count", -type) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE) %>%
+    rbind(data, .)
+
+# 
+histPlots(
+    data = data,
+    key = "feature",
+    value = "Count",
+    group = "type",
+    fill = "type",
+    main = "Novel peptide summary")
 
 # Read blast result from top candidates matched ORF against
 # the reference proteome used in this study
@@ -677,12 +476,81 @@ for (x in 1:nrow(candidate.pos)) {
     
 }
 
+# 
+data <- candidate.pos %>%
+    dplyr::filter(., ReasonNovel != "PEPfilter") %>%
+    dplyr::group_by(., ReasonNovel) %>%
+    dplyr::summarise(
+        .,
+        Number_peptide = n_distinct(Sequence),
+        Number_ORF = n_distinct(ORF)) %>%
+    tidyr::gather(
+        data = ., key = "feature", value = "Count", -ReasonNovel) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+#
+histPlots(
+    data = data,
+    key = "feature",
+    value = "Count",
+    group = "ReasonNovel",
+    fill = "ReasonNovel",
+    main = "Peptide novelty reasons")
+
 # Investigate the potentially novel
 filt <- candidate.pos[candidate.pos$ReasonNovel == "Novel", "ORF"]
 tmp <- candidate.pos[candidate.pos$ORF %in% filt, ]
 data <- table(tmp$ORF) %>%
     base::as.data.frame(., stringsAsFActors = FALSE)
 
+#
+dev.off()
+
+#
+write.table(
+    x = candidates,
+    file = paste("Candidates_PEPfilt_evidence_", date.str, ".txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE)
+
+#
+data <- evid.match %>%
+    dplyr::filter(., group == "Novel") %>%
+    dplyr::select(
+        .,
+        Sequence, Length, Proteins, Mass, `Mass Error [ppm]`,
+        `Mass Error [Da]`, PEP, Score, Intensity) %>%
+    dplyr::group_by(., Sequence) %>%
+    dplyr::summarise(
+        .,
+        Length = toString(x = unique(Length), width = NULL),
+        Proteins = toString(x = unique(Proteins), width = NULL),
+        Mass = toString(x = unique(Mass), width = NULL),
+        minMassErrorppm = min(`Mass Error [ppm]`, na.rm = TRUE),
+        minMassErrorDa = min(`Mass Error [Da]`, na.rm = TRUE),
+        minPEP = min(PEP, na.rm = TRUE),
+        maxScore = max(Score, na.rm = TRUE),
+        maxIntensity = max(Intensity, na.rm = TRUE)) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+candidate.pos <- merge(
+    x = candidate.pos, y = data, by = "Sequence", all.x = TRUE)
+write.table(
+    x = candidate.pos,
+    file = paste("Novel_evidence_", date.str, ".txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE)
 
 
-
+# to re-implement as wrapper function
+#ggplot(
+#    data = data.filt,
+#    mapping = aes(x = PEP, fill = factor(group), colour = factor(group))) +
+#    geom_density(alpha = 0.1) +
+#    xlab(label = "Evidence PEP") +
+#    ylab(label = "Density") +
+#    ggtitle(label = "Density of evidence PEP") +
+#    xlim(0, 0.05)
