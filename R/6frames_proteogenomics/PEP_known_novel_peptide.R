@@ -147,7 +147,6 @@ histPlots(
     main = "Number of evidence/peptide",
     transf = "log10")
 
-
 # Calculate quantile values of evidence PEP
 data <- evid.match %>%
     dplyr::select(., group, PEP) %>%
@@ -497,25 +496,45 @@ histPlots(
     fill = "ReasonNovel",
     main = "Peptide novelty reasons")
 
-# Investigate the potentially novel
-filt <- candidate.pos[candidate.pos$ReasonNovel == "Novel", "ORF"]
-tmp <- candidate.pos[candidate.pos$ORF %in% filt, ]
-data <- table(tmp$ORF) %>%
-    base::as.data.frame(., stringsAsFActors = FALSE)
+# Investigate the potentially fully uncharacterised novel peptide
+novelty <- unique(candidate.pos$ReasonNovel)[-1]
+data <- data.frame()
+for (key in novelty) {
+    
+    filt <- candidate.pos[candidate.pos$ReasonNovel == key, "ORF"]
+    data <- candidate.pos %>%
+        dplyr::filter(., ORF %in% filt) %>%
+        dplyr::group_by(., ORF) %>%
+        dplyr::summarise(., Unique_peptide_count = n_distinct(Sequence)) %>%
+        dplyr::group_by(., Unique_peptide_count) %>%
+        dplyr::summarise(., ORF_count = n_distinct(ORF)) %>%
+        base::data.frame(., Novelty = key, stringsAsFActors = FALSE) %>%
+        rbind(data, .)
+    
+}
 
 #
+histPlots(
+    data = data,
+    key = "Unique_peptide_count",
+    value = "ORF_count",
+    group = "Novelty",
+    fill = "Novelty",
+    main = "Count of novel ORF per count of unique novel peptide")
+
+# Close the plot output
 dev.off()
 
-#
+# Export complete evidence info for thee novel evidence
 write.table(
-    x = candidates,
-    file = paste("Candidates_PEPfilt_evidence_", date.str, ".txt", sep = ""),
+    x = evid.match[evid.match$group == "Novel", ],
+    file = paste("Novel_evidence_", date.str, ".txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
     col.names = TRUE)
 
-#
+# Compile a condensed dataframe of novel peptide info and export it
 data <- evid.match %>%
     dplyr::filter(., group == "Novel") %>%
     dplyr::select(
@@ -534,16 +553,58 @@ data <- evid.match %>%
         maxScore = max(Score, na.rm = TRUE),
         maxIntensity = max(Intensity, na.rm = TRUE)) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
-candidate.pos <- merge(
+candidate.pos.final <- merge(
     x = candidate.pos, y = data, by = "Sequence", all.x = TRUE)
 write.table(
-    x = candidate.pos,
-    file = paste("Novel_evidence_", date.str, ".txt", sep = ""),
+    x = candidate.pos.final,
+    file = paste("Novel_peptide_", date.str, ".txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
     col.names = TRUE)
 
+
+
+### Biological explanation of novel ORF ----------------------------------
+
+# 
+filt <- candidate.pos[candidate.pos$ReasonNovel != "PEPfilter", "ORF"]
+data <- candidate.pos %>%
+    dplyr::filter(., ORF %in% filt) %>%
+    dplyr::group_by(., ORF) %>%
+    dplyr::summarise(
+        .,
+        Sequences = toString(x = unique(Sequence), width = NULL),
+        ReasonNovel = toString(x = unique(ReasonNovel), width = NULL),
+        Unique_peptide_count = n_distinct(Sequence)) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE) %>%
+    .[order(.$Unique_peptide_count, decreasing = TRUE), ]
+
+# Look first into the novel ORF that match known other bacterial entries
+tmp <- data[grep(pattern = "Known other bacteria", x = data$ReasonNovel), ] %>%
+    dplyr::filter(., Unique_peptide_count > 1) %>%
+    merge(
+        x = ., y = blast.allbact.final,
+        by.x = "ORF", by.y = "qseqid", all.x = TRUE)
+
+# 
+tmp <- data[grep(pattern = "Novel", x = data$ReasonNovel), ] %>%
+    dplyr::filter(., Unique_peptide_count > 1) %>%
+    merge(
+        x = ., y = blast.allbact.final,
+        by.x = "ORF", by.y = "qseqid", all.x = TRUE) %>%
+    rbind(tmp, .) %>%
+    .[order(.$Unique_peptide_count, decreasing = TRUE), ] %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# 
+write.table(
+    x = tmp,
+    file = paste("Novel_ORF_toInterprete_", date.str, ".txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE)
 
 # to re-implement as wrapper function
 #ggplot(
