@@ -1,0 +1,21 @@
+# GeneralParam
+ProjectName="Bsu_6frame"
+MultiThreads=5
+
+# WorkingPaths
+MainDir="/media/sf_F_DRIVE/Nicolas"
+
+# ProcessSteps
+GetOrf=1
+
+# EmbossParam
+FRAME=6
+TABLE=11
+FIND=2
+MINSIZE=1
+CIRCULAR="Yes"
+
+# ReferenceDatabase
+SEQUENCE="/media/sf_E_DRIVE/processing/Nicolas/Data/Vaishnavi/Databases/GCA_000009045.1.fasta"
+
+
