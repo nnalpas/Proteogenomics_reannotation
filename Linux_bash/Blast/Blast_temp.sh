@@ -17,6 +17,17 @@ blastdbcmd -db "/media/sf_F_DRIVE/Nicolas/Proteome/Bacillus_subtilis/Bsu_genome_
 
 
 
+# Multi entries retrieval and blasting Bsu 6 frames from Karsten and Nicolas
+mkdir /media/sf_F_DRIVE/Nicolas/Bsu_6frame/Blasting
+cd !$
+blastdbcmd -db "/media/sf_F_DRIVE/Nicolas/Bsu_6frame/Nuc_translation/Find0_GCA_000009045.1.fasta" \
+  -dbtype 'prot' \
+  -entry 'all' | \
+  blastp -query - -task 'blastp' \
+  -db "/media/sf_F_DRIVE/Nicolas/Proteome/Bacillus_subtilis/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta" \
+  -out "blastp_ORF_Nicolas_vs_Karsten_11012017" -evalue 0.01 -num_alignments 30 -num_threads 5 \
+  -outfmt '6 qseqid sseqid pident nident mismatch length gapopen qstart qend sstart send evalue bitscore score'
+
 
 
 
