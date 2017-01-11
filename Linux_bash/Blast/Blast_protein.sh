@@ -38,7 +38,7 @@ cp $Param ${LogDir}/Parameters.txt
 # Check whether to create a blast database
 if [ $MakeBlastDb == 1 ]; then
 
-    ${HOME}/bin/MakeBlastDb.sh ${RefProteome} ${frameProteome} > ${LogDir}/MakeBlastDb.log 2>&1
+    ${HOME}/bin/MakeBlastDb.sh ${InputType} ${DbType} ${frameProteome} > ${LogDir}/MakeBlastDb.log 2>&1
     
 fi
 
