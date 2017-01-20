@@ -1,8 +1,12 @@
 
 
+### Parameters setting up ------------------------------------------------
 
 # Start with clean environment
 rm(list = ls())
+
+
+### Define working directory ---------------------------------------------
 
 # Define the work space
 setwd(choose.dir())
@@ -12,6 +16,10 @@ user <- Sys.info()[["user"]]
 
 # Define current time
 date.str <- format(Sys.time(), "%Y-%m-%d")
+
+
+
+### List of required packages -----------------------------------------------
 
 # Source the custom user functions
 source(
@@ -44,6 +52,11 @@ loadpackage(RecordLinkage)
 loadpackage(VariantAnnotation)
 loadpackage(cgdsr)
 loadpackage(bit64)
+loadpackage(cleaver)
+
+
+
+### Data import ----------------------------------------------------------
 
 # Import the maxquant evidence table
 evid <- maxquant.read(
@@ -51,78 +64,107 @@ evid <- maxquant.read(
     name = "evidence.txt",
     integer64 = "double")
 
-# 
-#evid.filt <- evid
-#evid.filt$group <- "Known"
-#evid.filt[
-#    grep(pattern = "^seq_\\d+(;seq_\\d+)*$", x = evid.filt$Proteins),
-#    "group"] <- "Novel"
-#evid.filt[evid.filt$Reverse == "+", "group"] <- "Reverse"
+# List the fasta files that need to be imported
+fasta.file <- c(
+    Novel = "G:/data/Vaishnavi/Databases/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta",
+    Known = "G:/data/Vaishnavi/Databases/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta",
+    Contaminant = "G:/MaxQuant/MaxQuant_1.5.1.0/bin/conf/contaminants.fasta"
+)
+
+# Import all fasta file data and store into list
+fasta.list <- list()
+for (x in 1:length(fasta.file)) {
+    
+    # Import the current fasta file
+    tmp <- read.fasta(
+        file = fasta.file[x], seqtype = "AA", as.string = TRUE)
+    
+    # Include imported fasta into the list
+    fasta.list[names(fasta.file)[x]] <- list(tmp)
+    
+}
 
 
 
 ### Novel peptide identification -----------------------------------------
 
+# Digest all protein and store peptide into list
+pep.list <- lapply(X = fasta.list, FUN = function(x) {
+    
+    cliv <- lapply(
+        X = c("K|R", "K", "R"),
+        FUN = function(y) {
+            tmp <- cleave(
+                x = x %>% unlist(.),
+                custom = y,
+                missedCleavages = c(0:2)) %>%
+                unlist(.) %>%
+                unique(.)
+        }) %>%
+        unlist(.) %>%
+        unique(.)
+    
+    cliv
+})
+
+# New dataframe to hold info about fasta of origin for each sequence
+evid.match <- evid %>%
+    dplyr::mutate(
+        .,
+        group = ifelse(
+            test = Sequence %in% pep.list$Known,
+            yes = "Known",
+            no = ifelse(
+                test = Sequence %in% pep.list$Contaminant,
+                yes = "Contaminant",
+                no = ifelse(
+                    test = Sequence %in% pep.list$Novel,
+                    yes = "Novel",
+                    no = NA_character_)))) %>%
+    base::as.data.frame(., stringAsFactors = TRUE)
+
+# Reperform previous step to try find the sequence that miss first methionine
+data <- evid.match %>%
+    dplyr::filter(., is.na(group)) %>%
+    dplyr::mutate(
+        .,
+        group = ifelse(
+            test = paste(
+                "M", Sequence, sep = "") %in% pep.list$Known,
+            yes = "Known",
+            no = ifelse(
+                test = paste(
+                    "M", Sequence, sep = "") %in% pep.list$Contaminant,
+                yes = "Contaminant",
+                no = ifelse(
+                    test = paste(
+                        "M", Sequence, sep = "") %in% pep.list$Novel,
+                    yes = "Novel",
+                    no = NA_character_)))) %>%
+    base::as.data.frame(., stringAsFactors = TRUE)
+
 # 
+evid.match <- rbind(evid.match[!is.na(evid.match$group), ], data)
+
+# Define the reverse hits as group
+evid.match[evid.match$Reverse == "+", "group"] <- "Reverse"
+
+# Print warning for unidentified sequence origin
+print(paste(
+    "There are", length(which(is.na(evid.match$group))),
+    "NA values, these need to be checked!", sep = " "))
+
+# Save the group mapping data
+saveRDS(object = evid.match, file = "Sequence_group_mapping.RDS")
+
+
+
+### 
+
+# Open the pdf report file
 pdf(
     file = paste("Potential_novel_feature_", date.str, ".pdf", sep = ""),
     width = 12, height = 10)
-
-# 
-fasta.file <- c(
-    "F:/data/Vaishnavi/Databases/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta",
-    "F:/data/Vaishnavi/Databases/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta",
-    "G:/MaxQuant/MaxQuant_1.5.1.0/bin/conf/contaminants.fasta"
-)
-
-# 
-fasta.6frame <- read.fasta(
-    file = fasta.file[1], seqtype = "AA", as.string = TRUE)
-fasta.ref <- read.fasta(
-    file = fasta.file[2], seqtype = "AA", as.string = TRUE)
-fasta.cont <- read.fasta(
-    file = fasta.file[3], seqtype = "AA", as.string = TRUE)
-
-#
-data <- base::data.frame(
-    Sequence = unique(evid$Sequence),
-    group = NA_character_,
-    stringsAsFactors = FALSE)
-
-# 
-na.val <- 0
-for (x in 1:nrow(data)) {
-    if (length(
-        grep(pattern = data$Sequence[x], x = fasta.ref)) > 0) {
-        data$group[x] <- "Known"
-    } else if (length(
-        grep(pattern = data$Sequence[x], x = fasta.cont)) > 0) {
-        data$group[x] <- "Contaminant"
-    } else if (length(
-        grep(pattern = data$Sequence[x], x = fasta.6frame)) > 0) {
-        data$group[x] <- "Novel"
-    } else {
-        na.val <- na.val + 1
-    }
-}
-
-# 
-print(paste(
-    "There are", na.val, " NA values, these need to be checked!", sep = " "))
-
-#data <- rbind(data, data.orig[!is.na(data.orig$group), ])
-
-#
-saveRDS(object = data, file = "Sequence_group_mapping.RDS")
-
-# 
-evid.match <- base::merge(x = evid, y = data, by = "Sequence", all = TRUE)
-
-# 
-evid.match[evid.match$Reverse == "+", "group"] <- "Reverse"
-
-#
-saveRDS(object = evid.match, file = "evid_match.RDS")
 
 # 
 data <- table(evid.match$group) %>%
@@ -738,13 +780,13 @@ novel.pep.pos <- merge(
     by.x = "sseqid", by.y = "ORF", all.y = TRUE) %>%
     dplyr::mutate(., id = sub("^lcl\\|", "", qseqid)) %>%
     merge(x = ., y = positions, by = "id", all.x = TRUE) %>%
-    dplyr::filter(., ReasonNovel == "Novel") %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Keep only ORF with positions information and only these columns
 data <- novel.pep.pos %>%
     dplyr::filter(., !is.na(`start.y`)) %>%
     dplyr::select(., sseqid, `start.y`, `end.y`, strand, frame) %>%
+    unique(.) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Format to numeric the ORFs position
@@ -824,6 +866,15 @@ for (x in 1:nrow(data)) {
     
 }
 
-# Continue with checking whether the 3 hits come from the few novel ORF with many peptides
+# Continue with adding neighbour info to novel ORF and calculating how many
+# peptides confirm the ORF presence
+tmp <- novel.pep.pos %>%
+    merge(x = ., y = neighbour.ORF, by = "sseqid", all.x = TRUE) %>%
+    dplyr::group_by(., sseqid, id) %>%
+    dplyr::mutate(., ORFpepCount = n()) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+
+
 
 
