@@ -1,0 +1,127 @@
+---
+title: "Baccillus proteogenomics report"
+author: "`r Sys.info()[['user']]`"
+date: "`r format(x = Sys.time(), '%d %B %Y %T')`"
+output:
+    ioslides_presentation:
+        css: "C:/Users/Nicolas/Documents/GitHub/Miscellaneous/R/Presentation/ioslides_custom.css"
+params:
+    evidences: NA
+    levenshtein: NA
+---
+
+
+
+## Overview: feature counts per type
+
+``` {r overview, eval = TRUE, echo = FALSE, warning = FALSE}
+
+# Compute count of evidence per group type
+data <- table(params[["evidences"]]$group) %>%
+    data.frame(., type = "evidence", stringsAsFactors = FALSE) %>%
+    set_names(c("group", "Freq", "type"))
+
+# Compute count of unique peptide per group type
+data <- params[["evidences"]] %>%
+    dplyr::select(., Sequence, group) %>%
+    dplyr::group_by(., group) %>%
+    dplyr::summarise(., Freq = n_distinct(Sequence)) %>%
+    data.frame(., type = "peptide", stringsAsFactors = FALSE) %>%
+    rbind(data, .)
+
+# Histogram of feature count per group type
+histPlots(
+    data = data,
+    key = "type",
+    value = "Freq",
+    group = "group",
+    fill = "group",
+    main = "Number of evidence/peptide",
+    transf = "log10")
+
+```
+
+
+
+## Overview: PEP per type
+
+``` {r overview2, eval = TRUE, echo = FALSE, warning = FALSE}
+
+# Plot evidence PEP distribution
+violonPlots(
+    data = params[["evidences"]],
+    key = "group",
+    value = "PEP",
+    fill = "lightblue",
+    colour = "black",
+    main = "PEP comparison")
+
+```
+
+
+
+## Overview: Score per type
+
+``` {r overview3, eval = TRUE, echo = FALSE, warning = FALSE}
+
+# Plot evidence score distribution
+violonPlots(
+    data = params[["evidences"]],
+    key = "group",
+    value = "Score",
+    fill = "lightblue",
+    colour = "black",
+    main = "Score comparison")
+
+```
+
+
+
+## Overview: Mass error per type
+
+``` {r overview4, eval = TRUE, echo = FALSE, warning = FALSE}
+
+# Calculate quantile values of evidence mass error
+data <- params[["evidences"]] %>%
+    dplyr::select(., group, `Mass Error [ppm]`) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE) %>%
+    set_colnames(c("group", "mass_error"))
+
+# Plot evidence mass error distribution
+violonPlots(
+    data = data,
+    key = "group",
+    value = "mass_error",
+    fill = "lightblue",
+    colour = "black",
+    main = "Mass error (ppm) comparison")
+
+```
+
+
+
+## Levenshtein distance for SAV peptide
+
+``` {r levenshtein, eval = TRUE, echo = FALSE, warning = FALSE}
+
+# Compute the peptide count per levenshtein distance
+data <- params[["levenshtein"]] %>%
+    dplyr::select(., Sequence, leven) %>%
+    unique(.) %>%
+    dplyr::group_by(., leven) %>%
+    dplyr::summarise(., count = n()) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Plot the levenshtein distance count
+histPlots(
+    data = data,
+    key = "leven",
+    value = "count",
+    group = "leven",
+    fill = "leven",
+    main = "Levenshtein distance density",
+    textsize = 15)
+
+```
+
+
