@@ -6,6 +6,10 @@
 # Start with clean environment
 rm(list = ls())
 
+# Define user input parameters
+markdown <- TRUE
+
+
 
 ### Define working directory ---------------------------------------------
 
@@ -157,6 +161,49 @@ print(paste(
 
 # Save the group mapping data
 saveRDS(object = evid.match, file = "Sequence_group_mapping.RDS")
+
+
+
+### Generate the report --------------------------------------------------
+
+# Check whether markdown output is requested
+if (markdown) {
+    
+    # Define the report markdown file
+    report.file <- paste(
+        "C:/Users",
+        user, 
+        "Documents/GitHub/Miscellaneous/R/6frames_proteogenomics",
+        "Bsu_proteogenomics_report.rmd", sep = "/")
+    
+    # Define temporary location for report generation
+    tempReport <- file.path(tempdir(), basename(report.file))
+    file.copy(
+        from = report.file,
+        to = tempReport,
+        overwrite = TRUE)
+    
+    # Define the required variables as markdown parameters
+    param <- list(
+        evidences = evid.match)
+    
+    # Define output file name
+    out.file <- paste(
+        work.space,
+        "/Bsu_proteogenomics_",
+        format(Sys.time(), '%Y%m%d_%H-%M'),
+        ".html",
+        sep = "")
+    
+    # Render the markdown report
+    rmarkdown::render(
+        input = tempReport,
+        output_format = "ioslides_presentation",
+        output_file = out.file,
+        params = param,
+        envir = new.env(parent = globalenv()))
+    
+}
 
 
 
