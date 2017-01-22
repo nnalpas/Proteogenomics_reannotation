@@ -193,49 +193,61 @@ leven.data <- adist(
 
 
 
+### Focus on high quality novel peptide ----------------------------------
 
-
-
-#
+# Find the median PEP for known peptides
 known.med.pep <- evid.match %>%
     dplyr::filter(., group == "Known") %>%
-    dplyr::select(., Sequence, PEP) %>%
     dplyr::summarise(., median(PEP)) %>%
     as.numeric(.)
 
-# Keep novel peptides with median PEP (based on known)
+# Keep novel peptides that have lower PEP than known peptide median PEP
 candidates <- evid.match %>%
     dplyr::filter(., PEP <= known.med.pep, group == "Novel") %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
-# Find the ORF where novel peptide map to
-candidate.orf <- data.frame()
-for (x in unique(evid.match[evid.match$group == "Novel", "Sequence"])) {
-    
-    orfs <- grep(pattern = x, x = fasta.6frame) %>%
-        names(fasta.6frame)[.]
-    candidate.orf %<>%
-        rbind(
-            ., data.frame(Sequence = x, ORF = orfs, stringsAsFactors = FALSE))
-    
-}
+
+
+
+
+###
+# continue from here by staying without for loop and using str_locate
+
+
+
+
+tmp <- evid.match %>%
+    dplyr::filter(., group == "Novel") %>%
+    dplyr::select(., Sequence) %>%
+    unique(.) %>%
+    dplyr::group_by(., Sequence) %>%
+    dplyr::summarise(
+        .,
+        Proteins = grep(Sequence, fasta.list$Novel) %>%
+            names(fasta.list$Novel)[.] %>%
+            paste(., collapse = ";")) %>%
+    cSplit(
+        indt = ., splitCols = "Proteins", sep = ";", direction = "long") %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
 
 # Get position of the novel peptide within ORF
+tmp <- evid.match %>%
+    dplyr::filter(., group == "Novel") %>%
+    .[["Sequence"]]
 candidate.pos <- data.frame()
-for (x in 1:nrow(candidate.orf)) {
+for (x in tmp) {
     
-    tmp <- str_locate_all(
-        string = fasta.6frame[candidate.orf$ORF[x]],
-        pattern = candidate.orf$Sequence[x]) %>%
-        set_names(names(fasta.6frame[candidate.orf$ORF[x]])) %>%
+    candidate.pos <- str_locate_all(
+        string = fasta.list$Novel,
+        pattern = x) %>%
+        set_names(names(fasta.list$Novel)) %>%
         ldply(., data.frame) %>%
-        set_colnames(c("ORF", "start", "end"))
-    candidate.pos %<>%
-        rbind(., data.frame(
-            Sequence = candidate.orf$Sequence[x],
-            tmp, stringsAsFactors = TRUE))
+        set_colnames(c("ORF", "start", "end")) %>%
+        base::data.frame(Sequence = x, tmp, stringsAsFactors = TRUE) %>%
+        rbind(candidate.pos, .)
+    
 }
-rm(candidate.orf)
 
 # Export the list of ORF identified by a novel peptide
 write.table(
