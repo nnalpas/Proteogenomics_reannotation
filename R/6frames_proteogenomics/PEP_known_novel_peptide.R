@@ -1,5 +1,6 @@
 
 
+
 ### Parameters setting up ------------------------------------------------
 
 # Start with clean environment
@@ -65,11 +66,11 @@ evid <- maxquant.read(
     integer64 = "double")
 
 # List the fasta files that need to be imported
-fasta.file <- c(
-    Novel = "G:/data/Vaishnavi/Databases/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta",
-    Known = "G:/data/Vaishnavi/Databases/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta",
-    Contaminant = "G:/MaxQuant/MaxQuant_1.5.1.0/bin/conf/contaminants.fasta"
-)
+fasta.file <- choose.files(
+    caption = "Select Fasta files",
+    multi = TRUE,
+    filters = ".fasta") %>%
+    set_names(c("Novel", "Contaminant", "Known"))
 
 # Import all fasta file data and store into list
 fasta.list <- list()
@@ -143,7 +144,7 @@ data <- evid.match %>%
                     no = NA_character_)))) %>%
     base::as.data.frame(., stringAsFactors = TRUE)
 
-# 
+# Combine the two peptide group type information
 evid.match <- rbind(evid.match[!is.na(evid.match$group), ], data)
 
 # Define the reverse hits as group
@@ -160,6 +161,11 @@ saveRDS(object = evid.match, file = "Sequence_group_mapping.RDS")
 
 
 ### 
+
+# 
+
+
+
 
 # Open the pdf report file
 pdf(
