@@ -14,7 +14,8 @@ markdown <- TRUE
 ### Define working directory ---------------------------------------------
 
 # Define the work space
-setwd(choose.dir())
+work.space <- choose.dir()
+setwd(work.space)
 
 # Define the current user
 user <- Sys.info()[["user"]]
@@ -164,148 +165,36 @@ saveRDS(object = evid.match, file = "Sequence_group_mapping.RDS")
 
 
 
-### Generate the report --------------------------------------------------
+### Levenshtein distance -------------------------------------------------
 
-# Check whether markdown output is requested
-if (markdown) {
-    
-    # Define the report markdown file
-    report.file <- paste(
-        "C:/Users",
-        user, 
-        "Documents/GitHub/Miscellaneous/R/6frames_proteogenomics",
-        "Bsu_proteogenomics_report.rmd", sep = "/")
-    
-    # Define temporary location for report generation
-    tempReport <- file.path(tempdir(), basename(report.file))
-    file.copy(
-        from = report.file,
-        to = tempReport,
-        overwrite = TRUE)
-    
-    # Define the required variables as markdown parameters
-    param <- list(
-        evidences = evid.match)
-    
-    # Define output file name
-    out.file <- paste(
-        work.space,
-        "/Bsu_proteogenomics_",
-        format(Sys.time(), '%Y%m%d_%H-%M'),
-        ".html",
-        sep = "")
-    
-    # Render the markdown report
-    rmarkdown::render(
-        input = tempReport,
-        output_format = "ioslides_presentation",
-        output_file = out.file,
-        params = param,
-        envir = new.env(parent = globalenv()))
-    
-}
-
-
-
-### 
-
-# 
-
-
-
-
-# Open the pdf report file
-pdf(
-    file = paste("Potential_novel_feature_", date.str, ".pdf", sep = ""),
-    width = 12, height = 10)
-
-# 
-data <- table(evid.match$group) %>%
-    data.frame(., type = "evidence", stringsAsFactors = FALSE) %>%
-    set_names(c("group", "Freq", "type"))
-
-# 
-data <- evid.match %>%
-    dplyr::select(., Sequence, group) %>%
-    dplyr::group_by(., group) %>%
-    dplyr::summarise(., Freq = n_distinct(Sequence)) %>%
-    data.frame(., type = "peptide", stringsAsFactors = FALSE) %>%
-    rbind(data, .)
-
-# 
-histPlots(
-    data = data,
-    key = "type",
-    value = "Freq",
-    group = "group",
-    fill = "group",
-    main = "Number of evidence/peptide",
-    transf = "log10")
-
-# Calculate quantile values of evidence PEP
-data <- evid.match %>%
-    dplyr::select(., group, PEP) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-
-# 
-boxPlots(
-    data = data,
-    key = "group",
-    value = "PEP",
-    main = "PEP comparison")
-
-# Calculate quantile values of evidence Score
-data <- evid.match %>%
-    dplyr::select(., group, Score) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-
-# 
-boxPlots(
-    data = data,
-    key = "group",
-    value = "Score",
-    main = "Score comparison")
-
-# Calculate quantile values of evidence mass error
-data <- evid.match %>%
-    dplyr::select(., group, `Mass Error [ppm]`) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE) %>%
-    set_colnames(c("group", "mass_error"))
-
-# 
-boxPlots(
-    data = data,
-    key = "group",
-    value = "mass_error",
-    main = "Mass error (ppm) comparison")
-
-# 
-tmp <- evid.match[evid.match$group == "Novel", "Sequence"] %>%
+# Keep only sequence for novel peptide
+tmp <- evid.match %>%
+    dplyr::filter(., group == "Novel") %>%
+    dplyr::select(., Sequence) %>%
     unique(.)
 
-# 
-leven.data <- base::data.frame()
-for (x in 1:length(tmp)) {
-    
-    # 
-    dist.name <- adist(
-        x = tmp[x],
-        y = fasta.ref,
-        partial = TRUE,
-        ignore.case = TRUE) %>%
-        t(.) %>%
-        base::data.frame(
-            id = rownames(.),
-            leven = .,
-            Sequence = tmp[x],
-            stringsAsFactors = FALSE)
-    
-    # 
-    leven.data <- rbind(
-        leven.data,
-        dist.name[dist.name$leven == min(dist.name$leven), ])
-    
-}
+# Compute the levenshtein distance for all novel peptide and keep
+# the minimum leven score result per peptide
+leven.data <- adist(
+    x = tmp$Sequence,
+    y = fasta.list$Known,
+    partial = TRUE,
+    ignore.case = TRUE) %>%
+    set_rownames(tmp$Sequence) %>%
+    t(.) %>%
+    base::data.frame(
+        id = rownames(.),
+        .,
+        stringsAsFactors = FALSE) %>%
+    tidyr::gather(data = ., key = "Sequence", value = "leven", -id) %>%
+    dplyr::group_by(., Sequence) %>%
+    dplyr::filter(., leven == min(leven)) %>%
+    base::as.data.frame(., stringsAsFActors = FALSE)
+
+
+
+
+
 
 #
 known.med.pep <- evid.match %>%
@@ -929,5 +818,46 @@ tmp <- novel.pep.pos %>%
 
 
 
+### Generate the report --------------------------------------------------
+
+# Check whether markdown output is requested
+if (markdown) {
+    
+    # Define the report markdown file
+    report.file <- paste(
+        "C:/Users",
+        user, 
+        "Documents/GitHub/Miscellaneous/R/6frames_proteogenomics",
+        "Bsu_proteogenomics_report.rmd", sep = "/")
+    
+    # Define temporary location for report generation
+    tempReport <- file.path(tempdir(), basename(report.file))
+    file.copy(
+        from = report.file,
+        to = tempReport,
+        overwrite = TRUE)
+    
+    # Define the required variables as markdown parameters
+    param <- list(
+        evidences = evid.match,
+        levenshtein = leven.data)
+    
+    # Define output file name
+    out.file <- paste(
+        work.space,
+        "/Bsu_proteogenomics_",
+        format(Sys.time(), '%Y%m%d_%H-%M'),
+        ".html",
+        sep = "")
+    
+    # Render the markdown report
+    rmarkdown::render(
+        input = tempReport,
+        output_format = "ioslides_presentation",
+        output_file = out.file,
+        params = param,
+        envir = new.env(parent = globalenv()))
+    
+}
 
 
