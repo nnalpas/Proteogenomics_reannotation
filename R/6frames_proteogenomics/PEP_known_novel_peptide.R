@@ -459,9 +459,51 @@ write.table(
 
 ### ORF genomic position identification ----------------------------------
 
-# Import the blast results
-blast <- read.table(
-    file = "blastp_ORF_Nicolas_vs_Karsten_11012017.txt",
+# List the fasta files that need to be imported
+fasta.file <- choose.files(
+    caption = "Select Fasta files",
+    multi = TRUE,
+    filters = ".fasta") %>%
+    set_names(c("NicolasORF"))
+
+# Import all fasta file data and store into list
+for (x in 1:length(fasta.file)) {
+    
+    # Import the current fasta file
+    tmp <- read.fasta(
+        file = fasta.file[x], seqtype = "AA", as.string = TRUE)
+    
+    # Include imported fasta into the list
+    fasta.list[names(fasta.file)[x]] <- list(tmp)
+    
+}
+
+# Get the start-end genomic position for each ORFs
+orf.pos <- lapply(
+    X = fasta.list$NicolasORF, FUN = function(x) { attr(x, "Annot") }) %>%
+    unlist(.) %>%
+    sub("^.*? \\[(.*?)\\] .*$", "\\1", .) %>%
+    base::data.frame(id = names(.), pos = ., stringsAsFactors = FALSE) %>%
+    tidyr::separate(
+        data = ., col = pos, into = c("start", "end"), sep = " - ") %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Determine strand and frame of ORF
+orf.pos$strand <- ifelse(
+    test = orf.pos$start < orf.pos$end, yes = 1, no = -1)
+orf.pos[orf.pos$strand == 1, "frame"] <- ((as.numeric(
+    orf.pos[orf.pos$strand == 1, "start"]) + 2) / 3) %>%
+    revtrunc(.) %>%
+    round(x = ((. + 0.33) * 3))
+orf.pos[orf.pos$strand == -1, "frame"] <- ((as.numeric(
+    orf.pos[orf.pos$strand == -1, "end"]) + 2) / 3) %>%
+    revtrunc(.) %>%
+    round(x = ((. + 0.33) * -3))
+
+# Import the blast results of NN ORF versus KK ORF, NN ORF have positional
+# information which can be used for KK ORF
+blast.NN.vs.KK <- read.table(
+    file = "blastp_ORF_Nicolas_vs_Karsten_11012017",
     header = FALSE,
     sep = "\t",
     quote = "",
@@ -473,7 +515,7 @@ blast <- read.table(
 
 # Get the best blastn match for each query
 # (pident == 100%, nident == length, qstart == sstart, qend == send)
-blast.NN.KK.final <- blast %>%
+blast.NN.vs.KK.best <- blast.NN.vs.KK %>%
     dplyr::group_by(., qseqid) %>%
     unique(.) %>%
     dplyr::filter(
@@ -484,12 +526,12 @@ blast.NN.KK.final <- blast %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Add the entries that are missing from previous step to find best match
-tmp <- blast[!blast$qseqid %in% blast.NN.KK.final$qseqid, ]
+tmp <- blast.NN.vs.KK[!blast.NN.vs.KK$qseqid %in% blast.NN.vs.KK.best$qseqid, ]
 tmp$count_entry <- 0
-blast.NN.KK.final <- rbind(blast.NN.KK.final, tmp)
+blast.NN.vs.KK.best <- rbind(blast.NN.vs.KK.best, tmp)
 
 # Check how many match have the query entries
-tmp <- blast.NN.KK.final %>%
+tmp <- blast.NN.vs.KK.best %>%
     dplyr::select(., qseqid, count_entry) %>%
     dplyr::group_by(., qseqid) %>%
     unique(.) %>%
@@ -498,50 +540,20 @@ tmp <- blast.NN.KK.final %>%
     dplyr::summarise(., table = n()) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
-# Import the fasta files
-fasta.nn <- read.fasta(
-    file = "G:/data/Vaishnavi/Databases/Find0_GCA_000009045.1.fasta",
-    seqtype = "AA",
-    as.string = TRUE)
-fasta.kk <- read.fasta(
-    file = paste(
-        "G:/data/Vaishnavi/Databases/",
-        "Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta",
-        sep = ""),
-    seqtype = "AA",
-    as.string = TRUE)
-
-# Get the start-end genomic position for each ORFs
-positions <- lapply(X = fasta.nn, FUN = function(x) { attr(x, "Annot") }) %>%
-    unlist(.) %>%
-    sub("^.*? \\[(.*?)\\] .*$", "\\1", .) %>%
-    base::data.frame(id = names(.), pos = ., stringsAsFactors = FALSE) %>%
-    tidyr::separate(
-        data = ., col = pos, into = c("start", "end"), sep = " - ") %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-
-# Determine strand and frame of ORF
-positions$strand <- ifelse(
-    test = positions$start < positions$end, yes = 1, no = -1)
-positions[positions$strand == 1, "frame"] <- ((as.numeric(
-    positions[positions$strand == 1, "start"]) + 2) / 3) %>%
-    revtrunc(.) %>%
-    round(x = ((. + 0.33) * 3))
-positions[positions$strand == -1, "frame"] <- ((as.numeric(
-    positions[positions$strand == -1, "end"]) + 2) / 3) %>%
-    revtrunc(.) %>%
-    round(x = ((. + 0.33) * -3))
-
 # Add start-end positions of ORFs to blast results
-blast.NN.KK.final %<>%
+blast.NN.vs.KK.best %<>%
     dplyr::mutate(., id = sub("^lcl\\|", "", qseqid)) %>%
     merge(
-    x = ., y = positions,
+    x = ., y = orf.pos,
     by = "id", all = TRUE)
 
+
+
+### ORF matching to known protein ----------------------------------------
+
 # Import the blast results of Nicolas' ORF versus the reference proteome
-blast.vs.ref <- read.table(
-    file = "blastp_ORF_Nicolas_vs_RefProt_19012017.txt", header = FALSE,
+blast.NN.vs.ref <- read.table(
+    file = "blastp_ORF_Nicolas_vs_RefProt_19012017", header = FALSE,
     sep = "\t",
     quote = "",
     col.names = c(
@@ -551,47 +563,24 @@ blast.vs.ref <- read.table(
     as.is = TRUE)
 
 # Find the best blast hit for each query id
-blast.vs.ref.best <- best.blast(data = blast.vs.ref, key = "qseqid") %>%
+blast.NN.vs.ref.best <- best.blast(data = blast.NN.vs.ref, key = "qseqid")
+
+# keep the mapping of ORF to uniprotID
+orf.uniprot <- blast.NN.vs.ref.best %>%
     dplyr::select(., qseqid, sseqid) %>%
     set_colnames(c("qseqid", "UniProtID")) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
-# Merge the Uniprot ID info to the blast map of ORF to UniprotID
-blast.vs.ref.final <- merge(
-    x = blast.NN.KK.final,
-    y = blast.vs.ref.best,
-    by = "qseqid",
-    all = TRUE)
 
-# Import the novel peptide table
-novel.pep <- read.table(
-    file = "Novel_peptide_2016-12-21.txt",
-    header = TRUE, sep = "\t", quote = "")
 
-# Check how many novel ORF are missing from the blast results
-summary(unique(novel.pep$ORF) %in% unique(blast.NN.KK.final$sseqid))
-
-# Merge the novel peptide with the ORF position and blast info
-novel.pep.pos <- merge(
-    x = blast.vs.ref.final, y = novel.pep,
-    by.x = "sseqid", by.y = "ORF", all.y = TRUE) %>%
-    dplyr::mutate(., id = sub("^lcl\\|", "", qseqid)) %>%
-    merge(x = ., y = positions, by = "id", all.x = TRUE) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-
-# Keep only ORF with positions information and only these columns
-data <- novel.pep.pos %>%
-    dplyr::filter(., !is.na(`start.y`)) %>%
-    dplyr::select(., sseqid, `start.y`, `end.y`, strand, frame) %>%
-    unique(.) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
+### ORF neighbours identification ----------------------------------------
 
 # Format to numeric the ORFs position
-positions$start <- as.numeric(positions$start)
-positions$end <- as.numeric(positions$end)
+orf.pos$start <- as.numeric(orf.pos$start)
+orf.pos$end <- as.numeric(orf.pos$end)
 data$start.y <- as.numeric(data$start.y)
 data$end.y <- as.numeric(data$end.y)
-blast.vs.ref.best$qseqid %<>%
+blast.NN.vs.ref.best$qseqid %<>%
     sub("^lcl\\|", "", .)
 
 # Loop through selected ORF
@@ -599,7 +588,7 @@ neighbour.ORF <- data.frame()
 for (x in 1:nrow(data)) {
     
     # Filter the full ORF entries for neighbours
-    tmp <- positions %>%
+    tmp <- orf.pos %>%
         dplyr::filter(
             .,
             strand == data[x, "strand"] & frame == data[x, "frame"])
@@ -636,14 +625,14 @@ for (x in 1:nrow(data)) {
         
         # Get UniProt ID for 5' and 3' neighbours if any
         FiveNeighbUniID <- ifelse(
-            test = any(blast.vs.ref.best$qseqid == FiveNeighb[["id"]]),
-            yes = blast.vs.ref.best[
-                blast.vs.ref.best$qseqid == FiveNeighb[["id"]], "UniProtID"],
+            test = any(blast.NN.vs.ref.best$qseqid == FiveNeighb[["id"]]),
+            yes = blast.NN.vs.ref.best[
+                blast.NN.vs.ref.best$qseqid == FiveNeighb[["id"]], "UniProtID"],
             no = "")
         ThreeNeighbUniID <- ifelse(
-            test = any(blast.vs.ref.best$qseqid == ThreeNeighb[["id"]]),
-            yes = blast.vs.ref.best[
-                blast.vs.ref.best$qseqid == ThreeNeighb[["id"]], "UniProtID"],
+            test = any(blast.NN.vs.ref.best$qseqid == ThreeNeighb[["id"]]),
+            yes = blast.NN.vs.ref.best[
+                blast.NN.vs.ref.best$qseqid == ThreeNeighb[["id"]], "UniProtID"],
             no = "")
         
         # Add the 5' and 3' ORF neighbours to the current novel ORF
