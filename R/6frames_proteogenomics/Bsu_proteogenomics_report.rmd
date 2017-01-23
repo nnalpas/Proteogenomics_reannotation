@@ -167,3 +167,32 @@ histPlots(
 ```
 
 
+
+## Novel peptide reason explanation
+
+``` {r NovelReason, eval = TRUE, echo = FALSE, warning = FALSE}
+
+# Compute the peptide count per novelty reasons
+data <- params[["pept.posit"]] %>%
+    dplyr::filter(., ReasonNovel != "PEPfilter") %>%
+    dplyr::group_by(., ReasonNovel) %>%
+    dplyr::summarise(
+        .,
+        Number_peptide = n_distinct(Sequence),
+        Number_ORF = n_distinct(ORF)) %>%
+    tidyr::gather(
+        data = ., key = "feature", value = "Count", -ReasonNovel) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Plot the feature count per novelty reasons
+histPlots(
+    data = data,
+    key = "feature",
+    value = "Count",
+    group = "ReasonNovel",
+    fill = "ReasonNovel",
+    main = "Peptide novelty reasons")
+
+```
+
+
