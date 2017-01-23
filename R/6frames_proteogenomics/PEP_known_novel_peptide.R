@@ -244,12 +244,12 @@ leven.data <- adist(
 
 
 
-### 
+### Novel ORF blast analysis ---------------------------------------------
 
 # Read blast result from top candidates matched ORF against
 # the reference proteome used in this study
-blast.bsu <- read.table(
-    file = "../blastp_BsuRef_novel_candidates_21122016",
+blast.bsu.vs.ref <- read.table(
+    file = "./blastp_BsuRef_novel_candidates_21122016",
     header = FALSE, sep = "\t", quote = "",
     col.names = c(
         "qseqid", "sseqid", "pident", "nident", "mismatch", "length",
@@ -258,43 +258,19 @@ blast.bsu <- read.table(
     as.is = TRUE)
 
 # Get the best blastp match for each query
-blast.bsu.final <- data.frame()
-for (id in unique(blast.bsu$qseqid)) {
-    
-    tmp <- blast.bsu[blast.bsu$qseqid == id, ] %>%
-        unique(.)
-    min.eval <- min(tmp$evalue)
-    tmp <- tmp[tmp$evalue == min.eval, ]
-        
-    if (nrow(tmp) == 1) {
-        blast.bsu.final <- rbind(blast.bsu.final, tmp)
-    } else {
-        max.score <- max(tmp$score)
-        tmp <- tmp[tmp$score == max.score, ]
-        if (nrow(tmp) == 1) {
-            blast.bsu.final <- rbind(blast.bsu.final, tmp)
-        } else {
-            max.pident <- max(tmp$pident)
-            tmp <- tmp[tmp$pident == max.pident, ]
-            if (nrow(tmp) == 1) {
-                blast.bsu.final <- rbind(blast.bsu.final, tmp)
-            } else {
-                print(paste("Cannot determine best match for: ", id, sep = ""))
-            }
-        }
-    }
-    
-}
+blast.bsu.vs.ref.best <- best.blast(data = blast.bsu.vs.ref, key = "qseqid")
 
 # Filter out the best match that have e-value above 0.0001
-blast.bsu.final <- blast.bsu.final[blast.bsu.final$evalue < 0.0001, ]
-blast.bsu.final$qseqid <- gsub(
-    pattern = "^lcl\\|", replacement = "", x = blast.bsu.final$qseqid)
+blast.bsu.vs.ref.best <- blast.bsu.vs.ref.best %>%
+    dplyr::filter(., evalue < 0.0001)
+blast.bsu.vs.ref.best$qseqid <- gsub(
+    pattern = "^lcl\\|", replacement = "",
+    x = blast.bsu.vs.ref.best$qseqid)
 
 # Read blast result from top candidates matched ORF against
 # all bacteria proteomes from uniprot
-blast.allbact <- read.table(
-    file = "../blastp_allprot_novel_candidates_21122016",
+blast.bsu.vs.allbact <- read.table(
+    file = "./blastp_allprot_novel_candidates_21122016",
     header = FALSE, sep = "\t", quote = "",
     col.names = c(
         "qseqid", "sseqid", "pident", "nident", "mismatch", "length",
@@ -303,37 +279,19 @@ blast.allbact <- read.table(
     as.is = TRUE)
 
 # Get the best blastp match for each query
-blast.allbact.final <- data.frame()
-for (id in unique(blast.allbact$qseqid)) {
-    
-    tmp <- blast.allbact[blast.allbact$qseqid == id, ] %>%
-        unique(.)
-    min.eval <- min(tmp$evalue)
-    tmp <- tmp[tmp$evalue == min.eval, ]
-    
-    if (nrow(tmp) == 1) {
-        blast.allbact.final <- rbind(blast.allbact.final, tmp)
-    } else {
-        max.score <- max(tmp$score)
-        tmp <- tmp[tmp$score == max.score, ]
-        if (nrow(tmp) == 1) {
-            blast.allbact.final <- rbind(blast.allbact.final, tmp)
-        } else {
-            max.pident <- max(tmp$pident)
-            tmp <- tmp[tmp$pident == max.pident, ]
-            blast.allbact.final <- rbind(blast.allbact.final, tmp)
-            if (nrow(tmp) != 1) {
-                print(paste("Cannot determine best match for: ", id, sep = ""))
-            }
-        }
-    }
-    
-}
+blast.bsu.vs.allbact.best <- best.blast(
+    data = blast.bsu.vs.allbact, key = "qseqid")
 
 # Filter out the best match that have e-value above 0.0001
-blast.allbact.final <- blast.allbact.final[blast.allbact.final$evalue < 0.0001, ]
-blast.allbact.final$qseqid <- gsub(
-    pattern = "^lcl\\|", replacement = "", x = blast.allbact.final$qseqid)
+blast.bsu.vs.allbact.best <- blast.bsu.vs.allbact.best %>%
+    dplyr::filter(., evalue < 0.0001)
+blast.bsu.vs.allbact.best$qseqid <- gsub(
+    pattern = "^lcl\\|", replacement = "",
+    x = blast.bsu.vs.allbact.best$qseqid)
+
+
+
+### Novelty reason determination -----------------------------------------
 
 # Define the reason for novel peptide, first add the peptide that
 # were filtered due to high PEP
@@ -354,10 +312,10 @@ for (x in 1:nrow(pep.pos)) {
         end.pep <- pep.pos$end[x]
         orf.pep <- pep.pos$ORF[x]
         
-        tmp.blast.bsu <- blast.bsu.final[
-            blast.bsu.final$qseqid == orf.pep, ]
-        tmp.blast.allbact <- blast.allbact.final[
-            blast.allbact.final$qseqid == orf.pep, ]
+        tmp.blast.bsu <- blast.bsu.vs.ref.best[
+            blast.bsu.vs.ref.best$qseqid == orf.pep, ]
+        tmp.blast.allbact <- blast.bsu.vs.allbact.best[
+            blast.bsu.vs.allbact.best$qseqid == orf.pep, ]
         tmp.leven.data <- leven.data[
             leven.data$Sequence == seq.pep & leven.data$leven == 1, ]
         
@@ -533,14 +491,14 @@ data <- pep.pos %>%
 tmp <- data[grep(pattern = "Known other bacteria", x = data$ReasonNovel), ] %>%
     dplyr::filter(., Unique_peptide_count > 1) %>%
     merge(
-        x = ., y = blast.allbact.final,
+        x = ., y = blast.bsu.vs.allbact.best,
         by.x = "ORF", by.y = "qseqid", all.x = TRUE)
 
 # 
 tmp <- data[grep(pattern = "Novel", x = data$ReasonNovel), ] %>%
     dplyr::filter(., Unique_peptide_count > 1) %>%
     merge(
-        x = ., y = blast.allbact.final,
+        x = ., y = blast.bsu.vs.allbact.best,
         by.x = "ORF", by.y = "qseqid", all.x = TRUE) %>%
     rbind(tmp, .) %>%
     .[order(.$Unique_peptide_count, decreasing = TRUE), ] %>%
