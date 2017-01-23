@@ -570,7 +570,8 @@ orf.uniprot <- blast.NN.vs.ref.best %>%
     dplyr::select(., qseqid, sseqid) %>%
     set_colnames(c("qseqid", "UniProtID")) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
-
+orf.uniprot$qseqid %<>%
+    gsub("^lcl\\|", "", .)
 
 
 ### ORF neighbours identification ----------------------------------------
@@ -578,31 +579,63 @@ orf.uniprot <- blast.NN.vs.ref.best %>%
 # Format to numeric the ORFs position
 orf.pos$start <- as.numeric(orf.pos$start)
 orf.pos$end <- as.numeric(orf.pos$end)
-data$start.y <- as.numeric(data$start.y)
-data$end.y <- as.numeric(data$end.y)
-blast.NN.vs.ref.best$qseqid %<>%
-    sub("^lcl\\|", "", .)
+
+# 
+neighbour.ORF <- data.frame()
+for (x in unique(orf.pos$frame)) {
+    
+    # Check the strand and use appropriate code
+    if (x %in% c(1, 2 , 3)) {
+        tmp <- orf.pos %>%
+            dplyr::filter(., frame == x) %>%
+            dplyr::arrange(., start) %>%
+            dplyr::select(., id) %>%
+            .[["id"]] %>%
+            base::data.frame(
+                id = .,
+                FiveNeighbID = c(.[length(.)], .[-length(.)]),
+                ThreeNeighbID = c(.[-1], .[1]),
+                stringsAsFactors = FALSE)
+    } else {
+        tmp <- orf.pos %>%
+            dplyr::filter(., frame == x) %>%
+            dplyr::desc(., start) %>%
+            dplyr::select(., id) %>%
+            .[["id"]] %>%
+            base::data.frame(
+                id = .,
+                FiveNeighbID = c(.[length(.)], .[-length(.)]),
+                ThreeNeighbID = c(.[-1], .[1]),
+                stringsAsFactors = FALSE)
+    }
+    
+    neighbour.ORF <- rbind(neighbour.ORF, .)
+    
+}
+
+
+
 
 # Loop through selected ORF
-neighbour.ORF <- data.frame()
-for (x in 1:nrow(data)) {
+
+for (x in 1:nrow(orf.pos)) {
     
     # Filter the full ORF entries for neighbours
     tmp <- orf.pos %>%
         dplyr::filter(
             .,
-            strand == data[x, "strand"] & frame == data[x, "frame"])
+            strand == orf.pos[x, "strand"] & frame == orf.pos[x, "frame"])
     
     # Depending on strand detect 5' and 3' neighbour ORF
-    if (data[x, "strand"] == 1) {
+    if (orf.pos[x, "strand"] == 1) {
         
         FiveNeighb <- tmp %>%
             dplyr::filter(
-                ., end < data[x, "start.y"]) %>%
+                ., end < orf.pos[x, "start"]) %>%
             dplyr::filter(., end == max(end)) %>%
             base::as.data.frame(., stringsAsFActors = FALSE)
         ThreeNeighb <- tmp %>%
-            dplyr::filter(., start > data[x, "end.y"]) %>%
+            dplyr::filter(., start > orf.pos[x, "end"]) %>%
             dplyr::filter(., start == min(start)) %>%
             base::as.data.frame(., stringsAsFActors = FALSE)
         
@@ -610,11 +643,11 @@ for (x in 1:nrow(data)) {
         
         FiveNeighb <- tmp %>%
             dplyr::filter(
-                ., end > data[x, "start.y"]) %>%
+                ., end > orf.pos[x, "start"]) %>%
             dplyr::filter(., end == min(end)) %>%
             base::as.data.frame(., stringsAsFActors = FALSE)
         ThreeNeighb <- tmp %>%
-            dplyr::filter(., start < data[x, "end.y"]) %>%
+            dplyr::filter(., start < orf.pos[x, "end"]) %>%
             dplyr::filter(., start == max(start)) %>%
             base::as.data.frame(., stringsAsFActors = FALSE)
         
@@ -625,19 +658,19 @@ for (x in 1:nrow(data)) {
         
         # Get UniProt ID for 5' and 3' neighbours if any
         FiveNeighbUniID <- ifelse(
-            test = any(blast.NN.vs.ref.best$qseqid == FiveNeighb[["id"]]),
-            yes = blast.NN.vs.ref.best[
-                blast.NN.vs.ref.best$qseqid == FiveNeighb[["id"]], "UniProtID"],
+            test = any(orf.uniprot$qseqid == FiveNeighb[["id"]]),
+            yes = orf.uniprot[
+                orf.uniprot$qseqid == FiveNeighb[["id"]], "UniProtID"],
             no = "")
         ThreeNeighbUniID <- ifelse(
-            test = any(blast.NN.vs.ref.best$qseqid == ThreeNeighb[["id"]]),
-            yes = blast.NN.vs.ref.best[
-                blast.NN.vs.ref.best$qseqid == ThreeNeighb[["id"]], "UniProtID"],
+            test = any(orf.uniprot$qseqid == ThreeNeighb[["id"]]),
+            yes = orf.uniprot[
+                orf.uniprot$qseqid == ThreeNeighb[["id"]], "UniProtID"],
             no = "")
         
         # Add the 5' and 3' ORF neighbours to the current novel ORF
         neighbour.ORF <- data.frame(
-            sseqid = data[x, "sseqid"],
+            orfID = orf.pos[x, "id"],
             FiveNeighbID = FiveNeighb[["id"]],
             FiveNeighbUniID = FiveNeighbUniID,
             FiveNeighbStart = FiveNeighb[["start"]],
