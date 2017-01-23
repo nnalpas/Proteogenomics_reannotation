@@ -196,3 +196,40 @@ histPlots(
 ```
 
 
+
+## Novel peptide reason explanation
+
+``` {r NovelReason, eval = TRUE, echo = FALSE, warning = FALSE}
+
+# Compute count of unique peptide per ORF (to see which ORF
+# have multiple peptide evidence)
+novelty <- unique(params[["pept.posit"]]$ReasonNovel)[-1]
+data <- data.frame()
+for (key in novelty) {
+    
+    filt <- params[["pept.posit"]] %>%
+        dplyr::filter(., ReasonNovel == key) %>%
+        dplyr::select(., ORF)
+    data <- params[["pept.posit"]] %>%
+        dplyr::filter(., ORF %in% filt) %>%
+        dplyr::group_by(., ORF) %>%
+        dplyr::summarise(., Unique_peptide_count = n_distinct(Sequence)) %>%
+        dplyr::group_by(., Unique_peptide_count) %>%
+        dplyr::summarise(., ORF_count = n_distinct(ORF)) %>%
+        base::data.frame(., Novelty = key, stringsAsFActors = FALSE) %>%
+        rbind(data, .)
+    
+}
+
+# Plot the ORF frequency per matching peptide count
+histPlots(
+    data = data,
+    key = "Unique_peptide_count",
+    value = "ORF_count",
+    group = "Novelty",
+    fill = "Novelty",
+    main = "Count of novel ORF per count of unique novel peptide")
+
+```
+
+

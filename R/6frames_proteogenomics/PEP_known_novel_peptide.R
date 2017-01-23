@@ -163,6 +163,15 @@ print(paste(
 # Save the group mapping data
 saveRDS(object = evid.match, file = "Sequence_group_mapping.RDS")
 
+# Export complete evidence info for these novel evidence
+write.table(
+    x = evid.match[evid.match$group == "Novel", ],
+    file = paste("Novel_evidence_", date.str, ".txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE)
+
 
 
 ### Focus on high quality novel peptide ----------------------------------
@@ -376,44 +385,6 @@ for (x in 1:nrow(pep.pos)) {
     }
     
 }
-
-# Investigate the potentially fully uncharacterised novel peptide
-novelty <- unique(pep.pos$ReasonNovel)[-1]
-data <- data.frame()
-for (key in novelty) {
-    
-    filt <- pep.pos[pep.pos$ReasonNovel == key, "ORF"]
-    data <- pep.pos %>%
-        dplyr::filter(., ORF %in% filt) %>%
-        dplyr::group_by(., ORF) %>%
-        dplyr::summarise(., Unique_peptide_count = n_distinct(Sequence)) %>%
-        dplyr::group_by(., Unique_peptide_count) %>%
-        dplyr::summarise(., ORF_count = n_distinct(ORF)) %>%
-        base::data.frame(., Novelty = key, stringsAsFActors = FALSE) %>%
-        rbind(data, .)
-    
-}
-
-#
-histPlots(
-    data = data,
-    key = "Unique_peptide_count",
-    value = "ORF_count",
-    group = "Novelty",
-    fill = "Novelty",
-    main = "Count of novel ORF per count of unique novel peptide")
-
-# Close the plot output
-dev.off()
-
-# Export complete evidence info for thee novel evidence
-write.table(
-    x = evid.match[evid.match$group == "Novel", ],
-    file = paste("Novel_evidence_", date.str, ".txt", sep = ""),
-    quote = FALSE,
-    sep = "\t",
-    row.names = FALSE,
-    col.names = TRUE)
 
 # Compile a condensed dataframe of novel peptide info and export it
 data <- evid.match %>%
