@@ -203,6 +203,8 @@ pep.pos <- apply(X = tmp, MARGIN = 1, FUN = function(x) {
     t(.) %>%
     set_colnames(c("Sequence", "ORF", "start", "end")) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
+pep.pos$start <- as.numeric(pep.pos$start)
+pep.pos$end <- as.numeric(pep.pos$end)
 
 # Add the reason for peptide novelty (or indicate if filtered out)
 pep.pos <- pep.pos %>%
@@ -293,19 +295,12 @@ blast.bsu.vs.allbact.best$qseqid <- gsub(
 
 ### Novelty reason determination -----------------------------------------
 
-# Define the reason for novel peptide, first add the peptide that
-# were filtered due to high PEP
-pep.pos$ReasonNovel <- NA
-pep.pos[
-    !(pep.pos$Sequence %in% unique(candidates$Sequence)),
-    "ReasonNovel"] <- "PEPfilter"
-
 # Define the reason for novel peptide, second add the peptide that
 # are novel due to SAV
 for (x in 1:nrow(pep.pos)) {
     
     # Process only peptide with no reasons for novelty
-    if (is.na(pep.pos$ReasonNovel[x])) {
+    if (pep.pos$ReasonNovel[x] == "") {
         
         seq.pep <- pep.pos$Sequence[x] %>% as.character(.)
         start.pep <- pep.pos$start[x]
@@ -381,27 +376,6 @@ for (x in 1:nrow(pep.pos)) {
     }
     
 }
-
-# 
-data <- pep.pos %>%
-    dplyr::filter(., ReasonNovel != "PEPfilter") %>%
-    dplyr::group_by(., ReasonNovel) %>%
-    dplyr::summarise(
-        .,
-        Number_peptide = n_distinct(Sequence),
-        Number_ORF = n_distinct(ORF)) %>%
-    tidyr::gather(
-        data = ., key = "feature", value = "Count", -ReasonNovel) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-
-#
-histPlots(
-    data = data,
-    key = "feature",
-    value = "Count",
-    group = "ReasonNovel",
-    fill = "ReasonNovel",
-    main = "Peptide novelty reasons")
 
 # Investigate the potentially fully uncharacterised novel peptide
 novelty <- unique(pep.pos$ReasonNovel)[-1]
