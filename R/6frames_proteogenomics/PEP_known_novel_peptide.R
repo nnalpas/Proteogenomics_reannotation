@@ -574,17 +574,18 @@ orf.uniprot$qseqid %<>%
     gsub("^lcl\\|", "", .)
 
 
+
 ### ORF neighbours identification ----------------------------------------
 
 # Format to numeric the ORFs position
 orf.pos$start <- as.numeric(orf.pos$start)
 orf.pos$end <- as.numeric(orf.pos$end)
 
-# 
+# Loop through all frames
 neighbour.ORF <- data.frame()
 for (x in unique(orf.pos$frame)) {
     
-    # Check the strand and use appropriate code
+    # Check the strand and use appropriate code to find orf neighbours
     if (x %in% c(1, 2 , 3)) {
         tmp <- orf.pos %>%
             dplyr::filter(., frame == x) %>%
@@ -599,7 +600,7 @@ for (x in unique(orf.pos$frame)) {
     } else {
         tmp <- orf.pos %>%
             dplyr::filter(., frame == x) %>%
-            dplyr::desc(., start) %>%
+            .[order(.[["start"]], decreasing = TRUE), ] %>%
             dplyr::select(., id) %>%
             .[["id"]] %>%
             base::data.frame(
@@ -609,88 +610,65 @@ for (x in unique(orf.pos$frame)) {
                 stringsAsFactors = FALSE)
     }
     
-    neighbour.ORF <- rbind(neighbour.ORF, .)
+    neighbour.ORF <- rbind(neighbour.ORF, tmp)
     
 }
 
-
-
-
-# Loop through selected ORF
-
-for (x in 1:nrow(orf.pos)) {
-    
-    # Filter the full ORF entries for neighbours
-    tmp <- orf.pos %>%
-        dplyr::filter(
-            .,
-            strand == orf.pos[x, "strand"] & frame == orf.pos[x, "frame"])
-    
-    # Depending on strand detect 5' and 3' neighbour ORF
-    if (orf.pos[x, "strand"] == 1) {
-        
-        FiveNeighb <- tmp %>%
-            dplyr::filter(
-                ., end < orf.pos[x, "start"]) %>%
-            dplyr::filter(., end == max(end)) %>%
-            base::as.data.frame(., stringsAsFActors = FALSE)
-        ThreeNeighb <- tmp %>%
-            dplyr::filter(., start > orf.pos[x, "end"]) %>%
-            dplyr::filter(., start == min(start)) %>%
-            base::as.data.frame(., stringsAsFActors = FALSE)
-        
-    } else {
-        
-        FiveNeighb <- tmp %>%
-            dplyr::filter(
-                ., end > orf.pos[x, "start"]) %>%
-            dplyr::filter(., end == min(end)) %>%
-            base::as.data.frame(., stringsAsFActors = FALSE)
-        ThreeNeighb <- tmp %>%
-            dplyr::filter(., start < orf.pos[x, "end"]) %>%
-            dplyr::filter(., start == max(start)) %>%
-            base::as.data.frame(., stringsAsFActors = FALSE)
-        
-    }
-    
-    # Check number of entry detected as neighbours
-    if (nrow(FiveNeighb) == 1 & nrow(ThreeNeighb) == 1) {
-        
-        # Get UniProt ID for 5' and 3' neighbours if any
-        FiveNeighbUniID <- ifelse(
-            test = any(orf.uniprot$qseqid == FiveNeighb[["id"]]),
-            yes = orf.uniprot[
-                orf.uniprot$qseqid == FiveNeighb[["id"]], "UniProtID"],
-            no = "")
-        ThreeNeighbUniID <- ifelse(
-            test = any(orf.uniprot$qseqid == ThreeNeighb[["id"]]),
-            yes = orf.uniprot[
-                orf.uniprot$qseqid == ThreeNeighb[["id"]], "UniProtID"],
-            no = "")
-        
-        # Add the 5' and 3' ORF neighbours to the current novel ORF
-        neighbour.ORF <- data.frame(
-            orfID = orf.pos[x, "id"],
-            FiveNeighbID = FiveNeighb[["id"]],
-            FiveNeighbUniID = FiveNeighbUniID,
-            FiveNeighbStart = FiveNeighb[["start"]],
-            FiveNeighbEnd = FiveNeighb[["end"]],
-            ThreeNeighbID = ThreeNeighb[["id"]],
-            ThreeNeighbUniID = ThreeNeighbUniID,
-            ThreeNeighbStart = ThreeNeighb[["start"]],
-            ThreeNeighbEnd = ThreeNeighb[["end"]]) %>%
-            rbind(neighbour.ORF, .)
-        
-    }
-    
-}
-
-# Continue with adding neighbour info to novel ORF and calculating how many
-# peptides confirm the ORF presence
-tmp <- novel.pep.pos %>%
-    merge(x = ., y = neighbour.ORF, by = "sseqid", all.x = TRUE) %>%
-    dplyr::group_by(., sseqid, id) %>%
-    dplyr::mutate(., ORFpepCount = n()) %>%
+# Add positions and uniprotID for orf and its neighbours
+neighbour.ORF <- merge(
+    x = neighbour.ORF, y = orf.pos[, c("id", "start", "end")],
+    by.x = "FiveNeighbID", by.y = "id", all = TRUE) %>%
+    set_colnames(c(
+        "id", "FiveNeighbID", "ThreeNeighbID",
+        "FiveNeighbstart", "FiveNeighbend")) %>%
+    merge(
+        x = ., y = orf.pos[, c("id", "start", "end")],
+        by.x = "ThreeNeighbID", by.y = "id", all = TRUE) %>%
+    set_colnames(c(
+        "id", "FiveNeighbID", "ThreeNeighbID",
+        "FiveNeighbstart", "FiveNeighbend",
+        "ThreeNeighbstart", "ThreeNeighbend")) %>%
+    merge(
+        x = ., y = orf.pos[, c("id", "start", "end")],
+        by.x = "id", by.y = "id", all = TRUE) %>%
+    set_colnames(c(
+        "id", "FiveNeighbID", "ThreeNeighbID",
+        "FiveNeighbstart", "FiveNeighbend",
+        "ThreeNeighbstart", "ThreeNeighbend",
+        "start", "end")) %>%
+    merge(
+        x = ., y = orf.uniprot,
+        by.x = "FiveNeighbID", by.y = "qseqid", all = TRUE) %>%
+    set_colnames(c(
+        "id", "FiveNeighbID", "ThreeNeighbID",
+        "FiveNeighbstart", "FiveNeighbend",
+        "ThreeNeighbstart", "ThreeNeighbend",
+        "start", "end", "FiveNeighbUniprot")) %>%
+    merge(
+        x = ., y = orf.uniprot,
+        by.x = "ThreeNeighbID", by.y = "qseqid", all = TRUE) %>%
+    set_colnames(c(
+        "id", "FiveNeighbID", "ThreeNeighbID",
+        "FiveNeighbstart", "FiveNeighbend",
+        "ThreeNeighbstart", "ThreeNeighbend",
+        "start", "end", "FiveNeighbUniprot",
+        "ThreeNeighbUniprot")) %>%
+    merge(
+        x = ., y = orf.uniprot,
+        by.x = "id", by.y = "qseqid", all = TRUE) %>%
+    set_colnames(c(
+        "id", "FiveNeighbID", "ThreeNeighbID",
+        "FiveNeighbstart", "FiveNeighbend",
+        "ThreeNeighbstart", "ThreeNeighbend",
+        "start", "end", "FiveNeighbUniprot",
+        "ThreeNeighbUniprot", "UniProtID")) %>%
+    dplyr::select(
+        .,
+        id, UniProtID, start, end,
+        FiveNeighbID, FiveNeighbUniprot,
+        FiveNeighbstart, FiveNeighbend,
+        ThreeNeighbID, ThreeNeighbUniprot,
+        ThreeNeighbstart, ThreeNeighbend) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 
