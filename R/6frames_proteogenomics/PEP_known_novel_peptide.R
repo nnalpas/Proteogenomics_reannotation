@@ -419,7 +419,7 @@ write.table(
 
 ### Biological explanation of novel ORF ----------------------------------
 
-# 
+# Count the number of unique peptide matching novel ORF
 filt <- pep.pos[pep.pos$ReasonNovel != "PEPfilter", "ORF"]
 data <- pep.pos %>%
     dplyr::filter(., ORF %in% filt) %>%
@@ -432,24 +432,21 @@ data <- pep.pos %>%
     base::as.data.frame(., stringsAsFactors = FALSE) %>%
     .[order(.$Unique_peptide_count, decreasing = TRUE), ]
 
-# Look first into the novel ORF that match known other bacterial entries
-tmp <- data[grep(pattern = "Known other bacteria", x = data$ReasonNovel), ] %>%
-    dplyr::filter(., Unique_peptide_count > 1) %>%
-    merge(
-        x = ., y = blast.bsu.vs.allbact.best,
-        by.x = "ORF", by.y = "qseqid", all.x = TRUE)
-
-# 
-tmp <- data[grep(pattern = "Novel", x = data$ReasonNovel), ] %>%
+# Look into the novel ORF that match known other bacterial entries or are
+# completely uncharacterised
+tmp <- data[grep(
+    pattern = paste(
+        c("Known other bacteria", "Potentially novel"),
+        collapse = "|"),
+    x = data$ReasonNovel), ] %>%
     dplyr::filter(., Unique_peptide_count > 1) %>%
     merge(
         x = ., y = blast.bsu.vs.allbact.best,
         by.x = "ORF", by.y = "qseqid", all.x = TRUE) %>%
-    rbind(tmp, .) %>%
     .[order(.$Unique_peptide_count, decreasing = TRUE), ] %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
-# 
+# Export the table of novel ORF that needs validation
 write.table(
     x = tmp,
     file = paste("Novel_ORF_toInterprete_", date.str, ".txt", sep = ""),
@@ -457,16 +454,6 @@ write.table(
     sep = "\t",
     row.names = FALSE,
     col.names = TRUE)
-
-# to re-implement as wrapper function
-#ggplot(
-#    data = data.filt,
-#    mapping = aes(x = PEP, fill = factor(group), colour = factor(group))) +
-#    geom_density(alpha = 0.1) +
-#    xlab(label = "Evidence PEP") +
-#    ylab(label = "Density") +
-#    ggtitle(label = "Density of evidence PEP") +
-#    xlim(0, 0.05)
 
 
 
