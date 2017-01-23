@@ -7,6 +7,7 @@ output:
         css: "C:/Users/Nicolas/Documents/GitHub/Miscellaneous/R/Presentation/ioslides_custom.css"
 params:
     evidences: NA
+    pept.posit: NA
     levenshtein: NA
 ---
 
@@ -95,6 +96,47 @@ violonPlots(
     fill = "lightblue",
     colour = "black",
     main = "Mass error (ppm) comparison")
+
+```
+
+
+
+## Novel features count
+
+``` {r NovelCount, eval = TRUE, echo = FALSE, warning = FALSE}
+
+# Compute novel feature count (peptide and ORF) in total
+data <- params[["pept.posit"]] %>%
+    dplyr::summarise(
+        .,
+        type = "All novel",
+        Number_peptide = n_distinct(Sequence),
+        Number_ORF = n_distinct(ORF)) %>%
+    tidyr::gather(
+        data = ., key = "feature", value = "Count", -type) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Compute novel feature count (peptide and ORF) that pass PEP filter 
+data <- params[["pept.posit"]] %>%
+    dplyr::filter(., ReasonNovel != "PEPfilter") %>%
+    dplyr::summarise(
+        .,
+        type = "PEP filtered",
+        Number_peptide = n_distinct(Sequence),
+        Number_ORF = n_distinct(ORF)) %>%
+    tidyr::gather(
+        data = ., key = "feature", value = "Count", -type) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE) %>%
+    rbind(data, .)
+
+# Plot the novel feature count
+histPlots(
+    data = data,
+    key = "feature",
+    value = "Count",
+    group = "type",
+    fill = "type",
+    main = "Novel peptide/ORF count")
 
 ```
 

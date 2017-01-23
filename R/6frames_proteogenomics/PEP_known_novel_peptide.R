@@ -165,34 +165,6 @@ saveRDS(object = evid.match, file = "Sequence_group_mapping.RDS")
 
 
 
-### Levenshtein distance -------------------------------------------------
-
-# Keep only sequence for novel peptide
-tmp <- evid.match %>%
-    dplyr::filter(., group == "Novel") %>%
-    dplyr::select(., Sequence) %>%
-    unique(.)
-
-# Compute the levenshtein distance for all novel peptide and keep
-# the minimum leven score result per peptide
-leven.data <- adist(
-    x = tmp$Sequence,
-    y = fasta.list$Known,
-    partial = TRUE,
-    ignore.case = TRUE) %>%
-    set_rownames(tmp$Sequence) %>%
-    t(.) %>%
-    base::data.frame(
-        id = rownames(.),
-        .,
-        stringsAsFactors = FALSE) %>%
-    tidyr::gather(data = ., key = "Sequence", value = "leven", -id) %>%
-    dplyr::group_by(., Sequence) %>%
-    dplyr::filter(., leven == min(leven)) %>%
-    base::as.data.frame(., stringsAsFActors = FALSE)
-
-
-
 ### Focus on high quality novel peptide ----------------------------------
 
 # Find the median PEP for known peptides
@@ -225,45 +197,54 @@ pep.pos <- apply(X = tmp, MARGIN = 1, FUN = function(x) {
         string = fasta.list$Novel[as.character(x[["Proteins"]])] %>% as.character(.),
         pattern = x[["Sequence"]] %>% as.character(.)) %>%
         unlist(.) %>%
-        as.numeric(.) %>%
         c(x[["Sequence"]], x[["Proteins"]], .)
 }) %>%
     unlist(.) %>%
     t(.) %>%
-    set_colnames(c("Sequence", "ORF", "start", "end"))
-
-# 
-data <- candidate.pos %>%
-    dplyr::summarise(
-        .,
-        type = "All novel",
-        Number_peptide = n_distinct(Sequence),
-        Number_ORF = n_distinct(ORF)) %>%
-    tidyr::gather(
-        data = ., key = "feature", value = "Count", -type) %>%
+    set_colnames(c("Sequence", "ORF", "start", "end")) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
-# 
-data <- candidate.pos %>%
-    dplyr::filter(., ReasonNovel != "PEPfilter") %>%
-    dplyr::summarise(
+# Add the reason for peptide novelty (or indicate if filtered out)
+pep.pos <- pep.pos %>%
+    dplyr::mutate(
         .,
-        type = "PEP filtered",
-        Number_peptide = n_distinct(Sequence),
-        Number_ORF = n_distinct(ORF)) %>%
-    tidyr::gather(
-        data = ., key = "feature", value = "Count", -type) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE) %>%
-    rbind(data, .)
+        ReasonNovel = ifelse(
+            test = Sequence %in% candidates$Sequence,
+            yes = "",
+            no = "PEPfilter")) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
 
-# 
-histPlots(
-    data = data,
-    key = "feature",
-    value = "Count",
-    group = "type",
-    fill = "type",
-    main = "Novel peptide summary")
+
+
+### Levenshtein distance -------------------------------------------------
+
+# Keep only sequence for novel peptide
+tmp <- evid.match %>%
+    dplyr::filter(., group == "Novel") %>%
+    dplyr::select(., Sequence) %>%
+    unique(.)
+
+# Compute the levenshtein distance for all novel peptide and keep
+# the minimum leven score result per peptide
+leven.data <- adist(
+    x = tmp$Sequence,
+    y = fasta.list$Known,
+    partial = TRUE,
+    ignore.case = TRUE) %>%
+    set_rownames(tmp$Sequence) %>%
+    t(.) %>%
+    base::data.frame(
+        id = rownames(.),
+        .,
+        stringsAsFactors = FALSE) %>%
+    tidyr::gather(data = ., key = "Sequence", value = "leven", -id) %>%
+    dplyr::group_by(., Sequence) %>%
+    dplyr::filter(., leven == min(leven)) %>%
+    base::as.data.frame(., stringsAsFActors = FALSE)
+
+
+
+### 
 
 # Read blast result from top candidates matched ORF against
 # the reference proteome used in this study
@@ -356,22 +337,22 @@ blast.allbact.final$qseqid <- gsub(
 
 # Define the reason for novel peptide, first add the peptide that
 # were filtered due to high PEP
-candidate.pos$ReasonNovel <- NA
-candidate.pos[
-    !(candidate.pos$Sequence %in% unique(candidates$Sequence)),
+pep.pos$ReasonNovel <- NA
+pep.pos[
+    !(pep.pos$Sequence %in% unique(candidates$Sequence)),
     "ReasonNovel"] <- "PEPfilter"
 
 # Define the reason for novel peptide, second add the peptide that
 # are novel due to SAV
-for (x in 1:nrow(candidate.pos)) {
+for (x in 1:nrow(pep.pos)) {
     
     # Process only peptide with no reasons for novelty
-    if (is.na(candidate.pos$ReasonNovel[x])) {
+    if (is.na(pep.pos$ReasonNovel[x])) {
         
-        seq.pep <- candidate.pos$Sequence[x] %>% as.character(.)
-        start.pep <- candidate.pos$start[x]
-        end.pep <- candidate.pos$end[x]
-        orf.pep <- candidate.pos$ORF[x]
+        seq.pep <- pep.pos$Sequence[x] %>% as.character(.)
+        start.pep <- pep.pos$start[x]
+        end.pep <- pep.pos$end[x]
+        orf.pep <- pep.pos$ORF[x]
         
         tmp.blast.bsu <- blast.bsu.final[
             blast.bsu.final$qseqid == orf.pep, ]
@@ -437,14 +418,14 @@ for (x in 1:nrow(candidate.pos)) {
             
         }
         
-        candidate.pos$ReasonNovel[x] <- reason.pep
+        pep.pos$ReasonNovel[x] <- reason.pep
         
     }
     
 }
 
 # 
-data <- candidate.pos %>%
+data <- pep.pos %>%
     dplyr::filter(., ReasonNovel != "PEPfilter") %>%
     dplyr::group_by(., ReasonNovel) %>%
     dplyr::summarise(
@@ -465,12 +446,12 @@ histPlots(
     main = "Peptide novelty reasons")
 
 # Investigate the potentially fully uncharacterised novel peptide
-novelty <- unique(candidate.pos$ReasonNovel)[-1]
+novelty <- unique(pep.pos$ReasonNovel)[-1]
 data <- data.frame()
 for (key in novelty) {
     
-    filt <- candidate.pos[candidate.pos$ReasonNovel == key, "ORF"]
-    data <- candidate.pos %>%
+    filt <- pep.pos[pep.pos$ReasonNovel == key, "ORF"]
+    data <- pep.pos %>%
         dplyr::filter(., ORF %in% filt) %>%
         dplyr::group_by(., ORF) %>%
         dplyr::summarise(., Unique_peptide_count = n_distinct(Sequence)) %>%
@@ -521,10 +502,10 @@ data <- evid.match %>%
         maxScore = max(Score, na.rm = TRUE),
         maxIntensity = max(Intensity, na.rm = TRUE)) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
-candidate.pos.final <- merge(
-    x = candidate.pos, y = data, by = "Sequence", all.x = TRUE)
+pep.pos.final <- merge(
+    x = pep.pos, y = data, by = "Sequence", all.x = TRUE)
 write.table(
-    x = candidate.pos.final,
+    x = pep.pos.final,
     file = paste("Novel_peptide_", date.str, ".txt", sep = ""),
     quote = FALSE,
     sep = "\t",
@@ -536,8 +517,8 @@ write.table(
 ### Biological explanation of novel ORF ----------------------------------
 
 # 
-filt <- candidate.pos[candidate.pos$ReasonNovel != "PEPfilter", "ORF"]
-data <- candidate.pos %>%
+filt <- pep.pos[pep.pos$ReasonNovel != "PEPfilter", "ORF"]
+data <- pep.pos %>%
     dplyr::filter(., ORF %in% filt) %>%
     dplyr::group_by(., ORF) %>%
     dplyr::summarise(
@@ -824,6 +805,7 @@ if (markdown) {
     # Define the required variables as markdown parameters
     param <- list(
         evidences = evid.match,
+        pept.posit = pep.pos,
         levenshtein = leven.data)
     
     # Define output file name
