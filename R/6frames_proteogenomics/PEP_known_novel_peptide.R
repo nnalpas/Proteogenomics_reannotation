@@ -206,16 +206,7 @@ candidates <- evid.match %>%
     dplyr::filter(., PEP <= known.med.pep, group == "Novel") %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
-
-
-
-
-###
-# continue from here by staying without for loop and using str_locate
-
-
-
-
+# Get position of the novel peptide within ORF
 tmp <- evid.match %>%
     dplyr::filter(., group == "Novel") %>%
     dplyr::select(., Sequence) %>%
@@ -229,36 +220,17 @@ tmp <- evid.match %>%
     cSplit(
         indt = ., splitCols = "Proteins", sep = ";", direction = "long") %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
-
-
-# Get position of the novel peptide within ORF
-tmp <- evid.match %>%
-    dplyr::filter(., group == "Novel") %>%
-    .[["Sequence"]]
-candidate.pos <- data.frame()
-for (x in tmp) {
-    
-    candidate.pos <- str_locate_all(
-        string = fasta.list$Novel,
-        pattern = x) %>%
-        set_names(names(fasta.list$Novel)) %>%
-        ldply(., data.frame) %>%
-        set_colnames(c("ORF", "start", "end")) %>%
-        base::data.frame(Sequence = x, tmp, stringsAsFactors = TRUE) %>%
-        rbind(candidate.pos, .)
-    
-}
-
-# Export the list of ORF identified by a novel peptide
-write.table(
-    x = candidate.pos[
-        candidate.pos$Sequence %in% unique(candidates$Sequence),
-        "ORF"],
-    file = paste("Novel_pep_orfs_", date.str, ".txt", sep = ""),
-    quote = FALSE,
-    sep = "\t",
-    row.names = FALSE,
-    col.names = FALSE)
+pep.pos <- apply(X = tmp, MARGIN = 1, FUN = function(x) {
+    val <- str_locate_all(
+        string = fasta.list$Novel[as.character(x[["Proteins"]])] %>% as.character(.),
+        pattern = x[["Sequence"]] %>% as.character(.)) %>%
+        unlist(.) %>%
+        as.numeric(.) %>%
+        c(x[["Sequence"]], x[["Proteins"]], .)
+}) %>%
+    unlist(.) %>%
+    t(.) %>%
+    set_colnames(c("Sequence", "ORF", "start", "end"))
 
 # 
 data <- candidate.pos %>%
