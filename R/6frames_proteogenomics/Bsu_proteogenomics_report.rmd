@@ -31,15 +31,15 @@ data <- params[["evidences"]] %>%
     rbind(data, .)
 
 # Histogram of feature count per group type
-histPlots(
+pl <- histPlots(
     data = data,
     key = "type",
     value = "Freq",
     group = "group",
     fill = "group",
     main = "Number of evidence/peptide",
-    transf = "log10") %>%
-    plotly::plotly_build(.)
+    transf = "log10")
+plotly::plotly_build(pl[[1]])
 
 ```
 
@@ -50,13 +50,14 @@ histPlots(
 ``` {r overview2, eval = TRUE, echo = FALSE, warning = FALSE}
 
 # Plot evidence PEP distribution
-violonPlots(
+pl <- violonPlots(
     data = params[["evidences"]],
     key = "group",
     value = "PEP",
     fill = "lightblue",
     colour = "black",
     main = "PEP comparison")
+pl[[1]]
 
 ```
 
@@ -67,13 +68,14 @@ violonPlots(
 ``` {r overview3, eval = TRUE, echo = FALSE, warning = FALSE}
 
 # Plot evidence score distribution
-violonPlots(
+pl <- violonPlots(
     data = params[["evidences"]],
     key = "group",
     value = "Score",
     fill = "lightblue",
     colour = "black",
     main = "Score comparison")
+pl[[1]]
 
 ```
 
@@ -90,13 +92,14 @@ data <- params[["evidences"]] %>%
     set_colnames(c("group", "mass_error"))
 
 # Plot evidence mass error distribution
-violonPlots(
+pl <- violonPlots(
     data = data,
     key = "group",
     value = "mass_error",
     fill = "lightblue",
     colour = "black",
     main = "Mass error (ppm) comparison")
+pl[[1]]
 
 ```
 
@@ -131,14 +134,14 @@ data <- params[["pept.posit"]] %>%
     rbind(data, .)
 
 # Plot the novel feature count
-histPlots(
+pl <- histPlots(
     data = data,
     key = "feature",
     value = "Count",
     group = "type",
     fill = "type",
-    main = "Novel peptide/ORF count") %>%
-    plotly::plotly_build(.)
+    main = "Novel peptide/ORF count")
+plotly::plotly_build(pl[[1]])
 
 ```
 
@@ -157,15 +160,15 @@ data <- params[["levenshtein"]] %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Plot the levenshtein distance count
-histPlots(
+pl <- histPlots(
     data = data,
     key = "leven",
     value = "count",
     group = "leven",
     fill = "leven",
     main = "Levenshtein distance density",
-    textsize = 15) %>%
-    plotly::plotly_build(.)
+    textsize = 15)
+plotly::plotly_build(pl[[1]])
 
 ```
 
@@ -188,14 +191,14 @@ data <- params[["pept.posit"]] %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Plot the feature count per novelty reasons
-histPlots(
+pl <- histPlots(
     data = data,
     key = "feature",
     value = "Count",
     group = "ReasonNovel",
     fill = "ReasonNovel",
-    main = "Peptide novelty reasons") %>%
-    plotly::plotly_build(.)
+    main = "Peptide novelty reasons")
+plotly::plotly_build(pl[[1]])
 
 ```
 
@@ -226,14 +229,14 @@ for (key in novelty) {
 }
 
 # Plot the ORF frequency per matching peptide count
-histPlots(
+pl <- histPlots(
     data = data,
     key = "Unique_peptide_count",
     value = "ORF_count",
     group = "Novelty",
     fill = "Novelty",
-    main = "Novel ORF density per novel peptide count") %>%
-    plotly::plotly_build(.)
+    main = "Novel ORF density per novel peptide count")
+plotly::plotly_build(pl[[1]])
 
 ```
 
