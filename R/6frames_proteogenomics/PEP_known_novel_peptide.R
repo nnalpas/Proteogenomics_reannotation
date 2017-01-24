@@ -435,9 +435,11 @@ data <- pep.pos %>%
 
 # Look into the novel ORF that match known other bacterial entries or are
 # completely uncharacterised
-tmp <- data[grep(
+orf.candidates <- data[grep(
     pattern = paste(
-        c("Known other bacteria", "Potentially novel"),
+        c(
+            "Known other bacteria", "Potentially novel",
+            "New start site", "SAV"),
         collapse = "|"),
     x = data$ReasonNovel), ] %>%
     dplyr::filter(., Unique_peptide_count > 1) %>%
@@ -671,6 +673,13 @@ neighbour.ORF <- merge(
         ThreeNeighbID, ThreeNeighbUniprot,
         ThreeNeighbstart, ThreeNeighbend) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
+
+
+
+### Novel ORF explanation by neighbours ----------------------------------
+
+# 
+orf.candidates
 
 
 
