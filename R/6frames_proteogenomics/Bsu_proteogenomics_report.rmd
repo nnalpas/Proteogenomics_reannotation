@@ -4,7 +4,7 @@ author: "`r Sys.info()[['user']]`"
 date: "`r format(x = Sys.time(), '%d %B %Y %T')`"
 output:
     ioslides_presentation:
-        css: "C:/Users/Nicolas/Documents/GitHub/Miscellaneous/R/Presentation/ioslides_custom.css"
+        css: "C:/Users/kxmna01/Documents/GitHub/Miscellaneous/R/Presentation/ioslides_custom.css"
 params:
     evidences: NA
     pept.posit: NA
@@ -38,7 +38,8 @@ histPlots(
     group = "group",
     fill = "group",
     main = "Number of evidence/peptide",
-    transf = "log10")
+    transf = "log10") %>%
+    plotly::plotly_build(.)
 
 ```
 
@@ -136,7 +137,8 @@ histPlots(
     value = "Count",
     group = "type",
     fill = "type",
-    main = "Novel peptide/ORF count")
+    main = "Novel peptide/ORF count") %>%
+    plotly::plotly_build(.)
 
 ```
 
@@ -162,7 +164,8 @@ histPlots(
     group = "leven",
     fill = "leven",
     main = "Levenshtein distance density",
-    textsize = 15)
+    textsize = 15) %>%
+    plotly::plotly_build(.)
 
 ```
 
@@ -191,15 +194,16 @@ histPlots(
     value = "Count",
     group = "ReasonNovel",
     fill = "ReasonNovel",
-    main = "Peptide novelty reasons")
+    main = "Peptide novelty reasons") %>%
+    plotly::plotly_build(.)
 
 ```
 
 
 
-## Novel peptide reason explanation
+## ORF density per novel peptide count
 
-``` {r NovelReason, eval = TRUE, echo = FALSE, warning = FALSE}
+``` {r PepCount, eval = TRUE, echo = FALSE, warning = FALSE}
 
 # Compute count of unique peptide per ORF (to see which ORF
 # have multiple peptide evidence)
@@ -209,7 +213,7 @@ for (key in novelty) {
     
     filt <- params[["pept.posit"]] %>%
         dplyr::filter(., ReasonNovel == key) %>%
-        dplyr::select(., ORF)
+        .[["ORF"]]
     data <- params[["pept.posit"]] %>%
         dplyr::filter(., ORF %in% filt) %>%
         dplyr::group_by(., ORF) %>%
@@ -228,7 +232,8 @@ histPlots(
     value = "ORF_count",
     group = "Novelty",
     fill = "Novelty",
-    main = "Count of novel ORF per count of unique novel peptide")
+    main = "Novel ORF density per novel peptide count") %>%
+    plotly::plotly_build(.)
 
 ```
 

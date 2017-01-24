@@ -59,6 +59,7 @@ loadpackage(VariantAnnotation)
 loadpackage(cgdsr)
 loadpackage(bit64)
 loadpackage(cleaver)
+loadpackage(plotly)
 
 
 
