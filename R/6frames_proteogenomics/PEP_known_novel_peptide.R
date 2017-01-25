@@ -618,7 +618,7 @@ for (x in unique(orf.pos$frame)) {
 }
 
 # Add positions and uniprotID for orf and its neighbours
-neighbour.ORF <- merge(
+tmp <- merge(
     x = neighbour.ORF, y = orf.pos[, c("id", "start", "end")],
     by.x = "FiveNeighbID", by.y = "id", all = TRUE) %>%
     set_colnames(c(
@@ -633,7 +633,7 @@ neighbour.ORF <- merge(
         "ThreeNeighbstart", "ThreeNeighbend")) %>%
     merge(
         x = ., y = orf.pos[, c("id", "start", "end")],
-        by.x = "id", by.y = "id", all = TRUE) %>%
+        by = "id", all = TRUE) %>%
     set_colnames(c(
         "id", "FiveNeighbID", "ThreeNeighbID",
         "FiveNeighbstart", "FiveNeighbend",
