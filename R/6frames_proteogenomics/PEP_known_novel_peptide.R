@@ -678,8 +678,26 @@ neighbour.ORF <- merge(
 
 ### Novel ORF explanation by neighbours ----------------------------------
 
-# 
-orf.candidates
+# Compile neighbouring info with the candidate ORF
+orf.candidates.final <- orf.candidates %>%
+    dplyr::select(
+        ., ORF, Sequences, ReasonNovel, Unique_peptide_count) %>%
+    unique(.) %>%
+    merge(
+        x = ., y = blast.NN.vs.KK.best[, c("id", "sseqid")],
+        by.x = "ORF", by.y = "sseqid", all.x = TRUE) %>%
+    merge(x = ., y = neighbour.ORF, by = "id", all.x = TRUE) %>%
+    dplyr::arrange(., ORF) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Export the data for easier examination
+write.table(
+    x = orf.candidates.final,
+    file = paste("ORF_candidate_neighbour_", date.str, ".txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE)
 
 
 
