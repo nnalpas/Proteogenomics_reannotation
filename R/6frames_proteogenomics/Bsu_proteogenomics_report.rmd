@@ -4,6 +4,7 @@ author: "`r Sys.info()[['user']]`"
 date: "`r format(x = Sys.time(), '%d %B %Y %T')`"
 output:
     ioslides_presentation:
+        self_contained: FALSE
         css: "C:/Users/kxmna01/Documents/GitHub/Miscellaneous/R/Presentation/ioslides_custom.css"
 params:
     evidences: NA
