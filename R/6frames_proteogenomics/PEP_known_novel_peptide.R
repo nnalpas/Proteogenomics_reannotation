@@ -91,6 +91,9 @@ for (x in 1:length(fasta.file)) {
     
 }
 
+# Clean-up
+rm(fasta.file)
+
 
 
 ### Novel peptide identification -----------------------------------------
@@ -161,6 +164,9 @@ print(paste(
     "There are", length(which(is.na(evid.match$group))),
     "NA values, these need to be checked!", sep = " "))
 
+# Clean-up
+rm(pep.list, evid)
+
 # Save the group mapping data
 saveRDS(object = evid.match, file = "Sequence_group_mapping.RDS")
 
@@ -226,6 +232,9 @@ pep.pos <- pep.pos %>%
             no = "PEPfilter")) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
+# Clean-up
+rm(tmp)
+
 
 
 ### Levenshtein distance -------------------------------------------------
@@ -253,6 +262,9 @@ leven.data <- adist(
     dplyr::group_by(., Sequence) %>%
     dplyr::filter(., leven == min(leven)) %>%
     base::as.data.frame(., stringsAsFActors = FALSE)
+
+# Clean-up
+rm(tmp)
 
 
 
@@ -300,6 +312,9 @@ blast.bsu.vs.allbact.best <- blast.bsu.vs.allbact.best %>%
 blast.bsu.vs.allbact.best$qseqid <- gsub(
     pattern = "^lcl\\|", replacement = "",
     x = blast.bsu.vs.allbact.best$qseqid)
+
+# Clean-up
+rm(blast.bsu.vs.ref, blast.bsu.vs.allbact)
 
 
 
@@ -387,7 +402,7 @@ for (x in 1:nrow(pep.pos)) {
     
 }
 
-# Compile a condensed dataframe of novel peptide info and export it
+# Compile a condensed dataframe of novel peptide info
 data <- evid.match %>%
     dplyr::filter(., group == "Novel") %>%
     dplyr::select(
@@ -406,8 +421,12 @@ data <- evid.match %>%
         maxScore = max(Score, na.rm = TRUE),
         maxIntensity = max(Intensity, na.rm = TRUE)) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
-pep.pos.final <- merge(
-    x = pep.pos, y = data, by = "Sequence", all.x = TRUE)
+
+# Add the novel peptide info from evidence to position info
+pep.pos.final <- dplyr::left_join(
+    x = pep.pos, y = data, by = "Sequence")
+
+# Export condensed dataframe of novel peptide
 write.table(
     x = pep.pos.final,
     file = paste("Novel_peptide_", date.str, ".txt", sep = ""),
@@ -415,6 +434,9 @@ write.table(
     sep = "\t",
     row.names = FALSE,
     col.names = TRUE)
+
+# Clean-up
+rm(data)
 
 
 
@@ -432,6 +454,8 @@ data <- pep.pos %>%
         Unique_peptide_count = n_distinct(Sequence)) %>%
     base::as.data.frame(., stringsAsFactors = FALSE) %>%
     .[order(.$Unique_peptide_count, decreasing = TRUE), ]
+tmp <- blast.bsu.vs.allbact.best
+colnames(tmp)[colnames(tmp) == "qseqid"] <- "ORF"
 
 # Look into the novel ORF that match known other bacterial entries or are
 # completely uncharacterised
@@ -443,9 +467,7 @@ orf.candidates <- data[grep(
         collapse = "|"),
     x = data$ReasonNovel), ] %>%
     dplyr::filter(., Unique_peptide_count > 1) %>%
-    merge(
-        x = ., y = blast.bsu.vs.allbact.best,
-        by.x = "ORF", by.y = "qseqid", all.x = TRUE) %>%
+    dplyr::left_join(x = ., y = tmp, by = "ORF") %>%
     .[order(.$Unique_peptide_count, decreasing = TRUE), ] %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
@@ -457,6 +479,9 @@ write.table(
     sep = "\t",
     row.names = FALSE,
     col.names = TRUE)
+
+# Clean-up
+rm(data, tmp)
 
 
 
@@ -488,7 +513,18 @@ orf.pos <- lapply(
     sub("^.*? \\[(.*?)\\] .*$", "\\1", .) %>%
     base::data.frame(id = names(.), pos = ., stringsAsFactors = FALSE) %>%
     tidyr::separate(
-        data = ., col = pos, into = c("start", "end"), sep = " - ") %>%
+        data = ., col = pos, into = c("start", "end"), sep = " - ")
+
+# Format to numeric the ORFs position
+orf.pos$start <- as.numeric(orf.pos$start)
+orf.pos$end <- as.numeric(orf.pos$end)
+
+# Filter out the ORF in the fasta that are not holding codons (multiple of 3)
+orf.pos %<>%
+    dplyr::mutate(
+        ., lengthCheck = revtrunc(x = (abs(x = (start - end)) + 1) / 3)) %>%
+    dplyr::filter(., lengthCheck == 0) %>%
+    dplyr::select(., -lengthCheck) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Determine strand and frame of ORF
@@ -533,22 +569,13 @@ tmp <- blast.NN.vs.KK[!blast.NN.vs.KK$qseqid %in% blast.NN.vs.KK.best$qseqid, ]
 tmp$count_entry <- 0
 blast.NN.vs.KK.best <- rbind(blast.NN.vs.KK.best, tmp)
 
-# Check how many match have the query entries
-tmp <- blast.NN.vs.KK.best %>%
-    dplyr::select(., qseqid, count_entry) %>%
-    dplyr::group_by(., qseqid) %>%
-    unique(.) %>%
-    dplyr::ungroup(.) %>%
-    dplyr::group_by(., count_entry) %>%
-    dplyr::summarise(., table = n()) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-
 # Add start-end positions of ORFs to blast results
 blast.NN.vs.KK.best %<>%
     dplyr::mutate(., id = sub("^lcl\\|", "", qseqid)) %>%
-    merge(
-    x = ., y = orf.pos,
-    by = "id", all = TRUE)
+    dplyr::full_join(x = ., y = orf.pos, by = "id")
+
+# Clean-up
+rm(blast.NN.vs.KK, fasta.file, tmp)
 
 
 
@@ -568,21 +595,22 @@ blast.NN.vs.ref <- read.table(
 # Find the best blast hit for each query id
 blast.NN.vs.ref.best <- best.blast(data = blast.NN.vs.ref, key = "qseqid")
 
-# keep the mapping of ORF to uniprotID
+# Keep the mapping of ORF to uniprotID
 orf.uniprot <- blast.NN.vs.ref.best %>%
     dplyr::select(., qseqid, sseqid) %>%
     set_colnames(c("qseqid", "UniProtID")) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 orf.uniprot$qseqid %<>%
     gsub("^lcl\\|", "", .)
+orf.uniprot %<>%
+    set_colnames(c("id", "UniProtID"))
+
+# Clean-up
+rm(blast.NN.vs.ref)
 
 
 
 ### ORF neighbours identification ----------------------------------------
-
-# Format to numeric the ORFs position
-orf.pos$start <- as.numeric(orf.pos$start)
-orf.pos$end <- as.numeric(orf.pos$end)
 
 # Loop through all frames
 neighbour.ORF <- data.frame()
@@ -618,62 +646,34 @@ for (x in unique(orf.pos$frame)) {
 }
 
 # Add positions and uniprotID for orf and its neighbours
-tmp <- merge(
-    x = neighbour.ORF, y = orf.pos[, c("id", "start", "end")],
-    by.x = "FiveNeighbID", by.y = "id", all = TRUE) %>%
+tmp <- orf.pos[, c("id", "start", "end")] %>%
+    dplyr::left_join(x = ., y = orf.uniprot, by = "id")
+orf.neighb <- neighbour.ORF %>%
+    dplyr::left_join(x = ., y = tmp, by = "id")
+tmp %<>%
     set_colnames(c(
-        "id", "FiveNeighbID", "ThreeNeighbID",
-        "FiveNeighbstart", "FiveNeighbend")) %>%
-    merge(
-        x = ., y = orf.pos[, c("id", "start", "end")],
-        by.x = "ThreeNeighbID", by.y = "id", all = TRUE) %>%
+        "FiveNeighbID", "FiveNeighbstart",
+        "FiveNeighbend", "FiveNeighbUniprot"))
+orf.neighb %<>%
+    dplyr::left_join(x = ., y = tmp, by = "FiveNeighbID")
+tmp %<>%
     set_colnames(c(
-        "id", "FiveNeighbID", "ThreeNeighbID",
-        "FiveNeighbstart", "FiveNeighbend",
-        "ThreeNeighbstart", "ThreeNeighbend")) %>%
-    merge(
-        x = ., y = orf.pos[, c("id", "start", "end")],
-        by = "id", all = TRUE) %>%
-    set_colnames(c(
-        "id", "FiveNeighbID", "ThreeNeighbID",
-        "FiveNeighbstart", "FiveNeighbend",
-        "ThreeNeighbstart", "ThreeNeighbend",
-        "start", "end")) %>%
-    merge(
-        x = ., y = orf.uniprot,
-        by.x = "FiveNeighbID", by.y = "qseqid", all = TRUE) %>%
-    set_colnames(c(
-        "id", "FiveNeighbID", "ThreeNeighbID",
-        "FiveNeighbstart", "FiveNeighbend",
-        "ThreeNeighbstart", "ThreeNeighbend",
-        "start", "end", "FiveNeighbUniprot")) %>%
-    merge(
-        x = ., y = orf.uniprot,
-        by.x = "ThreeNeighbID", by.y = "qseqid", all = TRUE) %>%
-    set_colnames(c(
-        "id", "FiveNeighbID", "ThreeNeighbID",
-        "FiveNeighbstart", "FiveNeighbend",
-        "ThreeNeighbstart", "ThreeNeighbend",
-        "start", "end", "FiveNeighbUniprot",
-        "ThreeNeighbUniprot")) %>%
-    merge(
-        x = ., y = orf.uniprot,
-        by.x = "id", by.y = "qseqid", all = TRUE) %>%
-    set_colnames(c(
-        "id", "FiveNeighbID", "ThreeNeighbID",
-        "FiveNeighbstart", "FiveNeighbend",
-        "ThreeNeighbstart", "ThreeNeighbend",
-        "start", "end", "FiveNeighbUniprot",
-        "ThreeNeighbUniprot", "UniProtID")) %>%
+        "ThreeNeighbID", "ThreeNeighbstart",
+        "ThreeNeighbend", "ThreeNeighbUniprot"))
+orf.neighb %<>%
+    dplyr::left_join(x = ., y = tmp, by = "ThreeNeighbID") %>%
     dplyr::select(
-        .,
-        id, UniProtID, start, end,
-        FiveNeighbID, FiveNeighbUniprot,
-        FiveNeighbstart, FiveNeighbend,
-        ThreeNeighbID, ThreeNeighbUniprot,
-        ThreeNeighbstart, ThreeNeighbend) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
+        ., id, UniProtID, start, end, FiveNeighbID, FiveNeighbUniprot,
+        FiveNeighbstart, FiveNeighbend, ThreeNeighbID, ThreeNeighbUniprot,
+        ThreeNeighbstart, ThreeNeighbend)
+tmp <- blast.NN.vs.KK.best %>%
+    dplyr::select(., id, sseqid) %>%
+    set_colnames(c("id", "ORF"))
+orf.neighb %<>%
+    dplyr::left_join(x = ., y = tmp, by = "id")
 
+# Clean-up
+rm(tmp)
 
 
 ### Novel ORF explanation by neighbours ----------------------------------
@@ -683,11 +683,8 @@ orf.candidates.final <- orf.candidates %>%
     dplyr::select(
         ., ORF, Sequences, ReasonNovel, Unique_peptide_count) %>%
     unique(.) %>%
-    merge(
-        x = ., y = blast.NN.vs.KK.best[, c("id", "sseqid")],
-        by.x = "ORF", by.y = "sseqid", all.x = TRUE) %>%
-    merge(x = ., y = neighbour.ORF, by = "id", all.x = TRUE) %>%
-    dplyr::arrange(., ORF) %>%
+    dplyr::left_join(x = ., y = orf.neighb, by = "ORF") %>%
+    dplyr::arrange(., start) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Export the data for easier examination
@@ -741,6 +738,9 @@ if (markdown) {
         output_file = out.file,
         params = param,
         envir = new.env(parent = globalenv()))
+    
+    # Clean-up
+    rm(param)
     
 }
 
