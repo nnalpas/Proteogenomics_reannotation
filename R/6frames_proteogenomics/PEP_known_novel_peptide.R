@@ -60,6 +60,9 @@ loadpackage(cgdsr)
 loadpackage(bit64)
 loadpackage(cleaver)
 loadpackage(plotly)
+loadpackage(GenomicRanges)
+loadpackage(biovizBase)
+loadpackage(ggbio)
 
 
 
@@ -695,6 +698,86 @@ write.table(
     sep = "\t",
     row.names = FALSE,
     col.names = TRUE)
+
+
+
+### ORF visualisation ----------------------------------------------------
+
+# Dataframe holding genome information for bacillus subtilis
+tmp <- base::data.frame(
+    Chromosome = 1, Strand = "*", Start = 1, End = 4215606,
+    name = "chr1", length = 4215606, Type = TRUE, geno = "AL009126.3",
+    stringsAsFactors = FALSE)
+
+# Create an Ideogram (GRanges object) for B. subtilis
+bsu.ideo <- with(
+    data = tmp,
+    expr = GRanges(
+        seqnames = name,
+        ranges = IRanges(Start, End),
+        strand = Strand,
+        Chromosome = Chromosome,
+        seqinfo = Seqinfo(
+            seqnames = name,
+            seqlengths = length,
+            isCircular = Type,
+            genome = geno)))
+
+# Export the bsu ideogram for reuse at later stage
+saveRDS(object = bsu.ideo, file = "./Databases/bsu_AL009126.3_ideo.RDS")
+
+# Format dataframe as genomic position and other info for each ORF
+filt <- evid.match %>%
+    dplyr::filter(., group == "Novel") %>%
+    cSplit(indt = ., splitCols = "Proteins", sep = ";", direction = "long") %>%
+    .[["Proteins"]] %>%
+    as.character(.) %>%
+    unique(.)
+tmp <- orf.neighb %>%
+    dplyr::filter(., !is.na(UniProtID) | (!is.na(ORF) & ORF %in% filt)) %>%
+    dplyr::select(., id, UniProtID, start, end, ORF) %>%
+    dplyr::left_join(
+        x = .,
+        y = orf.pos %>% dplyr::select(., -start, -end),
+        by = "id") %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+tmp %<>%
+    dplyr::mutate(
+        .,
+        Start = ifelse(test = strand == 1, yes = start, no = end),
+        End = ifelse(test = strand == 1, yes = end, no = start),
+        Strand = ifelse(test = strand == 1, yes = "+", no = "-"),
+        UniProtKBID = uniprotID.clean(UniProtID),
+        Chromosome = 1,
+        chr.name = "chr1",
+        length = 4215606,
+        Type = TRUE,
+        geno = "AL009126.3") %>%
+    dplyr::select(., -start, -end, -strand) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Create a GRanges object for all reference and identified novel ORF 
+orf.grange <- with(
+    data = tmp,
+    expr = GRanges(
+        seqnames = chr.name,
+        ranges = IRanges(Start, End),
+        strand = Strand))
+
+# Add values and seqinfo to the created GRanges object
+values(orf.grange) <- tmp %>%
+    dplyr::select(., id, UniProtKBID, ORF, frame, Chromosome)
+seqinfo(orf.grange) <- Seqinfo(
+    seqnames = tmp$chr.name %>% unique(.),
+    seqlengths = tmp$length %>% unique(.),
+    isCircular = tmp$Type %>% unique(.),
+    genome = tmp$geno %>% unique(.))
+
+
+
+
+
+
 
 
 
