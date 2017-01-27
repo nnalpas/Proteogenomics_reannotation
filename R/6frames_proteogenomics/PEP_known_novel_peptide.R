@@ -773,6 +773,36 @@ seqinfo(orf.grange) <- Seqinfo(
     isCircular = tmp$Type %>% unique(.),
     genome = tmp$geno %>% unique(.))
 
+# Use ggbio extension to plot ORF location on genome as a circos graph
+colou <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
+p <- ggplot() +
+    layout_circle(
+        bsu.ideo, geom = "ideo", fill = "gray70",
+        radius = 30, trackWidth = 3) +
+    layout_circle(
+        bsu.ideo, geom = "scale", size = 2, radius = 33, trackWidth = 2) +
+    layout_circle(
+        bsu.ideo, geom = "text", aes(label = seqnames),
+        angle = 0, radius = 36, trackWidth = 5) +
+    layout_circle(
+        subset(x = orf.grange, frame == 1), geom = "rect", color = colou[1],
+        radius = 26, trackWidth = 3) +
+    layout_circle(
+        subset(x = orf.grange, frame == 2), geom = "rect", color = colou[2],
+        radius = 23, trackWidth = 3) +
+    layout_circle(
+        subset(x = orf.grange, frame == 3), geom = "rect", color = colou[3],
+        radius = 20, trackWidth = 3) +
+    layout_circle(
+        subset(x = orf.grange, frame == -1), geom = "rect", color = colou[4],
+        radius = 17, trackWidth = 3) +
+    layout_circle(
+        subset(x = orf.grange, frame == -2), geom = "rect", color = colou[5],
+        radius = 14, trackWidth = 3) +
+    layout_circle(
+        subset(x = orf.grange, frame == -3), geom = "rect", color = colou[6],
+        radius = 11, trackWidth = 3)
+p
 
 
 
