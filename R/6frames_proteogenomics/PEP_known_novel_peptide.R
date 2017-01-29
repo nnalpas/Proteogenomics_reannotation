@@ -804,7 +804,7 @@ p <- ggplot() +
         radius = 11, trackWidth = 3)
 p
 
-
+# Transfer all genomic coordinates code to GRanges and use already implemented functions
 
 
 
