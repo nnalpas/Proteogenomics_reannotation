@@ -29,7 +29,18 @@ blastdbcmd -db "/media/sf_F_DRIVE/Nicolas/Bsu_6frame/Nuc_translation/Find0_GCA_0
   -outfmt '6 qseqid sseqid pident nident mismatch length gapopen qstart qend sstart send evalue bitscore score'
 
 
+# Multi entries retrieval and blasting Bsu 6 frames from Nicolas versus Reference proteome
+cd /media/sf_F_DRIVE/Nicolas/Bsu_6frame/Blasting
+blastdbcmd -db "/media/sf_F_DRIVE/Nicolas/Bsu_6frame/Nuc_translation/Find0_GCA_000009045.1.fasta" \
+  -dbtype 'prot' \
+  -entry 'all' | \
+  blastp -query - -task 'blastp' \
+  -db "/media/sf_F_DRIVE/Nicolas/Proteome/Bacillus_subtilis/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta" \
+  -out "blastp_ORF_Nicolas_vs_RefProt_18012017" -evalue 0.01 -num_alignments 30 -num_threads 5 \
+  -outfmt '6 qseqid sseqid pident nident mismatch length gapopen qstart qend sstart send evalue bitscore score'
 
+  
+  
 
 
 blastp [-h] [-help] [-import_search_strategy filename]
