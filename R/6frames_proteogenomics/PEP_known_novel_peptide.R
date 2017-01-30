@@ -726,15 +726,9 @@ bsu.ideo <- with(
 # Export the bsu ideogram for reuse at later stage
 saveRDS(object = bsu.ideo, file = "./Databases/bsu_AL009126.3_ideo.RDS")
 
-# Format dataframe as genomic position and other info for each ORF
-filt <- evid.match %>%
-    dplyr::filter(., group == "Novel") %>%
-    cSplit(indt = ., splitCols = "Proteins", sep = ";", direction = "long") %>%
-    .[["Proteins"]] %>%
-    as.character(.) %>%
-    unique(.)
+# Format dataframe as genomic position and other info for each reference ORF
 tmp <- orf.neighb %>%
-    dplyr::filter(., !is.na(UniProtID) | (!is.na(ORF) & ORF %in% filt)) %>%
+    dplyr::filter(., !is.na(UniProtID)) %>%
     dplyr::select(., id, UniProtID, start, end, ORF) %>%
     dplyr::left_join(
         x = .,
@@ -754,6 +748,91 @@ tmp %<>%
         Type = TRUE,
         geno = "AL009126.3") %>%
     dplyr::select(., -start, -end, -strand) %>%
+    dplyr::group_by(., id, Start, End, Strand, frame, Chromosome, chr.name) %>%
+    summarise_each(
+        funs(toString(x = unique(.), width = NULL))) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Create a GRanges object for all reference and identified novel ORF 
+ref.grange <- with(
+    data = tmp,
+    expr = GRanges(
+        seqnames = chr.name,
+        ranges = IRanges(Start, End),
+        strand = Strand))
+
+# Add values and seqinfo to the created GRanges object
+values(ref.grange) <- tmp %>%
+    dplyr::select(., id, UniProtKBID, ORF, frame, Chromosome)
+seqinfo(ref.grange) <- Seqinfo(
+    seqnames = tmp$chr.name %>% unique(.),
+    seqlengths = tmp$length %>% unique(.),
+    isCircular = tmp$Type %>% unique(.),
+    genome = tmp$geno %>% unique(.))
+
+# Use ggbio extension to plot ORF location on genome as a circos graph
+colou <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
+p <- ggplot() +
+    ggtitle(label = "Reference ORF") +
+    layout_circle(
+        bsu.ideo, geom = "ideo", fill = "gray70",
+        radius = 30, trackWidth = 3) +
+    layout_circle(
+        bsu.ideo, geom = "scale", size = 2, radius = 33, trackWidth = 2) +
+    layout_circle(
+        bsu.ideo, geom = "text", aes(label = seqnames),
+        angle = 0, radius = 36, trackWidth = 5) +
+    layout_circle(
+        subset(x = ref.grange, frame == 1), geom = "rect", color = colou[1],
+        radius = 26, trackWidth = 3) +
+    layout_circle(
+        subset(x = ref.grange, frame == 2), geom = "rect", color = colou[2],
+        radius = 23, trackWidth = 3) +
+    layout_circle(
+        subset(x = ref.grange, frame == 3), geom = "rect", color = colou[3],
+        radius = 20, trackWidth = 3) +
+    layout_circle(
+        subset(x = ref.grange, frame == -1), geom = "rect", color = colou[4],
+        radius = 17, trackWidth = 3) +
+    layout_circle(
+        subset(x = ref.grange, frame == -2), geom = "rect", color = colou[5],
+        radius = 14, trackWidth = 3) +
+    layout_circle(
+        subset(x = ref.grange, frame == -3), geom = "rect", color = colou[6],
+        radius = 11, trackWidth = 3)
+p
+
+# Format dataframe as genomic position and other info for each novel ORF
+filt <- evid.match %>%
+    dplyr::filter(., group == "Novel") %>%
+    cSplit(indt = ., splitCols = "Proteins", sep = ";", direction = "long") %>%
+    .[["Proteins"]] %>%
+    as.character(.) %>%
+    unique(.)
+tmp <- orf.neighb %>%
+    dplyr::filter(., (!is.na(ORF) & ORF %in% filt)) %>%
+    dplyr::select(., id, UniProtID, start, end, ORF) %>%
+    dplyr::left_join(
+        x = .,
+        y = orf.pos %>% dplyr::select(., -start, -end),
+        by = "id") %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+tmp %<>%
+    dplyr::mutate(
+        .,
+        Start = ifelse(test = strand == 1, yes = start, no = end),
+        End = ifelse(test = strand == 1, yes = end, no = start),
+        Strand = ifelse(test = strand == 1, yes = "+", no = "-"),
+        UniProtKBID = uniprotID.clean(UniProtID),
+        Chromosome = 1,
+        chr.name = "chr1",
+        length = 4215606,
+        Type = TRUE,
+        geno = "AL009126.3") %>%
+    dplyr::select(., -start, -end, -strand) %>%
+    dplyr::group_by(., id, Start, End, Strand, frame, Chromosome, chr.name) %>%
+    summarise_each(
+        funs(toString(x = unique(.), width = NULL))) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Create a GRanges object for all reference and identified novel ORF 
@@ -776,6 +855,7 @@ seqinfo(orf.grange) <- Seqinfo(
 # Use ggbio extension to plot ORF location on genome as a circos graph
 colou <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
 p <- ggplot() +
+    ggtitle(label = "Novel ORF") +
     layout_circle(
         bsu.ideo, geom = "ideo", fill = "gray70",
         radius = 30, trackWidth = 3) +
@@ -803,8 +883,6 @@ p <- ggplot() +
         subset(x = orf.grange, frame == -3), geom = "rect", color = colou[6],
         radius = 11, trackWidth = 3)
 p
-
-# Transfer all genomic coordinates code to GRanges and use already implemented functions
 
 
 
