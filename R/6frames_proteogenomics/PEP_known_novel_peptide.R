@@ -63,6 +63,7 @@ loadpackage(plotly)
 loadpackage(GenomicRanges)
 loadpackage(biovizBase)
 loadpackage(ggbio)
+loadpackage(ggradar)
 
 
 
@@ -93,6 +94,11 @@ for (x in 1:length(fasta.file)) {
     fasta.list[names(fasta.file)[x]] <- list(tmp)
     
 }
+
+# Import the experimental design (with conditions)
+exp.design <- read.table(
+    file = "Bsu_Conditions_06022017.txt", header = TRUE,
+    sep = "\t", quote = "", as.is = TRUE)
 
 # Clean-up
 rm(fasta.file)
@@ -701,6 +707,58 @@ write.table(
 
 
 
+
+
+
+### Check novel ORF per conditions ---------------------------------------
+
+# Calculate number of unique peptide per group and conditions
+pep.cond <- evid.match %>%
+    dplyr::left_join(
+        x = .,
+        y = exp.design %>% dplyr::select(., Name, Conditions, Modification),
+        by = c("Raw file" = "Name")) %>%
+    dplyr:::group_by(., group, Conditions) %>%
+    dplyr::summarise(., count = n_distinct(Sequence)) %>%
+    dplyr::ungroup(.) %>%
+    dplyr::group_by(., group) %>%
+    dplyr::mutate(., perc = count / sum(count)) %>%
+    dplyr::select(., -count) %>%
+    tidyr::spread(data = ., key = Conditions, value = perc) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Compute the condition repartition for the overall experiment
+pep.cond <- exp.design %>%
+    dplyr:::group_by(., Conditions) %>%
+    dplyr::summarise(., count = n_distinct(Name)) %>%
+    dplyr::ungroup(.) %>%
+    dplyr::mutate(
+        .,
+        group = "Condition per samples",
+        perc = count / sum(count)) %>%
+    dplyr::select(., -count) %>%
+    dplyr::group_by(., group) %>%
+    tidyr::spread(data = ., key = Conditions, value = perc) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE) %>%
+    base::rbind(pep.cond, .)
+
+# Plot cyclical data for the peptide proportion per group and conditions
+ggradar(
+    plot.data = pep.cond,
+    grid.mid = 0.25,
+    grid.max = 0.5,
+    group.line.width = 1,
+    group.point.size = 4,
+    axis.label.size = 4.5,
+    grid.label.size = 5) +
+    ggtitle(label = "Peptide proportional count per group and condition")
+
+
+
+
+
+
+
 ### ORF visualisation ----------------------------------------------------
 
 # Dataframe holding genome information for bacillus subtilis
@@ -765,10 +823,10 @@ ref.grange <- with(
 values(ref.grange) <- tmp %>%
     dplyr::select(., id, UniProtKBID, ORF, frame, Chromosome)
 seqinfo(ref.grange) <- Seqinfo(
-    seqnames = tmp$chr.name %>% unique(.),
-    seqlengths = tmp$length %>% unique(.),
-    isCircular = tmp$Type %>% unique(.),
-    genome = tmp$geno %>% unique(.))
+    seqnames = tmp$chr.name %>% unique(.) %>% as.character(.),
+    seqlengths = tmp$length %>% unique(.) %>% as.integer(.),
+    isCircular = tmp$Type %>% unique(.) %>% as.logical(.),
+    genome = tmp$geno %>% unique(.) %>% as.character(.))
 
 # Use ggbio extension to plot ORF location on genome as a circos graph
 colou <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
