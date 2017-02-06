@@ -712,6 +712,12 @@ write.table(
 
 ### Check novel ORF per conditions ---------------------------------------
 
+# Homogeneise the condition labels
+exp.design$Conditions %<>%
+    sub("Log/Stationary", "Log-Stationary Transition", .) %>%
+    sub("Log/Transition", "Log", .) %>%
+    sub(" Transition", "", .)
+
 # Calculate number of unique peptide per group and conditions
 pep.cond <- evid.match %>%
     dplyr::left_join(
@@ -724,7 +730,6 @@ pep.cond <- evid.match %>%
     dplyr::group_by(., group) %>%
     dplyr::mutate(., perc = count / sum(count)) %>%
     dplyr::select(., -count) %>%
-    tidyr::spread(data = ., key = Conditions, value = perc) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Compute the condition repartition for the overall experiment
@@ -738,24 +743,19 @@ pep.cond <- exp.design %>%
         perc = count / sum(count)) %>%
     dplyr::select(., -count) %>%
     dplyr::group_by(., group) %>%
-    tidyr::spread(data = ., key = Conditions, value = perc) %>%
     base::as.data.frame(., stringsAsFactors = FALSE) %>%
     base::rbind(pep.cond, .)
 
-# Plot cyclical data for the peptide proportion per group and conditions
-ggradar(
-    plot.data = pep.cond,
-    grid.mid = 0.25,
-    grid.max = 0.5,
-    group.line.width = 1,
-    group.point.size = 4,
-    axis.label.size = 4.5,
-    grid.label.size = 5) +
-    ggtitle(label = "Peptide proportional count per group and condition")
-
-
-
-
+# Line plot of the peptide proportion per group and condition
+linePlots(
+    data = pep.cond,
+    key = "Conditions",
+    value = "perc",
+    group = "group",
+    fill = "group",
+    colour = "group",
+    main = "Peptide proportional count per group and condition",
+    textsize = 15)
 
 
 
