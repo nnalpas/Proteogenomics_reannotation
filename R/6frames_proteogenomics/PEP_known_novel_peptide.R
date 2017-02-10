@@ -696,6 +696,44 @@ orf.candidates.final <- orf.candidates %>%
     dplyr::arrange(., start) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
+### Check novel ORF per conditions ---------------------------------------
+
+# Homogeneise the condition labels
+exp.design$Conditions %<>%
+    sub("Log/Stationary", "Log-Stationary Transition", .) %>%
+    sub("Log/Transition", "Log", .) %>%
+    sub(" Transition", "", .)
+
+# Expand dataframe to get individual peptide sequence
+tmp <- orf.candidates.final %>%
+    cSplit(
+        indt = ., splitCols = "Sequences", sep = ", ", direction = "long") %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Obtain for each peptide all associated condition it was found in and
+# compile per ORF all associated conditions
+tmp2 <- evid.match %>%
+    dplyr::select(., Sequence, `Raw file`) %>%
+    unique(.) %>%
+    dplyr::filter(., Sequence %in% tmp$Sequences) %>%
+    dplyr::left_join(x = ., y = exp.design, by = c("Raw file" = "Name")) %>%
+    dplyr::select(., Sequence, Conditions) %>%
+    dplyr::left_join(
+        x = ., y = tmp[, c("ORF", "Sequences")],
+        by = c("Sequence" = "Sequences")) %>%
+    dplyr::group_by(., ORF) %>%
+    dplyr::summarise_each(
+        funs(toString(x = unique(.), width = NULL)))
+
+# Add the ORF-condition map to the top candidates
+tmp %<>%
+    dplyr::left_join(x = ., y = tmp2[, c("ORF", "Conditions")], by = "ORF") %>%
+    dplyr::group_by(., ORF) %>%
+    dplyr::summarise_each(
+        funs(toString(x = unique(.), width = NULL))) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+orf.candidates.final <- tmp
+
 # Export the data for easier examination
 write.table(
     x = orf.candidates.final,
@@ -705,57 +743,8 @@ write.table(
     row.names = FALSE,
     col.names = TRUE)
 
-
-
-
-
-
-### Check novel ORF per conditions ---------------------------------------
-
-# Homogeneise the condition labels
-exp.design$Conditions %<>%
-    sub("Log/Stationary", "Log-Stationary Transition", .) %>%
-    sub("Log/Transition", "Log", .) %>%
-    sub(" Transition", "", .)
-
-# Calculate number of unique peptide per group and conditions
-pep.cond <- evid.match %>%
-    dplyr::left_join(
-        x = .,
-        y = exp.design %>% dplyr::select(., Name, Conditions, Modification),
-        by = c("Raw file" = "Name")) %>%
-    dplyr:::group_by(., group, Conditions) %>%
-    dplyr::summarise(., count = n_distinct(Sequence)) %>%
-    dplyr::ungroup(.) %>%
-    dplyr::group_by(., group) %>%
-    dplyr::mutate(., perc = count / sum(count)) %>%
-    dplyr::select(., -count) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-
-# Compute the condition repartition for the overall experiment
-pep.cond <- exp.design %>%
-    dplyr:::group_by(., Conditions) %>%
-    dplyr::summarise(., count = n_distinct(Name)) %>%
-    dplyr::ungroup(.) %>%
-    dplyr::mutate(
-        .,
-        group = "Condition per samples",
-        perc = count / sum(count)) %>%
-    dplyr::select(., -count) %>%
-    dplyr::group_by(., group) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE) %>%
-    base::rbind(pep.cond, .)
-
-# Line plot of the peptide proportion per group and condition
-linePlots(
-    data = pep.cond,
-    key = "Conditions",
-    value = "perc",
-    group = "group",
-    fill = "group",
-    colour = "group",
-    main = "Peptide proportional count per group and condition",
-    textsize = 15)
+# Clean-up
+rm(tmp, tmp2)
 
 
 
@@ -828,38 +817,6 @@ seqinfo(ref.grange) <- Seqinfo(
     isCircular = tmp$Type %>% unique(.) %>% as.logical(.),
     genome = tmp$geno %>% unique(.) %>% as.character(.))
 
-# Use ggbio extension to plot ORF location on genome as a circos graph
-colou <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
-p <- ggplot() +
-    ggtitle(label = "Reference ORF") +
-    layout_circle(
-        bsu.ideo, geom = "ideo", fill = "gray70",
-        radius = 30, trackWidth = 3) +
-    layout_circle(
-        bsu.ideo, geom = "scale", size = 2, radius = 33, trackWidth = 2) +
-    layout_circle(
-        bsu.ideo, geom = "text", aes(label = seqnames),
-        angle = 0, radius = 36, trackWidth = 5) +
-    layout_circle(
-        subset(x = ref.grange, frame == 1), geom = "rect", color = colou[1],
-        radius = 26, trackWidth = 3) +
-    layout_circle(
-        subset(x = ref.grange, frame == 2), geom = "rect", color = colou[2],
-        radius = 23, trackWidth = 3) +
-    layout_circle(
-        subset(x = ref.grange, frame == 3), geom = "rect", color = colou[3],
-        radius = 20, trackWidth = 3) +
-    layout_circle(
-        subset(x = ref.grange, frame == -1), geom = "rect", color = colou[4],
-        radius = 17, trackWidth = 3) +
-    layout_circle(
-        subset(x = ref.grange, frame == -2), geom = "rect", color = colou[5],
-        radius = 14, trackWidth = 3) +
-    layout_circle(
-        subset(x = ref.grange, frame == -3), geom = "rect", color = colou[6],
-        radius = 11, trackWidth = 3)
-p
-
 # Format dataframe as genomic position and other info for each novel ORF
 filt <- evid.match %>%
     dplyr::filter(., group == "Novel") %>%
@@ -905,45 +862,10 @@ orf.grange <- with(
 values(orf.grange) <- tmp %>%
     dplyr::select(., id, UniProtKBID, ORF, frame, Chromosome)
 seqinfo(orf.grange) <- Seqinfo(
-    seqnames = tmp$chr.name %>% unique(.),
-    seqlengths = tmp$length %>% unique(.),
-    isCircular = tmp$Type %>% unique(.),
-    genome = tmp$geno %>% unique(.))
-
-# Use ggbio extension to plot ORF location on genome as a circos graph
-colou <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
-p <- ggplot() +
-    ggtitle(label = "Novel ORF") +
-    layout_circle(
-        bsu.ideo, geom = "ideo", fill = "gray70",
-        radius = 30, trackWidth = 3) +
-    layout_circle(
-        bsu.ideo, geom = "scale", size = 2, radius = 33, trackWidth = 2) +
-    layout_circle(
-        bsu.ideo, geom = "text", aes(label = seqnames),
-        angle = 0, radius = 36, trackWidth = 5) +
-    layout_circle(
-        subset(x = orf.grange, frame == 1), geom = "rect", color = colou[1],
-        radius = 26, trackWidth = 3) +
-    layout_circle(
-        subset(x = orf.grange, frame == 2), geom = "rect", color = colou[2],
-        radius = 23, trackWidth = 3) +
-    layout_circle(
-        subset(x = orf.grange, frame == 3), geom = "rect", color = colou[3],
-        radius = 20, trackWidth = 3) +
-    layout_circle(
-        subset(x = orf.grange, frame == -1), geom = "rect", color = colou[4],
-        radius = 17, trackWidth = 3) +
-    layout_circle(
-        subset(x = orf.grange, frame == -2), geom = "rect", color = colou[5],
-        radius = 14, trackWidth = 3) +
-    layout_circle(
-        subset(x = orf.grange, frame == -3), geom = "rect", color = colou[6],
-        radius = 11, trackWidth = 3)
-p
-
-
-
+    seqnames = tmp$chr.name %>% unique(.) %>% as.character(.),
+    seqlengths = tmp$length %>% unique(.) %>% as.integer(.),
+    isCircular = tmp$Type %>% unique(.) %>% as.logical(.),
+    genome = tmp$geno %>% unique(.) %>% as.character(.))
 
 
 
@@ -970,7 +892,11 @@ if (markdown) {
     param <- list(
         evidences = evid.match,
         pept.posit = pep.pos,
-        levenshtein = leven.data)
+        levenshtein = leven.data,
+        pheno = exp.design,
+        bsu.ideo = bsu.ideo,
+        ref.grange = ref.grange,
+        novel.grange = orf.grange)
     
     # Define output file name
     out.file <- paste(
