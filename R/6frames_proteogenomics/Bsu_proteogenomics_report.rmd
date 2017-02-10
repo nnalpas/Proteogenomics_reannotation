@@ -10,6 +10,10 @@ params:
     evidences: NA
     pept.posit: NA
     levenshtein: NA
+    pheno: NA
+    bsu.ideo: NA
+    ref.grange: NA
+    novel.grange: NA
 ---
 
 
@@ -238,6 +242,191 @@ pl <- histPlots(
     fill = "Novelty",
     main = "Novel ORF density per novel peptide count")
 plotly::plotly_build(pl[[1]])
+
+```
+
+
+
+## Peptide proportion per condition
+
+``` {r PepCondi, eval = TRUE, echo = FALSE, warning = FALSE}
+
+# Calculate number of unique peptide per group and conditions
+pep.cond <- params[["evidences"]] %>%
+    dplyr::left_join(
+        x = .,
+        y = params[["pheno"]] %>% dplyr::select(., Name, Conditions, Modification),
+        by = c("Raw file" = "Name")) %>%
+    dplyr:::group_by(., group, Conditions) %>%
+    dplyr::summarise(., count = n_distinct(Sequence)) %>%
+    dplyr::ungroup(.) %>%
+    dplyr::group_by(., group) %>%
+    dplyr::mutate(., perc = count / sum(count)) %>%
+    dplyr::select(., -count) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Compute the condition repartition for the overall experiment
+pep.cond <- params[["pheno"]] %>%
+    dplyr:::group_by(., Conditions) %>%
+    dplyr::summarise(., count = n_distinct(Name)) %>%
+    dplyr::ungroup(.) %>%
+    dplyr::mutate(
+        .,
+        group = "Condition per samples",
+        perc = count / sum(count)) %>%
+    dplyr::select(., -count) %>%
+    dplyr::group_by(., group) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE) %>%
+    base::rbind(pep.cond, .)
+
+# Line plot of the peptide proportion per group and condition
+pl <- linePlots(
+    data = pep.cond,
+    key = "Conditions",
+    value = "perc",
+    group = "group",
+    fill = "group",
+    colour = "group",
+    main = "Peptide proportion per group and condition",
+    textsize = 15)
+pl[[1]]
+
+```
+
+
+
+## Genomic mapping of ORF
+
+``` {r Circos, eval = TRUE, echo = FALSE, warning = FALSE}
+
+# Use ggbio extension to plot ORF location on genome as a circos graph
+colou <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
+pl1 <- ggplot() +
+    ggtitle(label = "Reference ORF") +
+    layout_circle(
+        params[["bsu.ideo"]], geom = "ideo", fill = "gray70",
+        radius = 30, trackWidth = 3) +
+    layout_circle(
+        params[["bsu.ideo"]], geom = "scale", size = 2, radius = 33, trackWidth = 2) +
+    layout_circle(
+        params[["bsu.ideo"]], geom = "text", aes(label = seqnames),
+        angle = 0, radius = 36, trackWidth = 5) +
+    layout_circle(
+        subset(x = params[["ref.grange"]], frame == 1), geom = "rect", color = colou[1],
+        radius = 26, trackWidth = 3) +
+    layout_circle(
+        subset(x = params[["ref.grange"]], frame == 2), geom = "rect", color = colou[2],
+        radius = 23, trackWidth = 3) +
+    layout_circle(
+        subset(x = params[["ref.grange"]], frame == 3), geom = "rect", color = colou[3],
+        radius = 20, trackWidth = 3) +
+    layout_circle(
+        subset(x = params[["ref.grange"]], frame == -1), geom = "rect", color = colou[4],
+        radius = 17, trackWidth = 3) +
+    layout_circle(
+        subset(x = params[["ref.grange"]], frame == -2), geom = "rect", color = colou[5],
+        radius = 14, trackWidth = 3) +
+    layout_circle(
+        subset(x = params[["ref.grange"]], frame == -3), geom = "rect", color = colou[6],
+        radius = 11, trackWidth = 3)
+
+# Use ggbio extension to plot ORF location on genome as a circos graph
+pl2 <- ggplot() +
+    ggtitle(label = "Novel ORF") +
+    layout_circle(
+        params[["bsu.ideo"]], geom = "ideo", fill = "gray70",
+        radius = 30, trackWidth = 3) +
+    layout_circle(
+        params[["bsu.ideo"]], geom = "scale", size = 2, radius = 33, trackWidth = 2) +
+    layout_circle(
+        params[["bsu.ideo"]], geom = "text", aes(label = seqnames),
+        angle = 0, radius = 36, trackWidth = 5) +
+    layout_circle(
+        subset(x = params[["novel.grange"]], frame == 1), geom = "rect", color = colou[1],
+        radius = 26, trackWidth = 3) +
+    layout_circle(
+        subset(x = params[["novel.grange"]], frame == 2), geom = "rect", color = colou[2],
+        radius = 23, trackWidth = 3) +
+    layout_circle(
+        subset(x = params[["novel.grange"]], frame == 3), geom = "rect", color = colou[3],
+        radius = 20, trackWidth = 3) +
+    layout_circle(
+        subset(x = params[["novel.grange"]], frame == -1), geom = "rect", color = colou[4],
+        radius = 17, trackWidth = 3) +
+    layout_circle(
+        subset(x = params[["novel.grange"]], frame == -2), geom = "rect", color = colou[5],
+        radius = 14, trackWidth = 3) +
+    layout_circle(
+        subset(x = params[["novel.grange"]], frame == -3), geom = "rect", color = colou[6],
+        radius = 11, trackWidth = 3)
+pl <- list("Known" = pl1, "Novel" = pl2)
+
+# Arrange the obtained plots on page
+ml <- marrangeGrob(pl, nrow = 1, ncol = 2)
+ml
+
+```
+
+
+
+## Genomic coverage
+
+``` {r GenomCover, eval = TRUE, echo = FALSE, warning = FALSE, fig.width = 5, fig.height = 5}
+
+# Get all chromosome nucleotide position
+chrom.nuc <- params[["bsu.ideo"]]@ranges[[1]]
+
+# Get all protein-coding associated nucleotide position
+coding.nuc <- lapply(X = params[["ref.grange"]]@ranges, FUN = function(x) {
+    x
+})
+names(coding.nuc) <- params[["ref.grange"]]@elementMetadata@listData$UniProtKBID
+
+# Get all expressed protein associated nucleotide position
+exprs.id <- strsplit(x = evid.match$Proteins, split = ";") %>%
+    unlist(.) %>%
+    unique(.)
+exprs.nuc <- coding.nuc[names(coding.nuc) %in% exprs.id]
+
+# Format data into a standard plotting dataframe
+toplot <- data.frame(
+    Param = paste(
+        "Chromosome", round(length(chrom.nuc) / 1000000, 1),
+        "Mb", sep = " "),
+    Position = as.integer(unique(chrom.nuc)),
+    stringsAsFactors = FALSE)
+toplot <- data.frame(
+    Param = paste(
+        "Protein-coding",
+        round(length(unique(unlist(coding.nuc))) / 1000000, 1),
+        "Mb", sep = " "),
+    Position = as.integer(unique(unlist(coding.nuc))),
+    stringsAsFactors = FALSE) %>%
+    base::rbind(toplot, .)
+toplot <- data.frame(
+    Param = paste(
+        "Expressed protein",
+        round(length(unique(unlist(exprs.nuc))) / 1000000, 1),
+        "Mb", sep = " "),
+    Position = as.integer(unique(unlist(exprs.nuc))),
+    stringsAsFactors = FALSE) %>%
+    base::rbind(toplot, .)
+
+# Plot a venn diagram of chromosome coverage
+pl <- vennPlots(
+    data = toplot,
+    key = "Param",
+    value = "Position",
+    main = "Venn diagram of coverage",
+    textsize = 15,
+    clean_name = FALSE)
+
+# Dtermine number of rows and columns to plot all graphs on same page
+grids <- grid.dim(x = length(pl))
+
+# Arrange the obtained plots on page
+ml <- marrangeGrob(pl, nrow = grids$x, ncol = grids$y, top = NULL)
+ml
 
 ```
 
