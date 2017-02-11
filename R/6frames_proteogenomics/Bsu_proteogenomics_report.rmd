@@ -1,5 +1,5 @@
 ---
-title: "Baccillus proteogenomics report"
+title: "Bacillus proteogenomics report"
 author: "`r Sys.info()[['user']]`"
 date: "`r format(x = Sys.time(), '%d %B %Y %T')`"
 output:
