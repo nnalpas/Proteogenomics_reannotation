@@ -869,6 +869,80 @@ seqinfo(orf.grange) <- Seqinfo(
 
 
 
+### Get peptide position within proteins ---------------------------------
+
+# Compile the required fasta files (novel and known)
+fastas <- c(fasta.list$Novel, fasta.list$Known)
+
+# Loop through all enzymatic cleavage rules
+pep.list <- base::data.frame()
+for (cleav in c("K|R", "K", "R")) {
+    
+    # Get all peptide sequence and position for all proteins
+    pep.list <- prot.digest(fasta = fastas, custom = cleav) %>%
+        base::rbind(pep.list, .)
+    
+}
+
+# Clean up the ID to standard uniprot ID
+pep.list$Proteins %<>%
+    sub(
+        pattern = ".+\\|(.+)\\|.+",
+        replacement = "\\1",
+        x = .)
+
+# Get association list of peptide and protein (remove reverse and contaminant)
+pep.prot <- evid.match %>%
+    rev.con.filt(.) %>%
+    dplyr::select(., Sequence, Proteins) %>%
+    cSplit(indt = ., splitCols = "Proteins", sep = ";", direction = "long") %>%
+    unique(.) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Get peptide location within each associated proteins for identified peptides
+pep.located <- pep.prot %>%
+    dplyr::left_join(x = ., y = pep.list, by = c("Sequence", "Proteins")) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Select the peptide that could not be located and add Methionine
+# at the start of the peptide sequence
+tmp <- pep.located %>%
+    dplyr::filter(., is.na(start)) %>%
+    dplyr::select(., Sequence, Proteins) %>%
+    set_colnames(c("OrigSequence", "Proteins")) %>%
+    dplyr::mutate(., Sequence = sub("^", "M", OrigSequence))
+
+# Keep only located peptide from this variable
+pep.located %<>%
+    dplyr::filter(., !is.na(start))
+
+# Try to locate again the missing peptide (the Methionine addition should help)
+# and add the new results to main variable
+pep.located <- tmp %>%
+    dplyr::left_join(x = ., y = pep.list, by = c("Sequence", "Proteins")) %>%
+    dplyr::mutate(., Sequence = OrigSequence, start = (start + 1)) %>%
+    dplyr::select(., -OrigSequence) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE) %>%
+    base::rbind(pep.located, ., stringsAsFactors = FALSE)
+
+# Remove any remaining contaminant entry (which also could not be located)
+pep.located <- pep.located[
+    grep("^CON__", pep.located$Proteins, invert = TRUE), ] %>%
+    unique(.)
+
+
+
+### Table of novel ORF manual annotation ---------------------------------
+
+# Import the table of manul annotation
+manual.annot <- read.table(
+    file = "ORF_candidate_neighbour_2017-02-13.txt",
+    header = TRUE, sep = "\t", quote = "", as.is = TRUE)
+colnames(manual.annot)[
+    grep("Unique_peptide", colnames(manual.annot))] <- "PeptideCount"
+
+
+
 ### Generate the report --------------------------------------------------
 
 # Check whether markdown output is requested
@@ -896,7 +970,9 @@ if (markdown) {
         pheno = exp.design,
         bsu.ideo = bsu.ideo,
         ref.grange = ref.grange,
-        novel.grange = orf.grange)
+        novel.grange = orf.grange,
+        pep.loc = pep.located,
+        manual.annot = manual.annot) 
     
     # Define output file name
     out.file <- paste(
