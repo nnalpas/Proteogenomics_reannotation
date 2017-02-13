@@ -364,7 +364,7 @@ pl2 <- ggplot() +
 pl <- list("Known" = pl1, "Novel" = pl2)
 
 # Arrange the obtained plots on page
-ml <- marrangeGrob(pl, nrow = 1, ncol = 2)
+ml <- marrangeGrob(pl, nrow = 1, ncol = 2, top = NULL)
 ml
 
 ```
@@ -450,11 +450,11 @@ rect(
     lwd = 2)
 text(
     x = 0.015,
-    y = 1.025,
+    y = 1.03,
     labels = paste(
         "Chromosome", round(length(chrom.nuc) / 1000000, 1),
         "Mb", sep = " "),
-    col = "red", cex = 1.4, adj = 0)
+    col = "red", cex = 1.0, adj = 0)
 rect(
     xleft = 0.01,
     ybottom = 0.01,
@@ -467,12 +467,12 @@ rect(
 text(
     x = 0.025,
     y = sqrt(
-        length(unique(unlist(coding.nuc))) / length(chrom.nuc)) + 0.01 - 0.02,
+        length(unique(unlist(coding.nuc))) / length(chrom.nuc)) + 0.01 - 0.035,
     labels = paste(
         "Protein-coding",
         round(length(unique(unlist(coding.nuc))) / 1000000, 1),
         "Mb", sep = " "),
-    col = "green", cex = 1.4, adj = 0)
+    col = "green", cex = 1.0, adj = 0)
 rect(
     xleft = 0.02,
     ybottom = 0.02,
@@ -485,12 +485,12 @@ rect(
 text(
     x = 0.035,
     y = sqrt(
-        length(unique(unlist(exprs.nuc))) / length(chrom.nuc)) + 0.02 - 0.02,
+        length(unique(unlist(exprs.nuc))) / length(chrom.nuc)) + 0.02 - 0.035,
     labels = paste(
         "Expressed protein",
         round(length(unique(unlist(exprs.nuc))) / 1000000, 1),
         "Mb", sep = " "),
-    col = "blue", cex = 1.4, adj = 0)
+    col = "blue", cex = 1.0, adj = 0)
 rect(
     xleft = 0.03,
     ybottom = 0.03,
@@ -503,12 +503,12 @@ rect(
 text(
     x = 0.045,
     y = sqrt(
-        length(unique(unlist(cover.nuc))) / length(chrom.nuc)) + 0.03 - 0.02,
+        length(unique(unlist(cover.nuc))) / length(chrom.nuc)) + 0.03 + 0.03,
     labels = paste(
         "Detected peptide",
         round(length(unique(unlist(cover.nuc))) / 1000000, 1),
         "Mb", sep = " "),
-    col = "gold", cex = 1.4, adj = 0)
+    col = "gold", cex = 1.0, adj = 0)
 
 ```
 
@@ -522,9 +522,8 @@ text(
 DT::datatable(
     data = params[["manual.annot"]] %>%
         dplyr::select(
-            ., ORF, ManualAnnotation, PeptideCount, UniProtID,
-            FiveNeighbUniprot, ThreeNeighbUniprot),
-    rownames = FALSE, width = 500, height = 500)
+            ., ORF, ManualAnnotation, PeptideCount),
+    rownames = FALSE, fillContainer = TRUE)
 
 ```
 
