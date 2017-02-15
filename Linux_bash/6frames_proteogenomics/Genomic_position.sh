@@ -41,3 +41,5 @@ if [ $GetOrf == 1 ]; then
     ${HOME}/bin/GetOrf.sh ${ProjDir}/Nuc_translation ${FIND} ${TABLE} ${MINSIZE} ${CIRCULAR} ${SEQUENCE} > ${LogDir}/GetOrf.log 2>&1
     
 fi
+
+
