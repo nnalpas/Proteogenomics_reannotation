@@ -29,8 +29,13 @@ fi
 
 # Loop through all submitted fasta
 for files in ${SEQ[@]}; do
+
 	outfile=`basename $files`
 	$HOME/Software/EMBOSS/bin/getorf -sequence ${files} -outseq ${WKDIR}/Find${FIND}_${outfile} -find=${FIND} -table=${TABLE} -minsize=${MINSIZE} -circular=${CIRCULAR}
+	
+	# Remove all entries that are empty
+	${HOME}/bin/Remove_empty_entries.sh ${WKDIR}/Find${FIND}_${outfile}
+	
 done
 
 # Time scripts ends
