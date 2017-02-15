@@ -1,0 +1,21 @@
+# GeneralParam
+ProjectName="Smyro_6frame"
+MultiThreads=5
+
+# WorkingPaths
+MainDir="/media/sf_F_DRIVE/Nicolas"
+
+# ProcessSteps
+GetOrf=1
+
+# EmbossParam
+FRAME=6
+TABLE=11
+FIND=0
+MINSIZE=1
+CIRCULAR="Yes"
+
+# ReferenceDatabase
+SEQUENCE="/media/sf_F_DRIVE/Nicolas/Smyro_6frame/Nuc_translation/Irish_Strep_myrophorea_contigs.fasta"
+
+
