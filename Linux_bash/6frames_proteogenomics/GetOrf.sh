@@ -8,7 +8,7 @@ echo "Start $(date +"%T %d-%m-%Y")."
 
 # Check for required command line arguments
 if [ $# -lt 6 ]; then
-	echo "Usage: $0 <FastaFile>"
+	echo "Usage: $0 <WorkDir> <FindTransla> <TableTransla> <MinSize> <Circular> <FastaFile>"
 	exit 1
 fi
 
@@ -20,7 +20,6 @@ TABLE=$3
 MINSIZE=$4
 CIRCULAR=$5
 SEQ="${@:6}"
-
 
 # Create the output folder
 if [ ! -d ${WKDIR} ] ; then
