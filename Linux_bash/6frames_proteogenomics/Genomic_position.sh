@@ -38,8 +38,32 @@ cp $Param ${LogDir}/Parameters.txt
 # Check whether to get the ORFs from genomic sequence
 if [ $GetOrf == 1 ]; then
 
-    ${HOME}/bin/GetOrf.sh ${ProjDir}/Nuc_translation ${FIND} ${TABLE} ${MINSIZE} ${CIRCULAR} ${SEQUENCE} > ${LogDir}/GetOrf.log 2>&1
+    ${HOME}/bin/GetOrf.sh ${ProjDir}/Nuc_translation 0 ${TABLE} ${MINSIZE} ${CIRCULAR} ${SEQUENCE} > ${LogDir}/GetOrf.log 2>&1
+    ${HOME}/bin/GetOrf.sh ${ProjDir}/Nuc_translation 2 ${TABLE} ${MINSIZE} ${CIRCULAR} ${SEQUENCE} >> ${LogDir}/GetOrf.log 2>&1
     
 fi
+
+
+
+##############################
+# Make custom Blast database #
+##############################
+
+# Check whether to create a blast database for proteome data
+if [ $MakeBlastDbProt == 1 ]; then
+
+    ${HOME}/bin/MakeBlastDb.sh ${InputType} "prot" ${frameProteome} > ${LogDir}/MakeBlastDb.log 2>&1
+    
+fi
+
+
+
+# Check whether to create a blast database for genome data
+if [ $MakeBlastDbNuc == 1 ]; then
+
+    ${HOME}/bin/MakeBlastDb.sh ${InputType} "prot" ${frameProteome} > ${LogDir}/MakeBlastDb.log 2>&1
+    
+fi
+
 
 
