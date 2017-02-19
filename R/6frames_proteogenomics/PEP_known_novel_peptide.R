@@ -83,7 +83,7 @@ fasta.file <- choose.files(
     caption = "Select Fasta files",
     multi = TRUE,
     filters = ".fasta") %>%
-    set_names(c("Novel", "Contaminant", "Known"))
+    set_names(c("Contaminant", "Novel", "Known"))
 
 # Import all fasta file data and store into list
 fasta.list <- list()
@@ -110,11 +110,14 @@ rm(fasta.file)
 
 ### Novel peptide identification -----------------------------------------
 
+# Define enzymatic rule
+enzym <- c("K", "F|W|Y|L|M")
+
 # Digest all protein and store peptide into list
 pep.list <- lapply(X = fasta.list, FUN = function(x) {
     
     cliv <- lapply(
-        X = c("K|R", "K", "R"),
+        X = enzym,
         FUN = function(y) {
             tmp <- cleave(
                 x = x %>% unlist(.),
