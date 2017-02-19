@@ -69,9 +69,12 @@ loadpackage(ggradar)
 
 ### Data import ----------------------------------------------------------
 
+# Select the maxquant txt folder
+txt.dir <- choose.dir(caption = "Select the MaxQuant txt folder?")
+
 # Import the maxquant evidence table
 evid <- maxquant.read(
-    path = ".",
+    path = txt.dir,
     name = "evidence.txt",
     integer64 = "double")
 
