@@ -110,6 +110,28 @@ rm(fasta.file)
 
 ### Novel peptide identification -----------------------------------------
 
+# Format association of peptide to protein
+data <- evid.match %>%
+    cSplit(indt = ., splitCols = "Proteins", sep = ";", direction = "long") %>%
+    dplyr::select(., Sequence, Proteins) %>%
+    unique(.) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Format the fasta files
+names(fasta.list$Contaminant) %<>%
+    sub(pattern = "^", replacement = "CON__", x = .)
+names(fasta.list$Known) %<>%
+    sub(pattern = ".+\\|(.+)\\|.+", replacement = "\\1", x = .)
+fastas <- c(fasta.list$Contaminant, fasta.list$Novel, fasta.list$Known)
+
+# Locate all the peptide within associated proteins
+pep.loc <- pept.locate(
+    data = data, peptide = "Sequence", proteins = "Proteins", fasta = fastas)
+
+
+
+
+
 # Define enzymatic rule
 enzym <- c("K", "F|W|Y|L|M")
 
