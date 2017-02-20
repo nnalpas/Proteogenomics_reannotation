@@ -124,13 +124,17 @@ names(fasta.list$Known) %<>%
     sub(pattern = ".+\\|(.+)\\|.+", replacement = "\\1", x = .)
 fastas <- c(fasta.list$Contaminant, fasta.list$Novel, fasta.list$Known)
 
+tmp <- Sys.time()
+
 # Locate all the peptide within associated proteins
 pep.loc <- pept.locate(
     data = data, peptide = "Sequence", proteins = "Proteins", fasta = fastas)
 
+Sys.time() - tmp
 
 
 
+tmp <- Sys.time()
 
 # Define enzymatic rule
 enzym <- c("K", "F|W|Y|L|M")
@@ -153,6 +157,9 @@ pep.list <- lapply(X = fasta.list, FUN = function(x) {
     
     cliv
 })
+
+Sys.time() - tmp
+
 
 # New dataframe to hold info about fasta of origin for each sequence
 evid.match <- evid %>%
