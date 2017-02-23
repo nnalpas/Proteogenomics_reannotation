@@ -111,7 +111,7 @@ rm(fasta.file)
 ### Novel peptide identification -----------------------------------------
 
 # Format association of peptide to protein
-data <- evid.match %>%
+data <- evid %>%
     cSplit(indt = ., splitCols = "Proteins", sep = ";", direction = "long") %>%
     dplyr::select(., Sequence, Proteins) %>%
     unique(.) %>%
@@ -124,42 +124,30 @@ names(fasta.list$Known) %<>%
     sub(pattern = ".+\\|(.+)\\|.+", replacement = "\\1", x = .)
 fastas <- c(fasta.list$Contaminant, fasta.list$Novel, fasta.list$Known)
 
-tmp <- Sys.time()
-
 # Locate all the peptide within associated proteins
 pep.loc <- pept.locate(
     data = data, peptide = "Sequence", proteins = "Proteins", fasta = fastas)
 
-Sys.time() - tmp
-
-
-
-tmp <- Sys.time()
-
-# Define enzymatic rule
-enzym <- c("K", "F|W|Y|L|M")
-
-# Digest all protein and store peptide into list
-pep.list <- lapply(X = fasta.list, FUN = function(x) {
-    
-    cliv <- lapply(
-        X = enzym,
-        FUN = function(y) {
-            tmp <- cleave(
-                x = x %>% unlist(.),
-                custom = y,
-                missedCleavages = c(0:2)) %>%
-                unlist(.) %>%
-                unique(.)
-        }) %>%
-        unlist(.) %>%
-        unique(.)
-    
-    cliv
-})
-
-Sys.time() - tmp
-
+# Split peptide sequence per fasta of origin and store into list variable
+Cont <- pep.loc %>%
+    dplyr::filter(., !is.na(start)) %>%
+    dplyr::filter(., grepl(pattern = "^CON__", x = prot)) %>%
+    .[["pep"]] %>%
+    as.character(.)
+Nov <- pep.loc %>%
+    dplyr::filter(., !is.na(start)) %>%
+    dplyr::filter(., grepl("^CP014348.1", prot)) %>%
+    .[["pep"]] %>%
+    as.character(.)
+know <- pep.loc %>%
+    dplyr::filter(., !is.na(start)) %>%
+    dplyr::filter(., !grepl("^(CP014348.1|CON__)", prot)) %>%
+    .[["pep"]] %>%
+    as.character(.)
+pep.list <- list(
+        Contaminant = Cont,
+        Novel = Nov,
+        Known = know)
 
 # New dataframe to hold info about fasta of origin for each sequence
 evid.match <- evid %>%
@@ -176,29 +164,6 @@ evid.match <- evid %>%
                     yes = "Novel",
                     no = NA_character_)))) %>%
     base::as.data.frame(., stringAsFactors = TRUE)
-
-# Reperform previous step to try find the sequence that miss first methionine
-data <- evid.match %>%
-    dplyr::filter(., is.na(group)) %>%
-    dplyr::mutate(
-        .,
-        group = ifelse(
-            test = paste(
-                "M", Sequence, sep = "") %in% pep.list$Known,
-            yes = "Known",
-            no = ifelse(
-                test = paste(
-                    "M", Sequence, sep = "") %in% pep.list$Contaminant,
-                yes = "Contaminant",
-                no = ifelse(
-                    test = paste(
-                        "M", Sequence, sep = "") %in% pep.list$Novel,
-                    yes = "Novel",
-                    no = NA_character_)))) %>%
-    base::as.data.frame(., stringAsFactors = TRUE)
-
-# Combine the two peptide group type information
-evid.match <- rbind(evid.match[!is.na(evid.match$group), ], data)
 
 # Define the reverse hits as group
 evid.match[evid.match$Reverse == "+", "group"] <- "Reverse"
