@@ -33,10 +33,11 @@ fi
 if [ ${ENTRY} == 'all' ]; then
 
 	# All entries retrieval and blasting of retrieved entries against another database
-	blastdbcmd -db ${INPUTSEQ} \
-	  -dbtype ${DBTYPE} \
-	  -entry ${ENTRY} | \
-	  blast2 -p ${TASK} \
+	#blastdbcmd -db ${INPUTSEQ} \
+	#  -dbtype ${DBTYPE} \
+	#  -entry ${ENTRY} | \
+	  blast2 -i ${INPUTSEQ} \
+	  -p ${TASK} \
 	  -d ${DB} \
 	  -o ${WKDIR}/${OUTBLAST} \
 	  -e ${EVAL} \
@@ -47,10 +48,11 @@ if [ ${ENTRY} == 'all' ]; then
 else
 
 	# Specific entries retrieval and blasting of retrieved entries against another database
-	blastdbcmd -db ${INPUTSEQ} \
-	  -dbtype ${DBTYPE} \
-	  -entry_batch ${ENTRY} | \
-	  blast2 -p ${TASK} \
+	#blastdbcmd -db ${INPUTSEQ} \
+	#  -dbtype ${DBTYPE} \
+	#  -entry_batch ${ENTRY} | \
+	  blast2 -i ${INPUTSEQ} \
+	  -p ${TASK} \
 	  -d ${DB} \
 	  -o ${WKDIR}/${OUTBLAST} \
 	  -e ${EVAL} \
