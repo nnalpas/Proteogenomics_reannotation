@@ -43,15 +43,28 @@ if [ $GetOrf == 1 ]; then
     
 fi
 
+# Define the file names for the ORF of the genomic sequence
+SIXFRAMEPROT=`echo $GENOME | perl -p -e 's/^(.*\\/)(.*)\\.fasta/$1Find0_$2_FIXED.fasta/'`
+SIXFRAMEGENE=`echo $GENOME | perl -p -e 's/^(.*\\/)(.*)\\.fasta/$1Find2_$2_FIXED.fasta/'`
+
+
+
+##################
+# Get novel ORFs #
+##################
+
+# Check whether to get the novel ORFs from MaxQuant seach results
+if [ $GetNovelEntries == 1 ]; then
+
+    ${HOME}/bin/GetNovelEntries.R ${ProjDir}/MaxQuant_txt "." ${UNIREFPROT} ${SIXFRAMEPROT} > ${LogDir}/GetNovelEntries.log 2>&1
+
+fi
+
 
 
 ##############################
 # Make custom Blast database #
 ##############################
-
-# Define the file names for the ORF of the genomic sequence
-SIXFRAMEPROT=`echo $GENOME | perl -p -e 's/^(.*\\/)(.*)\\.fasta/$1Find0_$2_FIXED.fasta/'`
-SIXFRAMEGENE=`echo $GENOME | perl -p -e 's/^(.*\\/)(.*)\\.fasta/$1Find2_$2_FIXED.fasta/'`
 
 # Check whether to create a blast database for proteome data
 if [ $MakeBlastDbProt == 1 ]; then
@@ -78,11 +91,11 @@ fi
 # Check whether to blast the ORFs against taxon reference protein and RNA and against all uniprot and ncbi
 if [ $BlastDbBlasting == 1 ]; then
     
-    ${HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" "all" "blastp" ${SIXFRAMEPROT} ${UNIREFPROT} ${Eval} ${NumAlign} ${MultiThreads} "ORFprot_vs_Refprot" > ${LogDir}/BlastDbBlasting.log 2>&1
-    ${HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" "all" "blastp" ${SIXFRAMEPROT} ${ALLUNIPROT} ${Eval} ${NumAlign} ${MultiThreads} "ORFprot_vs_Uniprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    ${HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" "all" "blastp" ${SIXFRAMEPROT} ${ALLNCBIPROT} ${Eval} ${NumAlign} ${MultiThreads} "ORFprot_vs_NCBIprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    ${HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" "all" "blastn" ${SIXFRAMEGENE} ${UNIREFGENE} ${Eval} ${NumAlign} ${MultiThreads} "ORFnucl_vs_Refrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    ${HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" "all" "blastn" ${SIXFRAMEGENE} ${ALLNCBIRNA} ${Eval} ${NumAlign} ${MultiThreads} "ORFnucl_vs_NCBIrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${HOME}/bin/BlastDbBlastp.sh ${ProjDir}/Blast "prot" "all" ${SIXFRAMEPROT} ${UNIREFPROT} ${Eval} ${NumAlign} ${MultiThreads} "ORFprot_vs_Refprot" > ${LogDir}/BlastDbBlasting.log 2>&1
+    ${HOME}/bin/BlastDbBlastp.sh ${ProjDir}/Blast "prot" "all" ${SIXFRAMEPROT} ${ALLUNIPROT} ${Eval} ${NumAlign} ${MultiThreads} "ORFprot_vs_Uniprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${HOME}/bin/BlastDbBlastp.sh ${ProjDir}/Blast "prot" "all" ${SIXFRAMEPROT} ${ALLNCBIPROT} ${Eval} ${NumAlign} ${MultiThreads} "ORFprot_vs_NCBIprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    #${HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" "all" "blastn" ${SIXFRAMEGENE} ${UNIREFGENE} ${Eval} ${NumAlign} ${MultiThreads} "ORFnucl_vs_Refrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    #${HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" "all" "blastn" ${SIXFRAMEGENE} ${ALLNCBIRNA} ${Eval} ${NumAlign} ${MultiThreads} "ORFnucl_vs_NCBIrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
     
 fi
 
