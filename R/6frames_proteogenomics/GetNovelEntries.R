@@ -46,17 +46,17 @@ user <- Sys.info()[["user"]]
 ### List of required packages -----------------------------------------------
 
 # Source the custom user functions
+#source(
+#    file = paste(
+#        "C:/Users",
+#        user,
+#        "Documents/GitHub/Miscellaneous/R/General/General_function.R",
+#        sep = "/"))
 source(
     file = paste(
-        "C:/Users",
+        "/home",
         user,
-        "Documents/GitHub/Miscellaneous/R/General/General_function.R",
-        sep = "/"))
-source(
-    file = paste(
-        "/Media/sf_C_DRIVE/Users",
-        user,
-        "Documents/GitHub/Miscellaneous/R/General/General_function.R",
+        "bin/General_function.R",
         sep = "/"))
 
 # Load the required packages (or install if not already in library)
