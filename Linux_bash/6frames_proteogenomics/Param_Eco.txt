@@ -8,10 +8,10 @@ MainDir="/media/sf_F_DRIVE/Nicolas"
 
 # ProcessSteps
 GetOrf=0
-GetNovelEntries=1
+GetNovelEntries=0
 MakeBlastDbProt=0
 MakeBlastDbNuc=0
-BlastDbBlasting=0
+BlastDbBlasting=1
 
 # EmbossParam
 FRAME=6
