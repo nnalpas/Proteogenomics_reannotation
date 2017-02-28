@@ -91,11 +91,11 @@ fi
 # Check whether to blast the ORFs against taxon reference protein and RNA and against all uniprot and ncbi
 if [ $BlastDbBlasting == 1 ]; then
     
-    ${HOME}/bin/BlastDbBlastp.sh ${ProjDir}/Blast "prot" "all" ${SIXFRAMEPROT} ${UNIREFPROT} ${Eval} ${NumAlign} ${MultiThreads} "ORFprot_vs_Refprot" > ${LogDir}/BlastDbBlasting.log 2>&1
-    ${HOME}/bin/BlastDbBlastp.sh ${ProjDir}/Blast "prot" "all" ${SIXFRAMEPROT} ${ALLUNIPROT} ${Eval} ${NumAlign} ${MultiThreads} "ORFprot_vs_Uniprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    ${HOME}/bin/BlastDbBlastp.sh ${ProjDir}/Blast "prot" "all" ${SIXFRAMEPROT} ${ALLNCBIPROT} ${Eval} ${NumAlign} ${MultiThreads} "ORFprot_vs_NCBIprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    #${HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" "all" "blastn" ${SIXFRAMEGENE} ${UNIREFGENE} ${Eval} ${NumAlign} ${MultiThreads} "ORFnucl_vs_Refrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    #${HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" "all" "blastn" ${SIXFRAMEGENE} ${ALLNCBIRNA} ${Eval} ${NumAlign} ${MultiThreads} "ORFnucl_vs_NCBIrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" "all" "blastp" ${SIXFRAMEPROT} ${UNIREFPROT} ${Eval} ${NumAlign} ${MultiThreads} "ORFprot_vs_Refprot" > ${LogDir}/BlastDbBlasting.log 2>&1
+    ${HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" ${ProjDir}/MaxQuant_txt/Novel_ORF.txt "blastp" ${SIXFRAMEPROT} ${ALLUNIPROT} ${Eval} ${NumAlign} ${MultiThreads} "ORFprot_vs_Uniprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" ${ProjDir}/MaxQuant_txt/Novel_ORF.txt "blastp" ${SIXFRAMEPROT} ${ALLNCBIPROT} ${Eval} ${NumAlign} ${MultiThreads} "ORFprot_vs_NCBIprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" "all" "blastn" ${SIXFRAMEGENE} ${UNIREFGENE} ${Eval} ${NumAlign} ${MultiThreads} "ORFnucl_vs_Refrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" ${ProjDir}/MaxQuant_txt/Novel_ORF.txt "blastn" ${SIXFRAMEGENE} ${ALLNCBIRNA} ${Eval} ${NumAlign} ${MultiThreads} "ORFnucl_vs_NCBIrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
     
 fi
 
