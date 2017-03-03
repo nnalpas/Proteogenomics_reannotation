@@ -13,6 +13,6 @@ cd ${PBS_O_WORKDIR}
 #gunzip -c uniprot_*.fasta.gz >> uniprot_sprot_trembl.fasta
  
 # Create the blast database
-${PBS_O_HOME}/bin/MakeBlastDb.sh "fasta" "prot" 131567 "${PBS_O_INITDIR}/uniprot_sprot_trembl.fasta" >> ./MakeBlastDb_{PBS_JOBID}.log
+${PBS_O_HOME}/bin/MakeBlastDb.sh "fasta" "prot" 131567 "${PBS_O_INITDIR}/uniprot_sprot_trembl.fasta" >> ./MakeBlastDb_${PBS_JOBID}.log
 
 
