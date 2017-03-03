@@ -17,7 +17,6 @@ INPUTTYPE=$1
 DBTYPE=$2
 TAXID=$3
 FASTA="${@:4}"
-echo "Working directory: $WKDIR"
 
 # Loop through all submitted fasta
 for fasta in ${FASTA[@]}; do
