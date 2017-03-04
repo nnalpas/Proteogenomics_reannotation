@@ -1,10 +1,6 @@
 # GeneralParam
 ProjectName="Eco_6frame"
-MultiThreads=5
 TaxId="83333"
-
-# WorkingPaths
-MainDir="/media/sf_F_DRIVE/Nicolas"
 
 # ProcessSteps
 GetOrf=0
@@ -20,12 +16,12 @@ MINSIZE=1
 CIRCULAR="Yes"
 
 # ReferenceDatabase
-GENOME="/media/sf_F_DRIVE/Nicolas/Eco_6frame/Nuc_translation/GCA_001566335.1_15022017.fasta"
-UNIREFPROT="/media/sf_F_DRIVE/Nicolas/Eco_6frame/Nuc_translation/UP000000625_83333_complete_17022017.fasta"
-UNIREFGENE="/media/sf_F_DRIVE/Nicolas/Eco_6frame/Nuc_translation/UP000000625_83333_DNA.fasta"
-ALLUNIPROT="/media/sf_F_DRIVE/Nicolas/BlastDB/uniprot_sprot_trembl.fasta"
-ALLNCBIPROT="/media/sf_F_DRIVE/Nicolas/BlastDB/refseq_protein"
-ALLNCBIRNA="/media/sf_F_DRIVE/Nicolas/BlastDB/refseq_rna"
+GENOME="${PBS_O_HOME}/work/Eco_6frame/Nuc_translation/GCA_001566335.1_15022017.fasta"
+UNIREFPROT="${PBS_O_HOME}/work/Eco_6frame/Nuc_translation/UP000000625_83333_complete_17022017.fasta"
+UNIREFGENE="${PBS_O_HOME}/work/Eco_6frame/Nuc_translation/UP000000625_83333_DNA.fasta"
+ALLUNIPROT="${PBS_O_HOME}/BlastDB/uniprot_sprot_trembl.fasta"
+ALLNCBIPROT="refseq_protein"
+ALLNCBIRNA="refseq_rna"
 
 # BlastDatab
 InputType="fasta"
