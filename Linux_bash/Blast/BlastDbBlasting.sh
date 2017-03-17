@@ -36,14 +36,15 @@ if [ ${ENTRY} == 'all' ]; then
 	blastdbcmd -db ${INPUTSEQ} \
 	  -dbtype ${DBTYPE} \
 	  -entry ${ENTRY} | \
-	  blast2 -i ${INPUTSEQ} \
-	  -p ${TASK} \
-	  -d ${DB} \
-	  -o ${WKDIR}/${OUTBLAST} \
-	  -e ${EVAL} \
-	  -K ${NUMALIGN} \
-	  -a ${THREADS} \
-	  -m '8 qseqid sseqid pident nident mismatch length gapopen qstart qend sstart send evalue bitscore score'
+	  eval "${TASK} \
+	  -query - \
+	  -task ${TASK} \
+	  -db ${DB} \
+	  -out ${WKDIR}/${OUTBLAST} \
+	  -evalue ${EVAL} \
+	  -num_alignments ${NUMALIGN} \
+	  -num_threads ${THREADS} \
+	  -outfmt '6 qseqid sseqid pident nident mismatch length gapopen qstart qend sstart send evalue bitscore score'"
 
 else
 
@@ -51,14 +52,15 @@ else
 	blastdbcmd -db ${INPUTSEQ} \
 	  -dbtype ${DBTYPE} \
 	  -entry_batch ${ENTRY} | \
-	  blast2 -i ${INPUTSEQ} \
-	  -p ${TASK} \
-	  -d ${DB} \
-	  -o ${WKDIR}/${OUTBLAST} \
-	  -e ${EVAL} \
-	  -K ${NUMALIGN} \
-	  -a ${THREADS} \
-	  -m '8 qseqid sseqid pident nident mismatch length gapopen qstart qend sstart send evalue bitscore score'
+	  eval "${TASK} \
+	  -query - \
+	  -task ${TASK} \
+	  -db ${DB} \
+	  -out ${WKDIR}/${OUTBLAST} \
+	  -evalue ${EVAL} \
+	  -num_alignments ${NUMALIGN} \
+	  -num_threads ${THREADS} \
+	  -outfmt '6 qseqid sseqid pident nident mismatch length gapopen qstart qend sstart send evalue bitscore score'"
 
 fi
 
