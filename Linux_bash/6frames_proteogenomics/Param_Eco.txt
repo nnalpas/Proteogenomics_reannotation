@@ -20,8 +20,8 @@ GENOME="${PBS_O_HOME}/work/Eco_6frame/Nuc_translation/GCA_001566335.1_15022017.f
 UNIREFPROT="${PBS_O_HOME}/work/Eco_6frame/Nuc_translation/UP000000625_83333_complete_17022017.fasta"
 UNIREFGENE="${PBS_O_HOME}/work/Eco_6frame/Nuc_translation/UP000000625_83333_DNA.fasta"
 ALLUNIPROT="${PBS_O_HOME}/BlastDB/uniprot_sprot_trembl.fasta"
-ALLNCBIPROT="refseq_protein"
-ALLNCBIRNA="refseq_rna"
+ALLNCBIPROT="${PBS_O_HOME}/BlastDB/refseq_protein"
+ALLNCBIRNA="${PBS_O_HOME}/BlastDB/refseq_rna"
 
 # BlastDatab
 InputType="fasta"
