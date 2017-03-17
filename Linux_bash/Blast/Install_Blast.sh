@@ -14,7 +14,7 @@ wget 'ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.6.
 module load devel/java_jdk/1.8.0u112
 
 # Unzip installation files using java (unzip command was not installed at the time)
-jar -xvf ncbi-blast-2.6.0+-src.zip 
+jar -xvf ncbi-blast-2.6.0+-src.zip
 
 # Make executable all files in software installation directory
 chmod 770 -R ncbi-blast-2.6.0+-src
