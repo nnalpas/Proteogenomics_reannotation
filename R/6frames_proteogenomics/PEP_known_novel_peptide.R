@@ -6,22 +6,19 @@
 # Start with clean environment
 rm(list = ls())
 
-# Define user input parameters
-markdown <- TRUE
-
 
 
 ### Define working directory ---------------------------------------------
 
 # Define the work space
-work.space <- choose.dir()
-setwd(work.space)
+work_space <- choose.dir()
+setwd(work_space)
 
 # Define the current user
 user <- Sys.info()[["user"]]
 
 # Define current time
-date.str <- format(Sys.time(), "%Y-%m-%d")
+date_str <- format(Sys.time(), "%Y-%m-%d")
 
 
 
@@ -38,65 +35,63 @@ source(
 # Load the required packages (or install if not already in library)
 # Note: the select function from dplyr and UniProt.ws is overlapping,
 # therefore order of package loading is important
-loadpackage(plyr)
-loadpackage(dplyr)
-loadpackage(tidyr)
-loadpackage(seqinr)
-loadpackage(UniProt.ws)
-loadpackage(magrittr)
-loadpackage(WriteXLS)
-loadpackage(data.table)
-loadpackage(splitstackshape)
-loadpackage(VennDiagram)
-loadpackage(ggplot2)
-loadpackage(grid)
-loadpackage(gridExtra)
-loadpackage(RColorBrewer)
-loadpackage(stringr)
-loadpackage(Biostrings)
-loadpackage(RecordLinkage)
-loadpackage(VariantAnnotation)
-loadpackage(cgdsr)
-loadpackage(bit64)
-loadpackage(cleaver)
-loadpackage(plotly)
-loadpackage(GenomicRanges)
-loadpackage(biovizBase)
-loadpackage(ggbio)
-loadpackage(ggradar)
+load_package(plyr)
+load_package(dplyr)
+load_package(tidyr)
+load_package(seqinr)
+load_package(UniProt.ws)
+load_package(magrittr)
+load_package(WriteXLS)
+load_package(data.table)
+load_package(splitstackshape)
+load_package(VennDiagram)
+load_package(ggplot2)
+load_package(grid)
+load_package(gridExtra)
+load_package(RColorBrewer)
+load_package(stringr)
+load_package(Biostrings)
+load_package(RecordLinkage)
+load_package(VariantAnnotation)
+load_package(cgdsr)
+load_package(bit64)
+load_package(cleaver)
+load_package(plotly)
+load_package(GenomicRanges)
+load_package(biovizBase)
+load_package(ggbio)
+load_package(ggradar)
 
 
 
 ### Data import ----------------------------------------------------------
 
 # Select the maxquant txt folder
-txt.dir <- choose.dir(caption = "Select the MaxQuant txt folder?")
+txt_dir <- choose.dir(caption = "Select the MaxQuant txt folder?")
 
 # Import the maxquant evidence table
-evid <- maxquant.read(
-    path = txt.dir,
+evid <- mq_read(
+    path = txt_dir,
     name = "evidence.txt",
     integer64 = "double")
 
 # List the fasta files that need to be imported
-fasta.file <- choose.files(
-    caption = "Select Fasta files",
-    multi = TRUE,
-    filters = ".fasta") %>%
-    set_names(c("Contaminant", "Novel", "Known"))
+fasta_file <- c()
+fasta_file["Known"] <- choose.files(
+    caption = "Select KNOWN proteome Fasta file",
+    multi = FALSE,
+    filters = ".fasta")
+fasta_file["Novel"] <- choose.files(
+    caption = "Select NOVEL proteome Fasta file",
+    multi = FALSE,
+    filters = ".fasta")
+fasta_file["Contaminant"] <- choose.files(
+    caption = "Select CONTAMINANT proteome Fasta file",
+    multi = FALSE,
+    filters = ".fasta")
 
-# Import all fasta file data and store into list
-fasta.list <- list()
-for (x in 1:length(fasta.file)) {
-    
-    # Import the current fasta file
-    tmp <- read.fasta(
-        file = fasta.file[x], seqtype = "AA", as.string = TRUE)
-    
-    # Include imported fasta into the list
-    fasta.list[names(fasta.file)[x]] <- list(tmp)
-    
-}
+# Import the current fasta file
+    .x = fasta_file, .f = read.fasta, seqtype = "AA", as.string = TRUE)
 
 # Import the experimental design (with conditions)
 exp.design <- read.table(
@@ -104,7 +99,7 @@ exp.design <- read.table(
     sep = "\t", quote = "", as.is = TRUE)
 
 # Clean-up
-rm(fasta.file)
+rm(fasta_file)
 
 
 
@@ -182,7 +177,7 @@ saveRDS(object = evid.match, file = "Sequence_group_mapping.RDS")
 # Export complete evidence info for these novel evidence
 write.table(
     x = evid.match[evid.match$group == "Novel", ],
-    file = paste("Novel_evidence_", date.str, ".txt", sep = ""),
+    file = paste("Novel_evidence_", date_str, ".txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
@@ -438,7 +433,7 @@ pep.pos.final <- dplyr::left_join(
 # Export condensed dataframe of novel peptide
 write.table(
     x = pep.pos.final,
-    file = paste("Novel_peptide_", date.str, ".txt", sep = ""),
+    file = paste("Novel_peptide_", date_str, ".txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
@@ -483,7 +478,7 @@ orf.candidates <- data[grep(
 # Export the table of novel ORF that needs validation
 write.table(
     x = tmp,
-    file = paste("Novel_ORF_toInterprete_", date.str, ".txt", sep = ""),
+    file = paste("Novel_ORF_toInterprete_", date_str, ".txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
@@ -497,21 +492,21 @@ rm(data, tmp)
 ### ORF genomic position identification ----------------------------------
 
 # List the fasta files that need to be imported
-fasta.file <- choose.files(
+fasta_file <- choose.files(
     caption = "Select Fasta files",
     multi = TRUE,
     filters = ".fasta") %>%
     set_names(c("NicolasORF"))
 
 # Import all fasta file data and store into list
-for (x in 1:length(fasta.file)) {
+for (x in 1:length(fasta_file)) {
     
     # Import the current fasta file
     tmp <- read.fasta(
-        file = fasta.file[x], seqtype = "AA", as.string = TRUE)
+        file = fasta_file[x], seqtype = "AA", as.string = TRUE)
     
     # Include imported fasta into the list
-    fasta.list[names(fasta.file)[x]] <- list(tmp)
+    fasta.list[names(fasta_file)[x]] <- list(tmp)
     
 }
 
@@ -584,7 +579,7 @@ blast.NN.vs.KK.best %<>%
     dplyr::full_join(x = ., y = orf.pos, by = "id")
 
 # Clean-up
-rm(blast.NN.vs.KK, fasta.file, tmp)
+rm(blast.NN.vs.KK, fasta_file, tmp)
 
 
 
@@ -737,7 +732,7 @@ orf.candidates.final <- tmp
 # Export the data for easier examination
 write.table(
     x = orf.candidates.final,
-    file = paste("ORF_candidate_neighbour_", date.str, ".txt", sep = ""),
+    file = paste("ORF_candidate_neighbour_", date_str, ".txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
@@ -945,54 +940,49 @@ colnames(manual.annot)[
 
 ### Generate the report --------------------------------------------------
 
-# Check whether markdown output is requested
-if (markdown) {
-    
-    # Define the report markdown file
-    report.file <- paste(
-        "C:/Users",
-        user, 
-        "Documents/GitHub/Miscellaneous/R/6frames_proteogenomics",
-        "Bsu_proteogenomics_report.rmd", sep = "/")
-    
-    # Define temporary location for report generation
-    tempReport <- file.path(tempdir(), basename(report.file))
-    file.copy(
-        from = report.file,
-        to = tempReport,
-        overwrite = TRUE)
-    
-    # Define the required variables as markdown parameters
-    param <- list(
-        evidences = evid.match,
-        pept.posit = pep.pos,
-        levenshtein = leven.data,
-        pheno = exp.design,
-        bsu.ideo = bsu.ideo,
-        ref.grange = ref.grange,
-        novel.grange = orf.grange,
-        pep.loc = pep.located,
-        manual.annot = manual.annot) 
-    
-    # Define output file name
-    out.file <- paste(
-        work.space,
-        "/Bsu_proteogenomics_",
-        format(Sys.time(), '%Y%m%d_%H-%M'),
-        ".html",
-        sep = "")
-    
-    # Render the markdown report
-    rmarkdown::render(
-        input = tempReport,
-        output_format = "ioslides_presentation",
-        output_file = out.file,
-        params = param,
-        envir = new.env(parent = globalenv()))
-    
-    # Clean-up
-    rm(param)
-    
-}
+# Define the report markdown file
+report.file <- paste(
+    "C:/Users",
+    user, 
+    "Documents/GitHub/Miscellaneous/R/6frames_proteogenomics",
+    "Bsu_proteogenomics_report.rmd", sep = "/")
+
+# Define temporary location for report generation
+tempReport <- file.path(tempdir(), basename(report.file))
+file.copy(
+    from = report.file,
+    to = tempReport,
+    overwrite = TRUE)
+
+# Define the required variables as markdown parameters
+param <- list(
+    evidences = evid.match,
+    pept.posit = pep.pos,
+    levenshtein = leven.data,
+    pheno = exp.design,
+    bsu.ideo = bsu.ideo,
+    ref.grange = ref.grange,
+    novel.grange = orf.grange,
+    pep.loc = pep.located,
+    manual.annot = manual.annot) 
+
+# Define output file name
+out.file <- paste(
+    work_space,
+    "/Bsu_proteogenomics_",
+    format(Sys.time(), '%Y%m%d_%H-%M'),
+    ".html",
+    sep = "")
+
+# Render the markdown report
+rmarkdown::render(
+    input = tempReport,
+    output_format = "ioslides_presentation",
+    output_file = out.file,
+    params = param,
+    envir = new.env(parent = globalenv()))
+
+# Clean-up
+rm(param)
 
 
