@@ -125,58 +125,24 @@ pep_loc <- pept_locate(
     data = data,
     peptide = "Sequence",
     proteins = "Proteins",
-    fasta = fastas) %>%
-    dplyr::mutate(
-        .,
-        origin = case_when(
-            .$prot %in% names(fasta_list$Known) ~ "Known",
-            .$prot %in% names(fasta_list$Contaminant) ~ "Contaminant",
-            .$prot %in% names(fasta_list$Novel) ~ "Novel",
-            TRUE ~ NA_character_))
+    fasta = fastas)
 
 # Find the source of the peptide from which fasta file they are originating
 evid_match <- pep_loc %>%
     dplyr::group_by(., pep) %>%
     dplyr::summarise(
         .,
-        group = case_when(
-            any(.$origin == "Known") ~ "Known",
-            any(.$origin == "Contaminant") ~ "Contaminant",
-            any(.$origin == "Novel") ~ "Novel",
-            TRUE ~ NA_character_)) %>%
-    dplyr::left_join(x = evid, y = ., by = c("Sequence" == "pep"))
-
-# Split peptide sequence per fasta of origin and store into list variable
-Cont <- pep_loc %>%
-    dplyr::filter(., !is.na(start)) %>%
-    dplyr::filter(., grepl(pattern = "^CON__", x = prot)) %>%
-    .[["pep"]] %>%
-    as.character(.)
-Nov <- pep_loc %>%
-    dplyr::filter(., !is.na(start)) %>%
-    dplyr::filter(., grepl("^CP014348.1", prot)) %>%
-    .[["pep"]] %>%
-    as.character(.)
-know <- pep_loc %>%
-    dplyr::filter(., !is.na(start)) %>%
-    dplyr::filter(., !grepl("^(CP014348.1|CON__)", prot)) %>%
-    .[["pep"]] %>%
-    as.character(.)
-pep_list <- list(
-        Contaminant = Cont,
-        Novel = Nov,
-        Known = know)
-
-# New dataframe to hold info about fasta of origin for each sequence
-evid_match <- evid %>%
-    dplyr::mutate(
-        .,
-        group = case_when(
-            .$Sequence %in% pep_list$Known ~ "Known",
-            .$Sequence %in% pep_list$Contaminant ~ "Contaminant",
-            .$Sequence %in% pep_list$Novel ~ "Novel",
-            TRUE ~ NA_character_)) %>%
-    base::as.data.frame(., stringAsFactors = TRUE)
+        group = ifelse(
+            test = any(prot %in% names(fasta_list$Known)),
+            yes = "Known",
+            no = ifelse(
+                test = any(prot %in% names(fasta_list$Contaminant)),
+                yes = "Contaminant",
+                no = ifelse(
+                    test = any(prot %in% names(fasta_list$Novel)),
+                    yes = "Novel",
+                    no = NA_character_)))) %>%
+    dplyr::left_join(x = evid, y = ., by = c("Sequence" = "pep"))
 
 # Define the reverse hits as group
 evid_match[evid_match$Reverse == "+", "group"] <- "Reverse"
