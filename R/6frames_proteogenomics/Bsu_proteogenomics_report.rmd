@@ -14,7 +14,7 @@ params:
     bsu.ideo: NA
     ref.grange: NA
     novel.grange: NA
-    pep.loc: NA
+    pep_loc: NA
     manual.annot: NA
 ---
 
@@ -391,9 +391,9 @@ exprs.id <- strsplit(x = evid.match$Proteins, split = ";") %>%
 exprs.nuc <- coding.nuc[names(coding.nuc) %in% exprs.id]
 
 # Get all peptide associated nucleotide position
-tmp <- params[["pep.loc"]][
-    params[["pep.loc"]]$Proteins %in% names(coding.nuc) &
-        !is.na(params[["pep.loc"]]$start), ]
+tmp <- params[["pep_loc"]][
+    params[["pep_loc"]]$Proteins %in% names(coding.nuc) &
+        !is.na(params[["pep_loc"]]$start), ]
 cover.nuc <- tmp %>%
     apply(
     X = .,
