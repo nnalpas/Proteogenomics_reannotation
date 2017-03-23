@@ -27,10 +27,12 @@ fi
 
 # Load all parameters
 source ${SCRIPT_FLAGS}
-export OMP_NUM_THREADS=${MOAB_PROCCOUNT}
 
 # Go to workspace
 cd ${PBS_O_WORKDIR}
+
+# Load the required modules
+module load ${PBS_O_HOME}/modulefiles/blast+/2.6.0
 
 # Create project directory
 ProjDir=${PBS_O_INITDIR}/${ProjectName}
@@ -42,6 +44,9 @@ mkdir -p $LogDir
 
 # Copy the parameter file to log
 cp ${SCRIPT_FLAGS} ${LogDir}/Parameters_${DateStart}.txt
+
+# Get the number of threads to use
+THREADS=`wc -l ${PBS_NODEFILE} | grep -o "^[0-9]*"`
 
 
 
@@ -105,11 +110,11 @@ fi
 # Check whether to blast the ORFs against taxon reference protein and RNA and against all uniprot and ncbi
 if [ $BlastDbBlasting == 1 ]; then
     
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" "all" "blastp" ${SIXFRAMEPROT} ${UNIREFPROT} ${Eval} ${NumAlign} ${OMP_NUM_THREADS} "ORFprot_vs_Refprot" > ${LogDir}/BlastDbBlasting.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" ${ProjDir}/MaxQuant_txt/Novel_ORF.txt "blastp" ${SIXFRAMEPROT} ${ALLUNIPROT} ${Eval} ${NumAlign} ${OMP_NUM_THREADS} "ORFprot_vs_Uniprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" ${ProjDir}/MaxQuant_txt/Novel_ORF.txt "blastp" ${SIXFRAMEPROT} ${ALLNCBIPROT} ${Eval} ${NumAlign} ${OMP_NUM_THREADS} "ORFprot_vs_NCBIprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" "all" "blastn" ${SIXFRAMEGENE} ${UNIREFGENE} ${Eval} ${NumAlign} ${OMP_NUM_THREADS} "ORFnucl_vs_Refrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" ${ProjDir}/MaxQuant_txt/Novel_ORF.txt "blastn" ${SIXFRAMEGENE} ${ALLNCBIRNA} ${Eval} ${NumAlign} ${OMP_NUM_THREADS} "ORFnucl_vs_NCBIrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" "all" "blastp" ${SIXFRAMEPROT} ${UNIREFPROT} ${Eval} ${NumAlign} ${THREADS} "ORFprot_vs_Refprot" > ${LogDir}/BlastDbBlasting.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" ${ProjDir}/MaxQuant_txt/Novel_ORF.txt "blastp" ${SIXFRAMEPROT} ${ALLUNIPROT} ${Eval} ${NumAlign} ${THREADS} "ORFprot_vs_Uniprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" ${ProjDir}/MaxQuant_txt/Novel_ORF.txt "blastp" ${SIXFRAMEPROT} ${ALLNCBIPROT} ${Eval} ${NumAlign} ${THREADS} "ORFprot_vs_NCBIprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" "all" "blastn" ${SIXFRAMEGENE} ${UNIREFGENE} ${Eval} ${NumAlign} ${THREADS} "ORFnucl_vs_Refrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" ${ProjDir}/MaxQuant_txt/Novel_ORF.txt "blastn" ${SIXFRAMEGENE} ${ALLNCBIRNA} ${Eval} ${NumAlign} ${THREADS} "ORFnucl_vs_NCBIrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
     
 fi
 
