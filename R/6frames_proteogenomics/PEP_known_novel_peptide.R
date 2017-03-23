@@ -6,22 +6,19 @@
 # Start with clean environment
 rm(list = ls())
 
-# Define user input parameters
-markdown <- TRUE
-
 
 
 ### Define working directory ---------------------------------------------
 
 # Define the work space
-work.space <- choose.dir()
-setwd(work.space)
+work_space <- choose.dir()
+setwd(work_space)
 
 # Define the current user
 user <- Sys.info()[["user"]]
 
 # Define current time
-date.str <- format(Sys.time(), "%Y-%m-%d")
+date_str <- format(Sys.time(), "%Y-%m-%d")
 
 
 
@@ -38,65 +35,64 @@ source(
 # Load the required packages (or install if not already in library)
 # Note: the select function from dplyr and UniProt.ws is overlapping,
 # therefore order of package loading is important
-loadpackage(plyr)
-loadpackage(dplyr)
-loadpackage(tidyr)
-loadpackage(seqinr)
-loadpackage(UniProt.ws)
-loadpackage(magrittr)
-loadpackage(WriteXLS)
-loadpackage(data.table)
-loadpackage(splitstackshape)
-loadpackage(VennDiagram)
-loadpackage(ggplot2)
-loadpackage(grid)
-loadpackage(gridExtra)
-loadpackage(RColorBrewer)
-loadpackage(stringr)
-loadpackage(Biostrings)
-loadpackage(RecordLinkage)
-loadpackage(VariantAnnotation)
-loadpackage(cgdsr)
-loadpackage(bit64)
-loadpackage(cleaver)
-loadpackage(plotly)
-loadpackage(GenomicRanges)
-loadpackage(biovizBase)
-loadpackage(ggbio)
-loadpackage(ggradar)
+load_package(plyr)
+load_package(dplyr)
+load_package(tidyr)
+load_package(seqinr)
+load_package(UniProt.ws)
+load_package(magrittr)
+load_package(WriteXLS)
+load_package(data.table)
+load_package(splitstackshape)
+load_package(VennDiagram)
+load_package(ggplot2)
+load_package(grid)
+load_package(gridExtra)
+load_package(RColorBrewer)
+load_package(stringr)
+load_package(Biostrings)
+load_package(RecordLinkage)
+load_package(VariantAnnotation)
+load_package(cgdsr)
+load_package(bit64)
+load_package(cleaver)
+load_package(plotly)
+load_package(GenomicRanges)
+load_package(biovizBase)
+load_package(ggbio)
+load_package(ggradar)
 
 
 
 ### Data import ----------------------------------------------------------
 
 # Select the maxquant txt folder
-txt.dir <- choose.dir(caption = "Select the MaxQuant txt folder?")
+txt_dir <- choose.dir(caption = "Select the MaxQuant txt folder?")
 
 # Import the maxquant evidence table
-evid <- maxquant.read(
-    path = txt.dir,
+evid <- mq_read(
+    path = txt_dir,
     name = "evidence.txt",
     integer64 = "double")
 
 # List the fasta files that need to be imported
-fasta.file <- choose.files(
-    caption = "Select Fasta files",
-    multi = TRUE,
-    filters = ".fasta") %>%
-    set_names(c("Contaminant", "Novel", "Known"))
+fasta_file <- c()
+fasta_file["Known"] <- choose.files(
+    caption = "Select KNOWN proteome Fasta file",
+    multi = FALSE,
+    filters = ".fasta")
+fasta_file["Novel"] <- choose.files(
+    caption = "Select NOVEL proteome Fasta file",
+    multi = FALSE,
+    filters = ".fasta")
+fasta_file["Contaminant"] <- choose.files(
+    caption = "Select CONTAMINANT proteome Fasta file",
+    multi = FALSE,
+    filters = ".fasta")
 
-# Import all fasta file data and store into list
-fasta.list <- list()
-for (x in 1:length(fasta.file)) {
-    
-    # Import the current fasta file
-    tmp <- read.fasta(
-        file = fasta.file[x], seqtype = "AA", as.string = TRUE)
-    
-    # Include imported fasta into the list
-    fasta.list[names(fasta.file)[x]] <- list(tmp)
-    
-}
+# Import the current fasta file
+fasta_list <- purrr::map(
+    .x = fasta_file, .f = read.fasta, seqtype = "AA", as.string = TRUE)
 
 # Import the experimental design (with conditions)
 exp.design <- read.table(
@@ -104,7 +100,7 @@ exp.design <- read.table(
     sep = "\t", quote = "", as.is = TRUE)
 
 # Clean-up
-rm(fasta.file)
+rm(fasta_file)
 
 
 
@@ -118,71 +114,54 @@ data <- evid %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Format the fasta files
-names(fasta.list$Contaminant) %<>%
+names(fasta_list$Contaminant) %<>%
     sub(pattern = "^", replacement = "CON__", x = .)
-names(fasta.list$Known) %<>%
+names(fasta_list$Known) %<>%
     sub(pattern = ".+\\|(.+)\\|.+", replacement = "\\1", x = .)
-fastas <- c(fasta.list$Contaminant, fasta.list$Novel, fasta.list$Known)
+fastas <- c(fasta_list$Contaminant, fasta_list$Novel, fasta_list$Known)
 
 # Locate all the peptide within associated proteins
-pep.loc <- pept.locate(
-    data = data, peptide = "Sequence", proteins = "Proteins", fasta = fastas)
+pep_loc <- pept_locate(
+    data = data,
+    peptide = "Sequence",
+    proteins = "Proteins",
+    fasta = fastas)
 
-# Split peptide sequence per fasta of origin and store into list variable
-Cont <- pep.loc %>%
-    dplyr::filter(., !is.na(start)) %>%
-    dplyr::filter(., grepl(pattern = "^CON__", x = prot)) %>%
-    .[["pep"]] %>%
-    as.character(.)
-Nov <- pep.loc %>%
-    dplyr::filter(., !is.na(start)) %>%
-    dplyr::filter(., grepl("^CP014348.1", prot)) %>%
-    .[["pep"]] %>%
-    as.character(.)
-know <- pep.loc %>%
-    dplyr::filter(., !is.na(start)) %>%
-    dplyr::filter(., !grepl("^(CP014348.1|CON__)", prot)) %>%
-    .[["pep"]] %>%
-    as.character(.)
-pep.list <- list(
-        Contaminant = Cont,
-        Novel = Nov,
-        Known = know)
-
-# New dataframe to hold info about fasta of origin for each sequence
-evid.match <- evid %>%
-    dplyr::mutate(
+# Find the source of the peptide from which fasta file they are originating
+evid_match <- pep_loc %>%
+    dplyr::group_by(., pep) %>%
+    dplyr::summarise(
         .,
         group = ifelse(
-            test = Sequence %in% pep.list$Known,
+            test = any(prot %in% names(fasta_list$Known)),
             yes = "Known",
             no = ifelse(
-                test = Sequence %in% pep.list$Contaminant,
+                test = any(prot %in% names(fasta_list$Contaminant)),
                 yes = "Contaminant",
                 no = ifelse(
-                    test = Sequence %in% pep.list$Novel,
+                    test = any(prot %in% names(fasta_list$Novel)),
                     yes = "Novel",
                     no = NA_character_)))) %>%
-    base::as.data.frame(., stringAsFactors = TRUE)
+    dplyr::left_join(x = evid, y = ., by = c("Sequence" = "pep"))
 
 # Define the reverse hits as group
-evid.match[evid.match$Reverse == "+", "group"] <- "Reverse"
+evid_match[evid_match$Reverse == "+", "group"] <- "Reverse"
 
 # Print warning for unidentified sequence origin
 print(paste(
-    "There are", length(which(is.na(evid.match$group))),
+    "There are", length(which(is.na(evid_match$group))),
     "NA values, these need to be checked!", sep = " "))
 
 # Clean-up
-rm(pep.list, evid)
+rm(pep_list, evid)
 
 # Save the group mapping data
-saveRDS(object = evid.match, file = "Sequence_group_mapping.RDS")
+saveRDS(object = evid_match, file = "Sequence_group_mapping.RDS")
 
 # Export complete evidence info for these novel evidence
 write.table(
-    x = evid.match[evid.match$group == "Novel", ],
-    file = paste("Novel_evidence_", date.str, ".txt", sep = ""),
+    x = evid_match[evid_match$group == "Novel", ],
+    file = paste("Novel_evidence_", date_str, ".txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
@@ -193,33 +172,33 @@ write.table(
 ### Focus on high quality novel peptide ----------------------------------
 
 # Find the median PEP for known peptides
-known.med.pep <- evid.match %>%
+known.med.pep <- evid_match %>%
     dplyr::filter(., group == "Known") %>%
     dplyr::summarise(., median(PEP)) %>%
     as.numeric(.)
 
 # Keep novel peptides that have lower PEP than known peptide median PEP
-candidates <- evid.match %>%
+candidates <- evid_match %>%
     dplyr::filter(., PEP <= known.med.pep, group == "Novel") %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Get position of the novel peptide within ORF
-tmp <- evid.match %>%
+tmp <- evid_match %>%
     dplyr::filter(., group == "Novel") %>%
     dplyr::select(., Sequence) %>%
     unique(.) %>%
     dplyr::group_by(., Sequence) %>%
     dplyr::summarise(
         .,
-        Proteins = grep(Sequence, fasta.list$Novel) %>%
-            names(fasta.list$Novel)[.] %>%
+        Proteins = grep(Sequence, fasta_list$Novel) %>%
+            names(fasta_list$Novel)[.] %>%
             paste(., collapse = ";")) %>%
     cSplit(
         indt = ., splitCols = "Proteins", sep = ";", direction = "long") %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 pep.pos <- apply(X = tmp, MARGIN = 1, FUN = function(x) {
     val <- str_locate_all(
-        string = fasta.list$Novel[as.character(x[["Proteins"]])] %>% as.character(.),
+        string = fasta_list$Novel[as.character(x[["Proteins"]])] %>% as.character(.),
         pattern = x[["Sequence"]] %>% as.character(.)) %>%
         unlist(.) %>%
         c(x[["Sequence"]], x[["Proteins"]], .)
@@ -249,7 +228,7 @@ rm(tmp)
 ### Levenshtein distance -------------------------------------------------
 
 # Keep only sequence for novel peptide
-tmp <- evid.match %>%
+tmp <- evid_match %>%
     dplyr::filter(., group == "Novel") %>%
     dplyr::select(., Sequence) %>%
     unique(.)
@@ -258,7 +237,7 @@ tmp <- evid.match %>%
 # the minimum leven score result per peptide
 leven.data <- adist(
     x = tmp$Sequence,
-    y = fasta.list$Known,
+    y = fasta_list$Known,
     partial = TRUE,
     ignore.case = TRUE) %>%
     set_rownames(tmp$Sequence) %>%
@@ -412,7 +391,7 @@ for (x in 1:nrow(pep.pos)) {
 }
 
 # Compile a condensed dataframe of novel peptide info
-data <- evid.match %>%
+data <- evid_match %>%
     dplyr::filter(., group == "Novel") %>%
     dplyr::select(
         .,
@@ -438,7 +417,7 @@ pep.pos.final <- dplyr::left_join(
 # Export condensed dataframe of novel peptide
 write.table(
     x = pep.pos.final,
-    file = paste("Novel_peptide_", date.str, ".txt", sep = ""),
+    file = paste("Novel_peptide_", date_str, ".txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
@@ -483,7 +462,7 @@ orf.candidates <- data[grep(
 # Export the table of novel ORF that needs validation
 write.table(
     x = tmp,
-    file = paste("Novel_ORF_toInterprete_", date.str, ".txt", sep = ""),
+    file = paste("Novel_ORF_toInterprete_", date_str, ".txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
@@ -497,27 +476,27 @@ rm(data, tmp)
 ### ORF genomic position identification ----------------------------------
 
 # List the fasta files that need to be imported
-fasta.file <- choose.files(
+fasta_file <- choose.files(
     caption = "Select Fasta files",
     multi = TRUE,
     filters = ".fasta") %>%
     set_names(c("NicolasORF"))
 
 # Import all fasta file data and store into list
-for (x in 1:length(fasta.file)) {
+for (x in 1:length(fasta_file)) {
     
     # Import the current fasta file
     tmp <- read.fasta(
-        file = fasta.file[x], seqtype = "AA", as.string = TRUE)
+        file = fasta_file[x], seqtype = "AA", as.string = TRUE)
     
     # Include imported fasta into the list
-    fasta.list[names(fasta.file)[x]] <- list(tmp)
+    fasta_list[names(fasta_file)[x]] <- list(tmp)
     
 }
 
 # Get the start-end genomic position for each ORFs
 orf.pos <- lapply(
-    X = fasta.list$NicolasORF, FUN = function(x) { attr(x, "Annot") }) %>%
+    X = fasta_list$NicolasORF, FUN = function(x) { attr(x, "Annot") }) %>%
     unlist(.) %>%
     sub("^.*? \\[(.*?)\\] .*$", "\\1", .) %>%
     base::data.frame(id = names(.), pos = ., stringsAsFactors = FALSE) %>%
@@ -584,7 +563,7 @@ blast.NN.vs.KK.best %<>%
     dplyr::full_join(x = ., y = orf.pos, by = "id")
 
 # Clean-up
-rm(blast.NN.vs.KK, fasta.file, tmp)
+rm(blast.NN.vs.KK, fasta_file, tmp)
 
 
 
@@ -712,7 +691,7 @@ tmp <- orf.candidates.final %>%
 
 # Obtain for each peptide all associated condition it was found in and
 # compile per ORF all associated conditions
-tmp2 <- evid.match %>%
+tmp2 <- evid_match %>%
     dplyr::select(., Sequence, `Raw file`) %>%
     unique(.) %>%
     dplyr::filter(., Sequence %in% tmp$Sequences) %>%
@@ -737,7 +716,7 @@ orf.candidates.final <- tmp
 # Export the data for easier examination
 write.table(
     x = orf.candidates.final,
-    file = paste("ORF_candidate_neighbour_", date.str, ".txt", sep = ""),
+    file = paste("ORF_candidate_neighbour_", date_str, ".txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
@@ -818,7 +797,7 @@ seqinfo(ref.grange) <- Seqinfo(
     genome = tmp$geno %>% unique(.) %>% as.character(.))
 
 # Format dataframe as genomic position and other info for each novel ORF
-filt <- evid.match %>%
+filt <- evid_match %>%
     dplyr::filter(., group == "Novel") %>%
     cSplit(indt = ., splitCols = "Proteins", sep = ";", direction = "long") %>%
     .[["Proteins"]] %>%
@@ -872,27 +851,27 @@ seqinfo(orf.grange) <- Seqinfo(
 ### Get peptide position within proteins ---------------------------------
 
 # Compile the required fasta files (novel and known)
-fastas <- c(fasta.list$Novel, fasta.list$Known)
+fastas <- c(fasta_list$Novel, fasta_list$Known)
 
 # Loop through all enzymatic cleavage rules
-pep.list <- base::data.frame()
+pep_list <- base::data.frame()
 for (cleav in c("K|R", "K", "R")) {
     
     # Get all peptide sequence and position for all proteins
-    pep.list <- prot.digest(fasta = fastas, custom = cleav) %>%
-        base::rbind(pep.list, .)
+    pep_list <- prot.digest(fasta = fastas, custom = cleav) %>%
+        base::rbind(pep_list, .)
     
 }
 
 # Clean up the ID to standard uniprot ID
-pep.list$Proteins %<>%
+pep_list$Proteins %<>%
     sub(
         pattern = ".+\\|(.+)\\|.+",
         replacement = "\\1",
         x = .)
 
 # Get association list of peptide and protein (remove reverse and contaminant)
-pep.prot <- evid.match %>%
+pep.prot <- evid_match %>%
     rev.con.filt(.) %>%
     dplyr::select(., Sequence, Proteins) %>%
     cSplit(indt = ., splitCols = "Proteins", sep = ";", direction = "long") %>%
@@ -900,34 +879,34 @@ pep.prot <- evid.match %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Get peptide location within each associated proteins for identified peptides
-pep.located <- pep.prot %>%
-    dplyr::left_join(x = ., y = pep.list, by = c("Sequence", "Proteins")) %>%
+pep_located <- pep.prot %>%
+    dplyr::left_join(x = ., y = pep_list, by = c("Sequence", "Proteins")) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Select the peptide that could not be located and add Methionine
 # at the start of the peptide sequence
-tmp <- pep.located %>%
+tmp <- pep_located %>%
     dplyr::filter(., is.na(start)) %>%
     dplyr::select(., Sequence, Proteins) %>%
     set_colnames(c("OrigSequence", "Proteins")) %>%
     dplyr::mutate(., Sequence = sub("^", "M", OrigSequence))
 
 # Keep only located peptide from this variable
-pep.located %<>%
+pep_located %<>%
     dplyr::filter(., !is.na(start))
 
 # Try to locate again the missing peptide (the Methionine addition should help)
 # and add the new results to main variable
-pep.located <- tmp %>%
-    dplyr::left_join(x = ., y = pep.list, by = c("Sequence", "Proteins")) %>%
+pep_located <- tmp %>%
+    dplyr::left_join(x = ., y = pep_list, by = c("Sequence", "Proteins")) %>%
     dplyr::mutate(., Sequence = OrigSequence, start = (start + 1)) %>%
     dplyr::select(., -OrigSequence) %>%
     base::as.data.frame(., stringsAsFactors = FALSE) %>%
-    base::rbind(pep.located, ., stringsAsFactors = FALSE)
+    base::rbind(pep_located, ., stringsAsFactors = FALSE)
 
 # Remove any remaining contaminant entry (which also could not be located)
-pep.located <- pep.located[
-    grep("^CON__", pep.located$Proteins, invert = TRUE), ] %>%
+pep_located <- pep_located[
+    grep("^CON__", pep_located$Proteins, invert = TRUE), ] %>%
     unique(.)
 
 
@@ -945,54 +924,49 @@ colnames(manual.annot)[
 
 ### Generate the report --------------------------------------------------
 
-# Check whether markdown output is requested
-if (markdown) {
-    
-    # Define the report markdown file
-    report.file <- paste(
-        "C:/Users",
-        user, 
-        "Documents/GitHub/Miscellaneous/R/6frames_proteogenomics",
-        "Bsu_proteogenomics_report.rmd", sep = "/")
-    
-    # Define temporary location for report generation
-    tempReport <- file.path(tempdir(), basename(report.file))
-    file.copy(
-        from = report.file,
-        to = tempReport,
-        overwrite = TRUE)
-    
-    # Define the required variables as markdown parameters
-    param <- list(
-        evidences = evid.match,
-        pept.posit = pep.pos,
-        levenshtein = leven.data,
-        pheno = exp.design,
-        bsu.ideo = bsu.ideo,
-        ref.grange = ref.grange,
-        novel.grange = orf.grange,
-        pep.loc = pep.located,
-        manual.annot = manual.annot) 
-    
-    # Define output file name
-    out.file <- paste(
-        work.space,
-        "/Bsu_proteogenomics_",
-        format(Sys.time(), '%Y%m%d_%H-%M'),
-        ".html",
-        sep = "")
-    
-    # Render the markdown report
-    rmarkdown::render(
-        input = tempReport,
-        output_format = "ioslides_presentation",
-        output_file = out.file,
-        params = param,
-        envir = new.env(parent = globalenv()))
-    
-    # Clean-up
-    rm(param)
-    
-}
+# Define the report markdown file
+report.file <- paste(
+    "C:/Users",
+    user, 
+    "Documents/GitHub/Miscellaneous/R/6frames_proteogenomics",
+    "Bsu_proteogenomics_report.rmd", sep = "/")
+
+# Define temporary location for report generation
+tempReport <- file.path(tempdir(), basename(report.file))
+file.copy(
+    from = report.file,
+    to = tempReport,
+    overwrite = TRUE)
+
+# Define the required variables as markdown parameters
+param <- list(
+    evidences = evid_match,
+    pept.posit = pep.pos,
+    levenshtein = leven.data,
+    pheno = exp.design,
+    bsu.ideo = bsu.ideo,
+    ref.grange = ref.grange,
+    novel.grange = orf.grange,
+    pep_loc = pep_located,
+    manual.annot = manual.annot) 
+
+# Define output file name
+out_file <- paste(
+    work_space,
+    "/Bsu_proteogenomics_",
+    format(Sys.time(), '%Y%m%d_%H-%M'),
+    ".html",
+    sep = "")
+
+# Render the markdown report
+rmarkdown::render(
+    input = tempReport,
+    output_format = "ioslides_presentation",
+    output_file = out_file,
+    params = param,
+    envir = new.env(parent = globalenv()))
+
+# Clean-up
+rm(param)
 
 
