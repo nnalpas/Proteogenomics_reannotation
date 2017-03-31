@@ -35,12 +35,6 @@ source(
         "bin/General_function.R",
         sep = "/"))
 
-
-
-.libPaths()
-
-
-
 # Load the required packages (or install if not already in library)
 load_package(plyr)
 load_package(dplyr)
