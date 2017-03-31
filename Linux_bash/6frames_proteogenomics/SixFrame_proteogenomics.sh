@@ -141,7 +141,7 @@ fi
 # Check whether to perform the reciprocal best blast against previously used databases
 if [ $ReciprocalBlast ]; then
     
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh "prot" ${ProjDir}/Blast/ORFprot_vs_Refprot_besthit.txt "blastp" ${UNIREFPROT} ${SIXFRAMEPROT} ${Eval} ${NumAlign} ${THREADS} "Refprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" ${ProjDir}/Blast/ORFprot_vs_Refprot_besthit.txt "blastp" ${UNIREFPROT} ${SIXFRAMEPROT} ${Eval} ${NumAlign} ${THREADS} "Refprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
 
 fi
 
