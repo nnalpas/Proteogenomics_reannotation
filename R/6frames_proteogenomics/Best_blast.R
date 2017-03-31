@@ -1,4 +1,4 @@
-#!/usr/bin/Rscript
+#!/usr/bin/env Rscript
 
 # This script identifies the best blast hits from blasting results
 # for target entries
@@ -12,7 +12,7 @@ rm(list = ls())
 
 # Define current time
 date_str <- format(Sys.time(), "%Y-%m-%d")
-print(paste("Start ", date.str, sep = ""))
+print(paste("Start", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
 
 # Define the current user
 user <- Sys.info()[["user"]]
@@ -30,10 +30,16 @@ user <- Sys.info()[["user"]]
 #        sep = "/"))
 source(
     file = paste(
-        "/home",
+        "/home-link",
         user,
         "bin/General_function.R",
         sep = "/"))
+
+
+
+.libPaths()
+
+
 
 # Load the required packages (or install if not already in library)
 load_package(plyr)
@@ -104,5 +110,9 @@ write.table(
     sep = "\t",
     row.names = FALSE,
     col.names = FALSE)
+
+# Define end time
+print(paste("Complete", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
+
 
 
