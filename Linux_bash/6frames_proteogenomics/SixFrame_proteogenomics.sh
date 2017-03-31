@@ -33,6 +33,7 @@ cd ${PBS_O_WORKDIR}
 
 # Load the required modules
 module load ${PBS_O_HOME}/modulefiles/blast+/2.6.0
+module load math/R/3.2.3-mkl-11.3
 
 # Create project directory
 ProjDir=${PBS_O_INITDIR}/${ProjectName}
@@ -117,5 +118,32 @@ if [ $BlastDbBlasting == 1 ]; then
     ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" ${ProjDir}/MaxQuant_txt/Novel_ORF.txt "blastn" ${SIXFRAMEGENE} ${ALLNCBIRNA} ${Eval} ${NumAlign} ${THREADS} "ORFnucl_vs_NCBIrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
     
 fi
+
+
+
+##################################
+# Best blast hits identification #
+##################################
+
+# Check whether to identify the best blast hits from all results of previous step
+if [ $BestBlast ]; then
+
+    ${PBS_O_HOME}/bin/Best_blast.R -i ${ProjDir}/Blast/ORFprot_vs_Refprot -o ${ProjDir}/Blast/ORFprot_vs_Refprot_besthit.txt > ${LogDir}/BestBlast.log 2>&1
+
+fi
+
+
+
+#########################
+# Reciprocal best blast #
+#########################
+
+# Check whether to perform the reciprocal best blast against previously used databases
+if [ $ReciprocalBlast ]; then
+    
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh "prot" ${ProjDir}/Blast/ORFprot_vs_Refprot_besthit.txt "blastp" ${UNIREFPROT} ${SIXFRAMEPROT} ${Eval} ${NumAlign} ${THREADS} "Refprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
+
+fi
+
 
 
