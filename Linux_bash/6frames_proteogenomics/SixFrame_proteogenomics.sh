@@ -129,6 +129,10 @@ fi
 if [ $BestBlast ]; then
 
     ${PBS_O_HOME}/bin/Best_blast.R -i ${ProjDir}/Blast/ORFprot_vs_Refprot -o ${ProjDir}/Blast/ORFprot_vs_Refprot_besthit.txt > ${LogDir}/BestBlast.log 2>&1
+    ${PBS_O_HOME}/bin/Best_blast.R -i ${ProjDir}/Blast/ORFprot_vs_Uniprot -o ${ProjDir}/Blast/ORFprot_vs_Uniprot_besthit.txt >> ${LogDir}/BestBlast.log 2>&1
+    ${PBS_O_HOME}/bin/Best_blast.R -i ${ProjDir}/Blast/ORFprot_vs_NCBIprot -o ${ProjDir}/Blast/ORFprot_vs_NCBIprot_besthit.txt >> ${LogDir}/BestBlast.log 2>&1
+    ${PBS_O_HOME}/bin/Best_blast.R -i ${ProjDir}/Blast/ORFnucl_vs_Refrna -o ${ProjDir}/Blast/ORFnucl_vs_Refrna_besthit.txt >> ${LogDir}/BestBlast.log 2>&1
+    ${PBS_O_HOME}/bin/Best_blast.R -i ${ProjDir}/Blast/ORFnucl_vs_NCBIrna -o ${ProjDir}/Blast/ORFnucl_vs_NCBIrna_besthit.txt >> ${LogDir}/BestBlast.log 2>&1
 
 fi
 
@@ -142,6 +146,10 @@ fi
 if [ $ReciprocalBlast ]; then
     
     ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" ${ProjDir}/Blast/ORFprot_vs_Refprot_besthit.txt "blastp" ${UNIREFPROT} ${SIXFRAMEPROT} ${Eval} ${NumAlign} ${THREADS} "Refprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" ${ProjDir}/Blast/ORFprot_vs_Uniprot_besthit.txt "blastp" ${ALLUNIPROT} ${SIXFRAMEPROT} ${Eval} ${NumAlign} ${THREADS} "Uniprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" ${ProjDir}/Blast/ORFprot_vs_NCBIprot_besthit.txt "blastp" ${ALLNCBIPROT} ${SIXFRAMEPROT} ${Eval} ${NumAlign} ${THREADS} "NCBIprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" ${ProjDir}/Blast/ORFnucl_vs_Refrna_besthit.txt "blastn" ${UNIREFGENE} ${SIXFRAMEGENE} ${Eval} ${NumAlign} ${THREADS} "Refrna_vs_ORFnucl" >> ${LogDir}/ReciprocalBlast.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" ${ProjDir}/Blast/ORFnucl_vs_NCBIrna_besthit.txt "blastn" ${ALLNCBIRNA} ${SIXFRAMEGENE} ${Eval} ${NumAlign} ${THREADS} "NCBIrna_vs_ORFnucl" >> ${LogDir}/ReciprocalBlast.log 2>&1
 
 fi
 
