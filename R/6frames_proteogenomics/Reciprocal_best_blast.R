@@ -87,7 +87,7 @@ if (is.null(opt$output)){
 
 
 
-### Data import and processing -------------------------------------------
+### Data import and best blast computation -------------------------------
 
 # Import the Blast results
 blast_data <- read.table(
@@ -99,7 +99,14 @@ blast_data <- read.table(
         "qseqid", "sseqid", "pident", "nident", "mismatch", "length",
         "gapopen", "qstart", "qend", "sstart", "send", "evalue",
         "bitscore", "score"),
-    as.is = TRUE)
+    as.is = TRUE) %>%
+    dplyr::mutate(
+        .,
+        qseqid = uni_id_clean(qseqid),
+        sseqid = uni_id_clean(sseqid))
+
+# Get the best blast match for each query
+best_blast_data <- best_blast(data = blast_data, key = "qseqid")
 
 # Import the reciprocal Blast results
 reciproc_data <- read.table(
@@ -111,6 +118,29 @@ reciproc_data <- read.table(
         "qseqid", "sseqid", "pident", "nident", "mismatch", "length",
         "gapopen", "qstart", "qend", "sstart", "send", "evalue",
         "bitscore", "score"),
-    as.is = TRUE)
+    as.is = TRUE) %>%
+    dplyr::mutate(
+        .,
+        qseqid = uni_id_clean(qseqid),
+        sseqid = uni_id_clean(sseqid))
+
+# Get the best reciprocal blast match for each query
+best_reciproc_data <- best_blast(data = reciproc_data, key = "qseqid")
+
+
+
+### Reciprocal best blast hits identification ----------------------------
+
+# Merge the best blast and best reciprocal data
+blast_merge <- best_blast_data %>%
+    dplyr::full_join(
+        x = .,
+        y = best_reciproc_data,
+        by = c("qseqid" = "sseqid"),
+        suffix = c("_blast", "_reciproc"))
+
+# Determine which entry have a reciprocal best hits
+
+
 
 
