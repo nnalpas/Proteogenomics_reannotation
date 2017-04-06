@@ -155,3 +155,19 @@ fi
 
 
 
+######################################
+# Compile reciprocal best blast data #
+######################################
+
+# Check whether to perform reciprocal best blast hit data processing
+if [ $ReciprocalBestBlast ]; then
+
+    ${PBS_O_HOME}/bin/Reciprocal_best_blast.R -b ${ProjDir}/Blast/ORFprot_vs_Refprot -r ${ProjDir}/Blast/Refprot_vs_ORFprot -o ${ProjDir}/Blast/ORFprot_vs_Refprot_reciprocbesthit.txt > ${LogDir}/ReciprocalBestBlast.log 2>&1
+    ${PBS_O_HOME}/bin/Reciprocal_best_blast.R -b ${ProjDir}/Blast/ORFprot_vs_Uniprot -r ${ProjDir}/Blast/Uniprot_vs_ORFprot -o ${ProjDir}/Blast/ORFprot_vs_Uniprot_reciprocbesthit.txt >> ${LogDir}/ReciprocalBestBlast.log 2>&1
+    ${PBS_O_HOME}/bin/Reciprocal_best_blast.R -b ${ProjDir}/Blast/ORFprot_vs_NCBIprot -r ${ProjDir}/Blast/NCBIprot_vs_ORFprot -o ${ProjDir}/Blast/ORFprot_vs_NCBIprot_reciprocbesthit.txt >> ${LogDir}/ReciprocalBestBlast.log 2>&1
+    ${PBS_O_HOME}/bin/Reciprocal_best_blast.R -b ${ProjDir}/Blast/ORFnucl_vs_Refrna -r ${ProjDir}/Blast/Refrna_vs_ORFnucl -o ${ProjDir}/Blast/ORFnucl_vs_Refrna_reciprocbesthit.txt >> ${LogDir}/ReciprocalBestBlast.log 2>&1
+    ${PBS_O_HOME}/bin/Reciprocal_best_blast.R -b ${ProjDir}/Blast/ORFnucl_vs_NCBIrna -r ${ProjDir}/Blast/NCBIrna_vs_ORFnucl -o ${ProjDir}/Blast/ORFnucl_vs_NCBIrna_reciprocbesthit.txt >> ${LogDir}/ReciprocalBestBlast.log 2>&1
+
+fi
+
+
