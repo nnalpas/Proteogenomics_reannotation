@@ -9,7 +9,8 @@ MakeBlastDbProt=0
 MakeBlastDbNuc=0
 BlastDbBlasting=0
 BestBlast=1
-ReciprocalBlast=1
+ReciprocalBlast=0
+ReciprocalBestBlast=1
 
 # EmbossParam
 FRAME=6
