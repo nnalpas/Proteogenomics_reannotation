@@ -133,14 +133,29 @@ best_reciproc_data <- best_blast(data = reciproc_data, key = "qseqid")
 
 # Merge the best blast and best reciprocal data
 blast_merge <- best_blast_data %>%
-    dplyr::full_join(
+    dplyr::left_join(
         x = .,
         y = best_reciproc_data,
         by = c("qseqid" = "sseqid"),
         suffix = c("_blast", "_reciproc"))
 
 # Determine which entry have a reciprocal best hits
+blast_merge_confirmed <- blast_merge %>%
+    dplyr::filter(
+        .,
+        is.na(qseqid_reciproc) |
+            sseqid == qseqid_reciproc) %>%
+    dplyr::mutate(., best_reciprocal_type = case_when(
+        is.na(.$qseqid_reciproc) ~ "None",
+            .$best_count_reciproc == 1 ~ "Single",
+        TRUE ~ "Multiple"))
 
+# Export the reciprocal best blast data
+write.table(
+    x = blast_merge_confirmed, file = opt$output,
+    quote = FALSE, sep = "\t", row.names = FALSE)
 
+# Define end time
+print(paste("Complete", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
 
 
