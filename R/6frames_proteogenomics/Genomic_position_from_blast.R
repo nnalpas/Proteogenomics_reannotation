@@ -43,7 +43,6 @@ load_package(data.table)
 load_package(splitstackshape)
 load_package(stringr)
 load_package(optparse)
-load_package(UniProt.ws)
 load_package(seqinr)
 
 
@@ -123,15 +122,15 @@ blast_data <- read.table(
         sseqid = uni_id_clean(sseqid))
 
 # Import the genomic position data
-blast_data <- read.table(
+orf_pos <- read.table(
     file = opt$genomic_position, header = TRUE, sep = "\t", quote = "")
 
 
 
 ### Get target ID position based on blast --------------------------------
 
-#
-
+# Determine the best blast for each queried protein
+best_blast_data <- best_blast(data = blast_data, key = "qseqid")
 
 
 
