@@ -119,6 +119,8 @@ pep_loc <- opt$peptide_location %>%
 fasta <- c(Known = opt$reference_fasta, Novel = opt$novel_fasta) %>%
     purrr::map(
         .x = ., .f = seqinr::read.fasta, seqtype = "AA", as.string = TRUE)
+names(fasta$Known) %<>%
+    uni_id_clean(.)
 
 # Import the reciprocal blast best hits between novel proteins and reference
 # proteins
@@ -159,6 +161,75 @@ leven_data <- adist(
     dplyr::group_by(., Sequence) %>%
     dplyr::filter(., leven == min(leven)) %>%
     base::as.data.frame(., stringsAsFActors = FALSE)
+
+
+
+### Reciprocal blast analysis --------------------------------------------
+
+# Filter out hits that have e-value above 0.0001
+reciprocal_blast_ref_filt <- reciprocal_blast_ref %>%
+    dplyr::filter(., evalue_blast < 0.0001 & evalue_reciproc < 0.0001)
+reciprocal_blast_uniprot_filt <- reciprocal_blast_uniprot %>%
+    dplyr::filter(., evalue_blast < 0.0001 & evalue_reciproc < 0.0001)
+
+
+
+### Novelty reason determination -----------------------------------------
+
+# Get the list of novel peptides
+novel_pep <- evid %>%
+    dplyr::filter(., group == "Novel") %>%
+    .[["Sequence"]] %>%
+    unique(.)
+
+# Determine the novelty reasons for each peptide
+novelty_reasons <- purrr::map(
+    .x = novel_pep,
+    .f = novel_pep_classify,
+    coordinate = pep_loc$Novel,
+    levenshtein = leven_data,
+    blast_ref = reciprocal_blast_ref_filt,
+    blast_all = reciprocal_blast_uniprot_filt) %>%
+    set_names(novel_pep) %>%
+    plyr::ldply(., "data.frame") %>%
+    set_colnames(c("id", "reason"))
+
+
+
+
+
+
+
+
+
+
+# Compile a condensed dataframe of novel peptide info
+data <- evid_match %>%
+    dplyr::filter(., group == "Novel") %>%
+    dplyr::select(
+        .,
+        Sequence, Length, Proteins, Mass, `Mass Error [ppm]`,
+        `Mass Error [Da]`, PEP, Score, Intensity) %>%
+    dplyr::group_by(., Sequence) %>%
+    dplyr::summarise(
+        .,
+        Length = toString(x = unique(Length), width = NULL),
+        Proteins = toString(x = unique(Proteins), width = NULL),
+        Mass = toString(x = unique(Mass), width = NULL),
+        minMassErrorppm = min(`Mass Error [ppm]`, na.rm = TRUE),
+        minMassErrorDa = min(`Mass Error [Da]`, na.rm = TRUE),
+        minPEP = min(PEP, na.rm = TRUE),
+        maxScore = max(Score, na.rm = TRUE),
+        maxIntensity = max(Intensity, na.rm = TRUE)) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Add the novel peptide info from evidence to position info
+pep.pos.final <- dplyr::left_join(
+    x = pep.pos, y = data, by = "Sequence")
+
+
+
+
 
 
 
