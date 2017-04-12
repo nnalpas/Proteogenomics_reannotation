@@ -1,7 +1,6 @@
 #!/usr/bin/env Rscript
 
-# This script compiles blast and reciprocal blast hits from blasting results
-# to identify reciprocal best hits and matching position
+# This script determines the ORF genomic coordinates based on fasta header
 
 
 
