@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
-# This script compiles blast and reciprocal blast hits from blasting results
-# to identify reciprocal best hits and matching position
+# This script determines the reference protein genomic coordinates based on
+# blast results against ORF of known coordinates
 
 
 
