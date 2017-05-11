@@ -270,7 +270,7 @@ blast.bsu.vs.ref <- read.table(
     as.is = TRUE)
 
 # Get the best blastp match for each query
-blast.bsu.vs.ref.best <- best.blast(data = blast.bsu.vs.ref, key = "qseqid")
+blast.bsu.vs.ref.best <- best_blast(data = blast.bsu.vs.ref, key = "qseqid")
 
 # Filter out the best match that have e-value above 0.0001
 blast.bsu.vs.ref.best <- blast.bsu.vs.ref.best %>%
@@ -291,7 +291,7 @@ blast.bsu.vs.allbact <- read.table(
     as.is = TRUE)
 
 # Get the best blastp match for each query
-blast.bsu.vs.allbact.best <- best.blast(
+blast.bsu.vs.allbact.best <- best_blast(
     data = blast.bsu.vs.allbact, key = "qseqid")
 
 # Filter out the best match that have e-value above 0.0001
@@ -510,7 +510,7 @@ orf.pos$end <- as.numeric(orf.pos$end)
 # Filter out the ORF in the fasta that are not holding codons (multiple of 3)
 orf.pos %<>%
     dplyr::mutate(
-        ., lengthCheck = revtrunc(x = (abs(x = (start - end)) + 1) / 3)) %>%
+        ., lengthCheck = keep_decimals(x = (abs(x = (start - end)) + 1) / 3)) %>%
     dplyr::filter(., lengthCheck == 0) %>%
     dplyr::select(., -lengthCheck) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
@@ -520,11 +520,11 @@ orf.pos$strand <- ifelse(
     test = orf.pos$start < orf.pos$end, yes = 1, no = -1)
 orf.pos[orf.pos$strand == 1, "frame"] <- ((as.numeric(
     orf.pos[orf.pos$strand == 1, "start"]) + 2) / 3) %>%
-    revtrunc(.) %>%
+    keep_decimals(.) %>%
     round(x = ((. + 0.33) * 3))
 orf.pos[orf.pos$strand == -1, "frame"] <- ((as.numeric(
     orf.pos[orf.pos$strand == -1, "end"]) + 2) / 3) %>%
-    revtrunc(.) %>%
+    keep_decimals(.) %>%
     round(x = ((. + 0.33) * -3))
 
 # Import the blast results of NN ORF versus KK ORF, NN ORF have positional
@@ -581,7 +581,7 @@ blast.NN.vs.ref <- read.table(
     as.is = TRUE)
 
 # Find the best blast hit for each query id
-blast.NN.vs.ref.best <- best.blast(data = blast.NN.vs.ref, key = "qseqid")
+blast.NN.vs.ref.best <- best_blast(data = blast.NN.vs.ref, key = "qseqid")
 
 # Keep the mapping of ORF to uniprotID
 orf.uniprot <- blast.NN.vs.ref.best %>%
@@ -664,6 +664,7 @@ orf.neighb %<>%
 rm(tmp)
 
 
+
 ### Novel ORF explanation by neighbours ----------------------------------
 
 # Compile neighbouring info with the candidate ORF
@@ -674,6 +675,8 @@ orf.candidates.final <- orf.candidates %>%
     dplyr::left_join(x = ., y = orf.neighb, by = "ORF") %>%
     dplyr::arrange(., start) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
+
+
 
 ### Check novel ORF per conditions ---------------------------------------
 
@@ -767,7 +770,7 @@ tmp %<>%
         Start = ifelse(test = strand == 1, yes = start, no = end),
         End = ifelse(test = strand == 1, yes = end, no = start),
         Strand = ifelse(test = strand == 1, yes = "+", no = "-"),
-        UniProtKBID = uniprotID.clean(UniProtID),
+        UniProtKBID = uni_id_clean(UniProtID),
         Chromosome = 1,
         chr.name = "chr1",
         length = 4215606,
@@ -817,7 +820,7 @@ tmp %<>%
         Start = ifelse(test = strand == 1, yes = start, no = end),
         End = ifelse(test = strand == 1, yes = end, no = start),
         Strand = ifelse(test = strand == 1, yes = "+", no = "-"),
-        UniProtKBID = uniprotID.clean(UniProtID),
+        UniProtKBID = uni_id_clean(UniProtID),
         Chromosome = 1,
         chr.name = "chr1",
         length = 4215606,
@@ -858,7 +861,7 @@ pep_list <- base::data.frame()
 for (cleav in c("K|R", "K", "R")) {
     
     # Get all peptide sequence and position for all proteins
-    pep_list <- prot.digest(fasta = fastas, custom = cleav) %>%
+    pep_list <- prot_digest(fasta = fastas, custom = cleav) %>%
         base::rbind(pep_list, .)
     
 }
