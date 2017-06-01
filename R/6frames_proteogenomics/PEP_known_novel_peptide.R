@@ -153,7 +153,7 @@ print(paste(
     "NA values, these need to be checked!", sep = " "))
 
 # Clean-up
-rm(pep_list, evid)
+rm(evid)
 
 # Save the group mapping data
 saveRDS(object = evid_match, file = "Sequence_group_mapping.RDS")
@@ -875,7 +875,7 @@ pep_list$Proteins %<>%
 
 # Get association list of peptide and protein (remove reverse and contaminant)
 pep.prot <- evid_match %>%
-    rev.con.filt(.) %>%
+    mq_rev_con_filt(.) %>%
     dplyr::select(., Sequence, Proteins) %>%
     cSplit(indt = ., splitCols = "Proteins", sep = ";", direction = "long") %>%
     unique(.) %>%
