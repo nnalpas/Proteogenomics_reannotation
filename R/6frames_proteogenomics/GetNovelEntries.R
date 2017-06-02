@@ -1,42 +1,18 @@
-#!/usr/bin/Rscript
+#!/usr/bin/env Rscript
 
 # This script identify all novel peptides and ORFs from a MaxQuant search
 # as input as well as the fasta files used for the search
 
 
 
-### Parameters setting up ------------------------------------------------
+### Environment set-up ---------------------------------------------------
 
 # Start with clean environment
 rm(list = ls())
 
 # Define current time
 date_str <- format(Sys.time(), "%Y-%m-%d")
-print(paste("Start ", date_str, sep = ""))
-
-
-
-### Define working directory ---------------------------------------------
-
-# Import command line arguments
-args <- commandArgs(trailingOnly = TRUE)
-
-# Check for appropriate number of command line arguments
-if (length(args) != 4) {
-    stop("Usage: <WorkSpace> <MaxQuantSearch> <RefProteome> <6FrameProteome>!")
-}
-
-# Define the work space
-work_space <- args[1]
-setwd(work_space)
-print(paste("Working directory: ", work_space, sep = ""))
-
-# Select the maxquant txt folder
-txt_dir <- args[2]
-
-# List the fasta files that need to be imported
-fasta_file <- c(args[3], args[4])
-names(fasta_file) <- c("Known", "Novel")
+print(paste("Start", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
 
 # Define the current user
 user <- Sys.info()[["user"]]
@@ -54,7 +30,7 @@ user <- Sys.info()[["user"]]
 #        sep = "/"))
 source(
     file = paste(
-        "/home",
+        "/home-link",
         user,
         "bin/General_function.R",
         sep = "/"))
@@ -70,32 +46,68 @@ load_package(magrittr)
 load_package(data.table)
 load_package(splitstackshape)
 load_package(stringr)
+load_package(optparse)
+
+
+
+### Parameters setting up ------------------------------------------------
+
+# Define the list of command line parameters
+option_list <- list(
+    make_option(
+        opt_str = c("-o", "--output"),
+        type = "character", default = NULL,
+        help = "Output directory", metavar = "character"),
+    make_option(
+        opt_str = c("-m", "--maxquant"),
+        type = "character", default = NULL,
+        help = "MaxQuant txt results folder", metavar = "character"),
+    make_option(
+        opt_str = c("-r", "--reference"),
+        type = "character", default = NULL,
+        help = "Reference protein fasta file", metavar = "character"),
+    make_option(
+        opt_str = c("-n", "--novel"),
+        type = "character", default = NULL,
+        help = "ORF fasta file", metavar = "character"))
+
+# Parse the parameters provided on command line by user
+opt_parser <- OptionParser(option_list = option_list)
+opt <- parse_args(opt_parser)
+
+# Check whether inputs parameter was provided
+if (
+    is.null(opt$output) | is.null(opt$maxquant) |
+    is.null(opt$reference) | is.null(opt$novel)) {
+    
+    print_help(opt_parser)
+    stop("All arguments must be supplied!")
+    
+}
+
+# For manual parameters set-up
+#opt <- list(
+#    output = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame",
+#    maxquant = "G:/data/Vaishnavi/combined - 6 frame translation/txt",
+#    reference = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta",
+#    novel = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta")
 
 
 
 ### Data import ----------------------------------------------------------
 
 # Import the maxquant evidence table
-evid <- maxquant.read(
-    path = txt_dir,
+evid <- mq_read(
+    path = opt$maxquant,
     name = "evidence.txt",
     integer64 = "double")
 
-# Import all fasta file data and store into list
-fasta_list <- list()
-for (x in 1:length(fasta_file)) {
-    
-    # Import the current fasta file
-    tmp <- read.fasta(
-        file = fasta_file[x], seqtype = "AA", as.string = TRUE)
-    
-    # Include imported fasta into the list
-    fasta_list[names(fasta_file)[x]] <- list(tmp)
-    
-}
-
-# Clean-up
-rm(fasta_file)
+# Import the fasta files
+fasta <- c(Known = opt$reference, Novel = opt$novel) %>%
+    purrr::map(
+        .x = ., .f = seqinr::read.fasta, seqtype = "AA", as.string = TRUE)
+names(fasta$Known) %<>%
+    uni_id_clean(.)
 
 
 
