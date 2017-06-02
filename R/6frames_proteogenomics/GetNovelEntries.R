@@ -120,19 +120,15 @@ data <- evid %>%
     unique(.) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
-# Format the fasta files
-names(fasta_list$Known) %<>%
-    sub(pattern = ".+\\|(.+)\\|.+", replacement = "\\1", x = .)
-
 # Locate all the peptide within associated proteins
 pep_loc <- list()
-pep_loc[["Known"]] <- pept.locate(
+pep_loc[["Known"]] <- pept_locate(
     data = data, peptide = "Sequence",
-    proteins = "Proteins", fasta = fasta_list$Known) %>%
+    proteins = "Proteins", fasta = fasta$Known) %>%
     dplyr::filter(., !is.na(start))
-pep_loc[["Novel"]] <- pept.locate(
+pep_loc[["Novel"]] <- pept_locate(
     data = data, peptide = "Sequence",
-    proteins = "Proteins", fasta = fasta_list$Novel) %>%
+    proteins = "Proteins", fasta = fasta$Novel) %>%
     dplyr::filter(., !is.na(start))
 pep_loc[["Contaminant"]] <- data %>%
     dplyr::filter(., grepl("^CON__", Proteins)) %>%
@@ -174,17 +170,20 @@ print(table(evid_match$group, useNA = "always"))
 # Save the group mapping data
 saveRDS(
     object = evid_match,
-    file = "Sequence_group_mapping.RDS")
+    file = paste(
+        opt$output, "/", date_str, "_Sequence_group_mapping.RDS", sep = ""))
 
 # Save the peptide location data
 saveRDS(
     object = pep_loc,
-    file = "Peptides_location.RDS")
+    file = paste(
+        opt$output, "/", date_str, "_Peptides_location.RDS", sep = ""))
 
 # Export complete evidence info for these novel evidence
 write.table(
     x = evid_match[evid_match$group == "Novel", ],
-    file = "Novel_evidence.txt",
+    file = paste(
+        opt$output, "/", date_str, "_Novel_evidence.txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
@@ -199,7 +198,8 @@ write.table(
             direction = "long", fixed = TRUE) %>%
         .[["Proteins"]] %>%
         unique(.),
-    file = "Novel_ORF.txt",
+    file = paste(
+        opt$output, "/", date_str, "_Novel_ORF.txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
