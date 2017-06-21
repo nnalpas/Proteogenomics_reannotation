@@ -54,7 +54,13 @@ option_list <- list(
         opt_str = c("-i", "--input"), type = "character", default = NULL, 
         help = "Blast data file name", metavar = "character"),
     make_option(
-        opt_str = c("-o", "--output"), type = "character", default = "out.txt", 
+        opt_str = c("-f", "--filter"), type = "character", default = NULL, 
+        help = "Specific filtering to apply", metavar = "character"),
+    make_option(
+        opt_str = c("-m", "--multi_match"), type = "character", default = NULL, 
+        help = "Filter for multi hits entry", metavar = "character"),
+    make_option(
+        opt_str = c("-o", "--out_path"), type = "character", default = NULL, 
         help = "Output file name [default= %default]", metavar = "character"))
 
 # Parse the parameters provided on command line by user
@@ -70,36 +76,57 @@ if (is.null(opt$input)){
 }
 
 # Check whether output parameter was provided
-if (is.null(opt$output)){
+if (is.null(opt$out_path)){
     
-    opt$output <- paste(dirname(opt$input), opt$output, sep = "/")
-    warning("Output results to out.txt!")
+    opt$output <- dirname(opt$input)
+    warning(paste("Output results to path: ", opt$output, "!", sep = ""))
     
 }
+
+# If filter and multi_match parameters are undefined, define as null
+if (is.null(opt$filter)) {
+    
+    opt$filter <- NULL
+    
+}
+if (is.null(opt$multi_match)) {
+    
+    opt$multi_match <- NULL
+    
+}
+
+# For manual parameters set-up
+opt <- list(
+    input = "C:/Users/kxmna01/Desktop/Uniprot_GigaDB_prot_ID.txt.9",
+    filter = NULL,
+    multi_match = NULL,
+    output = "C:/Users/kxmna01/Desktop")
 
 
 
 ### Data import and processing -------------------------------------------
 
 # Import the Blast results
-blast_data <- read.table(
-    file = opt$input,
-    header = FALSE,
-    sep = "\t",
-    quote = "",
-    col.names = c(
-        "qseqid", "sseqid", "pident", "nident", "mismatch", "length",
-        "gapopen", "qstart", "qend", "sstart", "send", "evalue",
-        "bitscore", "score"),
-    as.is = TRUE)
+blast_data <- blast_read(file = opt$input, blast_format = "6")
 
 # Get the best blast match for each query
-best_blast_data <- best_blast(data = blast_data, key = "qseqid")
+best_blast_data <- best_blast(
+    data = blast_data, key = "qseqid",
+    filter = opt$filter, multi_match = opt$multi_match)
 
 # Export the best hits protein IDs that needs to be reciprocally blasted
 write.table(
     x = unique(best_blast_data$sseqid),
-    file = opt$output,
+    file = paste(opt$output, "/Reciprocal_id_", basename(opt$input), sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = FALSE)
+
+# Export the best hits results
+write.table(
+    x = best_blast_data,
+    file = paste(opt$output, "/Best_blast_", basename(opt$input), sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
