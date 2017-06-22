@@ -97,10 +97,10 @@ if (is.null(opt$multi_match)) {
 
 # For manual parameters set-up
 opt <- list(
-    input = "C:/Users/kxmna01/",
+    input = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/blastp_ORF_Nicolas_vs_Karsten_11012017",
     filter = "pident == 100 & nident == length & qstart == sstart & qend == send",
     multi_match = "uniquify",
-    output = "C:/Users/kxmna01/Desktop")
+    output = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases")
 
 
 
