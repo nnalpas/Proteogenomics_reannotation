@@ -97,9 +97,9 @@ if (is.null(opt$multi_match)) {
 
 # For manual parameters set-up
 opt <- list(
-    input = "C:/Users/kxmna01/Desktop/Uniprot_GigaDB_prot_ID.txt.9",
-    filter = NULL,
-    multi_match = NULL,
+    input = "C:/Users/kxmna01/",
+    filter = "pident == 100 & nident == length & qstart == sstart & qend == send",
+    multi_match = "uniquify",
     output = "C:/Users/kxmna01/Desktop")
 
 
