@@ -38,15 +38,16 @@ data <- params[["evidences"]] %>%
     rbind(data, .)
 
 # Histogram of feature count per group type
-pl <- histPlots(
+pl <- plots_hist(
     data = data,
     key = "type",
     value = "Freq",
     group = "group",
     fill = "group",
     main = "Number of evidence/peptide",
-    transf = "log10")
-plotly::plotly_build(pl[[1]])
+    transf = "log10",
+    label = "Freq")
+pl[[1]]
 
 ```
 
@@ -57,14 +58,34 @@ plotly::plotly_build(pl[[1]])
 ``` {r overview2, eval = TRUE, echo = FALSE, warning = FALSE}
 
 # Plot evidence PEP distribution
-pl <- violonPlots(
+pl <- plots_violon(
     data = params[["evidences"]],
     key = "group",
     value = "PEP",
     fill = "lightblue",
     colour = "black",
-    main = "PEP comparison")
+    main = "PEP comparison",
+    zoom = c(-0.001, quantile(params[["evidences"]]$PEP, 0.95)[[1]]))
 pl[[1]]
+
+```
+
+
+
+## Overview: PEP per type (zoom)
+
+``` {r overview2bis, eval = TRUE, echo = FALSE, warning = FALSE}
+
+# Plot evidence PEP distribution
+pl <- plots_violon(
+    data = params[["evidences"]],
+    key = "group",
+    value = "PEP",
+    fill = "lightblue",
+    colour = "black",
+    main = "PEP comparison",
+    zoom = c(-0.001, quantile(params[["evidences"]]$PEP, 0.95)[[1]]))
+pl[[2]]
 
 ```
 
@@ -75,7 +96,7 @@ pl[[1]]
 ``` {r overview3, eval = TRUE, echo = FALSE, warning = FALSE}
 
 # Plot evidence score distribution
-pl <- violonPlots(
+pl <- plots_violon(
     data = params[["evidences"]],
     key = "group",
     value = "Score",
@@ -99,7 +120,7 @@ data <- params[["evidences"]] %>%
     set_colnames(c("group", "mass_error"))
 
 # Plot evidence mass error distribution
-pl <- violonPlots(
+pl <- plots_violon(
     data = data,
     key = "group",
     value = "mass_error",
@@ -141,14 +162,15 @@ data <- params[["pept.posit"]] %>%
     rbind(data, .)
 
 # Plot the novel feature count
-pl <- histPlots(
+pl <- plots_hist(
     data = data,
     key = "feature",
     value = "Count",
     group = "type",
     fill = "type",
-    main = "Novel peptide/ORF count")
-plotly::plotly_build(pl[[1]])
+    main = "Novel peptide/ORF count",
+    label = "Count")
+pl[[1]]
 
 ```
 
@@ -167,15 +189,16 @@ data <- params[["levenshtein"]] %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Plot the levenshtein distance count
-pl <- histPlots(
+pl <- plots_hist(
     data = data,
     key = "leven",
     value = "count",
     group = "leven",
     fill = "leven",
     main = "Levenshtein distance density",
-    textsize = 15)
-plotly::plotly_build(pl[[1]])
+    textsize = 15,
+    label = "count")
+pl[[1]]
 
 ```
 
@@ -198,14 +221,15 @@ data <- params[["pept.posit"]] %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Plot the feature count per novelty reasons
-pl <- histPlots(
+pl <- plots_hist(
     data = data,
     key = "feature",
     value = "Count",
     group = "ReasonNovel",
     fill = "ReasonNovel",
-    main = "Peptide novelty reasons")
-plotly::plotly_build(pl[[1]])
+    main = "Peptide novelty reasons",
+    label = "Count")
+pl[[1]]
 
 ```
 
@@ -236,14 +260,15 @@ for (key in novelty) {
 }
 
 # Plot the ORF frequency per matching peptide count
-pl <- histPlots(
+pl <- plots_hist(
     data = data,
     key = "Unique_peptide_count",
     value = "ORF_count",
     group = "Novelty",
     fill = "Novelty",
-    main = "Novel ORF density per novel peptide count")
-plotly::plotly_build(pl[[1]])
+    main = "Novel ORF density per novel peptide count",
+    label = "ORF_count")
+pl[[1]]
 
 ```
 
@@ -282,7 +307,7 @@ pep.cond <- params[["pheno"]] %>%
     base::rbind(pep.cond, .)
 
 # Line plot of the peptide proportion per group and condition
-pl <- linePlots(
+pl <- plots_line(
     data = pep.cond,
     key = "Conditions",
     value = "perc",
@@ -385,7 +410,7 @@ coding.nuc <- lapply(X = params[["ref.grange"]]@ranges, FUN = function(x) {
 names(coding.nuc) <- params[["ref.grange"]]@elementMetadata@listData$UniProtKBID
 
 # Get all expressed protein associated nucleotide position
-exprs.id <- strsplit(x = evid.match$Proteins, split = ";") %>%
+exprs.id <- strsplit(x = params[["evidences"]]$Proteins, split = ";") %>%
     unlist(.) %>%
     unique(.)
 exprs.nuc <- coding.nuc[names(coding.nuc) %in% exprs.id]
