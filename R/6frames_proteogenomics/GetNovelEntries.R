@@ -47,6 +47,7 @@ load_package(data.table)
 load_package(splitstackshape)
 load_package(stringr)
 load_package(optparse)
+load_package(ggplot2)
 
 
 
@@ -87,7 +88,7 @@ if (
 
 # For manual parameters set-up
 #opt <- list(
-#    output = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame",
+#    output = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/11082017",
 #    maxquant = "G:/data/Vaishnavi/combined - 6 frame translation/txt",
 #    reference = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta",
 #    novel = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta")
@@ -141,23 +142,35 @@ pep_loc[["Reverse"]] <- evid %>%
     dplyr::mutate(., start = NA_integer_, end = NA_integer_)
 
 # New dataframe to hold info about fasta of origin for each sequence
-evid_match <- evid %>%
-    dplyr::mutate(
-        .,
+evid_match <- plyr::ldply(
+    .data = pep_loc, .fun = "data.frame", .id = "DatabID") %>%
+    dplyr::group_by(., pep) %>%
+    dplyr::summarise(
+        ., 
         group = ifelse(
-            test = Sequence %in% pep_loc$Known$pep,
+            test = any(DatabID == "Known"),
             yes = "Known",
             no = ifelse(
-                test = Sequence %in% pep_loc$Contaminant$pep,
+                test = any(DatabID == "Contaminant"),
                 yes = "Contaminant",
                 no = ifelse(
-                    test = Sequence %in% pep_loc$Novel$pep,
+                    test = any(DatabID == "Novel"),
                     yes = "Novel",
                     no = ifelse(
-                        test = Sequence %in% pep_loc$Reverse$pep,
+                        test = any(DatabID == "Reverse"),
                         yes = "Reverse",
-                        no = NA_character_))))) %>%
-    base::as.data.frame(., stringAsFactors = TRUE)
+                        no = NA_character_)))),
+        Database = ifelse(
+            test = group %in% c("Known", "Contaminant"),
+            yes = "Target",
+            no = ifelse(
+                test = group == "Reverse",
+                yes = "Decoy",
+                no = ifelse(
+                    test = group == "Novel",
+                    yes = "Novel",
+                    no = NA_character_)))) %>%
+    dplyr::left_join(x = evid, y = ., by = c("Sequence" = "pep"))
 
 # Print warning for unidentified sequence origin
 print(paste(
@@ -166,6 +179,56 @@ print(paste(
 
 # Print the repartition of peptide per group
 print(table(evid_match$group, useNA = "always"))
+
+
+
+### Results export and visualisation -------------------------------------
+
+# Open a file for plot visualisation
+pdf(
+    file = paste0(opt$output, "/", date_str, "_GetNovelEntries.pdf"),
+    width = 10, height = 10, onefile = FALSE)
+
+# Create histogram
+toplot <- evid_match %>%
+    dplyr::group_by(., group) %>%
+    dplyr::summarise(., evid_count = n())
+pl <- plots_hist(
+    data = toplot,
+    key = "group",
+    value = "evid_count",
+    group = "group",
+    fill = "group",
+    main = "Peptide spectrum match",
+    xlabel = "Databases",
+    ylabel = "Count (log scale)",
+    textsize = 25,
+    label = "evid_count",
+    transf = "log10",
+    bw = TRUE)
+pl[[1]]
+
+# Create histogram
+toplot <- evid_match %>%
+    dplyr::group_by(., Database) %>%
+    dplyr::summarise(., evid_count = n())
+pl <- plots_hist(
+    data = toplot,
+    key = "Database",
+    value = "evid_count",
+    group = "Database",
+    fill = "Database",
+    main = "Peptide spectrum match",
+    xlabel = "Databases",
+    ylabel = "Count (log scale)",
+    textsize = 25,
+    label = "evid_count",
+    transf = "log10",
+    bw = TRUE)
+pl[[1]]
+
+# Close the picture file
+dev.off()
 
 # Save the group mapping data
 saveRDS(
