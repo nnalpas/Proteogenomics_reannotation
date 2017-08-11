@@ -20,6 +20,9 @@ user <- Sys.info()[["user"]]
 # Define current time
 date_str <- format(Sys.time(), "%Y-%m-%d")
 
+# Variable for additional filter
+filter <- FALSE
+
 
 
 ### List of required packages -----------------------------------------------
@@ -75,6 +78,15 @@ evid <- mq_read(
     name = "evidence.txt",
     integer64 = "double")
 
+# Import the maxquant proteingroups table
+pg <- mq_read(
+    path = txt_dir,
+    name = "proteinGroups.txt",
+    integer64 = "double")
+pg_not_sites <- pg %>%
+    dplyr::filter(., `Only identified by site` == "") %>%
+    cSplit(indt = ., splitCols = "Evidence IDs", sep = ";", direction = "long")
+
 # List the fasta files that need to be imported
 fasta_file <- c()
 fasta_file["Known"] <- choose.files(
@@ -105,6 +117,12 @@ rm(fasta_file)
 
 
 ### Novel peptide identification -----------------------------------------
+
+# Additional filter
+if (filter) {
+    evid %<>%
+        dplyr::filter(., id %in% unique(pg_not_sites$`Evidence IDs`))
+}
 
 # Format association of peptide to protein
 data <- evid %>%
