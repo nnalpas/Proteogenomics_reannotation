@@ -187,9 +187,9 @@ print(table(evid_match$group, useNA = "always"))
 # Open a file for plot visualisation
 pdf(
     file = paste0(opt$output, "/", date_str, "_GetNovelEntries.pdf"),
-    width = 10, height = 10, onefile = FALSE)
+    width = 10, height = 10)
 
-# Create histogram
+# Histogram of evidence counts
 toplot <- evid_match %>%
     dplyr::group_by(., group) %>%
     dplyr::summarise(., evid_count = n())
@@ -199,7 +199,7 @@ pl <- plots_hist(
     value = "evid_count",
     group = "group",
     fill = "group",
-    main = "Peptide spectrum match",
+    main = "Peptide spectrum match count",
     xlabel = "Databases",
     ylabel = "Count (log scale)",
     textsize = 25,
@@ -208,7 +208,7 @@ pl <- plots_hist(
     bw = TRUE)
 pl[[1]]
 
-# Create histogram
+# Histogram of evidence counts
 toplot <- evid_match %>%
     dplyr::group_by(., Database) %>%
     dplyr::summarise(., evid_count = n())
@@ -218,13 +218,124 @@ pl <- plots_hist(
     value = "evid_count",
     group = "Database",
     fill = "Database",
-    main = "Peptide spectrum match",
+    main = "Peptide spectrum match count",
     xlabel = "Databases",
     ylabel = "Count (log scale)",
     textsize = 25,
     label = "evid_count",
     transf = "log10",
     bw = TRUE)
+pl[[1]]
+
+# Boxplot of evidence resolution
+toplot <- evid_match %>%
+    dplyr::select(., group, Resolution)
+pl <- plots_box(
+    data = toplot,
+    key = "group",
+    value = "Resolution",
+    main = "PSM resolution",
+    textsize = 25,
+    fill = "grey")
+
+#g <- ggplot_build(pl[[1]])$data[[1]] %>%
+#    dplyr::select(., ymin:ymax, x) %>%
+#    tidyr::gather(type, value, - x) %>%
+#    dplyr::arrange(x)
+
+#pl <- pl +
+#    annotate("text", x = g$x + 0.4, y = g$value, label = g$value, size = 3)
+
+pl[[1]]
+
+# Boxplot of evidence resolution
+toplot <- evid_match %>%
+    dplyr::select(., Database, Resolution)
+pl <- plots_box(
+    data = toplot,
+    key = "Database",
+    value = "Resolution",
+    main = "PSM resolution",
+    textsize = 25,
+    fill = "grey")
+pl[[1]]
+
+# Boxplot of evidence mass error (ppm)
+toplot <- evid_match %>%
+    dplyr::select(., group, `Mass Error [ppm]`) %>%
+    set_colnames(c("group", "Masserror"))
+pl <- plots_box(
+    data = toplot,
+    key = "group",
+    value = "Masserror",
+    main = "PSM mass error (ppm)",
+    textsize = 25,
+    fill = "grey")
+pl[[1]]
+
+# Bowplot of evidence mass error (ppm)
+toplot <- evid_match %>%
+    dplyr::select(., Database, `Mass Error [ppm]`) %>%
+    set_colnames(c("Database", "Masserror"))
+pl <- plots_box(
+    data = toplot,
+    key = "Database",
+    value = "Masserror",
+    main = "PSM mass error (ppm)",
+    textsize = 25,
+    fill = "grey")
+pl[[1]]
+
+# Boxplot of evidence PEP
+toplot <- evid_match %>%
+    dplyr::select(., group, PEP)
+pl <- plots_box(
+    data = toplot,
+    key = "group",
+    value = "PEP",
+    main = "PSM PEP",
+    textsize = 25,
+    zoom = c(-0.001, quantile(toplot$PEP, 0.95)[[1]]),
+    fill = "grey")
+pl[[1]]
+pl[[2]]
+
+# Bowplot of evidence PEP
+toplot <- evid_match %>%
+    dplyr::select(., Database, PEP)
+pl <- plots_box(
+    data = toplot,
+    key = "Database",
+    value = "PEP",
+    main = "PSM PEP",
+    textsize = 25,
+    zoom = c(-0.001, quantile(toplot$PEP, 0.95)[[1]]),
+    fill = "grey")
+pl[[1]]
+pl[[2]]
+
+# Boxplot of evidence score
+toplot <- evid_match %>%
+    dplyr::select(., group, Score)
+pl <- plots_box(
+    data = toplot,
+    key = "group",
+    value = "Score",
+    main = "PSM score",
+    textsize = 25,
+    fill = "grey")
+pl[[1]]
+
+# Bowplot of evidence score
+toplot <- evid_match %>%
+    dplyr::select(., Database, Score)
+pl <- plots_box(
+    data = toplot,
+    key = "Database",
+    value = "Score",
+    main = "PSM score",
+    textsize = 25,
+    fill = "grey")
 pl[[1]]
 
 # Close the picture file
