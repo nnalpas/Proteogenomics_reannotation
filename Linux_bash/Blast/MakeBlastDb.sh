@@ -6,22 +6,80 @@
 echo "$0"
 echo "Start $(date +"%T %d-%m-%Y")."
 
-# Check for required command line arguments
-if [ $# -lt 4 ]; then
-	echo "Usage: $0 <InputType> <DbType> <TaxId> <FastaFiles>"
+# Function holding the usage
+display_usage() { 
+	echo "
+		Usage: $0 [Options] Fastafiles"
+	echo "
+		Options:
+        	-i	[str]	The input file format.
+			-y	[str]	The type of the data ('nucl' or 'prot')
+			-t	[int]	The taxon ID for the database(s)
+        	-h	[]	To display the help.
+	"
+}
+
+# Parse user parameters
+while getopts "i:y:t:h" opt; do
+	case $opt in
+		i)
+			INPUTTYPE=$OPTARG
+			echo "Working directory: $WKDIR"
+			shift $((OPTIND-1)); OPTIND=1
+			;;
+        y)
+            DBTYPE=$OPTARG
+            shift $((OPTIND-1)); OPTIND=1
+			;;
+		t)
+			TAXID=$OPTARG
+			shift $((OPTIND-1)); OPTIND=1
+			;;
+		h)
+			display_usage
+			shift $((OPTIND-1)); OPTIND=1
+			exit 0
+			;;
+		\?)
+			display_usage
+			exit 1
+			;;
+		:)
+			display_usage
+			exit 1
+			;;
+	esac
+done
+
+# Also get target folders from parameter
+INPUT=${@:1}
+
+# Check for mandatory parameters
+if [ -z "${INPUTTYPE}" ]; then
+	echo "The input file format must be specified." >&2
+	display_usage
+	exit 1
+fi
+if [ -z "${DBTYPE}" ]; then
+	echo "The database type must be specified." >&2
+	display_usage
+	exit 1
+fi
+if [ -z "${TAXID}" ]; then
+	echo "The taxon ID must be specified." >&2
+	display_usage
+	exit 1
+fi
+if [ -z "${INPUT}" ]; then
+	echo "At least one path must be specified." >&2
+	display_usage
 	exit 1
 fi
 
-# Define variables
-INPUTTYPE=$1
-DBTYPE=$2
-TAXID=$3
-FASTA="${@:4}"
-
 # Loop through all submitted fasta
-for fasta in ${FASTA[@]}; do
-	title=`basename $fasta | perl -p -e 's/.fasta$//'`
-	makeblastdb -in ${fasta} -input_type ${INPUTTYPE} -title ${title} -parse_seqids -dbtype ${DBTYPE} -taxid ${TAXID}
+for file in ${INPUT[@]}; do
+	title=`basename $file | perl -p -e 's/.fasta$//'`
+	makeblastdb -in ${file} -input_type ${INPUTTYPE} -title ${title} -parse_seqids -dbtype ${DBTYPE} -taxid ${TAXID}
 done
 
 # Time scripts ends
