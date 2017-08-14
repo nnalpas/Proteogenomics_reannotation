@@ -48,6 +48,9 @@ load_package(splitstackshape)
 load_package(stringr)
 load_package(optparse)
 load_package(ggplot2)
+load_package(gtable)
+load_package(grid)
+load_package(gridExtra)
 
 
 
@@ -199,7 +202,7 @@ pl <- plots_hist(
     value = "evid_count",
     group = "group",
     fill = "group",
-    main = "Peptide spectrum match count",
+    main = "PSM count",
     xlabel = "Databases",
     ylabel = "Count (log scale)",
     textsize = 25,
@@ -218,7 +221,7 @@ pl <- plots_hist(
     value = "evid_count",
     group = "Database",
     fill = "Database",
-    main = "Peptide spectrum match count",
+    main = "PSM count",
     xlabel = "Databases",
     ylabel = "Count (log scale)",
     textsize = 25,
@@ -237,18 +240,10 @@ pl <- plots_box(
     main = "PSM resolution",
     textsize = 25,
     fill = "grey",
-    xlabel = "Resolution",
-    ylabel = "Databases")
-
-#g <- ggplot_build(pl[[1]])$data[[1]] %>%
-#    dplyr::select(., ymin:ymax, x) %>%
-#    tidyr::gather(type, value, - x) %>%
-#    dplyr::arrange(x)
-
-#pl <- pl +
-#    annotate("text", x = g$x + 0.4, y = g$value, label = g$value, size = 3)
-
-pl[[1]]
+    xlabel = "Databases",
+    ylabel = "Resolution",
+    outlier_simplify = TRUE)
+plot(pl[[1]])
 
 # Boxplot of evidence resolution
 toplot <- evid_match %>%
@@ -260,9 +255,10 @@ pl <- plots_box(
     main = "PSM resolution",
     textsize = 25,
     fill = "grey",
-    xlabel = "Resolution",
-    ylabel = "Databases")
-pl[[1]]
+    xlabel = "Databases",
+    ylabel = "Resolution",
+    outlier_simplify = TRUE)
+plot(pl[[1]])
 
 # Boxplot of evidence mass error (ppm)
 toplot <- evid_match %>%
@@ -275,9 +271,10 @@ pl <- plots_box(
     main = "PSM mass error (ppm)",
     textsize = 25,
     fill = "grey",
-    xlabel = "Mass error (ppm)",
-    ylabel = "Databases")
-pl[[1]]
+    xlabel = "Databases",
+    ylabel = "Mass error (ppm)",
+    outlier_simplify = TRUE)
+plot(pl[[1]])
 
 # Bowplot of evidence mass error (ppm)
 toplot <- evid_match %>%
@@ -290,9 +287,10 @@ pl <- plots_box(
     main = "PSM mass error (ppm)",
     textsize = 25,
     fill = "grey",
-    xlabel = "Mass error (ppm)",
-    ylabel = "Databases")
-pl[[1]]
+    xlabel = "Databases",
+    ylabel = "Mass error (ppm)",
+    outlier_simplify = TRUE)
+plot(pl[[1]])
 
 # Boxplot of evidence PEP
 toplot <- evid_match %>%
@@ -305,10 +303,11 @@ pl <- plots_box(
     textsize = 25,
     zoom = c(-0.001, quantile(toplot$PEP, 0.95)[[1]]),
     fill = "grey",
-    xlabel = "PEP",
-    ylabel = "Databases")
-pl[[1]]
-pl[[2]]
+    xlabel = "Databases",
+    ylabel = "PEP",
+    outlier_simplify = TRUE)
+plot(pl[[1]])
+plot(pl[[2]])
 
 # Bowplot of evidence PEP
 toplot <- evid_match %>%
@@ -321,10 +320,11 @@ pl <- plots_box(
     textsize = 25,
     zoom = c(-0.001, quantile(toplot$PEP, 0.95)[[1]]),
     fill = "grey",
-    xlabel = "PEP",
-    ylabel = "Databases")
-pl[[1]]
-pl[[2]]
+    xlabel = "Databases",
+    ylabel = "PEP",
+    outlier_simplify = TRUE)
+plot(pl[[1]])
+plot(pl[[2]])
 
 # Boxplot of evidence score
 toplot <- evid_match %>%
@@ -336,9 +336,10 @@ pl <- plots_box(
     main = "PSM score",
     textsize = 25,
     fill = "grey",
-    xlabel = "Score",
-    ylabel = "Databases")
-pl[[1]]
+    xlabel = "Databases",
+    ylabel = "Score",
+    outlier_simplify = TRUE)
+plot(pl[[1]])
 
 # Bowplot of evidence score
 toplot <- evid_match %>%
@@ -350,9 +351,10 @@ pl <- plots_box(
     main = "PSM score",
     textsize = 25,
     fill = "grey",
-    xlabel = "Score",
-    ylabel = "Databases")
-pl[[1]]
+    xlabel = "Databases",
+    ylabel = "Score",
+    outlier_simplify = TRUE)
+plot(pl[[1]])
 
 # Close the picture file
 dev.off()
@@ -371,9 +373,9 @@ saveRDS(
 
 # Export complete evidence info for these novel evidence
 write.table(
-    x = evid_match[evid_match$group == "Novel", ],
+    x = evid_match,
     file = paste(
-        opt$output, "/", date_str, "_Novel_evidence.txt", sep = ""),
+        opt$output, "/", date_str, "_group_evidence.txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
