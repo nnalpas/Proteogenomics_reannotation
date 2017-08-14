@@ -76,7 +76,7 @@ SIXFRAMEGENE=`echo $GENOME | perl -p -e 's/^(.*\\/)(.*)\\.fasta/$1Find2_$2_FIXED
 # Check whether to get the novel ORFs from MaxQuant seach results
 if [ $GetNovelEntries == 1 ]; then
 
-    ${PBS_O_HOME}/bin/GetNovelEntries.R ${ProjDir}/MaxQuant_txt "." ${UNIREFPROT} ${SIXFRAMEPROT} > ${LogDir}/GetNovelEntries.log 2>&1
+    ${PBS_O_HOME}/bin/GetNovelEntries.R -o ${ProjDir}/Novel_res -m ${ProjDir}/MaxQuant_txt -r ${UNIREFPROT} -n ${SIXFRAMEPROT} > ${LogDir}/GetNovelEntries.log 2>&1
 
 fi
 
@@ -89,7 +89,7 @@ fi
 # Check whether to create a blast database for proteome data
 if [ $MakeBlastDbProt == 1 ]; then
     
-    ${PBS_O_HOME}/bin/MakeBlastDb.sh ${InputType} "prot" ${TaxId} ${UNIREFPROT} ${SIXFRAMEPROT} > ${LogDir}/MakeBlastDb.log 2>&1
+    ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "prot" -t ${TaxId} ${UNIREFPROT} ${SIXFRAMEPROT} > ${LogDir}/MakeBlastDb.log 2>&1
     
 fi
 
@@ -98,7 +98,7 @@ fi
 # Check whether to create a blast database for genome data
 if [ $MakeBlastDbNuc == 1 ]; then
     
-    ${PBS_O_HOME}/bin/MakeBlastDb.sh ${InputType} "nucl" ${TaxId} ${UNIREFGENE} ${SIXFRAMEGENE} >> ${LogDir}/MakeBlastDb.log 2>&1
+    ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "nucl" -t ${TaxId} ${UNIREFGENE} ${SIXFRAMEGENE} >> ${LogDir}/MakeBlastDb.log 2>&1
     
 fi
 
@@ -111,11 +111,11 @@ fi
 # Check whether to blast the ORFs against taxon reference protein and RNA and against all uniprot and ncbi
 if [ $BlastDbBlasting == 1 ]; then
     
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" "all" "blastp" ${SIXFRAMEPROT} ${UNIREFPROT} ${Eval} ${NumAlign} ${THREADS} "ORFprot_vs_Refprot" > ${LogDir}/BlastDbBlasting.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" ${ProjDir}/MaxQuant_txt/Novel_ORF.txt "blastp" ${SIXFRAMEPROT} ${ALLUNIPROT} ${Eval} ${NumAlign} ${THREADS} "ORFprot_vs_Uniprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" ${ProjDir}/MaxQuant_txt/Novel_ORF.txt "blastp" ${SIXFRAMEPROT} ${ALLNCBIPROT} ${Eval} ${NumAlign} ${THREADS} "ORFprot_vs_NCBIprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" "all" "blastn" ${SIXFRAMEGENE} ${UNIREFGENE} ${Eval} ${NumAlign} ${THREADS} "ORFnucl_vs_Refrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" ${ProjDir}/MaxQuant_txt/Novel_ORF.txt "blastn" ${SIXFRAMEGENE} ${ALLNCBIRNA} ${Eval} ${NumAlign} ${THREADS} "ORFnucl_vs_NCBIrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l "all" -a "blastp" -s ${SIXFRAMEPROT} -q ${UNIREFPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFprot_vs_Refprot" > ${LogDir}/BlastDbBlasting.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l ${ProjDir}/Novel_res/Novel_ORF.txt -a "blastp" -s ${SIXFRAMEPROT} -q ${ALLUNIPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFprot_vs_Uniprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l ${ProjDir}/Novel_res/Novel_ORF.txt -a "blastp" -s ${SIXFRAMEPROT} -q ${ALLNCBIPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFprot_vs_NCBIprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "nucl" -l "all" -a "blastn" -s ${SIXFRAMEGENE} -q ${UNIREFGENE} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFnucl_vs_Refrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "nucl" -l ${ProjDir}/Novel_res/Novel_ORF.txt -a "blastn" -s ${SIXFRAMEGENE} -q ${ALLNCBIRNA} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFnucl_vs_NCBIrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
     
 fi
 
@@ -145,11 +145,11 @@ fi
 # Check whether to perform the reciprocal best blast against previously used databases
 if [ $ReciprocalBlast ]; then
     
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" ${ProjDir}/Blast/ORFprot_vs_Refprot_besthit.txt "blastp" ${UNIREFPROT} ${SIXFRAMEPROT} ${Eval} ${NumAlign} ${THREADS} "Refprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" ${ProjDir}/Blast/ORFprot_vs_Uniprot_besthit.txt "blastp" ${ALLUNIPROT} ${SIXFRAMEPROT} ${Eval} ${NumAlign} ${THREADS} "Uniprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "prot" ${ProjDir}/Blast/ORFprot_vs_NCBIprot_besthit.txt "blastp" ${ALLNCBIPROT} ${SIXFRAMEPROT} ${Eval} ${NumAlign} ${THREADS} "NCBIprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" ${ProjDir}/Blast/ORFnucl_vs_Refrna_besthit.txt "blastn" ${UNIREFGENE} ${SIXFRAMEGENE} ${Eval} ${NumAlign} ${THREADS} "Refrna_vs_ORFnucl" >> ${LogDir}/ReciprocalBlast.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh ${ProjDir}/Blast "nucl" ${ProjDir}/Blast/ORFnucl_vs_NCBIrna_besthit.txt "blastn" ${ALLNCBIRNA} ${SIXFRAMEGENE} ${Eval} ${NumAlign} ${THREADS} "NCBIrna_vs_ORFnucl" >> ${LogDir}/ReciprocalBlast.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l ${ProjDir}/Blast/ORFprot_vs_Refprot_besthit.txt -a "blastp" -s ${UNIREFPROT} -q ${SIXFRAMEPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Refprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l ${ProjDir}/Blast/ORFprot_vs_Uniprot_besthit.txt -a "blastp" -s ${ALLUNIPROT} -q ${SIXFRAMEPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Uniprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l ${ProjDir}/Blast/ORFprot_vs_NCBIprot_besthit.txt -a "blastp" -s ${ALLNCBIPROT} -q ${SIXFRAMEPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "NCBIprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "nucl" -l ${ProjDir}/Blast/ORFnucl_vs_Refrna_besthit.txt -a "blastn" -s ${UNIREFGENE} -q ${SIXFRAMEGENE} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Refrna_vs_ORFnucl" >> ${LogDir}/ReciprocalBlast.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "nucl" -l ${ProjDir}/Blast/ORFnucl_vs_NCBIrna_besthit.txt -a "blastn" -s ${ALLNCBIRNA} -q ${SIXFRAMEGENE} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "NCBIrna_vs_ORFnucl" >> ${LogDir}/ReciprocalBlast.log 2>&1
 
 fi
 
