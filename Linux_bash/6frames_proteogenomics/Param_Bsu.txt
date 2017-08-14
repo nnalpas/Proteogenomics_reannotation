@@ -1,0 +1,37 @@
+# GeneralParam
+ProjectName="Bsu_6frame"
+TaxId="1423"
+
+# ProcessSteps
+GetOrf=0
+GetNovelEntries=1
+MakeBlastDbProt=1
+MakeBlastDbNuc=0
+BlastDbBlasting=1
+BestBlast=1
+ReciprocalBlast=1
+ReciprocalBestBlast=1
+ProteinCoordinate=0
+
+# EmbossParam
+FRAME=6
+TABLE=11
+MINSIZE=1
+CIRCULAR="Yes"
+
+# ReferenceDatabase
+GENOME="${PBS_O_HOME}/Genome/Bacillus_subtilis/GCA_000009045.1.fasta"
+SIXFRAMEPROT="${PBS_O_HOME}/Genome/Bacillus_subtilis/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta"
+COORDSIXFRAMEPROT="${PBS_O_HOME}/Genome/Bacillus_subtilis/Find0_GCA_000009045.1_FIXED.fasta"
+UNIREFPROT="${PBS_O_HOME}/Genome/Bacillus_subtilis/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta"
+UNIREFGENE=""
+ALLUNIPROT="${PBS_O_HOME}/BlastDB/uniprot_sprot_trembl.fasta"
+ALLNCBIPROT="${PBS_O_HOME}/BlastDB/refseq_protein"
+ALLNCBIRNA="${PBS_O_HOME}/BlastDB/refseq_rna"
+
+# BlastDatab
+InputType="fasta"
+
+# BlastParam
+Eval=0.1
+NumAlign=100
