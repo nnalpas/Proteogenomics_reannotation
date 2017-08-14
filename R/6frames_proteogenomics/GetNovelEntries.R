@@ -236,7 +236,9 @@ pl <- plots_box(
     value = "Resolution",
     main = "PSM resolution",
     textsize = 25,
-    fill = "grey")
+    fill = "grey",
+    xlabel = "Resolution",
+    ylabel = "Databases")
 
 #g <- ggplot_build(pl[[1]])$data[[1]] %>%
 #    dplyr::select(., ymin:ymax, x) %>%
@@ -257,7 +259,9 @@ pl <- plots_box(
     value = "Resolution",
     main = "PSM resolution",
     textsize = 25,
-    fill = "grey")
+    fill = "grey",
+    xlabel = "Resolution",
+    ylabel = "Databases")
 pl[[1]]
 
 # Boxplot of evidence mass error (ppm)
@@ -270,7 +274,9 @@ pl <- plots_box(
     value = "Masserror",
     main = "PSM mass error (ppm)",
     textsize = 25,
-    fill = "grey")
+    fill = "grey",
+    xlabel = "Mass error (ppm)",
+    ylabel = "Databases")
 pl[[1]]
 
 # Bowplot of evidence mass error (ppm)
@@ -283,7 +289,9 @@ pl <- plots_box(
     value = "Masserror",
     main = "PSM mass error (ppm)",
     textsize = 25,
-    fill = "grey")
+    fill = "grey",
+    xlabel = "Mass error (ppm)",
+    ylabel = "Databases")
 pl[[1]]
 
 # Boxplot of evidence PEP
@@ -296,7 +304,9 @@ pl <- plots_box(
     main = "PSM PEP",
     textsize = 25,
     zoom = c(-0.001, quantile(toplot$PEP, 0.95)[[1]]),
-    fill = "grey")
+    fill = "grey",
+    xlabel = "PEP",
+    ylabel = "Databases")
 pl[[1]]
 pl[[2]]
 
@@ -310,7 +320,9 @@ pl <- plots_box(
     main = "PSM PEP",
     textsize = 25,
     zoom = c(-0.001, quantile(toplot$PEP, 0.95)[[1]]),
-    fill = "grey")
+    fill = "grey",
+    xlabel = "PEP",
+    ylabel = "Databases")
 pl[[1]]
 pl[[2]]
 
@@ -323,7 +335,9 @@ pl <- plots_box(
     value = "Score",
     main = "PSM score",
     textsize = 25,
-    fill = "grey")
+    fill = "grey",
+    xlabel = "Score",
+    ylabel = "Databases")
 pl[[1]]
 
 # Bowplot of evidence score
@@ -335,7 +349,9 @@ pl <- plots_box(
     value = "Score",
     main = "PSM score",
     textsize = 25,
-    fill = "grey")
+    fill = "grey",
+    xlabel = "Score",
+    ylabel = "Databases")
 pl[[1]]
 
 # Close the picture file
