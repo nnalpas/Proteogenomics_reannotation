@@ -51,6 +51,7 @@ load_package(ggplot2)
 load_package(gtable)
 load_package(grid)
 load_package(gridExtra)
+load_package(purrr)
 
 
 
