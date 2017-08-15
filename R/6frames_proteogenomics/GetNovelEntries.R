@@ -92,10 +92,13 @@ if (
 
 # For manual parameters set-up
 #opt <- list(
-#    output = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/11082017",
+#    output = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/15082017",
 #    maxquant = "G:/data/Vaishnavi/combined - 6 frame translation/txt",
 #    reference = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta",
 #    novel = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta")
+
+# Create output directory if not already existing
+dir.create(opt$output)
 
 
 
