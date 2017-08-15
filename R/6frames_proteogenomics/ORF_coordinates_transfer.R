@@ -86,9 +86,9 @@ if (opt$output == "orf_coordinates.txt") {
 
 # For manual parameters set-up
 #opt <- list(
-#    idmap = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/Best_blast_blastp_ORF_Nicolas_vs_Karsten_11012017_reformatted.txt",
-#    coordinates = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/orf_coordinates_tmp.txt",
-#    output = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/orf_coordinates.txt")
+#    idmap = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/Blast_cross-map_blastp_ORF_Nicolas_vs_Karsten_11012017",
+#    coordinates = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/Find0_GCA_000009045.1_FIXED_orf_coordinates.txt",
+#    output = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/6frames_orf_coordinates.txt")
 
 
 
@@ -113,7 +113,7 @@ coordinates <- opt$coordinates %>%
 ### Get genomic coordinates ----------------------------------------------
 
 # Detect which columns should be used for merging coordinates and IDmap
-if (all(idmap$V1 %in% coordinates$id) & all(idmap$V2 %in% coordinates$id)) {
+if (!any(idmap$V1 %in% coordinates$id) & !any(idmap$V2 %in% coordinates$id)) {
     stop("Impossible to differentiate which column to use for merging!")
 } else if (
     !all(idmap$V1 %in% coordinates$id) & !all(idmap$V2 %in% coordinates$id)) {
@@ -128,7 +128,10 @@ if (all(idmap$V1 %in% coordinates$id)) {
     orf_pos <- dplyr::left_join(
         x = idmap, y = coordinates, by = c("association_id" = "id"))
 } else if (all(idmap$V2 %in% coordinates$id)) {
-    print(paste("Merging on column 2, starting with:", head(idmap$V2), "!"))
+    print(paste(
+        "Merging on column 2, starting with:",
+        paste(head(idmap$V2), collapse = ";"),
+        "!"))
     colnames(idmap) <- c("id", "association_id")
     orf_pos <- dplyr::left_join(
         x = idmap, y = coordinates, by = c("association_id" = "id"))
