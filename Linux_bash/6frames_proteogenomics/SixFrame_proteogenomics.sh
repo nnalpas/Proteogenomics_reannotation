@@ -179,9 +179,10 @@ fi
 # Check whether to perform protein coordinate identification
 if [ $ProteinCoordinate ]; then
 
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/ProtPosition -y "prot" -l "all" -a "blastp" -s ${UNIREFPROT} -q ${SIXFRAMEPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "AllRefprot_vs_ORFprot" > ${LogDir}/ProteinCoordinate.log 2>&1
-    ${PBS_O_HOME}/bin/ORF_coordinates.R -f ${SIXFRAMEPROT} -o ${ProjDir}/ProtPosition/orf_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
-    ${PBS_O_HOME}/bin/Genomic_position_from_blast.R -f ${UNIREFPROT} -b ${ProjDir}/ProtPosition/AllRefprot_vs_ORFprot -g ${ProjDir}/ProtPosition/orf_coordinates.txt -o ${ProjDir}/ProtPosition/refprot_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh               -o ${ProjDir}/ProtPosition -y "prot" -l "all" -a "blastp" -s ${UNIREFPROT} -q ${SIXFRAMEPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "AllRefprot_vs_ORFprot" > ${LogDir}/ProteinCoordinate.log 2>&1
+    ${PBS_O_HOME}/bin/BestBlast.sh       
+    ${PBS_O_HOME}/bin/ORF_coordinates.R                -f ${SIXFRAMEPROT} -o ${ProjDir}/ProtPosition/orf_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
+    ${PBS_O_HOME}/bin/ORF_coordinates_transfer.R       -f ${UNIREFPROT} -b ${ProjDir}/ProtPosition/AllRefprot_vs_ORFprot -g ${ProjDir}/ProtPosition/orf_coordinates.txt -o ${ProjDir}/ProtPosition/refprot_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
 
 fi
 
