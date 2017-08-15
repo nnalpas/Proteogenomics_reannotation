@@ -82,7 +82,7 @@ if (opt$output == "orf_coordinates.txt") {
 # For manual parameters set-up
 #opt <- list(
 #    fasta = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/Find0_GCA_000009045.1_FIXED.fasta",
-#    output = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/orf_coordinates_tmp.txt")
+#    output = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/Find0_GCA_000009045.1_FIXED_orf_coordinates.txt")
 
 
 
