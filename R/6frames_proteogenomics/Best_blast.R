@@ -132,6 +132,16 @@ write.table(
     row.names = FALSE,
     col.names = FALSE)
 
+# Export the blast ID map results
+write.table(
+    x = best_blast_data %>%
+        dplyr::select(., qseqid, sseqid),
+    file = paste(opt$output, "/Blast_cross-map_", basename(opt$input), sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = FALSE)
+
 # Define end time
 print(paste("Complete", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
 
