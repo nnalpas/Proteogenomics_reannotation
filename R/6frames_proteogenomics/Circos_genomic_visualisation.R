@@ -119,6 +119,57 @@ orf_coord <- read.table(
 
 
 
+# temporary
+
+
+
+# Import the blast results of Nicolas' ORF versus the reference proteome
+blast_NN_vs_ref <- read.table(
+    file = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/blastp_ORF_Nicolas_vs_RefProt_19012017",
+    header = FALSE,
+    sep = "\t",
+    quote = "",
+    col.names = c(
+        "qseqid", "sseqid", "pident", "nident", "mismatch", "length",
+        "gapopen", "qstart", "qend", "sstart", "send", "evalue",
+        "bitscore", "score"),
+    as.is = TRUE)
+
+# Find the best blast hit for each query id
+blast_NN_vs_ref_best <- best_blast(
+    data = blast_NN_vs_ref, key = "qseqid", multi_match = "remove")
+
+# Keep the mapping of ORF to uniprotID
+orf_to_uniprot <- blast_NN_vs_ref_best %>%
+    dplyr::select(., qseqid, sseqid) %>%
+    set_colnames(c("qseqid", "UniProtID")) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+orf_to_uniprot$qseqid %<>%
+    gsub("^lcl\\|", "", .)
+orf_to_uniprot %<>%
+    set_colnames(c("id", "UniProtID"))
+
+
+orf_coord %<>%
+    dplyr::left_join(., orf_to_uniprot, by = c("association_id" = "id"))
+
+
+evid_match <- readRDS("C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/15082017/2017-08-15_Sequence_group_mapping.RDS")
+evid_expr <- evid_match %>%
+    strsplit(x = .[["Proteins"]], split = ";", fixed = TRUE) %>%
+    unlist(.) %>%
+    unique(.)
+
+
+
+#orf_coord_filt <- orf_coord %>%
+#    dplyr::filter(., id %in% evid_expr | UniProtID %in% evid_expr)
+
+
+
+
+
+
 ### Ideogram generation --------------------------------------------------
 
 # Dataframe holding genome information for bacillus subtilis
@@ -151,7 +202,7 @@ saveRDS(
 ### ORF visualisation ----------------------------------------------------
 
 # Format dataframe as genomic position and other info for each reference ORF
-tmp <- orf_coord_filt %>%
+tmp <- orf_coord %>%
     dplyr::filter(., !is.na(UniProtID)) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 tmp %<>%
@@ -171,6 +222,8 @@ tmp %<>%
     summarise_each(
         funs(toString(x = unique(.), width = NULL))) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
+tmp %<>%
+    dplyr::filter(., !duplicated(UniProtKBID))
 
 # Create a GRanges object for all reference and identified novel ORF 
 ref_grange <- with(
@@ -190,7 +243,7 @@ seqinfo(ref_grange) <- Seqinfo(
     genome = tmp$geno %>% unique(.) %>% as.character(.))
 
 # Format dataframe as genomic position and other info for each novel ORF
-tmp <- orf_coord_filt %>%
+tmp <- orf_coord %>%
     dplyr::filter(., is.na(UniProtID)) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 tmp %<>%
@@ -210,6 +263,8 @@ tmp %<>%
     summarise_each(
         funs(toString(x = unique(.), width = NULL))) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
+tmp %<>%
+    dplyr::filter(., !duplicated(id))
 
 # Create a GRanges object for all reference and identified novel ORF 
 orf_grange <- with(
@@ -229,30 +284,213 @@ seqinfo(orf_grange) <- Seqinfo(
     genome = tmp$geno %>% unique(.) %>% as.character(.))
 
 # Use ggbio extension to plot ORF location on genome as a circos graph
+ref_grange_expr <- subset(x = ref_grange, UniProtKBID %in% evid_expr)
+orf_grange_expr <- subset(x = orf_grange, id %in% evid_expr)
 colou <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
 pl <- ggplot() +
     ggtitle(label = "Bacillus subtilis ORFs") +
     layout_circle(
         bsu_ideo, geom = "ideo", fill = "gray70",
-        radius = 30, trackWidth = 3) +
+        radius = 30, trackWidth = 2) +
     layout_circle(
-        bsu_ideo, geom = "scale", size = 2, radius = 33, trackWidth = 2) +
+        bsu_ideo, geom = "scale", size = 4,
+        radius = 33, trackWidth = 2) +
     layout_circle(
-        bsu_ideo, geom = "text", aes(label = seqnames),
-        angle = 0, radius = 36, trackWidth = 5) +
+        bsu_ideo, geom = "text", size = 7, aes(label = seqnames),
+        angle = 0, radius = 37, trackWidth = 5) +
     layout_circle(
-        subset(x = ref_grange, strand == "+"), geom = "rect", color = colou[1],
-        radius = 26, trackWidth = 3) +
+        subset(x = ref_grange_expr, strand == "+"),
+        geom = "rect", color = colou[1],
+        radius = 26, trackWidth = 4) +
     layout_circle(
-        subset(x = ref_grange, strand == "-"), geom = "rect", color = colou[2],
-        radius = 23, trackWidth = 3) +
+        subset(x = ref_grange_expr, strand == "-"),
+        geom = "rect", color = colou[2],
+        radius = 22, trackWidth = 4) +
     layout_circle(
-        subset(x = orf_grange, strand == "+"), geom = "rect", color = colou[3],
-        radius = 20, trackWidth = 3) +
+        subset(x = orf_grange_expr, strand == "+"),
+        geom = "rect", color = colou[3],
+        radius = 18, trackWidth = 4) +
     layout_circle(
-        subset(x = orf_grange, strand == "-"), geom = "rect", color = colou[4],
-        radius = 17, trackWidth = 3)
-pl
+        subset(x = orf_grange_expr, strand == "-"),
+        geom = "rect", color = colou[4],
+        radius = 14, trackWidth = 4)
+
+
+pdf(file = paste0(opt$out_path, "/ORFs_circos.pdf"), width = 10, height = 10)
+plot(pl)
+dev.off()
+
+
+### Genomic coverage -----------------------------------------------------
+
+
+
+# Get all chromosome nucleotide position
+chrom_nuc <- bsu_ideo@ranges[[1]]
+
+# Get all protein-coding associated nucleotide position
+coding_nuc <- lapply(X = ref_grange@ranges, FUN = function(x) {
+    x
+})
+names(coding_nuc) <- ref_grange@elementMetadata@listData$UniProtKBID
+
+# Get all expressed protein associated nucleotide position
+exprs_nuc <- lapply(X = ref_grange_expr@ranges, FUN = function(x) {
+    x
+})
+names(exprs_nuc) <- ref_grange_expr@elementMetadata@listData$UniProtKBID
+exprs_nuc_stranded <- list()
+orf_coord_filt <- orf_coord[!is.na(orf_coord$UniProtID), ] %>%
+    dplyr::filter(., !duplicated(UniProtID))
+orf_coord_filt$UniProtID %<>%
+    uni_id_clean(.)
+for (x in names(exprs_nuc)) {
+    if (orf_coord_filt[orf_coord_filt$UniProtID == x, "strand"] == -1) {
+        exprs_nuc_stranded[[x]] <- rev(exprs_nuc[[x]])
+    } else {
+        exprs_nuc_stranded[[x]] <- exprs_nuc[[x]]
+    }
+}
+
+# Get all peptide associated nucleotide position
+pep_loc <- readRDS(file = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/15082017/2017-08-15_Peptides_location.RDS") %>%
+    ldply(., "data.frame", .id = "Database")
+pep_loc_filt <- pep_loc %>%
+    dplyr::filter(., Database == "Known")
+
+tmp <- pep_loc_filt[
+    !is.na(pep_loc_filt$start) & !duplicated(pep_loc_filt$pep), ]
+cover_nuc <- apply(
+    X = tmp,
+    MARGIN = 1,
+    FUN = function(x) {
+        
+        val <- seq(from = as.integer(x["start"]) * 3 - 2, to = as.integer(x["end"]) * 3)
+        tmp <- exprs_nuc_stranded[[x["prot"]]][val]
+        tmp
+        
+    }
+)
+names(cover_nuc) <- tmp$pep
+
+# Format data into a standard plotting dataframe
+toplot <- data.frame(
+    Param = paste(
+        "Chromosome", round(length(chrom_nuc) / 1000000, 1),
+        "Mb", sep = " "),
+    Position = as.integer(unique(chrom_nuc)),
+    stringsAsFactors = FALSE)
+toplot <- data.frame(
+    Param = paste(
+        "Protein-coding",
+        round(length(unique(unlist(coding_nuc))) / 1000000, 1),
+        "Mb", sep = " "),
+    Position = as.integer(unique(unlist(coding_nuc))),
+    stringsAsFactors = FALSE) %>%
+    base::rbind(toplot, .)
+toplot <- data.frame(
+    Param = paste(
+        "Expressed protein",
+        round(length(unique(unlist(exprs_nuc))) / 1000000, 1),
+        "Mb", sep = " "),
+    Position = as.integer(unique(unlist(exprs_nuc))),
+    stringsAsFactors = FALSE) %>%
+    base::rbind(toplot, .)
+toplot <- data.frame(
+    Param = paste(
+        "Detected peptide",
+        round(length(unique(unlist(cover_nuc))) / 1000000, 1),
+        "Mb", sep = " "),
+    Position = as.integer(unique(unlist(cover_nuc))),
+    stringsAsFactors = FALSE) %>%
+    base::rbind(toplot, .)
+
+pdf(file = paste0(opt$out_path, "/Genomic_coverage.pdf"), width = 10, height = 10)
+
+# Plot a square venn diagram of chromosome coverage
+plot.new()
+rect(
+    xleft = 0,
+    ybottom = 0,
+    xright = 1,
+    ytop = 1,
+    border = "red",
+    lwd = 2)
+text(
+    x = 0.015,
+    y = 1.02,
+    labels = paste(
+        "Chromosome", round(length(chrom_nuc) / 1000000, 1),
+        "Mb", sep = " "),
+    col = "red", cex = 1.0, adj = 0)
+rect(
+    xleft = 0.01,
+    ybottom = 0.01,
+    xright = sqrt(
+        length(unique(unlist(coding_nuc))) / length(chrom_nuc)) + 0.01,
+    ytop = sqrt(
+        length(unique(unlist(coding_nuc))) / length(chrom_nuc)) + 0.01,
+    border = "green",
+    lwd = 2)
+text(
+    x = 0.025,
+    y = sqrt(
+        length(unique(unlist(coding_nuc))) / length(chrom_nuc)) + 0.032,
+    labels = paste(
+        "Protein-coding",
+        round(length(unique(unlist(coding_nuc))) / 1000000, 1),
+        "Mb", sep = " "),
+    col = "green", cex = 1.0, adj = 0)
+rect(
+    xleft = 0.02,
+    ybottom = 0.02,
+    xright = sqrt(
+        length(unique(unlist(exprs_nuc))) / length(chrom_nuc)) + 0.02,
+    ytop = sqrt(
+        length(unique(unlist(exprs_nuc))) / length(chrom_nuc)) + 0.02,
+    border = "blue",
+    lwd = 2)
+text(
+    x = 0.035,
+    y = sqrt(
+        length(unique(unlist(exprs_nuc))) / length(chrom_nuc)) + 0.04,
+    labels = paste(
+        "Expressed protein",
+        round(length(unique(unlist(exprs_nuc))) / 1000000, 1),
+        "Mb", sep = " "),
+    col = "blue", cex = 1.0, adj = 0)
+rect(
+    xleft = 0.03,
+    ybottom = 0.03,
+    xright = sqrt(
+        length(unique(unlist(cover_nuc))) / length(chrom_nuc)) + 0.03,
+    ytop = sqrt(
+        length(unique(unlist(cover_nuc))) / length(chrom_nuc)) + 0.03,
+    border = "gold",
+    lwd = 2)
+text(
+    x = 0.045,
+    y = sqrt(
+        length(unique(unlist(cover_nuc))) / length(chrom_nuc)) + 0.05,
+    labels = paste(
+        "Detected peptide",
+        round(length(unique(unlist(cover_nuc))) / 1000000, 1),
+        "Mb", sep = " "),
+    col = "gold", cex = 1.0, adj = 0)
+
+dev.off()
+
+
+
+### Coverage per nucleotide ----------------------------------------------
+
+# 
+peptide_to_nucl <- cover_nuc %>%
+    ldply(., "data.frame") %>%
+    set_colnames(c("Sequence", "Nucl_pos")) %>%
+    dplyr::filter(., !is.na(Nucl_pos))
+
+# Merge with evid and the msms count
 
 
 
