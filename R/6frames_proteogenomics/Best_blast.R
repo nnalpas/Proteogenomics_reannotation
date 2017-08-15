@@ -61,7 +61,7 @@ option_list <- list(
         help = "Filter for multi hits entry", metavar = "character"),
     make_option(
         opt_str = c("-o", "--out_path"), type = "character", default = NULL, 
-        help = "Output file name [default= %default]", metavar = "character"))
+        help = "Output directory", metavar = "character"))
 
 # Parse the parameters provided on command line by user
 opt_parser <- OptionParser(option_list = option_list)
