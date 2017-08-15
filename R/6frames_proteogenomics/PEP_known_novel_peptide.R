@@ -460,11 +460,18 @@ data <- pep.pos %>%
         Unique_peptide_count = n_distinct(Sequence)) %>%
     base::as.data.frame(., stringsAsFactors = FALSE) %>%
     .[order(.$Unique_peptide_count, decreasing = TRUE), ]
-tmp <- blast.bsu.vs.allbact.best
+tmp <- blast.bsu.vs.allbact.best %>%
+    dplyr::select(., qseqid, sseqid, pident, nident, evalue)
 colnames(tmp)[colnames(tmp) == "qseqid"] <- "ORF"
 
 # Look into the novel ORF that match known other bacterial entries or are
 # completely uncharacterised
+data %<>%
+    dplyr::left_join(x = ., y = tmp, by = "ORF") %>%
+    .[order(.$Unique_peptide_count, decreasing = TRUE), ] %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Keep only the top candidates
 orf.candidates <- data[grep(
     pattern = paste(
         c(
@@ -472,15 +479,15 @@ orf.candidates <- data[grep(
             "New start site", "SAV"),
         collapse = "|"),
     x = data$ReasonNovel), ] %>%
-    dplyr::filter(., Unique_peptide_count > 1) %>%
-    dplyr::left_join(x = ., y = tmp, by = "ORF") %>%
-    .[order(.$Unique_peptide_count, decreasing = TRUE), ] %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
+    dplyr::filter(., Unique_peptide_count > 1)
+
+# Keep the complete (unfiltered) annotation data
+orf_annot <- data
 
 # Export the table of novel ORF that needs validation
 write.table(
-    x = tmp,
-    file = paste("Novel_ORF_toInterprete_", date_str, ".txt", sep = ""),
+    x = data,
+    file = paste("Novel_ORF_annotation_", date_str, ".txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
@@ -684,6 +691,15 @@ rm(tmp)
 
 
 ### Novel ORF explanation by neighbours ----------------------------------
+
+# Compile neighbouring info with the candidate ORF
+orf.candidates.final <- orf.candidates %>%
+    dplyr::select(
+        ., ORF, Sequences, ReasonNovel, Unique_peptide_count) %>%
+    unique(.) %>%
+    dplyr::left_join(x = ., y = orf.neighb, by = "ORF") %>%
+    dplyr::arrange(., start) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Compile neighbouring info with the candidate ORF
 orf.candidates.final <- orf.candidates %>%
