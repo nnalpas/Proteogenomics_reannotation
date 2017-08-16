@@ -486,7 +486,7 @@ orf_annot <- data
 
 # Export the table of novel ORF that needs validation
 write.table(
-    x = data,
+    x = orf_annot,
     file = paste("Novel_ORF_annotation_", date_str, ".txt", sep = ""),
     quote = FALSE,
     sep = "\t",
@@ -702,13 +702,20 @@ orf.candidates.final <- orf.candidates %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Compile neighbouring info with the candidate ORF
-orf.candidates.final <- orf.candidates %>%
-    dplyr::select(
-        ., ORF, Sequences, ReasonNovel, Unique_peptide_count) %>%
+orf_annot_final <- orf_annot %>%
     unique(.) %>%
     dplyr::left_join(x = ., y = orf.neighb, by = "ORF") %>%
     dplyr::arrange(., start) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Export the table of novel ORF that needs validation
+write.table(
+    x = orf_annot_final,
+    file = paste("Novel_ORF_annotation_withNeighb_", date_str, ".txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE)
 
 
 
