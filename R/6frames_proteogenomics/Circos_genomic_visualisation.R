@@ -491,6 +491,76 @@ peptide_to_nucl <- cover_nuc %>%
     dplyr::filter(., !is.na(Nucl_pos))
 
 # Merge with evid and the msms count
+peptide_to_nucl_count <- evid_match %>%
+    dplyr::select(., Sequence, `MS/MS Count`) %>%
+    dplyr::group_by(., Sequence) %>%
+    dplyr::summarise(., Count = sum(`MS/MS Count`)) %>%
+    dplyr::left_join(peptide_to_nucl, ., by = "Sequence")
 
+# 
+peptide_to_nucl_count$Count <- factor(
+    x = peptide_to_nucl_count$Count,
+    levels = seq(1, max(peptide_to_nucl_count$Count)),
+    labels = seq(1, max(peptide_to_nucl_count$Count)),
+    ordered = TRUE)
+toplot <- peptide_to_nucl_count %>%
+    plyr::ddply(
+        .data = ., .variables = c("Count"),
+        .fun = summarise, Freq = n(),
+        .drop = FALSE)
+
+quantiles_toplot <- quantile(
+    x = as.integer(as.character(peptide_to_nucl_count$Count)),
+    probs = c(0, 0.25, 0.5, 0.75, 1)) %>%
+    as.data.frame(.) %>%
+    set_colnames("Quartiles")
+
+
+pl <- plots_hist(
+    data = toplot %>%
+        dplyr::filter(., Count %in% c(1:160)),
+    key = "Count",
+    value = "Freq",
+    group = "Count",
+    fill = "grey",
+    main = "Coverage per nucleotide",
+    xlabel = "MS/MS counts",
+    ylabel = "Nucleotide counts",
+    textsize = 25)
+
+pl <- pl[[1]] +
+    annotation_custom(
+        grob = tableGrob(d = quantiles_toplot, theme = ttheme_minimal()),
+        xmin = 130, xmax = 150, ymin = 2E5, ymax = 4E5)
+
+
+pdf(file = paste0(opt$out_path, "/Coverage_per_nucleotide.pdf"), width = 10, height = 10)
+plot(pl)
+dev.off()
+
+
+peptide_count <- peptide_to_nucl_count %>%
+    dplyr::select(., -Nucl_pos) %>%
+    unique(.)
+peptide_count$Count %<>%
+    as.character(.) %>%
+    as.numeric(.)
+
+peptide_count <- evid_match %>%
+    dplyr::select(
+        ., Sequence, Length, Modifications, `Modified sequence`,
+        starts_with("Missed cleavages"), Proteins, `Leading Proteins`,
+        `Leading Razor Protein`, `Gene Names`, `Protein Names`,
+        Type, `Labeling State`, `Raw file`, Experiment, `MS/MS m/z`,
+        Charge, `m/z`, Mass, Resolution, PEP, `MS/MS Count`, Score,
+        starts_with("Intensity"), Reverse, `Potential contaminant`, id,
+        group, Database) %>%
+    dplyr::left_join(., peptide_count, by = "Sequence")
+
+
+write.table(
+    x = peptide_count,
+    file = paste0(opt$out_path, "/Coverage_per_peptide.txt"),
+    quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 
