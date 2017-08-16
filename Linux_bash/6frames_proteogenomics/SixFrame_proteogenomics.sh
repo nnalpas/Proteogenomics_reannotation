@@ -126,7 +126,7 @@ fi
 ##################################
 
 # Check whether to identify the best blast hits from all results of previous step
-if [ $BestBlast ]; then
+if [ $BestBlast == 1 ]; then
 
     ${PBS_O_HOME}/bin/Best_blast.R -i ${ProjDir}/Blast/ORFprot_vs_Refprot -o ${ProjDir}/Blast/ORFprot_vs_Refprot_besthit.txt > ${LogDir}/BestBlast.log 2>&1
     ${PBS_O_HOME}/bin/Best_blast.R -i ${ProjDir}/Blast/ORFprot_vs_Uniprot -o ${ProjDir}/Blast/ORFprot_vs_Uniprot_besthit.txt >> ${LogDir}/BestBlast.log 2>&1
@@ -143,7 +143,7 @@ fi
 #########################
 
 # Check whether to perform the reciprocal best blast against previously used databases
-if [ $ReciprocalBlast ]; then
+if [ $ReciprocalBlast == 1 ]; then
     
     ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l ${ProjDir}/Blast/ORFprot_vs_Refprot_besthit.txt -a "blastp" -s ${UNIREFPROT} -q ${SIXFRAMEPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Refprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
     ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l ${ProjDir}/Blast/ORFprot_vs_Uniprot_besthit.txt -a "blastp" -s ${ALLUNIPROT} -q ${SIXFRAMEPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Uniprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
@@ -160,7 +160,7 @@ fi
 ######################################
 
 # Check whether to perform reciprocal best blast hit data processing
-if [ $ReciprocalBestBlast ]; then
+if [ $ReciprocalBestBlast == 1 ]; then
 
     ${PBS_O_HOME}/bin/Reciprocal_best_blast.R -b ${ProjDir}/Blast/ORFprot_vs_Refprot -r ${ProjDir}/Blast/Refprot_vs_ORFprot -o ${ProjDir}/Blast/ORFprot_vs_Refprot_reciprocbesthit.txt > ${LogDir}/ReciprocalBestBlast.log 2>&1
     ${PBS_O_HOME}/bin/Reciprocal_best_blast.R -b ${ProjDir}/Blast/ORFprot_vs_Uniprot -r ${ProjDir}/Blast/Uniprot_vs_ORFprot -o ${ProjDir}/Blast/ORFprot_vs_Uniprot_reciprocbesthit.txt >> ${LogDir}/ReciprocalBestBlast.log 2>&1
@@ -177,7 +177,7 @@ fi
 ##################################
 
 # Check whether to perform protein coordinate identification
-if [ $ProteinCoordinate ]; then
+if [ $ProteinCoordinate == 1 ]; then
 
     ${PBS_O_HOME}/bin/BlastDbBlasting.sh               -o ${ProjDir}/ProtPosition -y "prot" -l "all" -a "blastp" -s ${UNIREFPROT} -q ${SIXFRAMEPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "AllRefprot_vs_ORFprot" > ${LogDir}/ProteinCoordinate.log 2>&1
     ${PBS_O_HOME}/bin/BestBlast.sh       
