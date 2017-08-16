@@ -60,7 +60,7 @@ option_list <- list(
         opt_str = c("-m", "--multi_match"), type = "character", default = NULL, 
         help = "Filter for multi hits entry", metavar = "character"),
     make_option(
-        opt_str = c("-o", "--out_path"), type = "character", default = NULL, 
+        opt_str = c("-o", "--output"), type = "character", default = NULL, 
         help = "Output directory", metavar = "character"))
 
 # Parse the parameters provided on command line by user
@@ -76,7 +76,7 @@ if (is.null(opt$input)){
 }
 
 # Check whether output parameter was provided
-if (is.null(opt$out_path)){
+if (is.null(opt$output)){
     
     opt$output <- dirname(opt$input)
     warning(paste("Output results to path: ", opt$output, "!", sep = ""))
@@ -101,6 +101,9 @@ if (is.null(opt$multi_match)) {
 #    filter = "pident == 100 & nident == length & qstart == sstart & qend == send",
 #    multi_match = "uniquify",
 #    output = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases")
+
+# Create output directory if not already existing
+dir.create(opt$output)
 
 
 
