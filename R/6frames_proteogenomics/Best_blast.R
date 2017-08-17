@@ -120,7 +120,7 @@ best_blast_data <- best_blast(
 # Export the best hits protein IDs that needs to be reciprocally blasted
 write.table(
     x = unique(best_blast_data$sseqid),
-    file = paste(opt$output, "/Reciprocal_id_", basename(opt$input), sep = ""),
+    file = paste0(opt$output, "/Reciprocal_id_", basename(opt$input)),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
@@ -129,7 +129,7 @@ write.table(
 # Export the best hits results
 write.table(
     x = best_blast_data,
-    file = paste(opt$output, "/Best_blast_", basename(opt$input), sep = ""),
+    file = paste0(opt$output, "/Best_blast_", basename(opt$input)),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
@@ -139,7 +139,7 @@ write.table(
 write.table(
     x = best_blast_data %>%
         dplyr::select(., qseqid, sseqid),
-    file = paste(opt$output, "/Blast_cross-map_", basename(opt$input), sep = ""),
+    file = paste0(opt$output, "/Blast_cross-map_", basename(opt$input)),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
