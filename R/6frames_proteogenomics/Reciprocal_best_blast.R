@@ -137,7 +137,8 @@ blast_merge_confirmed <- blast_merge %>%
 write.table(
     x = best_blast_data,
     file = paste0(
-        opt$output, "/Best_Reciproc_Blast_", basename(opt$input)),
+        opt$output, "/Best_Reciproc_Blast_",
+        basename(opt$reciprocal_blast)),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
@@ -148,7 +149,8 @@ write.table(
     x = best_blast_data %>%
         dplyr::select(., qseqid, sseqid),
     file = paste0(
-        opt$output, "/Reciproc_Blast_cross-map_", basename(opt$input)),
+        opt$output, "/Reciproc_Blast_cross-map_",
+        basename(opt$reciprocal_blast)),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
