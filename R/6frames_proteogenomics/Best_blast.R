@@ -105,6 +105,14 @@ if (is.null(opt$multi_match)) {
 # Create output directory if not already existing
 dir.create(opt$output)
 
+warning(paste0(
+    "input: ", opt$input,
+    " filter: ", opt$filter,
+    " multi_match: ", opt$multi_match,
+    " output: ", opt$output
+))
+
+stop()
 
 
 ### Data import and processing -------------------------------------------
