@@ -5,13 +5,13 @@ TaxId="1423"
 # ProcessSteps
 GetOrf=0
 GetNovelEntries=0
-MakeBlastDbProt=0
+MakeBlastDbProt=1
 MakeBlastDbNuc=0
 BlastDbBlasting=0
 BestBlast=0
 ReciprocalBlast=0
-ReciprocalBestBlast=1
-ProteinCoordinate=0
+ReciprocalBestBlast=0
+ProteinCoordinate=1
 
 # EmbossParam
 FRAME=6
