@@ -89,7 +89,8 @@ fi
 # Check whether to create a blast database for proteome data
 if [ $MakeBlastDbProt == 1 ]; then
     
-    ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "prot" -t ${TaxId} ${UNIREFPROT} ${SIXFRAMEPROT} > ${LogDir}/MakeBlastDb.log 2>&1
+    ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "prot" -t ${TaxId} ${COORDSIXFRAMEPROT} > ${LogDir}/MakeBlastDb.log 2>&1
+    #${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "prot" -t ${TaxId} ${UNIREFPROT} ${SIXFRAMEPROT} > ${LogDir}/MakeBlastDb.log 2>&1
     
 fi
 
@@ -179,10 +180,10 @@ fi
 # Check whether to perform protein coordinate identification
 if [ $ProteinCoordinate == 1 ]; then
 
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh               -o ${ProjDir}/ProtPosition -y "prot" -l "all" -a "blastp" -s ${UNIREFPROT} -q ${SIXFRAMEPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "AllRefprot_vs_ORFprot" > ${LogDir}/ProteinCoordinate.log 2>&1
-    ${PBS_O_HOME}/bin/BestBlast.sh       
-    ${PBS_O_HOME}/bin/ORF_coordinates.R                -f ${SIXFRAMEPROT} -o ${ProjDir}/ProtPosition/orf_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
-    ${PBS_O_HOME}/bin/ORF_coordinates_transfer.R       -f ${UNIREFPROT} -b ${ProjDir}/ProtPosition/AllRefprot_vs_ORFprot -g ${ProjDir}/ProtPosition/orf_coordinates.txt -o ${ProjDir}/ProtPosition/refprot_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/ProtPosition -y "prot" -l "all" -a "blastp" -s ${SIXFRAMEPROT} -q ${COORDSIXFRAMEPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFprot_vs_coordORF" > ${LogDir}/ProteinCoordinate.log 2>&1
+    #${PBS_O_HOME}/bin/Best_blast.R -i ${ProjDir}/ProtPosition/ORFprot_vs_coordORF -f 'pident == 100%, nident == length, qstart == sstart, qend == send' -m "keep" -o ${ProjDir}/ProtPosition >> ${LogDir}/ProteinCoordinate.log 2>&1
+    #${PBS_O_HOME}/bin/ORF_coordinates.R -f ${COORDSIXFRAMEPROT} -o ${ProjDir}/ProtPosition/tmp_orf_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
+    #${PBS_O_HOME}/bin/ORF_coordinates_transfer.R -i ${ProjDir}/ProtPosition/Blast_cross-map_ORFprot_vs_coordORF -c ${ProjDir}/ProtPosition/tmp_orf_coordinates.txt -o ${ProjDir}/ProtPosition/orf_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
 
 fi
 
