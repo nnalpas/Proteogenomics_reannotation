@@ -60,8 +60,8 @@ option_list <- list(
         help = "Reciprocal blast data file name", metavar = "character"),
     make_option(
         opt_str = c("-o", "--output"),
-        type = "character", default = "reciprocal_best_hits.txt", 
-        help = "Output file name [default= %default]", metavar = "character"))
+        type = "character", default = NULL, 
+        help = "Output directory", metavar = "character"))
 
 # Parse the parameters provided on command line by user
 opt_parser <- OptionParser(option_list = option_list)
@@ -80,8 +80,8 @@ if (is.null(opt$blast) | is.null(opt$reciprocal_blast)){
 # Check whether output parameter was provided
 if (is.null(opt$output)){
     
-    opt$output <- paste(dirname(opt$input), opt$output, sep = "/")
-    warning("Output results to reciprocal_best_hits.txt!")
+    opt$output <- dirname(opt$input)
+    warning(paste("Output results to path: ", opt$output, "!", sep = ""))
     
 }
 
@@ -90,16 +90,7 @@ if (is.null(opt$output)){
 ### Data import and best blast computation -------------------------------
 
 # Import the Blast results
-blast_data <- read.table(
-    file = opt$blast,
-    header = FALSE,
-    sep = "\t",
-    quote = "",
-    col.names = c(
-        "qseqid", "sseqid", "pident", "nident", "mismatch", "length",
-        "gapopen", "qstart", "qend", "sstart", "send", "evalue",
-        "bitscore", "score"),
-    as.is = TRUE) %>%
+blast_data <- blast_read(file = opt$blast, blast_format = "6") %>%
     dplyr::mutate(
         .,
         qseqid = uni_id_clean(qseqid),
@@ -109,16 +100,8 @@ blast_data <- read.table(
 best_blast_data <- best_blast(data = blast_data, key = "qseqid")
 
 # Import the reciprocal Blast results
-reciproc_data <- read.table(
-    file = opt$reciprocal_blast,
-    header = FALSE,
-    sep = "\t",
-    quote = "",
-    col.names = c(
-        "qseqid", "sseqid", "pident", "nident", "mismatch", "length",
-        "gapopen", "qstart", "qend", "sstart", "send", "evalue",
-        "bitscore", "score"),
-    as.is = TRUE) %>%
+reciproc_data <- blast_read(
+    file = opt$reciprocal_blast, blast_format = "6") %>%
     dplyr::mutate(
         .,
         qseqid = uni_id_clean(qseqid),
@@ -150,10 +133,26 @@ blast_merge_confirmed <- blast_merge %>%
             .$best_count_reciproc == 1 ~ "Single",
         TRUE ~ "Multiple"))
 
-# Export the reciprocal best blast data
+# Export the best hits results
 write.table(
-    x = blast_merge_confirmed, file = opt$output,
-    quote = FALSE, sep = "\t", row.names = FALSE)
+    x = best_blast_data,
+    file = paste0(
+        opt$output, "/Best_Reciproc_Blast_", basename(opt$input)),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE)
+
+# Export the blast ID map results
+write.table(
+    x = best_blast_data %>%
+        dplyr::select(., qseqid, sseqid),
+    file = paste0(
+        opt$output, "/Reciproc_Blast_cross-map_", basename(opt$input)),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = FALSE)
 
 # Define end time
 print(paste("Complete", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
