@@ -5,7 +5,7 @@ TaxId="1423"
 # ProcessSteps
 GetOrf=0
 GetNovelEntries=0
-MakeBlastDbProt=1
+MakeBlastDbProt=0
 MakeBlastDbNuc=0
 BlastDbBlasting=0
 BestBlast=0
