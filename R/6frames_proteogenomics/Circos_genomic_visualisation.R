@@ -161,6 +161,13 @@ evid_expr <- evid_match %>%
     unique(.)
 
 
+operon <- read.table(
+    file = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/Bsu_operon_01062017.opr",
+    header = TRUE,
+    sep = "\t",
+    quote = "",
+    as.is = TRUE)
+
 
 #orf_coord_filt <- orf_coord %>%
 #    dplyr::filter(., id %in% evid_expr | UniProtID %in% evid_expr)
@@ -319,6 +326,98 @@ pl <- ggplot() +
 pdf(file = paste0(opt$out_path, "/ORFs_circos.pdf"), width = 10, height = 10)
 plot(pl)
 dev.off()
+
+
+
+
+# Format dataframe as genomic position and other info for each novel ORF
+tmp <- operon %>%
+    dplyr::group_by(., OperonID) %>%
+    dplyr::summarise(
+        .,
+        GeneCount = n(),
+        Start = min(Start),
+        End = max(End),
+        Strand = unique(Strand),
+        Length = max(End) - min(Start)) %>%
+    dplyr::filter(., !is.na(OperonID)) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+tmp %<>%
+    dplyr::mutate(
+        .,
+        Chromosome = 1,
+        chr.name = "chr1",
+        length = 4215606,
+        Type = TRUE,
+        geno = "AL009126.3") %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+tmp %<>%
+    dplyr::filter(., !duplicated(OperonID))
+
+# Create a GRanges object for all reference and identified novel ORF 
+operon_grange <- with(
+    data = tmp,
+    expr = GRanges(
+        seqnames = chr.name,
+        ranges = IRanges(Start, End),
+        strand = Strand))
+
+# Add values and seqinfo to the created GRanges object
+values(operon_grange) <- tmp %>%
+    dplyr::select(., OperonID, GeneCount, Chromosome)
+seqinfo(operon_grange) <- Seqinfo(
+    seqnames = tmp$chr.name %>% unique(.) %>% as.character(.),
+    seqlengths = tmp$length %>% unique(.) %>% as.integer(.),
+    isCircular = tmp$Type %>% unique(.) %>% as.logical(.),
+    genome = tmp$geno %>% unique(.) %>% as.character(.))
+
+
+colou <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
+pl <- ggplot() +
+    ggtitle(label = "Bacillus subtilis ORFs") +
+    layout_circle(
+        bsu_ideo, geom = "ideo", fill = "#e6e6e6",
+        radius = 30.5, trackWidth = 2) +
+    layout_circle(
+        bsu_ideo, geom = "scale", size = 4,
+        radius = 33, trackWidth = 2) +
+    layout_circle(
+        bsu_ideo, geom = "text", size = 7, aes(label = seqnames),
+        angle = 0, radius = 38, trackWidth = 5) +
+    layout_circle(
+        subset(x = operon_grange, strand == "+" & GeneCount > 2),
+        geom = "rect", color = colou[5],
+        radius = 30.5, trackWidth = 1.9) +
+    layout_circle(
+        subset(x = operon_grange, strand == "-" & GeneCount > 2),
+        geom = "rect", color = colou[6],
+        radius = 30.5, trackWidth = 1.9) +
+    layout_circle(
+        subset(x = ref_grange_expr, strand == "+"),
+        geom = "rect", color = colou[1],
+        radius = 26, trackWidth = 4) +
+    layout_circle(
+        subset(x = ref_grange_expr, strand == "-"),
+        geom = "rect", color = colou[2],
+        radius = 22, trackWidth = 4) +
+    layout_circle(
+        subset(x = orf_grange_expr, strand == "+"),
+        geom = "rect", color = colou[3],
+        radius = 18, trackWidth = 4) +
+    layout_circle(
+        subset(x = orf_grange_expr, strand == "-"),
+        geom = "rect", color = colou[4],
+        radius = 14, trackWidth = 4)
+
+
+pdf(file = paste0(opt$out_path, "/ORFs_circos_with_operon.pdf"), width = 10, height = 10)
+plot(pl)
+dev.off()
+
+autoplot(
+    operon_grange[ranges(operon_grange)$start %in% c(22496:42858)],
+    geom = "rect", layout = "linear")
+
 
 
 ### Genomic coverage -----------------------------------------------------
