@@ -715,6 +715,32 @@ end_pos <- end(orf_grange_expr[orf_grange_expr@elementMetadata@listData$id == "s
 
 
 
+
+
+
+tmp <- operon_grange[start(operon_grange) %in% c(start_pos:end_pos) | end(operon_grange) %in% c(start_pos:end_pos)] %>%
+    as.data.frame(.)
+tmp$value <- rep(x = 1, times = nrow(tmp))
+
+pl1 <- autoplot(
+    operon_grange[start(operon_grange) %in% c(start_pos:end_pos) | end(operon_grange) %in% c(start_pos:end_pos)],
+    mapping = aes(fill = strand, label = OperonID),
+    geom = "arrowrect", layout = "linear", colour = "black") +
+    geom_text(
+        data = tmp,
+        mapping = aes(x = start + ((end - start) / 2), y = value, label = OperonID),
+        nudge_y = 0.45, check_overlap = TRUE) +
+    xlab(label = "Genomic position") +
+    ylab(label = "") +
+    ggtitle(label = "Operon")
+pl1
+
+
+
+
+
+
+
 pl1 <- autoplot(
     operon_grange[start(operon_grange) %in% c(start_pos:end_pos) | end(operon_grange) %in% c(start_pos:end_pos)],
     mapping = aes(fill = strand),
