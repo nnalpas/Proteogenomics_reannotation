@@ -155,11 +155,16 @@ orf_coord %<>%
 
 
 evid_match <- readRDS("C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/15082017/2017-08-15_Sequence_group_mapping.RDS")
-evid_expr <- evid_match %>%
+evid_expr_known <- evid_match %>%
+    dplyr::filter(., group == "Known") %>%
     strsplit(x = .[["Proteins"]], split = ";", fixed = TRUE) %>%
     unlist(.) %>%
     unique(.)
-
+evid_expr_novel <- evid_match %>%
+    dplyr::filter(., group == "Novel") %>%
+    strsplit(x = .[["Proteins"]], split = ";", fixed = TRUE) %>%
+    unlist(.) %>%
+    unique(.)
 
 operon <- read.table(
     file = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/Bsu_operon_01062017.opr",
@@ -251,7 +256,7 @@ seqinfo(ref_grange) <- Seqinfo(
 
 # Format dataframe as genomic position and other info for each novel ORF
 tmp <- orf_coord %>%
-    dplyr::filter(., is.na(UniProtID)) %>%
+    dplyr::filter(., !is.na(id)) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 tmp %<>%
     dplyr::mutate(
@@ -291,8 +296,8 @@ seqinfo(orf_grange) <- Seqinfo(
     genome = tmp$geno %>% unique(.) %>% as.character(.))
 
 # Use ggbio extension to plot ORF location on genome as a circos graph
-ref_grange_expr <- subset(x = ref_grange, UniProtKBID %in% evid_expr)
-orf_grange_expr <- subset(x = orf_grange, id %in% evid_expr)
+ref_grange_expr <- subset(x = ref_grange, UniProtKBID %in% evid_expr_known)
+orf_grange_expr <- subset(x = orf_grange, id %in% evid_expr_novel)
 colou <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
 pl <- ggplot() +
     ggtitle(label = "Bacillus subtilis ORFs") +
@@ -413,10 +418,6 @@ pl <- ggplot() +
 pdf(file = paste0(opt$out_path, "/ORFs_circos_with_operon.pdf"), width = 10, height = 10)
 plot(pl)
 dev.off()
-
-autoplot(
-    operon_grange[ranges(operon_grange)$start %in% c(22496:42858)],
-    geom = "rect", layout = "linear")
 
 
 
@@ -661,5 +662,93 @@ write.table(
     x = peptide_count,
     file = paste0(opt$out_path, "/Coverage_per_peptide.txt"),
     quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+
+
+
+### Visualise specific genomic region
+
+# Get all expressed protein associated nucleotide position
+exprs_nuc_orf <- lapply(X = orf_grange_expr@ranges, FUN = function(x) {
+    x
+})
+names(exprs_nuc_orf) <- orf_grange_expr@elementMetadata@listData$id
+exprs_nuc_stranded_orf <- list()
+orf_coord_filt <- orf_coord[!is.na(orf_coord$id), ] %>%
+    dplyr::filter(., !duplicated(id))
+for (x in names(exprs_nuc_orf)) {
+    if (orf_coord_filt[orf_coord_filt$id == x, "strand"] == -1) {
+        exprs_nuc_stranded_orf[[x]] <- rev(exprs_nuc_orf[[x]])
+    } else {
+        exprs_nuc_stranded_orf[[x]] <- exprs_nuc_orf[[x]]
+    }
+}
+
+
+all_exprs_nuc <- c(exprs_nuc_stranded, exprs_nuc_stranded_orf)
+tmp <- pep_loc_filt[
+    !is.na(pep_loc_filt$start) & !duplicated(pep_loc_filt$pep), ]
+cover_nuc <- apply(
+    X = tmp,
+    MARGIN = 1,
+    FUN = function(x) {
+        
+        val <- c(as.integer(x["start"]) * 3 - 2, as.integer(x["end"]) * 3)
+        tmp <- c(all_exprs_nuc[[x["prot"]]][val] %>% unlist(.), x[["prot"]], x[["Database"]])
+        if (length(tmp) < 4) {
+            stop(paste0("Wrong length: ", paste(tmp, collapse = ";")))
+        }
+        names(tmp) <- c("Start", "End", "ProteinID", "Database")
+        tmp
+        
+    }
+)
+names(cover_nuc) <- tmp$pep
+cover_nuc %<>%
+    ldply(., "data.frame", .id = "Sequence")
+
+
+
+
+start_pos <- start(orf_grange_expr[orf_grange_expr@elementMetadata@listData$id == "seq_51322"]) - 2000
+end_pos <- end(orf_grange_expr[orf_grange_expr@elementMetadata@listData$id == "seq_51322"]) + 2000
+
+
+
+
+pl1 <- autoplot(
+    operon_grange[start(operon_grange) %in% c(start_pos:end_pos) | end(operon_grange) %in% c(start_pos:end_pos)],
+    mapping = aes(fill = strand),
+    geom = "rect", layout = "linear", colour = "black") +
+    geom_arrow(
+        layout = "linear", colour = "black", type = "closed",
+        angle = 20, length = unit(0.8, "cm"), arrow.rate = 0.8) +
+    scale_fill_manual(values = c(`+` = colou[5], `-` = colou[6]))
+pl2 <- autoplot(
+    ref_grange_expr[start(ref_grange_expr) %in% c(start_pos:end_pos) | end(ref_grange_expr) %in% c(start_pos:end_pos)],
+    mapping = aes(fill = strand),
+    geom = "arrowrect", layout = "linear", colour = "black", label = TRUE, label.color = "black") +
+    scale_fill_manual(values = c(`+` = colou[1], `-` = colou[2]))
+pl3 <- autoplot(
+    orf_grange[start(orf_grange) %in% c(start_pos:end_pos) | end(orf_grange) %in% c(start_pos:end_pos)],
+    mapping = aes(fill = strand),
+    geom = "arrowrect", layout = "linear", colour = "black") +
+    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
+fixed(pl3) <- TRUE
+
+tracks(pl1, pl2, pl3, heights = c(2, 1, 1)) +
+    theme_bw()
+
+
+
+
+
+load_package(cowplot)
+
+cowplot::plot_grid(
+    ggplot_gtable(ggplot_build(pl1)), ggplot_gtable(ggplot_build(pl3)), nrow = 3,
+    labels = c("Operon", "Known gene", "6 frame ORF"))
+
+
+
 
 
