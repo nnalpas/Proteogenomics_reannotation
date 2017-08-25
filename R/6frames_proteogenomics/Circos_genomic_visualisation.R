@@ -718,62 +718,125 @@ end_pos <- end(orf_grange_expr[orf_grange_expr@elementMetadata@listData$id == "s
 
 
 
-tmp <- operon_grange[start(operon_grange) %in% c(start_pos:end_pos) | end(operon_grange) %in% c(start_pos:end_pos)] %>%
+tmp <- operon_grange[
+    start(operon_grange) %in% c(start_pos:end_pos) |
+        end(operon_grange) %in% c(start_pos:end_pos)] %>%
     as.data.frame(.)
 tmp$value <- rep(x = 1, times = nrow(tmp))
 
 pl1 <- autoplot(
-    operon_grange[start(operon_grange) %in% c(start_pos:end_pos) | end(operon_grange) %in% c(start_pos:end_pos)],
-    mapping = aes(fill = strand, label = OperonID),
+    operon_grange[
+        start(operon_grange) %in% c(start_pos:end_pos) |
+            end(operon_grange) %in% c(start_pos:end_pos)],
+    mapping = aes(fill = strand),
     geom = "arrowrect", layout = "linear", colour = "black") +
     geom_text(
         data = tmp,
-        mapping = aes(x = start + ((end - start) / 2), y = value, label = OperonID),
-        nudge_y = 0.45, check_overlap = TRUE) +
-    xlab(label = "Genomic position") +
-    ylab(label = "") +
-    ggtitle(label = "Operon")
+        mapping = aes(
+            x = start + ((end - start) / 2), y = value, label = OperonID),
+        nudge_y = 0.45, check_overlap = TRUE)
+    scale_fill_manual(values = c(`+` = colou[5], `-` = colou[6]))
 pl1
 
 
+tmp <- ref_grange_expr[
+    start(ref_grange_expr) %in% c(start_pos:end_pos) |
+        end(ref_grange_expr) %in% c(start_pos:end_pos)] %>%
+    as.data.frame(.)
+tmp$value <- rep(x = 1, times = nrow(tmp))
 
-
-
-
-
-pl1 <- autoplot(
-    operon_grange[start(operon_grange) %in% c(start_pos:end_pos) | end(operon_grange) %in% c(start_pos:end_pos)],
-    mapping = aes(fill = strand),
-    geom = "rect", layout = "linear", colour = "black") +
-    geom_arrow(
-        layout = "linear", colour = "black", type = "closed",
-        angle = 20, length = unit(0.8, "cm"), arrow.rate = 0.8) +
-    scale_fill_manual(values = c(`+` = colou[5], `-` = colou[6]))
 pl2 <- autoplot(
-    ref_grange_expr[start(ref_grange_expr) %in% c(start_pos:end_pos) | end(ref_grange_expr) %in% c(start_pos:end_pos)],
+    ref_grange_expr[
+        start(ref_grange_expr) %in% c(start_pos:end_pos) |
+            end(ref_grange_expr) %in% c(start_pos:end_pos)],
     mapping = aes(fill = strand),
-    geom = "arrowrect", layout = "linear", colour = "black", label = TRUE, label.color = "black") +
+    geom = "arrowrect", layout = "linear", colour = "black") +
+    geom_text(
+        data = tmp,
+        mapping = aes(
+            x = start + ((end - start) / 2), y = value, label = UniProtKBID),
+        nudge_y = 0.45, check_overlap = TRUE) +
     scale_fill_manual(values = c(`+` = colou[1], `-` = colou[2]))
+pl2
+
+
+
+tmp <- orf_grange[
+    start(orf_grange) %in% c(start_pos:end_pos) |
+        end(orf_grange) %in% c(start_pos:end_pos)] %>%
+    as.data.frame(.)
+tmp$value <- rep(x = 1, times = nrow(tmp))
+
 pl3 <- autoplot(
-    orf_grange[start(orf_grange) %in% c(start_pos:end_pos) | end(orf_grange) %in% c(start_pos:end_pos)],
+    orf_grange[
+        (start(orf_grange) %in% c(start_pos:end_pos) |
+             end(orf_grange) %in% c(start_pos:end_pos)) &
+            orf_grange$frame == 1],
     mapping = aes(fill = strand),
     geom = "arrowrect", layout = "linear", colour = "black") +
     scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
-fixed(pl3) <- TRUE
+pl3
+pl4 <- autoplot(
+    orf_grange[
+        (start(orf_grange) %in% c(start_pos:end_pos) |
+            end(orf_grange) %in% c(start_pos:end_pos)) &
+            orf_grange$frame == 2],
+    mapping = aes(fill = strand),
+    geom = "arrowrect", layout = "linear", colour = "black") +
+    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
+pl4
+pl5 <- autoplot(
+    orf_grange[
+        (start(orf_grange) %in% c(start_pos:end_pos) |
+             end(orf_grange) %in% c(start_pos:end_pos)) &
+            orf_grange$frame == 3],
+    mapping = aes(fill = strand),
+    geom = "arrowrect", layout = "linear", colour = "black") +
+    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
+pl5
+pl6 <- autoplot(
+    orf_grange[
+        (start(orf_grange) %in% c(start_pos:end_pos) |
+             end(orf_grange) %in% c(start_pos:end_pos)) &
+            orf_grange$frame == -1],
+    mapping = aes(fill = strand),
+    geom = "arrowrect", layout = "linear", colour = "black") +
+    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
+pl6
+pl7 <- autoplot(
+    orf_grange[
+        (start(orf_grange) %in% c(start_pos:end_pos) |
+             end(orf_grange) %in% c(start_pos:end_pos)) &
+            orf_grange$frame == -2],
+    mapping = aes(fill = strand),
+    geom = "arrowrect", layout = "linear", colour = "black") +
+    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
+pl7
+pl8 <- autoplot(
+    orf_grange[
+        (start(orf_grange) %in% c(start_pos:end_pos) |
+             end(orf_grange) %in% c(start_pos:end_pos)) &
+            orf_grange$frame == -3],
+    mapping = aes(fill = strand),
+    geom = "arrowrect", layout = "linear", colour = "black") +
+    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
+pl8
 
-tracks(pl1, pl2, pl3, heights = c(2, 1, 1)) +
-    theme_bw()
 
-
-
-
-
-load_package(cowplot)
-
-cowplot::plot_grid(
-    ggplot_gtable(ggplot_build(pl1)), ggplot_gtable(ggplot_build(pl3)), nrow = 3,
-    labels = c("Operon", "Known gene", "6 frame ORF"))
-
+pl <- tracks(
+    `Operon` = pl1, `Known ORFs` = pl2,
+    `Frame 1` = pl3, `Frame 2` = pl4, `Frame 3` = pl5,
+    `Frame -1` = pl6, `Frame -2` = pl7, `Frame -3` = pl8,
+    heights = c(2, 2, rep(0.5, times = 6)),
+    xlab = "Genomic position",
+    label.bg.fill = "white") +
+    theme_bw() +
+    theme(
+        axis.text.y =  element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.position = "none")
+xlim(pl) <- c(start_pos:end_pos)
+pl
 
 
 
