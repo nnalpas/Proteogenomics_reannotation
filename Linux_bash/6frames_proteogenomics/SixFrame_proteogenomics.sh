@@ -196,7 +196,7 @@ fi
 if [ $SangerCoordinate == 1 ]; then
     
     ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "nucl" -t ${TaxId} ${SANGER} ${GENOME} > ${LogDir}/MakeBlastDb.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Sanger_validation -y "nucl" -l "all" -a "blastp" -s ${SANGER} -q ${GENOME} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Sanger_vs_Genome" > ${LogDir}/SangerCoordinate.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Sanger_validation -y "nucl" -l "all" -a "blastn" -s ${SANGER} -q ${GENOME} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Sanger_vs_Genome" > ${LogDir}/SangerCoordinate.log 2>&1
     
 fi
 
