@@ -187,3 +187,19 @@ if [ $ProteinCoordinate == 1 ]; then
 fi
 
 
+
+################################
+# Sanger validation coordinate #
+################################
+
+# Check whether to compute coordinate of Sanger sequence
+if [ $SangerCoordinate == 1 ]; then
+    
+    ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "nucl" -t ${TaxId} ${SANGER} ${GENOME} > ${LogDir}/MakeBlastDb.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/ProtPosition -y "prot" -l "all" -a "blastp" -s ${SANGER} -q ${GENOME} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Sanger_vs_Genome" > ${LogDir}/SangerCoordinate.log 2>&1
+    
+fi
+
+
+
+
