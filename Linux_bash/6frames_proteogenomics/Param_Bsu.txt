@@ -11,7 +11,8 @@ BlastDbBlasting=0
 BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
-ProteinCoordinate=1
+ProteinCoordinate=0
+SangerCoordinate=1
 
 # EmbossParam
 FRAME=6
@@ -28,6 +29,7 @@ UNIREFGENE=""
 ALLUNIPROT="${PBS_O_HOME}/BlastDB/uniprot_sprot_trembl.fasta"
 ALLNCBIPROT="${PBS_O_HOME}/BlastDB/refseq_protein"
 ALLNCBIRNA="${PBS_O_HOME}/BlastDB/refseq_rna"
+SANGER="${PBS_O_HOME}/work/Bsu_6frame/Sanger_validation/Sanger_validation.fasta"
 
 # BlastDatab
 InputType="fasta"
