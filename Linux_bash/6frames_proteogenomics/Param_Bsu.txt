@@ -21,7 +21,7 @@ MINSIZE=1
 CIRCULAR="Yes"
 
 # ReferenceDatabase
-GENOME="${PBS_O_HOME}/Genome/Bacillus_subtilis/GCA_000009045.1.fasta"
+GENOME="${PBS_O_HOME}/Genome/Bacillus_subtilis/GCA_000009045.1_fixedHEADER.fasta"
 SIXFRAMEPROT="${PBS_O_HOME}/Genome/Bacillus_subtilis/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta"
 COORDSIXFRAMEPROT="${PBS_O_HOME}/Genome/Bacillus_subtilis/Find0_GCA_000009045.1_FIXED.fasta"
 UNIREFPROT="${PBS_O_HOME}/Genome/Bacillus_subtilis/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta"
