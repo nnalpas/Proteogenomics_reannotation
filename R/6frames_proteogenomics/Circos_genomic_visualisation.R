@@ -19,7 +19,6 @@ user <- Sys.info()[["user"]]
 
 
 
-
 ### List of required packages -----------------------------------------------
 
 # Source the custom user functions
@@ -188,9 +187,17 @@ ref_details <- read.table(
 orf_coord %<>%
     dplyr::left_join(., ref_details, by = c("UniProtID" = "Entry"))
 
+# Import peptide location within proteins
+pep_loc <- readRDS(file = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/15082017/2017-08-15_Peptides_location.RDS") %>%
+    ldply(., "data.frame", .id = "Database")
 
-#orf_coord_filt <- orf_coord %>%
-#    dplyr::filter(., id %in% evid_expr | UniProtID %in% evid_expr)
+# Import the blast result of PCR sanger sequence against Bsu genome
+sanger_vs_genome <- blast_read(
+    file = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/PCR_validation/Sanger_seq/Sanger_vs_Genome",
+    blast_format = "6")
+
+# Identify best blast for each sanger sequence
+best_sanger_vs_genome <- best_blast(data = sanger_vs_genome, key = "qseqid")
 
 
 
@@ -235,7 +242,8 @@ tmp %<>%
         Start = ifelse(test = strand == 1, yes = start, no = end),
         End = ifelse(test = strand == 1, yes = end, no = start),
         Strand = ifelse(test = strand == 1, yes = "+", no = "-"),
-        UniProtKBID = uni_id_clean(UniProtID),
+        UniProtKBID = UniProtID,
+        Expressed = ifelse(UniProtID %in% evid_expr_known, TRUE, FALSE),
         Chromosome = 1,
         chr.name = "chr1",
         length = 4215606,
@@ -243,7 +251,7 @@ tmp %<>%
         geno = "AL0091263") %>%
     dplyr::select(
         .,
-        UniProtKBID, id, association_id, Start, End, Strand, frame,
+        UniProtKBID, id, association_id, Start, End, Strand, frame, Expressed,
         Chromosome, `chr.name`, length, Type, geno, Gene_name, Locus) %>%
     dplyr::group_by(
         ., UniProtKBID, Start, End, Strand, frame, Chromosome, chr.name) %>%
@@ -264,7 +272,7 @@ ref_grange <- with(
 # Add values and seqinfo to the created GRanges object
 values(ref_grange) <- tmp %>%
     dplyr::select(
-        ., id, UniProtKBID, association_id, frame,
+        ., id, UniProtKBID, association_id, frame, Expressed,
         Chromosome, Gene_name, Locus)
 seqinfo(ref_grange) <- Seqinfo(
     seqnames = tmp$chr.name %>% unique(.) %>% as.character(.),
@@ -283,7 +291,8 @@ tmp %<>%
         Start = ifelse(test = strand == 1, yes = start, no = end),
         End = ifelse(test = strand == 1, yes = end, no = start),
         Strand = ifelse(test = strand == 1, yes = "+", no = "-"),
-        UniProtKBID = uni_id_clean(UniProtID),
+        UniProtKBID = UniProtID,
+        Expressed = ifelse(UniProtID %in% evid_expr_known, TRUE, FALSE),
         Chromosome = 1,
         chr.name = "chr1",
         length = 4215606,
@@ -291,7 +300,7 @@ tmp %<>%
         geno = "AL0091263") %>%
     dplyr::select(
         .,
-        UniProtKBID, id, association_id, Start, End, Strand, frame,
+        UniProtKBID, id, association_id, Start, End, Strand, frame, Expressed,
         Chromosome, `chr.name`, length, Type, geno, Gene_name, Locus) %>%
     dplyr::group_by(., id, Start, End, Strand, frame, Chromosome, chr.name) %>%
     summarise_each(
@@ -310,7 +319,9 @@ orf_grange <- with(
 
 # Add values and seqinfo to the created GRanges object
 values(orf_grange) <- tmp %>%
-    dplyr::select(., id, UniProtKBID, association_id, frame, Chromosome)
+    dplyr::select(
+        ., id, UniProtKBID, association_id, frame, Expressed,
+        Chromosome, Gene_name, Locus)
 seqinfo(orf_grange) <- Seqinfo(
     seqnames = tmp$chr.name %>% unique(.) %>% as.character(.),
     seqlengths = tmp$length %>% unique(.) %>% as.integer(.),
@@ -328,9 +339,7 @@ tmp <- operon %>%
         End = max(End),
         Strand = unique(Strand),
         Length = max(End) - min(Start)) %>%
-    dplyr::filter(., !is.na(OperonID)) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-tmp %<>%
+    dplyr::filter(., !is.na(OperonID))%>%
     dplyr::mutate(
         .,
         Chromosome = 1,
@@ -342,7 +351,7 @@ tmp %<>%
 tmp %<>%
     dplyr::filter(., !duplicated(OperonID))
 
-# Create a GRanges object for all reference and identified novel ORF 
+# Create a GRanges object for all operons
 operon_grange <- with(
     data = tmp,
     expr = GRanges(
@@ -360,94 +369,118 @@ seqinfo(operon_grange) <- Seqinfo(
     genome = tmp$geno %>% unique(.) %>% as.character(.))
 names(operon_grange) <- operon_grange$OperonID
 
-
-
-# Get all expressed protein associated nucleotide position
-exprs_nuc_orf <- lapply(X = ranges(orf_grange_expr), FUN = function(x) {
-    x
-})
-names(exprs_nuc_orf) <- orf_grange_expr$id
-exprs_nuc_stranded_orf <- list()
-orf_coord_filt <- orf_coord[!is.na(orf_coord$id), ] %>%
-    dplyr::filter(., !duplicated(id))
-for (x in names(exprs_nuc_orf)) {
-    if (orf_coord_filt[orf_coord_filt$id == x, "strand"] == -1) {
-        exprs_nuc_stranded_orf[[x]] <- rev(exprs_nuc_orf[[x]])
-    } else {
-        exprs_nuc_stranded_orf[[x]] <- exprs_nuc_orf[[x]]
-    }
-}
-
-# 
-all_exprs_nuc <- c(exprs_nuc_stranded, exprs_nuc_stranded_orf)
-tmp <- pep_loc_filt[
-    !is.na(pep_loc_filt$start) & !duplicated(pep_loc_filt$pep), ]
-cover_nuc <- apply(
-    X = tmp,
-    MARGIN = 1,
+# Get all known protein associated nucleotide position
+tmp <- lapply(
+    X = ranges(ref_grange),
     FUN = function(x) {
-        
-        val <- c(as.integer(x["start"]) * 3 - 2, as.integer(x["end"]) * 3)
-        tmp <- c(
-            x[["pep"]],
-            all_exprs_nuc[[x["prot"]]][val[1]],
-            all_exprs_nuc[[x["prot"]]][val[2]],
-            x[["prot"]],
-            x[["Database"]])
-        if (length(tmp) < 4) {
-            warning(paste0("Wrong length: ", paste(tmp, collapse = ";")))
-            tmp <- c(
-                x[["pep"]],
-                NA,
-                NA,
-                x[["prot"]],
-                x[["Database"]])
-        }
-        names(tmp) <- c("pep", "Start", "End", "Prot", "Database")
-        tmp
-        
-    }
-)
-cover_nuc <- t(cover_nuc) %>%
-    as.data.frame(., stringAsFactors = FALSE) %>%
+        x
+    }) %>%
+    tibble::tibble(UniProtKBID = names(.), nucl_pos = .)
+tmp <- lapply(
+    X = tmp$nucl_pos,
+    FUN = function(x) {
+        rev(x)
+    }) %>%
+    tibble::tibble(UniProtKBID = tmp$UniProtKBID, rev_nucl_pos = .) %>%
+    dplyr::left_join(tmp, .)
+tmp <- ref_grange %>%
+    tibble::as.tibble(.) %>%
+    dplyr::left_join(., tmp)
+nuc_stranded_ref <- tmp %>%
     dplyr::mutate(
         .,
-        Start = as.integer(as.character(Start)),
-        End = as.integer(as.character(End)))
-cover_nuc_final <- cover_nuc %>%
+        mainID = UniProtKBID,
+        nucl_pos_stranded = case_when(
+            as.character(.[["strand"]]) == "+" ~ .[["nucl_pos"]],
+            as.character(.[["strand"]]) == "-" ~ .[["rev_nucl_pos"]]))
+
+# Get all ORF associated nucleotide position
+tmp <- lapply(
+    X = ranges(orf_grange),
+    FUN = function(x) {
+        x
+    }) %>%
+    tibble::tibble(id = names(.), nucl_pos = .)
+tmp <- lapply(
+    X = tmp$nucl_pos,
+    FUN = function(x) {
+        rev(x)
+    }) %>%
+    tibble::tibble(id = tmp$id, rev_nucl_pos = .) %>%
+    dplyr::left_join(tmp, .)
+tmp <- orf_grange %>%
+    tibble::as.tibble(.) %>%
+    dplyr::left_join(., tmp)
+nuc_stranded_orf <- tmp %>%
+    dplyr::mutate(
+        .,
+        mainID = id,
+        nucl_pos_stranded = case_when(
+            as.character(.[["strand"]]) == "+" ~ .[["nucl_pos"]],
+            as.character(.[["strand"]]) == "-" ~ .[["rev_nucl_pos"]]))
+
+# Compile all nucleotide position of all known genes and ORFs
+nuc_stranded_all <- dplyr::bind_rows(nuc_stranded_ref, nuc_stranded_orf)
+
+# Associate each peptide to its genes/orfs
+nuc_stranded_pep <- pep_loc %>%
+    set_colnames(c("Database", "pep", "mainID", "pep_start", "pep_end")) %>%
+    dplyr::left_join(nuc_stranded_all, .) %>%
+    dplyr::filter(., !is.na(pep) & !is.na(pep_start) & !is.na(pep_end))
+
+# For each peptide transform aa position to nucleotide position
+nuc_stranded_pep %<>%
+    dplyr::mutate(
+        .,
+        pep_nucl_start = as.integer(pep_start) * 3 - 2,
+        pep_nucl_end = as.integer(pep_end) * 3) %>%
+    rowwise(.) %>%
+    dplyr::mutate(
+        .,
+        pep_nucl_pos_start = nucl_pos_stranded[pep_nucl_start],
+        pep_nucl_pos_end = nucl_pos_stranded[pep_nucl_end])
+
+# Get vector of all peptide coming from known proteins
+known_pep <- nuc_stranded_pep %>%
     dplyr::filter(., Database == "Known") %>%
-    dplyr::left_join(
-        x = .,
-        y = orf_coord[!is.na(orf_coord$UniProtID), ],
-        by = c("Prot" = "UniProtID")) %>%
-    dplyr::mutate(., UniProtID = Prot)
-cover_nuc_final <- cover_nuc %>%
-    dplyr::filter(., Database == "Novel") %>%
-    dplyr::left_join(
-        x = .,
-        y = orf_coord[!is.na(orf_coord$id), ],
-        by = c("Prot" = "id")) %>%
-    dplyr::mutate(., id = Prot) %>%
-    dplyr::bind_rows(cover_nuc_final, .)
+    .[["pep"]] %>%
+    unique(.)
+
+# Keep peptide entries as coming exclusively from Known database and
+# the remaining as Novel
+tmp <- nuc_stranded_pep %>%
+    dplyr::filter(
+        .,
+        (pep %in% known_pep & Database == "Known") |
+            (!(pep %in% known_pep) & Database == "Novel"))
 
 # Format dataframe as genomic position and other info for each peptide
-tmp <- cover_nuc_final %>%
-    dplyr::filter(., !is.na(pep) & !is.na(Start) & !is.na(End)) %>%
+tmp %<>%
+    dplyr::filter(
+        ., !is.na(pep) &
+            !is.na(pep_nucl_pos_start) &
+            !is.na(pep_nucl_pos_end)) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 tmp %<>%
-    dplyr::select(., pep, Start, End, Prot, Database, strand, frame) %>%
+    dplyr::select(
+        ., pep, pep_nucl_pos_start, pep_nucl_pos_end,
+        mainID, id, UniProtKBID, Database, strand, frame) %>%
     dplyr::mutate(
         .,
-        start = ifelse(test = strand == 1, yes = Start, no = End),
-        end = ifelse(test = strand == 1, yes = End, no = Start),
-        Strand = ifelse(test = strand == 1, yes = "+", no = "-"),
-        ProteinID = Prot,
+        start = ifelse(
+            test = strand == "+",
+            yes = pep_nucl_pos_start,
+            no = pep_nucl_pos_end),
+        end = ifelse(
+            test = strand == "+",
+            yes = pep_nucl_pos_end,
+            no = pep_nucl_pos_start),
         Chromosome = 1,
         chr.name = "chr1",
         length = 4215606,
         Type = TRUE,
         geno = "AL0091263") %>%
-    dplyr::select(., -Start, -End, -Prot, -strand) %>%
+    dplyr::select(., -pep_nucl_pos_start, -pep_nucl_pos_end) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 tmp %<>%
     dplyr::filter(., !duplicated(pep))
@@ -458,62 +491,50 @@ pep_grange <- with(
     expr = GRanges(
         seqnames = chr.name,
         ranges = IRanges(start, end),
-        strand = Strand))
+        strand = strand))
 
 # Add values and seqinfo to the created GRanges object
 values(pep_grange) <- tmp %>%
-    dplyr::select(., pep, Database, frame, Chromosome, ProteinID)
+    dplyr::select(., pep, mainID, id, UniProtKBID, Database, frame, Chromosome)
 seqinfo(pep_grange) <- Seqinfo(
     seqnames = tmp$chr.name %>% unique(.) %>% as.character(.),
     seqlengths = tmp$length %>% unique(.) %>% as.integer(.),
     isCircular = tmp$Type %>% unique(.) %>% as.logical(.),
     genome = tmp$geno %>% unique(.) %>% as.character(.))
+names(pep_grange) <- pep_grange$pep
 
-# 
-sanger_vs_genome <- blast_read(
-    file = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/PCR_validation/Sanger_seq/Sanger_vs_Genome",
-    blast_format = "6")
-
-
-sanger_fasta <- read.fasta(file = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/PCR_validation/Sanger_seq/Sanger_validation.fasta", seqtype = "DNA", as.string = TRUE)
-sanger_seq <- sanger_fasta %>%
-    unlist(.) %>%
-    ldply(., "data.frame") %>%
-    set_colnames(c("sangerid", "sequence"))
-
-
-best_sanger_vs_genome <- best_blast(data = sanger_vs_genome, key = "qseqid")
-best_sanger_vs_genome %<>%
-    dplyr::left_join(x = sanger_seq, y = ., by = c("sangerid" = "qseqid")) %>%
-    dplyr::select(., sangerid, sequence, sstart, send) %>%
+# Format dataframe as genomic position and other info for each sanger sequence
+tmp <- best_sanger_vs_genome %>%
+    dplyr::select(., qseqid, sstart, send) %>%
+    set_colnames(c("sangerid", "sstart", "send")) %>%
     dplyr::mutate(
         .,
         Start = ifelse(sstart < send, sstart, send),
         End = ifelse(sstart < send, send, sstart),
-        Sequence = ifelse(sstart < send, as.character(sequence), rev(as.character(sequence))),
         Chromosome = 1,
         chr.name = "chr1",
         length = 4215606,
         Type = TRUE,
         geno = "AL0091263") %>%
-    dplyr::select(., -sstart, -send, -sequence) %>%
+    dplyr::select(., -sstart, -send) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Create a GRanges object for all reference and identified novel ORF 
 sanger_grange <- with(
-    data = best_sanger_vs_genome,
+    data = tmp,
     expr = GRanges(
         seqnames = chr.name,
         ranges = IRanges(Start, End)))
 
 # Add values and seqinfo to the created GRanges object
-values(sanger_grange) <- best_sanger_vs_genome %>%
-    dplyr::select(., sangerid, Chromosome, Sequence)
+values(sanger_grange) <- tmp %>%
+    dplyr::select(., sangerid, Chromosome)
 seqinfo(sanger_grange) <- Seqinfo(
-    seqnames = best_sanger_vs_genome$chr.name %>% unique(.) %>% as.character(.),
-    seqlengths = best_sanger_vs_genome$length %>% unique(.) %>% as.integer(.),
-    isCircular = best_sanger_vs_genome$Type %>% unique(.) %>% as.logical(.),
-    genome = best_sanger_vs_genome$geno %>% unique(.) %>% as.character(.))
+    seqnames = tmp$chr.name %>% unique(.) %>% as.character(.),
+    seqlengths = tmp$length %>% unique(.) %>% as.integer(.),
+    isCircular = tmp$Type %>% unique(.) %>% as.logical(.),
+    genome = tmp$geno %>% unique(.) %>% as.character(.))
+names(sanger_grange) <- sanger_grange$sangerid
 
 
 
@@ -617,11 +638,10 @@ exprs_nuc <- lapply(X = ref_grange_expr@ranges, FUN = function(x) {
     x
 })
 names(exprs_nuc) <- ref_grange_expr@elementMetadata@listData$UniProtKBID
-exprs_nuc_stranded <- list()
+nuc_stranded_ref <- list()
 orf_coord_filt <- orf_coord[!is.na(orf_coord$UniProtID), ] %>%
     dplyr::filter(., !duplicated(UniProtID))
-orf_coord_filt$UniProtID %<>%
-    uni_id_clean(.)
+
 for (x in names(exprs_nuc)) {
     if (orf_coord_filt[orf_coord_filt$UniProtID == x, "strand"] == -1) {
         exprs_nuc_stranded[[x]] <- rev(exprs_nuc[[x]])
@@ -630,12 +650,11 @@ for (x in names(exprs_nuc)) {
     }
 }
 
-# Get all peptide associated nucleotide position
-pep_loc <- readRDS(file = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/15082017/2017-08-15_Peptides_location.RDS") %>%
-    ldply(., "data.frame", .id = "Database")
+
 pep_loc_filt <- pep_loc %>%
     dplyr::filter(., Database == "Known")
 
+# Get all peptide associated nucleotide position
 tmp <- pep_loc_filt[
     !is.na(pep_loc_filt$start) & !duplicated(pep_loc_filt$pep), ]
 cover_nuc <- apply(
