@@ -577,7 +577,8 @@ pdf(file = paste0(opt$out_path, "/ORFs_circos.pdf"), width = 10, height = 10)
 plot(pl)
 dev.off()
 
-#
+# Use ggbio extension to plot ORF and operon location on genome
+# as a circos graph
 colou <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
 pl <- ggplot() +
     ggtitle(label = "Bacillus subtilis ORFs") +
@@ -631,13 +632,13 @@ chrom_nuc <- bsu_ideo@ranges[[1]]
 coding_nuc <- lapply(X = ref_grange@ranges, FUN = function(x) {
     x
 })
-names(coding_nuc) <- ref_grange@elementMetadata@listData$UniProtKBID
+names(coding_nuc) <- names(ref_grange)
 
 # Get all expressed protein associated nucleotide position
 exprs_nuc <- lapply(X = ref_grange_expr@ranges, FUN = function(x) {
     x
 })
-names(exprs_nuc) <- ref_grange_expr@elementMetadata@listData$UniProtKBID
+names(exprs_nuc) <- names(ref_grange_expr)
 nuc_stranded_ref <- list()
 orf_coord_filt <- orf_coord[!is.na(orf_coord$UniProtID), ] %>%
     dplyr::filter(., !duplicated(UniProtID))
@@ -864,57 +865,61 @@ write.table(
 
 ### Visualise specific genomic region ------------------------------------
 
-# 
+# Get the Bsu genome object
 bsu <- BSgenome.Bsubtilis.EMBL.AL0091263
 
-# 
-start_pos <- start(orf_grange_expr[orf_grange_expr@elementMetadata@listData$id == "seq_51322"]) - 1000
-end_pos <- end(orf_grange_expr[orf_grange_expr@elementMetadata@listData$id == "seq_51322"]) + 1000
+# Define the novel ORF of interest
+Target_id <- "seq_51322"
 
+# Define genomic region of interest
+start_pos <- start(orf_grange_expr[Target_id]) - 1000
+end_pos <- end(orf_grange_expr[Target_id]) + 1000
 
+# The plot of operon for that genomic region
 tmp <- operon_grange[
-    start(operon_grange) %in% c(start_pos:end_pos) |
-        end(operon_grange) %in% c(start_pos:end_pos)] %>%
+    (start(operon_grange) %in% c(start_pos:end_pos) |
+        end(operon_grange) %in% c(start_pos:end_pos)) &
+        operon_grange$GeneCount > 2] %>%
     as.data.frame(.)
 tmp$value <- rep(x = 1, times = nrow(tmp))
 
 pl1 <- autoplot(
     operon_grange[
-        start(operon_grange) %in% c(start_pos:end_pos) |
-            end(operon_grange) %in% c(start_pos:end_pos)],
+        (start(operon_grange) %in% c(start_pos:end_pos) |
+            end(operon_grange) %in% c(start_pos:end_pos)) &
+            operon_grange$GeneCount > 2],
     mapping = aes(fill = strand),
     geom = "arrowrect", layout = "linear", colour = "black") +
     geom_text(
         data = tmp,
         mapping = aes(
             x = start + ((end - start) / 2), y = value, label = OperonID),
-        nudge_y = 0.45, check_overlap = TRUE)
+        nudge_y = 0.45, check_overlap = TRUE) + 
     scale_fill_manual(values = c(`+` = colou[5], `-` = colou[6]))
 pl1
 
-
-tmp <- ref_grange_expr[
-    start(ref_grange_expr) %in% c(start_pos:end_pos) |
-        end(ref_grange_expr) %in% c(start_pos:end_pos)] %>%
+# The plot of known genes for that genomic region
+tmp <- ref_grange[
+    start(ref_grange) %in% c(start_pos:end_pos) |
+        end(ref_grange) %in% c(start_pos:end_pos)] %>%
     as.data.frame(.)
 tmp$value <- rep(x = 1, times = nrow(tmp))
 
 pl2 <- autoplot(
-    ref_grange_expr[
-        start(ref_grange_expr) %in% c(start_pos:end_pos) |
-            end(ref_grange_expr) %in% c(start_pos:end_pos)],
-    mapping = aes(fill = strand),
+    ref_grange[
+        start(ref_grange) %in% c(start_pos:end_pos) |
+            end(ref_grange) %in% c(start_pos:end_pos)],
+    mapping = aes(fill = strand, alpha = Expressed),
     geom = "arrowrect", layout = "linear", colour = "black") +
     geom_text(
         data = tmp,
         mapping = aes(
-            x = start + ((end - start) / 2), y = value, label = UniProtKBID),
+            x = start + ((end - start) / 2), y = value, label = Gene_name),
         nudge_y = 0.45, check_overlap = TRUE) +
     scale_fill_manual(values = c(`+` = colou[1], `-` = colou[2]))
 pl2
 
-
-
+# The plot of novel ORFs for that genomic region
 tmp <- orf_grange[
     start(orf_grange) %in% c(start_pos:end_pos) |
         end(orf_grange) %in% c(start_pos:end_pos)] %>%
@@ -998,8 +1003,8 @@ pl
 
 
 
-start_pep <- start(orf_grange_expr[orf_grange_expr@elementMetadata@listData$id == "seq_51322"])
-end_pep <- end(orf_grange_expr[orf_grange_expr@elementMetadata@listData$id == "seq_51322"])
+start_pep <- start(orf_grange_expr[orf_grange_expr@elementMetadata@listData$id == Target_id])
+end_pep <- end(orf_grange_expr[orf_grange_expr@elementMetadata@listData$id == Target_id])
 
 tmp <- pep_grange[
     start(pep_grange) %in% c(start_pep:end_pep) |
