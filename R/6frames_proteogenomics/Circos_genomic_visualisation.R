@@ -292,7 +292,7 @@ tmp %<>%
         End = ifelse(test = strand == 1, yes = end, no = start),
         Strand = ifelse(test = strand == 1, yes = "+", no = "-"),
         UniProtKBID = UniProtID,
-        Expressed = ifelse(UniProtID %in% evid_expr_known, TRUE, FALSE),
+        Expressed = ifelse(UniProtID %in% evid_expr_known | id %in% evid_expr_novel, TRUE, FALSE),
         Chromosome = 1,
         chr.name = "chr1",
         length = 4215606,
@@ -931,7 +931,7 @@ pl3 <- autoplot(
         (start(orf_grange) %in% c(start_pos:end_pos) |
              end(orf_grange) %in% c(start_pos:end_pos)) &
             orf_grange$frame == 1],
-    mapping = aes(fill = strand),
+    mapping = aes(fill = strand, alpha = Expressed),
     geom = "arrowrect", layout = "linear", colour = "black") +
     scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
 pl3
@@ -940,7 +940,7 @@ pl4 <- autoplot(
         (start(orf_grange) %in% c(start_pos:end_pos) |
             end(orf_grange) %in% c(start_pos:end_pos)) &
             orf_grange$frame == 2],
-    mapping = aes(fill = strand),
+    mapping = aes(fill = strand, alpha = Expressed),
     geom = "arrowrect", layout = "linear", colour = "black") +
     scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
 pl4
@@ -949,7 +949,7 @@ pl5 <- autoplot(
         (start(orf_grange) %in% c(start_pos:end_pos) |
              end(orf_grange) %in% c(start_pos:end_pos)) &
             orf_grange$frame == 3],
-    mapping = aes(fill = strand),
+    mapping = aes(fill = strand, alpha = Expressed),
     geom = "arrowrect", layout = "linear", colour = "black") +
     scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
 pl5
@@ -958,7 +958,7 @@ pl6 <- autoplot(
         (start(orf_grange) %in% c(start_pos:end_pos) |
              end(orf_grange) %in% c(start_pos:end_pos)) &
             orf_grange$frame == -1],
-    mapping = aes(fill = strand),
+    mapping = aes(fill = strand, alpha = Expressed),
     geom = "arrowrect", layout = "linear", colour = "black") +
     scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
 pl6
@@ -967,7 +967,7 @@ pl7 <- autoplot(
         (start(orf_grange) %in% c(start_pos:end_pos) |
              end(orf_grange) %in% c(start_pos:end_pos)) &
             orf_grange$frame == -2],
-    mapping = aes(fill = strand),
+    mapping = aes(fill = strand, alpha = Expressed),
     geom = "arrowrect", layout = "linear", colour = "black") +
     scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
 pl7
@@ -976,54 +976,44 @@ pl8 <- autoplot(
         (start(orf_grange) %in% c(start_pos:end_pos) |
              end(orf_grange) %in% c(start_pos:end_pos)) &
             orf_grange$frame == -3],
-    mapping = aes(fill = strand),
+    mapping = aes(fill = strand, alpha = Expressed),
     geom = "arrowrect", layout = "linear", colour = "black") +
     scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
 pl8
 
 
-pl <- tracks(
-    `Operon` = pl1, `Known ORFs` = pl2,
-    `Frame 1` = pl3, `Frame 2` = pl4, `Frame 3` = pl5,
-    `Frame -1` = pl6, `Frame -2` = pl7, `Frame -3` = pl8,
-    heights = c(0.2, 0.2, rep(0.1, times = 6)),
-    xlab = "Genomic position",
-    label.bg.fill = "white") +
-    theme_bw() +
-    theme(
-        axis.text.y =  element_blank(),
-        axis.ticks.y = element_blank(),
-        legend.position = "none")
-xlim(pl) <- c(start_pos:end_pos)
-pl
+
+# Define genomic region of interest
+start_pep <- start(orf_grange_expr[Target_id])
+end_pep <- end(orf_grange_expr[Target_id])
 
 
 
-
-
-
-
-start_pep <- start(orf_grange_expr[orf_grange_expr@elementMetadata@listData$id == Target_id])
-end_pep <- end(orf_grange_expr[orf_grange_expr@elementMetadata@listData$id == Target_id])
 
 tmp <- pep_grange[
     start(pep_grange) %in% c(start_pep:end_pep) |
         end(pep_grange) %in% c(start_pep:end_pep)] %>%
     as.data.frame(.)
 tmp$value <- rep(x = 1, times = nrow(tmp))
+tmp %<>%
+    dplyr::arrange(., frame)
+tmp$pep <- factor(
+    x = tmp$pep,
+    levels = as.character(tmp$pep),
+    labels = as.character(tmp$pep),
+    ordered = TRUE)
 
 
 
 pl9 <- ggplot(data = tmp,
     mapping = aes(
         xmin = start, xmax = end,
-        ymin = as.integer(factor(pep)), ymax = as.integer(factor(pep))+0.5,
+        ymin = as.integer(pep), ymax = as.integer(pep)+0.5,
         fill = factor(frame), label = pep)) +
     geom_rect(colour = "black") +
     geom_text(mapping = aes(
-        x = start + ((end - start) / 2), y = as.integer(factor(pep))+0.25),
-        colour = "white", size = 4, check_overlap = TRUE)# +
-    #scale_fill_manual(values = c(`+` = colou[5], `-` = colou[6]))
+        x = start + ((end - start) / 2), y = as.integer(pep)+0.275),
+        colour = "white", size = 3, check_overlap = TRUE)
 pl9
 
 
@@ -1036,57 +1026,71 @@ tmp <- sanger_grange[
 pl10 <- ggplot(data = tmp,
               mapping = aes(
                   xmin = start, xmax = end,
-                  ymin = as.integer(factor(sangerid)), ymax = as.integer(factor(sangerid))+0.5,
-                  label = Sequence)) +
-    geom_rect(colour = "black") +
-    geom_text(mapping = aes(
-        x = start + ((end - start) / 2), y = as.integer(factor(sangerid))+0.25),
-        colour = "white", size = 3, check_overlap = TRUE)# +
-    #scale_fill_manual(values = c(`+` = colou[5], `-` = colou[6]))
+                  ymin = as.integer(factor(sangerid)),
+                  ymax = as.integer(factor(sangerid))+0.5,
+                  colour = strand)) +
+    geom_rect(fill = "grey")
 pl10
 
 
-pl_bis <- tracks(
-    `Peptide` = pl9, `Sequenced PCR` = pl10,
-    heights = c(2, 0.5),
+
+
+wh <- orf_grange_expr[Target_id] %>%
+    range(.)
+pl11 <- autoplot(bsu, which = wh, geom = "rect")
+pl11
+
+
+
+# Plot the tracks
+pl <- tracks(
+    #`Operon` = pl1,
+    `Known ORFs` = pl2,
+    `Frame 1` = pl3, `Frame 2` = pl4, `Frame 3` = pl5,
+    `Frame -1` = pl6, `Frame -2` = pl7, `Frame -3` = pl8,
+    heights = c(
+        #0.2,
+        0.5, rep(0.1, times = 6)),
     xlab = "Genomic position",
     label.bg.fill = "white") +
     theme_bw() +
     theme(
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.y =  element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.position = "none")
+xlim(pl) <- c(start_pos:end_pos)
+pl
+
+
+
+
+
+pl_bis <- tracks(
+    `Peptide` = pl9, `Sequenced PCR` = pl10, `Genome` = pl11,
+    heights = c(2, 0.5, 0.2),
+    xlab = "Genomic position",
+    label.bg.fill = "white") +
+    theme_bw() +
+    theme(
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
         axis.text.y =  element_blank(),
         axis.title.y =  element_blank(),
         axis.ticks.y = element_blank(),
-        legend.position = "none")
-xlim(pl_bis) <- c(start_pep:end_pep)
+        legend.position = "right")
+xlim(pl_bis) <- c(start_pep, end_pep)
 pl_bis
 
 
-pdf(file = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Manuscript/Figures_tables/Figure2.pdf", width = 10, height = 10)
+
+
+pdf(
+    file = paste0(opt$out_path, "/", Target_id, "_genomic_region.pdf"),
+    width = 15, height = 10)
 pl
 pl_bis
 dev.off()
-
-
-
-
-
-
-
-wh <- sanger_grange[1:4] %>%
-    range(.)
-pl_bsu <- list()
-pl_bsu[["chr1"]] <- autoplot(bsu, which = wh, geom = "rect")
-
-for (x in 1:length(sanger_grange[1:4])) {
-    wh <- sanger_grange[x]
-    pl_bsu[[paste(x)]] <- autoplot(bsu, which = wh, geom = "rect")
-}
-
-tracks(pl_bsu)
-
-
-
-
-
 
 
