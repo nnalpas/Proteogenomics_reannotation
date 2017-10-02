@@ -894,34 +894,34 @@ write.table(
 bsu <- BSgenome.Bsubtilis.EMBL.AL0091263
 
 # Define the novel ORF of interest
-Target_id <- "seq_51322"
+Target_id <- "seq_223100"
 
 # Define genomic region of interest
 start_pos <- start(orf_grange_expr[Target_id]) - 1000
 end_pos <- end(orf_grange_expr[Target_id]) + 1000
 
 # The plot of operon for that genomic region
-tmp <- operon_grange[
-    (start(operon_grange) %in% c(start_pos:end_pos) |
-        end(operon_grange) %in% c(start_pos:end_pos)) &
-        operon_grange$GeneCount > 2] %>%
-    as.data.frame(.)
-tmp$value <- rep(x = 1, times = nrow(tmp))
+#tmp <- operon_grange[
+#    (start(operon_grange) %in% c(start_pos:end_pos) |
+#        end(operon_grange) %in% c(start_pos:end_pos)) &
+#        operon_grange$GeneCount > 2] %>%
+#    as.data.frame(.)
+#tmp$value <- rep(x = 1, times = nrow(tmp))
 
-pl1 <- autoplot(
-    operon_grange[
-        (start(operon_grange) %in% c(start_pos:end_pos) |
-            end(operon_grange) %in% c(start_pos:end_pos)) &
-            operon_grange$GeneCount > 2],
-    mapping = aes(fill = strand),
-    geom = "arrowrect", layout = "linear", colour = "black") +
-    geom_text(
-        data = tmp,
-        mapping = aes(
-            x = start + ((end - start) / 2), y = value, label = OperonID),
-        nudge_y = 0.45, check_overlap = TRUE) + 
-    scale_fill_manual(values = c(`+` = colou[5], `-` = colou[6]))
-pl1
+#pl1 <- autoplot(
+#    operon_grange[
+#        (start(operon_grange) %in% c(start_pos:end_pos) |
+#            end(operon_grange) %in% c(start_pos:end_pos)) &
+#            operon_grange$GeneCount > 2],
+#    mapping = aes(fill = strand),
+#    geom = "arrowrect", layout = "linear", colour = "black") +
+#    geom_text(
+#        data = tmp,
+#        mapping = aes(
+#            x = start + ((end - start) / 2), y = value, label = OperonID),
+#        nudge_y = 0.45, check_overlap = TRUE) + 
+#    scale_fill_manual(values = c(`+` = colou[5], `-` = colou[6]))
+#pl1
 
 # The plot of known genes for that genomic region
 tmp <- ref_grange[
@@ -941,7 +941,8 @@ pl2 <- autoplot(
         mapping = aes(
             x = start + ((end - start) / 2), y = value, label = Gene_name),
         nudge_y = 0.45, check_overlap = TRUE) +
-    scale_fill_manual(values = c(`+` = colou[1], `-` = colou[2]))
+    scale_fill_manual(values = c(`+` = colou[1], `-` = colou[2])) +
+    scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.5))
 pl2
 
 # The plot of novel ORFs for that genomic region
@@ -958,7 +959,8 @@ pl3 <- autoplot(
             orf_grange$frame == 1],
     mapping = aes(fill = strand, alpha = Expressed),
     geom = "arrowrect", layout = "linear", colour = "black") +
-    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
+    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4])) +
+    scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.5))
 pl3
 pl4 <- autoplot(
     orf_grange[
@@ -967,7 +969,8 @@ pl4 <- autoplot(
             orf_grange$frame == 2],
     mapping = aes(fill = strand, alpha = Expressed),
     geom = "arrowrect", layout = "linear", colour = "black") +
-    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
+    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4])) +
+    scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.5))
 pl4
 pl5 <- autoplot(
     orf_grange[
@@ -976,7 +979,8 @@ pl5 <- autoplot(
             orf_grange$frame == 3],
     mapping = aes(fill = strand, alpha = Expressed),
     geom = "arrowrect", layout = "linear", colour = "black") +
-    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
+    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4])) +
+    scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.5))
 pl5
 pl6 <- autoplot(
     orf_grange[
@@ -985,7 +989,8 @@ pl6 <- autoplot(
             orf_grange$frame == -1],
     mapping = aes(fill = strand, alpha = Expressed),
     geom = "arrowrect", layout = "linear", colour = "black") +
-    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
+    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4])) +
+    scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.5))
 pl6
 pl7 <- autoplot(
     orf_grange[
@@ -994,7 +999,8 @@ pl7 <- autoplot(
             orf_grange$frame == -2],
     mapping = aes(fill = strand, alpha = Expressed),
     geom = "arrowrect", layout = "linear", colour = "black") +
-    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
+    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4])) +
+    scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.5))
 pl7
 pl8 <- autoplot(
     orf_grange[
@@ -1003,7 +1009,8 @@ pl8 <- autoplot(
             orf_grange$frame == -3],
     mapping = aes(fill = strand, alpha = Expressed),
     geom = "arrowrect", layout = "linear", colour = "black") +
-    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4]))
+    scale_fill_manual(values = c(`+` = colou[3], `-` = colou[4])) +
+    scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.5))
 pl8
 
 
