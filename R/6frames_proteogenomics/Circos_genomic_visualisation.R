@@ -281,6 +281,11 @@ seqinfo(ref_grange) <- Seqinfo(
     genome = tmp$geno %>% unique(.) %>% as.character(.))
 names(ref_grange) <- ref_grange$UniProtKBID
 
+# Export the reference GRanges for reuse at later stage
+saveRDS(
+    object = ref_grange,
+    file = paste0(opt$out_path, "/bsu_AL009126.3_ref_grange.RDS"))
+
 # Format dataframe as genomic position and other info for each novel ORF
 tmp <- orf_coord %>%
     dplyr::filter(., !is.na(id)) %>%
@@ -329,6 +334,11 @@ seqinfo(orf_grange) <- Seqinfo(
     genome = tmp$geno %>% unique(.) %>% as.character(.))
 names(orf_grange) <- orf_grange$id
 
+# Export the reference GRanges for reuse at later stage
+saveRDS(
+    object = orf_grange,
+    file = paste0(opt$out_path, "/bsu_AL009126.3_orf_grange.RDS"))
+
 # Format dataframe as genomic position and other info for each novel ORF
 tmp <- operon %>%
     dplyr::group_by(., OperonID) %>%
@@ -368,6 +378,11 @@ seqinfo(operon_grange) <- Seqinfo(
     isCircular = tmp$Type %>% unique(.) %>% as.logical(.),
     genome = tmp$geno %>% unique(.) %>% as.character(.))
 names(operon_grange) <- operon_grange$OperonID
+
+# Export the reference GRanges for reuse at later stage
+saveRDS(
+    object = operon_grange,
+    file = paste0(opt$out_path, "/bsu_AL009126.3_operon_grange.RDS"))
 
 # Get all known protein associated nucleotide position
 tmp <- lapply(
@@ -503,6 +518,11 @@ seqinfo(pep_grange) <- Seqinfo(
     genome = tmp$geno %>% unique(.) %>% as.character(.))
 names(pep_grange) <- pep_grange$pep
 
+# Export the reference GRanges for reuse at later stage
+saveRDS(
+    object = pep_grange,
+    file = paste0(opt$out_path, "/bsu_AL009126.3_pep_grange.RDS"))
+
 # Format dataframe as genomic position and other info for each sanger sequence
 tmp <- best_sanger_vs_genome %>%
     dplyr::select(., qseqid, sstart, send) %>%
@@ -535,6 +555,11 @@ seqinfo(sanger_grange) <- Seqinfo(
     isCircular = tmp$Type %>% unique(.) %>% as.logical(.),
     genome = tmp$geno %>% unique(.) %>% as.character(.))
 names(sanger_grange) <- sanger_grange$sangerid
+
+# Export the reference GRanges for reuse at later stage
+saveRDS(
+    object = sanger_grange,
+    file = paste0(opt$out_path, "/bsu_AL009126.3_sanger_grange.RDS"))
 
 
 
@@ -1088,7 +1113,7 @@ pl_bis
 
 pdf(
     file = paste0(opt$out_path, "/", Target_id, "_genomic_region.pdf"),
-    width = 15, height = 10)
+    width = 20, height = 10)
 pl
 pl_bis
 dev.off()
