@@ -36,33 +36,33 @@ source(
         sep = "/"))
 
 # Load the required packages (or install if not already in library)
-load_package(plyr)
-load_package(dplyr)
-load_package(tidyr)
-load_package(seqinr)
-load_package(UniProt.ws)
-load_package(magrittr)
-load_package(WriteXLS)
-load_package(data.table)
-load_package(splitstackshape)
-load_package(VennDiagram)
-load_package(ggplot2)
-load_package(grid)
-load_package(gridExtra)
-load_package(RColorBrewer)
-load_package(stringr)
-load_package(Biostrings)
-load_package(RecordLinkage)
-load_package(VariantAnnotation)
-load_package(cgdsr)
-load_package(bit64)
-load_package(cleaver)
-load_package(plotly)
-load_package(GenomicRanges)
-load_package(biovizBase)
-load_package(ggbio)
-load_package(ggradar)
-load_package(BSgenome.Bsubtilis.EMBL.AL0091263)
+load_package("plyr")
+load_package("dplyr")
+load_package("tidyr")
+load_package("seqinr")
+load_package("UniProt.ws")
+load_package("magrittr")
+load_package("WriteXLS")
+load_package("data.table")
+load_package("splitstackshape")
+load_package("VennDiagram")
+load_package("ggplot2")
+load_package("grid")
+load_package("gridExtra")
+load_package("RColorBrewer")
+load_package("stringr")
+load_package("Biostrings")
+load_package("RecordLinkage")
+load_package("VariantAnnotation")
+load_package("cgdsr")
+load_package("bit64")
+load_package("cleaver")
+load_package("plotly")
+load_package("GenomicRanges")
+load_package("biovizBase")
+load_package("ggbio")
+load_package("ggradar")
+load_package("BSgenome.Bsubtilis.EMBL.AL0091263")
 
 
 
@@ -1123,6 +1123,88 @@ pdf(
     width = 20, height = 10)
 pl
 pl_bis
+dev.off()
+
+
+
+### Temporary code -------------------------------------------------------
+
+to_import <- list.files(opt$out_path, pattern = "\\.RDS$", full.names = T)
+
+to_import %<>%
+    set_names(sub("bsu_AL009126.3_(.*)\\.RDS", "\\1", basename(.)))
+
+data <- purrr::map(.x = to_import, .f = readRDS)
+
+list2env(x = data, envir = .GlobalEnv)
+
+evid_match <- readRDS(
+    "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/15082017/2017-08-15_Sequence_group_mapping.RDS")
+
+# Get the Bsu genome object
+bsu <- BSgenome.Bsubtilis.EMBL.AL0091263
+
+# Define the novel ORF of interest
+Target_id <- "seq_51322"
+
+# Define genomic region of interest
+start_pos <- start(orf_grange[Target_id]) - 1000
+end_pos <- end(orf_grange[Target_id]) + 1000
+
+# 
+target_ref <- ref_grange[
+    (start(ref_grange) %in% c(start_pos:end_pos) |
+         end(ref_grange) %in% c(start_pos:end_pos)) &
+        ref_grange$Expressed == TRUE]
+
+target_orf <- orf_grange[
+    (start(orf_grange) %in% c(start_pos:end_pos) |
+         end(orf_grange) %in% c(start_pos:end_pos)) &
+        orf_grange$Expressed == TRUE & orf_grange$UniProtKBID == "NA"]$id
+
+#
+target_raw <- evid_match %>%
+    dplyr::filter(
+        .,
+        grepl(
+            paste0("(", paste(target_orf, collapse = "|"), ")"),
+            Proteins)) %>%
+    .[["Raw file"]] %>%
+    unique(.)
+
+#
+data <- evid_match %>%
+    dplyr::filter(
+        .,
+        grepl(
+            paste0(
+                "(",
+                paste(c(target_ref$UniProtKBID, target_orf), collapse = "|"),
+                ")"),
+            Proteins)) %>%
+    dplyr::group_by(., `Leading Proteins`, `Raw file`) %>%
+    dplyr::summarise(., Count = sum(`MS/MS Count`)) %>%
+    dplyr::mutate(
+        ., Type = ifelse(`Raw file` %in% target_raw, "Novel", "Known")) %>%
+    set_colnames(c("Proteins", "Raw", "Count", "Type")) %>%
+    dplyr::mutate(
+        .,
+        Name = ifelse(
+            Proteins %in% target_ref$UniProtKBID,
+            target_ref[target_ref$UniProtKBID %in% Proteins]$Gene_name,
+            Proteins))
+
+# 
+pl <- plots_box(
+    data = data, key = "Name", value = "Count", fill = "Type",
+    main = paste0(Target_id, " region spectral count"),
+    textsize = 20, bw = TRUE,
+    label = c("N_label", "M_label", "Md_label"))
+
+pdf(
+    file = paste0(opt$out_path, "/", Target_id, "_spectral_count.pdf"),
+    width = 10, height = 10)
+pl[1]
 dev.off()
 
 
