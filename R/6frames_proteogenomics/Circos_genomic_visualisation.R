@@ -123,6 +123,11 @@ orf_coord <- read.table(
 
 
 
+# Import the experimental design (with conditions)
+exp_design <- read.table(
+    file = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Bsu_Conditions_06022017.txt", header = TRUE,
+    sep = "\t", quote = "", as.is = TRUE)
+
 # Import the blast results of Nicolas' ORF versus the reference proteome
 blast_NN_vs_ref <- read.table(
     file = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/blastp_ORF_Nicolas_vs_RefProt_19012017",
@@ -1014,67 +1019,93 @@ evid_match <- readRDS(
 bsu <- BSgenome.Bsubtilis.EMBL.AL0091263
 
 # Define the novel ORF of interest
-Target_id <- "seq_51322"
+Target_ids <- c(
+    "seq_49263", "seq_51322", "seq_134853", "seq_145510",
+    "seq_154909", "seq_163507", "seq_223100")
 
-# Define genomic region of interest
-start_pos <- start(orf_grange[Target_id]) - 1000
-end_pos <- end(orf_grange[Target_id]) + 1000
-
-# Select all reference within range of the target
-target_ref <- ref_grange[
-    (start(ref_grange) %in% c(start_pos:end_pos) |
-         end(ref_grange) %in% c(start_pos:end_pos)) &
-        ref_grange$Expressed == TRUE]
-
-# Select all ORF within range of the target
-target_orf <- orf_grange[
-    (start(orf_grange) %in% c(start_pos:end_pos) |
-         end(orf_grange) %in% c(start_pos:end_pos)) &
-        orf_grange$Expressed == TRUE & orf_grange$UniProtKBID == "NA"]$id
-
-#
-target_raw <- evid_match %>%
-    dplyr::filter(
-        .,
-        grepl(
-            paste0("(", paste(target_orf, collapse = "|"), ")"),
-            Proteins)) %>%
-    .[["Raw file"]] %>%
-    unique(.)
-
-#
-data <- evid_match %>%
-    dplyr::filter(
-        .,
-        grepl(
-            paste0(
-                "(",
-                paste(c(target_ref$UniProtKBID, target_orf), collapse = "|"),
-                ")"),
-            Proteins)) %>%
-    dplyr::group_by(., `Leading Proteins`, `Raw file`) %>%
-    dplyr::summarise(., Count = sum(`MS/MS Count`)) %>%
-    dplyr::mutate(
-        ., Type = ifelse(`Raw file` %in% target_raw, "Novel", "Known")) %>%
-    set_colnames(c("Proteins", "Raw", "Count", "Type")) %>%
-    dplyr::mutate(
-        .,
-        Name = ifelse(
-            Proteins %in% target_ref$UniProtKBID,
-            target_ref[target_ref$UniProtKBID %in% Proteins]$Gene_name,
-            Proteins))
-
-# 
-pl <- plots_box(
-    data = data, key = "Name", value = "Count", fill = "Type",
-    main = paste0(Target_id, " region spectral count"),
-    textsize = 20, bw = TRUE,
-    label = c("N_label", "M_label", "Md_label"))
-
-pdf(
-    file = paste0(opt$out_path, "/", Target_id, "_spectral_count.pdf"),
-    width = 10, height = 10)
-pl[1]
-dev.off()
+# Loop through all targets
+for (Target_id in Target_ids) {
+    
+    # Define genomic region of interest
+    start_pos <- start(orf_grange[Target_id]) - 1000
+    end_pos <- end(orf_grange[Target_id]) + 1000
+    
+    # Select all reference within range of the target
+    target_ref <- ref_grange[
+        (start(ref_grange) %in% c(start_pos:end_pos) |
+             end(ref_grange) %in% c(start_pos:end_pos)) &
+            ref_grange$Expressed == TRUE]
+    
+    # Select all ORF within range of the target
+    target_orf <- orf_grange[
+        (start(orf_grange) %in% c(start_pos:end_pos) |
+             end(orf_grange) %in% c(start_pos:end_pos)) &
+            orf_grange$Expressed == TRUE & orf_grange$UniProtKBID == "NA"]$id
+    
+    # Get raw files associated to candidate novel ORF
+    target_raw <- evid_match %>%
+        dplyr::filter(
+            .,
+            grepl(
+                paste0("(", paste(target_orf, collapse = "|"), ")"),
+                Proteins)) %>%
+        .[["Raw file"]] %>%
+        unique(.)
+    
+    # Determine in which condition was the candidate novel ORF observed
+    target_raw_condition <- exp_design %>%
+        dplyr::filter(., Name %in% target_raw) %>%
+        dplyr::select(., Name, Conditions)
+    
+    # Create the pdf to contain plots
+    pdf(
+        file = paste0(
+            opt$out_path, "/", date_str, "_", Target_id, "_spectral_count.pdf"),
+        width = 10, height = 10)
+    
+    # Generate the table of condition per raw file of interest
+    pl <- ggplot() +
+        theme_bw() +
+        annotation_custom(
+            grob = tableGrob(
+                d = target_raw_condition, theme = ttheme_default(), rows = NULL))
+    plot(pl)
+    
+    # Compute the MS/MS count for all known protein and ORF within range of
+    # the target and for each raw file
+    data <- evid_match %>%
+        dplyr::filter(
+            .,
+            grepl(
+                paste0(
+                    "(",
+                    paste(c(target_ref$UniProtKBID, target_orf), collapse = "|"),
+                    ")"),
+                Proteins)) %>%
+        dplyr::group_by(., `Leading Proteins`, `Raw file`) %>%
+        dplyr::summarise(., Count = sum(`MS/MS Count`)) %>%
+        dplyr::mutate(
+            ., Type = ifelse(`Raw file` %in% target_raw, "Novel", "Known")) %>%
+        set_colnames(c("Proteins", "Raw", "Count", "Type")) %>%
+        dplyr::mutate(
+            .,
+            Name = ifelse(
+                Proteins %in% target_ref$UniProtKBID,
+                target_ref[target_ref$UniProtKBID %in% Proteins]$Gene_name,
+                Proteins))
+    
+    # Create the boxplot of MS/MS count per raw files and ORFs, also differentiate
+    # raw files according to whether they belong to the candidate novel ORF or not
+    pl <- plots_box(
+        data = data, key = "Name", value = "Count", fill = "Type",
+        main = paste0(Target_id, " region spectral count"),
+        textsize = 20, bw = TRUE,
+        label = c("N_label", "M_label", "Md_label"))
+    plot(pl[[1]])
+    
+    # Close pdf output
+    dev.off()
+    
+}
 
 
