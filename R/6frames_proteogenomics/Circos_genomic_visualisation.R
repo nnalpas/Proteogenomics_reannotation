@@ -597,16 +597,14 @@ pl <- ggplot() +
         geom = "rect", color = colou[4],
         radius = 14, trackWidth = 4)
 
-
+# Open pdf output and render the plot
 pdf(file = paste0(opt$out_path, "/ORFs_circos.pdf"), width = 10, height = 10)
 plot(pl)
-dev.off()
 
 # Use ggbio extension to plot ORF and operon location on genome
 # as a circos graph
-colou <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
 pl <- ggplot() +
-    ggtitle(label = "Bacillus subtilis ORFs") +
+    ggtitle(label = "Bacillus subtilis ORFs with operons") +
     layout_circle(
         bsu_ideo, geom = "ideo", fill = "#e6e6e6",
         radius = 30.5, trackWidth = 2) +
@@ -641,8 +639,7 @@ pl <- ggplot() +
         geom = "rect", color = colou[4],
         radius = 14, trackWidth = 4)
 
-
-pdf(file = paste0(opt$out_path, "/ORFs_circos_with_operon.pdf"), width = 10, height = 10)
+# Render the plot
 plot(pl)
 dev.off()
 
@@ -650,195 +647,60 @@ dev.off()
 
 ### Genomic coverage -----------------------------------------------------
 
-# Get all chromosome nucleotide position
-chrom_nuc <- bsu_ideo@ranges[[1]]
-
-# Get all protein-coding associated nucleotide position
-coding_nuc <- lapply(X = ref_grange@ranges, FUN = function(x) {
-    x
-})
-names(coding_nuc) <- names(ref_grange)
-
-# Get all expressed protein associated nucleotide position
-exprs_nuc <- lapply(X = ref_grange_expr@ranges, FUN = function(x) {
-    x
-})
-names(exprs_nuc) <- names(ref_grange_expr)
-nuc_stranded_ref <- list()
-orf_coord_filt <- orf_coord[!is.na(orf_coord$UniProtID), ] %>%
-    dplyr::filter(., !duplicated(UniProtID))
-
-for (x in names(exprs_nuc)) {
-    if (orf_coord_filt[orf_coord_filt$UniProtID == x, "strand"] == -1) {
-        exprs_nuc_stranded[[x]] <- rev(exprs_nuc[[x]])
-    } else {
-        exprs_nuc_stranded[[x]] <- exprs_nuc[[x]]
-    }
-}
-
-
-pep_loc_filt <- pep_loc %>%
-    dplyr::filter(., Database == "Known")
-
-# Get all peptide associated nucleotide position
-tmp <- pep_loc_filt[
-    !is.na(pep_loc_filt$start) & !duplicated(pep_loc_filt$pep), ]
-cover_nuc <- apply(
-    X = tmp,
-    MARGIN = 1,
-    FUN = function(x) {
-        
-        val <- seq(from = as.integer(x["start"]) * 3 - 2, to = as.integer(x["end"]) * 3)
-        tmp <- exprs_nuc_stranded[[x["prot"]]][val]
-        tmp
-        
-    }
-)
-names(cover_nuc) <- tmp$pep
-
-# Format data into a standard plotting dataframe
-toplot <- data.frame(
-    Param = paste(
-        "Chromosome", round(length(chrom_nuc) / 1000000, 1),
-        "Mb", sep = " "),
-    Position = as.integer(unique(chrom_nuc)),
-    stringsAsFactors = FALSE)
-toplot <- data.frame(
-    Param = paste(
-        "Protein-coding",
-        round(length(unique(unlist(coding_nuc))) / 1000000, 1),
-        "Mb", sep = " "),
-    Position = as.integer(unique(unlist(coding_nuc))),
-    stringsAsFactors = FALSE) %>%
-    base::rbind(toplot, .)
-toplot <- data.frame(
-    Param = paste(
-        "Expressed protein",
-        round(length(unique(unlist(exprs_nuc))) / 1000000, 1),
-        "Mb", sep = " "),
-    Position = as.integer(unique(unlist(exprs_nuc))),
-    stringsAsFactors = FALSE) %>%
-    base::rbind(toplot, .)
-toplot <- data.frame(
-    Param = paste(
-        "Detected peptide",
-        round(length(unique(unlist(cover_nuc))) / 1000000, 1),
-        "Mb", sep = " "),
-    Position = as.integer(unique(unlist(cover_nuc))),
-    stringsAsFactors = FALSE) %>%
-    base::rbind(toplot, .)
-
-pdf(file = paste0(opt$out_path, "/Genomic_coverage.pdf"), width = 10, height = 10)
-
-# Plot a square venn diagram of chromosome coverage
-plot.new()
-rect(
-    xleft = 0,
-    ybottom = 0,
-    xright = 1,
-    ytop = 1,
-    border = "red",
-    lwd = 2)
-text(
-    x = 0.015,
-    y = 1.02,
-    labels = paste(
-        "Chromosome", round(length(chrom_nuc) / 1000000, 1),
-        "Mb", sep = " "),
-    col = "red", cex = 1.0, adj = 0)
-rect(
-    xleft = 0.01,
-    ybottom = 0.01,
-    xright = sqrt(
-        length(unique(unlist(coding_nuc))) / length(chrom_nuc)) + 0.01,
-    ytop = sqrt(
-        length(unique(unlist(coding_nuc))) / length(chrom_nuc)) + 0.01,
-    border = "green",
-    lwd = 2)
-text(
-    x = 0.025,
-    y = sqrt(
-        length(unique(unlist(coding_nuc))) / length(chrom_nuc)) + 0.032,
-    labels = paste(
-        "Protein-coding",
-        round(length(unique(unlist(coding_nuc))) / 1000000, 1),
-        "Mb", sep = " "),
-    col = "green", cex = 1.0, adj = 0)
-rect(
-    xleft = 0.02,
-    ybottom = 0.02,
-    xright = sqrt(
-        length(unique(unlist(exprs_nuc))) / length(chrom_nuc)) + 0.02,
-    ytop = sqrt(
-        length(unique(unlist(exprs_nuc))) / length(chrom_nuc)) + 0.02,
-    border = "blue",
-    lwd = 2)
-text(
-    x = 0.035,
-    y = sqrt(
-        length(unique(unlist(exprs_nuc))) / length(chrom_nuc)) + 0.04,
-    labels = paste(
-        "Expressed protein",
-        round(length(unique(unlist(exprs_nuc))) / 1000000, 1),
-        "Mb", sep = " "),
-    col = "blue", cex = 1.0, adj = 0)
-rect(
-    xleft = 0.03,
-    ybottom = 0.03,
-    xright = sqrt(
-        length(unique(unlist(cover_nuc))) / length(chrom_nuc)) + 0.03,
-    ytop = sqrt(
-        length(unique(unlist(cover_nuc))) / length(chrom_nuc)) + 0.03,
-    border = "gold",
-    lwd = 2)
-text(
-    x = 0.045,
-    y = sqrt(
-        length(unique(unlist(cover_nuc))) / length(chrom_nuc)) + 0.05,
-    labels = paste(
-        "Detected peptide",
-        round(length(unique(unlist(cover_nuc))) / 1000000, 1),
-        "Mb", sep = " "),
-    col = "gold", cex = 1.0, adj = 0)
-
-dev.off()
+# Compute and visualise the genomic coverage based on nucleotide coverage
+pl <- plots_rectvenn(
+    ideo = bsu_ideo, ref = ref_grange, pep = pep_grange)
 
 
 
 ### Coverage per nucleotide ----------------------------------------------
 
-# 
+# Get all peptide associated nucleotide position
+cover_nuc <- gr_nucleotide_pos(
+    grange = pep_grange, filter = 'Database == "Known"')
+
+# Convert to dataframe
 peptide_to_nucl <- cover_nuc %>%
     ldply(., "data.frame") %>%
     set_colnames(c("Sequence", "Nucl_pos")) %>%
     dplyr::filter(., !is.na(Nucl_pos))
 
-# Merge with evid and the msms count
+# Compute msms count for each peptide sequence
 peptide_to_nucl_count <- evid_match %>%
     dplyr::select(., Sequence, `MS/MS Count`) %>%
     dplyr::group_by(., Sequence) %>%
     dplyr::summarise(., Count = sum(`MS/MS Count`)) %>%
     dplyr::left_join(peptide_to_nucl, ., by = "Sequence")
 
-# 
+# Format dataframe count column to factor
 peptide_to_nucl_count$Count <- factor(
     x = peptide_to_nucl_count$Count,
     levels = seq(1, max(peptide_to_nucl_count$Count)),
     labels = seq(1, max(peptide_to_nucl_count$Count)),
     ordered = TRUE)
+
+# Calculate overall nucleotide coverage frequencies
 toplot <- peptide_to_nucl_count %>%
     plyr::ddply(
         .data = ., .variables = c("Count"),
         .fun = summarise, Freq = n(),
         .drop = FALSE)
 
+# Calculate the quantiles of count frequencies
 quantiles_toplot <- quantile(
     x = as.integer(as.character(peptide_to_nucl_count$Count)),
     probs = c(0, 0.25, 0.5, 0.75, 1)) %>%
     as.data.frame(.) %>%
-    set_colnames("Quartiles")
+    set_colnames("Values") %>%
+    dplyr::mutate(., Quartiles = row.names(.))
+quantiles_toplot <- data.frame(
+    Quartiles = "Mean",
+    Values = mean(as.integer(as.character(peptide_to_nucl_count$Count)))) %>%
+    dplyr::bind_rows(quantiles_toplot, .) %>%
+    dplyr::select(., Quartiles, Values) %>%
+    dplyr::mutate(., Values = round(x = Values, digits = 1))
 
-
+# Generate the histogram frequency of MS/MS count per nucleotide
 pl <- plots_hist(
     data = toplot %>%
         dplyr::filter(., Count %in% c(1:160)),
@@ -851,17 +713,21 @@ pl <- plots_hist(
     ylabel = "Nucleotide counts",
     textsize = 25)
 
+# Add quantiles table to the graph
 pl <- pl[[1]] +
     annotation_custom(
-        grob = tableGrob(d = quantiles_toplot, theme = ttheme_minimal()),
+        grob = tableGrob(
+            d = quantiles_toplot, theme = ttheme_minimal(), rows = NULL),
         xmin = 130, xmax = 150, ymin = 2E5, ymax = 4E5)
 
-
-pdf(file = paste0(opt$out_path, "/Coverage_per_nucleotide.pdf"), width = 10, height = 10)
+# Output the plot to pdf
+pdf(
+    file = paste0(opt$out_path, "/", date_str, "_Coverage_per_nucleotide.pdf"),
+    width = 10, height = 10)
 plot(pl)
 dev.off()
 
-
+# Get only MS/MS count per peptide
 peptide_count <- peptide_to_nucl_count %>%
     dplyr::select(., -Nucl_pos) %>%
     unique(.)
@@ -869,6 +735,8 @@ peptide_count$Count %<>%
     as.character(.) %>%
     as.numeric(.)
 
+# Add the MS/MS count information to the evidence so that
+# they can be sorted by abundance
 peptide_count <- evid_match %>%
     dplyr::select(
         ., Sequence, Length, Modifications, `Modified sequence`,
@@ -880,7 +748,7 @@ peptide_count <- evid_match %>%
         group, Database) %>%
     dplyr::left_join(., peptide_count, by = "Sequence")
 
-
+# Export the evidence table together with MS/MS count values
 write.table(
     x = peptide_count,
     file = paste0(opt$out_path, "/Coverage_per_peptide.txt"),
@@ -1137,6 +1005,7 @@ to_import %<>%
 data <- purrr::map(.x = to_import, .f = readRDS)
 
 list2env(x = data, envir = .GlobalEnv)
+rm(data)
 
 evid_match <- readRDS(
     "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/15082017/2017-08-15_Sequence_group_mapping.RDS")
@@ -1151,12 +1020,13 @@ Target_id <- "seq_51322"
 start_pos <- start(orf_grange[Target_id]) - 1000
 end_pos <- end(orf_grange[Target_id]) + 1000
 
-# 
+# Select all reference within range of the target
 target_ref <- ref_grange[
     (start(ref_grange) %in% c(start_pos:end_pos) |
          end(ref_grange) %in% c(start_pos:end_pos)) &
         ref_grange$Expressed == TRUE]
 
+# Select all ORF within range of the target
 target_orf <- orf_grange[
     (start(orf_grange) %in% c(start_pos:end_pos) |
          end(orf_grange) %in% c(start_pos:end_pos)) &
