@@ -34,6 +34,7 @@ cd ${PBS_O_WORKDIR}
 # Load the required modules
 module load ${PBS_O_HOME}/modulefiles/blast+/2.6.0
 module load math/R/3.2.3-mkl-11.3
+module load ${PBS_O_HOME}/modulefiles/clustal_omega/1.2.4
 
 # Create project directory
 ProjDir=${PBS_O_INITDIR}/${ProjectName}
