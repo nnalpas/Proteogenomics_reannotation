@@ -202,4 +202,15 @@ fi
 
 
 
+##############################
+# Clustal multiple alignment #
+##############################
+
+# Check whether to perform multiple pair-wise alignments for RBS analysis
+if [ $ClustalAlign == 1 ]; then
+
+    ${PBS_O_HOME}/bin/ClustalAlignment.sh -o ${ProjDir}/RBS_clustalo -t ${THREADS} ${RBSLOW} ${RBSHIGH} > ${LogDir}/ClustalAlign.log 2>&1
+
+fi
+
 
