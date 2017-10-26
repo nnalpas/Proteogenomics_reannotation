@@ -63,6 +63,7 @@ load_package("biovizBase")
 load_package("ggbio")
 load_package("ggradar")
 load_package("BSgenome.Bsubtilis.EMBL.AL0091263")
+load_package("GenomicFeatures")
 
 
 
@@ -1107,5 +1108,105 @@ for (Target_id in Target_ids) {
     dev.off()
     
 }
+
+
+
+### Nucleotide sequence analysis -----------------------------------------
+
+# Create new GRange object to study nucleotide frequence of start codon
+start_grange <- subset(ref_grange, strand == "+")
+names(start_grange) %<>%
+    sub("^", "start_", .)
+end(start_grange) <- (start(start_grange) + 2)
+
+# Get the nucleotide sequence associated with the start codon
+tmp <- getSeq(x = bsu, names = start_grange)
+
+# Weird results obtained here, indeed it's reported that
+# in B. subtilis ATG, TTG and GTG start codons are used in 78%, 13% and 9%
+# of CDSs, respectively
+nucleotideFrequencyAt(
+    x = tmp, at = 1, as.prob = FALSE, as.array = TRUE,
+    fast.moving.side = "right", with.labels = TRUE)
+nucleotideFrequencyAt(
+    x = tmp, at = 2, as.prob = FALSE, as.array = TRUE,
+    fast.moving.side = "right", with.labels = TRUE)
+nucleotideFrequencyAt(
+    x = tmp, at = 3, as.prob = FALSE, as.array = TRUE,
+    fast.moving.side = "right", with.labels = TRUE)
+trinucleotideFrequency(
+    x = tmp, step = 1, as.prob = FALSE, as.array = FALSE,
+    fast.moving.side = "right", with.labels = TRUE,
+    simplify.as = "collapsed")
+
+# Compute the MS/MS count for all known protein and ORF within range of
+# the target and for each raw file
+data <- evid_match %>%
+    dplyr::filter(., group == "Known") %>%
+    dplyr::group_by(., `Leading Proteins`, `Raw file`) %>%
+    dplyr::summarise(., Count = sum(`MS/MS Count`)) %>%
+    set_colnames(c("Proteins", "Raw", "Count")) %>%
+    dplyr::ungroup(.) %>%
+    dplyr::group_by(., Proteins) %>%
+    dplyr::summarise(., Count = median(Count)) %>%
+    dplyr::arrange(., Count) %>%
+    cSplit(
+        indt = ., splitCols = "Proteins", sep = ";",
+        direction = "long", fixed = TRUE) %>%
+    dplyr::filter(., !grepl("^seq_", Proteins))
+
+# Get the most and lowest expressed protein
+low_express <- data %>%
+    dplyr::slice(., 1:102)
+high_express <- data %>%
+    dplyr::slice(., c((nrow(.)-101):nrow(.)))
+
+# Create GRange object to study RBS nucleotide frequence (+/- 50bp of start)
+rbs_low_grange <- subset(
+    ref_grange, UniProtKBID %in% low_express$Proteins)
+ranges(rbs_low_grange) <- IRanges(
+    start = ifelse(
+        strand(rbs_low_grange) == "+",
+        (start(rbs_low_grange) - 50),
+        (end(rbs_low_grange) - 50)), 
+    end = ifelse(
+        strand(rbs_low_grange) == "+",
+        (start(rbs_low_grange) + 50),
+        (end(rbs_low_grange) + 50)))
+names(rbs_low_grange) <- sub("^", "rbs_", rbs_low_grange$UniProtKBID)
+
+# Get the nucleotide sequence associated with the start codon
+rbs_low_seq <- getSeq(x = bsu, names = rbs_low_grange)
+
+# Export sequences to fasta file
+Biostrings::writeXStringSet(
+    x = rbs_low_seq,
+    filepath = paste0(opt$out_path, "/", date_str, "_low_expr_RBS_seq.fasta"),
+    append = FALSE, compress = FALSE,
+    compression_level = NA, format = "fasta")
+
+# Create GRange object to study RBS nucleotide frequence (+/- 50bp of start)
+rbs_high_grange <- subset(
+    ref_grange, UniProtKBID %in% high_express$Proteins)
+ranges(rbs_high_grange) <- IRanges(
+    start = ifelse(
+        strand(rbs_high_grange) == "+",
+        (start(rbs_high_grange) - 50),
+        (end(rbs_high_grange) - 50)), 
+    end = ifelse(
+        strand(rbs_high_grange) == "+",
+        (start(rbs_high_grange) + 50),
+        (end(rbs_high_grange) + 50)))
+names(rbs_high_grange) <- sub("^", "rbs_", rbs_high_grange$UniProtKBID)
+
+# Get the nucleotide sequence associated with the start codon
+rbs_high_seq <- getSeq(x = bsu, names = rbs_high_grange)
+
+# Export sequences to fasta file
+Biostrings::writeXStringSet(
+    x = rbs_high_seq,
+    filepath = paste0(opt$out_path, "/", date_str, "_high_expr_RBS_seq.fasta"),
+    append = FALSE, compress = FALSE,
+    compression_level = NA, format = "fasta")
 
 
