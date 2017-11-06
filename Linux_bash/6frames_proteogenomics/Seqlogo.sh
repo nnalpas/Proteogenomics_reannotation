@@ -72,7 +72,7 @@ for file in $TARGETFILES; do
     
     # Run Weblogo to get sequence alignment logo
     kweblogo -seqall $file \
-        -goutfile $outfile \
+        -goutfile ${WKDIR}/${outfile}.pdf \
         -format 'pdf'
     
 done
