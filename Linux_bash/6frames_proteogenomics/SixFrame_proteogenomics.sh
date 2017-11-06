@@ -212,7 +212,7 @@ fi
 if [ $ClustalAlign == 1 ]; then
 
     #${PBS_O_HOME}/bin/ClustalAlignment.sh -o ${ProjDir}/RBS_clustalo -t ${THREADS} ${RBSLOW}.fasta ${RBSHIGH}.fasta > ${LogDir}/ClustalAlign.log 2>&1
-    ${PBS_O_HOME}/bin/Seqlogo.sh -o ${ProjDir}/RBS_clustalo ${RBSLOW}_alignment_full.clustal ${RBSHIGH}_alignment_full.clustal >> ${LogDir}/ClustalAlign.log 2>&1
+    ${PBS_O_HOME}/bin/Seqlogo.sh -o ${ProjDir}/RBS_clustalo ${RBSLOW}_alignment_full.aln ${RBSHIGH}_alignment_full.aln >> ${LogDir}/ClustalAlign.log 2>&1
     
 fi
 
