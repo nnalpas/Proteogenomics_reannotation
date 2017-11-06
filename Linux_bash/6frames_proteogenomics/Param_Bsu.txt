@@ -40,5 +40,5 @@ Eval=0.1
 NumAlign=100
 
 # ClustalParam
-RBSLOW="${PBS_O_HOME}/work/Bsu_6frame/RBS_clustalo/2017-10-26_low_expr_RBS_seq.fasta"
-RBSHIGH="${PBS_O_HOME}/work/Bsu_6frame/RBS_clustalo/2017-10-26_high_expr_RBS_seq.fasta"
+RBSLOW="${PBS_O_HOME}/work/Bsu_6frame/RBS_clustalo/2017-10-26_low_expr_RBS_seq"
+RBSHIGH="${PBS_O_HOME}/work/Bsu_6frame/RBS_clustalo/2017-10-26_high_expr_RBS_seq"
