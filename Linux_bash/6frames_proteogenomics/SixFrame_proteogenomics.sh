@@ -35,6 +35,7 @@ cd ${PBS_O_WORKDIR}
 module load ${PBS_O_HOME}/modulefiles/blast+/2.6.0
 module load math/R/3.2.3-mkl-11.3
 module load ${PBS_O_HOME}/modulefiles/clustal_omega/1.2.4
+module load ${PBS_O_HOME}/modulefiles/emboss/6.6.0
 
 # Create project directory
 ProjDir=${PBS_O_INITDIR}/${ProjectName}
@@ -210,8 +211,9 @@ fi
 # Check whether to perform multiple pair-wise alignments for RBS analysis
 if [ $ClustalAlign == 1 ]; then
 
-    ${PBS_O_HOME}/bin/ClustalAlignment.sh -o ${ProjDir}/RBS_clustalo -t ${THREADS} ${RBSLOW} ${RBSHIGH} > ${LogDir}/ClustalAlign.log 2>&1
-
+    #${PBS_O_HOME}/bin/ClustalAlignment.sh -o ${ProjDir}/RBS_clustalo -t ${THREADS} ${RBSLOW}.fasta ${RBSHIGH}.fasta > ${LogDir}/ClustalAlign.log 2>&1
+    ${PBS_O_HOME}/bin/Seqlogo.sh -o ${ProjDir}/RBS_clustalo ${RBSLOW}_alignment_full.clustal ${RBSHIGH}_alignment_full.clustal >> ${LogDir}/ClustalAlign.log 2>&1
+    
 fi
 
 
