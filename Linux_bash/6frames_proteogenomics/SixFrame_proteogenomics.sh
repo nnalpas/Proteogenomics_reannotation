@@ -122,7 +122,6 @@ if [ $BlastDbBlasting == 1 ]; then
     #${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "nucl" -l ${ProjDir}/Novel_res/Novel_ORF.txt -a "blastn" -s ${SIXFRAMEGENE} -q ${ALLNCBIRNA} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFnucl_vs_NCBIrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
     ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l "all" -a "tblastn" -s ${UNIREFPROT} -q ${GENOME} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Refprot_vs_Genome" > ${LogDir}/BlastDbBlasting.log 2>&1
 
-    
 fi
 
 
