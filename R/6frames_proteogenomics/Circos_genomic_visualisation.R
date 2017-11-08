@@ -118,6 +118,9 @@ orf_coord <- read.table(
     file = opt$coordinates, header = TRUE,
     sep = "\t", quote = "", as.is = TRUE)
 
+# Genome size
+geno_size <- 4215606
+
 
 
 # temporary
@@ -210,9 +213,31 @@ tblastn_ref_vs_genome <- blast_read(
     file = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/tblastn_Refprot_vs_Genome_08112017",
     blast_format = "6")
 
-# Get the best blast
+# Get the best blast and format sequence as stringset
 tblastn_ref_vs_genome_best <- best_blast(
-    data = tblastn_ref_vs_genome, key = "qseqid", multi_match = "uniquify")
+    data = tblastn_ref_vs_genome, key = "qseqid", multi_match = "uniquify") %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(
+        .,
+        qseq = list(AAString(qseq)),
+        sseq = list(AAString(sseq))) %<>%
+    dplyr::left_join(., ref_details, by = c("qseqid" = "Entry"))
+
+# Define exact genomic coordinate, frame and strand
+tblastn_ref_vs_genome_best %<>%
+    dplyr::mutate(
+        .,
+        ExactCoord = ifelse(
+            qstart == 1 & qend == qlen,
+            "Exact",
+            "Approximate"),
+        strand = ifelse(
+            test = sstart < send, yes = 1, no = -1))
+tblastn_ref_vs_genome_best <- get_frame(
+    data = tblastn_ref_vs_genome_best,
+    start = "sstart",
+    strand = "strand",
+    genome_size = geno_size)
 
 
 
@@ -220,8 +245,8 @@ tblastn_ref_vs_genome_best <- best_blast(
 
 # Dataframe holding genome information for bacillus subtilis
 tmp <- base::data.frame(
-    Chromosome = 1, Strand = "*", Start = 1, End = 4215606,
-    name = "chr1", length = 4215606, Type = TRUE, geno = "AL0091263",
+    Chromosome = 1, Strand = "*", Start = 1, End = geno_size,
+    name = "chr1", length = geno_size, Type = TRUE, geno = "AL0091263",
     stringsAsFactors = FALSE)
 
 # Create an Ideogram (GRanges object) for B. subtilis
@@ -261,7 +286,7 @@ tmp %<>%
         Expressed = ifelse(UniProtID %in% evid_expr_known, TRUE, FALSE),
         Chromosome = 1,
         chr.name = "chr1",
-        length = 4215606,
+        length = geno_size,
         Type = TRUE,
         geno = "AL0091263") %>%
     dplyr::select(
@@ -315,7 +340,7 @@ tmp %<>%
         Expressed = ifelse(UniProtID %in% evid_expr_known | id %in% evid_expr_novel, TRUE, FALSE),
         Chromosome = 1,
         chr.name = "chr1",
-        length = 4215606,
+        length = geno_size,
         Type = TRUE,
         geno = "AL0091263") %>%
     dplyr::select(
@@ -369,7 +394,7 @@ tmp <- operon %>%
         .,
         Chromosome = 1,
         chr.name = "chr1",
-        length = 4215606,
+        length = geno_size,
         Type = TRUE,
         geno = "AL0091263") %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
@@ -507,7 +532,7 @@ tmp %<>%
             no = pep_nucl_pos_start),
         Chromosome = 1,
         chr.name = "chr1",
-        length = 4215606,
+        length = geno_size,
         Type = TRUE,
         geno = "AL0091263") %>%
     dplyr::select(., -pep_nucl_pos_start, -pep_nucl_pos_end) %>%
@@ -548,7 +573,7 @@ tmp <- best_sanger_vs_genome %>%
         End = ifelse(sstart < send, send, sstart),
         Chromosome = 1,
         chr.name = "chr1",
-        length = 4215606,
+        length = geno_size,
         Type = TRUE,
         geno = "AL0091263") %>%
     dplyr::select(., -sstart, -send) %>%
