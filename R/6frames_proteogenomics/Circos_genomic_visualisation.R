@@ -155,7 +155,7 @@ orf_to_uniprot <- blast_NN_vs_ref_best %>%
         UniProtID = uni_id_clean(UniProtID)) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
-# 
+# Include this ID cross-mapping to the ORF coordinates
 orf_coord %<>%
     dplyr::left_join(., orf_to_uniprot)
 
@@ -204,6 +204,15 @@ sanger_vs_genome <- blast_read(
 
 # Identify best blast for each sanger sequence
 best_sanger_vs_genome <- best_blast(data = sanger_vs_genome, key = "qseqid")
+
+# Import the blast results of Nicolas' ORF versus the reference proteome
+tblastn_ref_vs_genome <- blast_read(
+    file = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/tblastn_Refprot_vs_Genome_08112017",
+    blast_format = "6")
+
+# Get the best blast
+tblastn_ref_vs_genome_best <- best_blast(
+    data = tblastn_ref_vs_genome, key = "qseqid", multi_match = "uniquify")
 
 
 
