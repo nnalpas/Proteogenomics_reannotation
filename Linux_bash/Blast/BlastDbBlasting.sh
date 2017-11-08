@@ -138,33 +138,33 @@ if [ ${ENTRY} == 'all' ]; then
 
 	# All entries retrieval and blasting of retrieved entries against another database
 	blastdbcmd -db ${SUBJECT} \
-	  -dbtype ${DBTYPE} \
-	  -entry ${ENTRY} | \
-	  eval "${TASK} \
-	  -query - \
-	  -task ${TASK} \
-	  -db ${QUERY} \
-	  -out ${WKDIR}/${BASENAME} \
-	  -evalue ${EVAL} \
-	  -num_alignments ${NUMALIGN} \
-	  -num_threads ${THREADS} \
-	  -outfmt '6 qseqid sseqid pident nident mismatch length gapopen qstart qend sstart send evalue bitscore score'"
+        -dbtype ${DBTYPE} \
+        -entry ${ENTRY} | \
+        eval "${TASK} \
+        -query - \
+        -task ${TASK} \
+        -db ${QUERY} \
+        -out ${WKDIR}/${BASENAME} \
+        -evalue ${EVAL} \
+        -num_alignments ${NUMALIGN} \
+        -num_threads ${THREADS} \
+        -outfmt '6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qframe qseq sstart send slen sframe sseq staxid ssciname evalue bitscore score'"
 
 else
 
 	# Specific entries retrieval and blasting of retrieved entries against another database
 	blastdbcmd -db ${SUBJECT} \
-	  -dbtype ${DBTYPE} \
-	  -entry_batch ${ENTRY} | \
-	  eval "${TASK} \
-	  -query - \
-	  -task ${TASK} \
-	  -db ${QUERY} \
-	  -out ${WKDIR}/${BASENAME} \
-	  -evalue ${EVAL} \
-	  -num_alignments ${NUMALIGN} \
-	  -num_threads ${THREADS} \
-	  -outfmt '6 qseqid sseqid pident nident mismatch length gapopen qstart qend sstart send evalue bitscore score'"
+        -dbtype ${DBTYPE} \
+        -entry_batch ${ENTRY} | \
+        eval "${TASK} \
+        -query - \
+        -task ${TASK} \
+        -db ${QUERY} \
+        -out ${WKDIR}/${BASENAME} \
+        -evalue ${EVAL} \
+        -num_alignments ${NUMALIGN} \
+        -num_threads ${THREADS} \
+        -outfmt '6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qframe qseq sstart send slen sframe sseq staxid ssciname sstrand evalue bitscore score'"
 
 fi
 
