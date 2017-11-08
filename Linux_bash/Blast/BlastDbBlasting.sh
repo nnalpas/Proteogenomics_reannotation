@@ -148,7 +148,7 @@ if [ ${ENTRY} == 'all' ]; then
         -evalue ${EVAL} \
         -num_alignments ${NUMALIGN} \
         -num_threads ${THREADS} \
-        -outfmt '6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qframe qseq sstart send slen sframe sseq staxid ssciname evalue bitscore score'"
+        -outfmt '6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qlen qframe qseq sstart send slen sframe sseq staxid ssciname sstrand evalue bitscore score'"
 
 else
 
@@ -164,7 +164,7 @@ else
         -evalue ${EVAL} \
         -num_alignments ${NUMALIGN} \
         -num_threads ${THREADS} \
-        -outfmt '6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qframe qseq sstart send slen sframe sseq staxid ssciname sstrand evalue bitscore score'"
+        -outfmt '6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qlen qframe qseq sstart send slen sframe sseq staxid ssciname sstrand evalue bitscore score'"
 
 fi
 
