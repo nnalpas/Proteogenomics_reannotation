@@ -7,13 +7,13 @@ GetOrf=0
 GetNovelEntries=0
 MakeBlastDbProt=0
 MakeBlastDbNuc=0
-BlastDbBlasting=1
+BlastDbBlasting=0
 BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
 ProteinCoordinate=0
 SangerCoordinate=0
-ClustalAlign=0
+ClustalAlign=1
 
 # EmbossParam
 FRAME=6
@@ -40,5 +40,5 @@ Eval=0.1
 NumAlign=100
 
 # ClustalParam
-RBSLOW="${PBS_O_HOME}/work/Bsu_6frame/RBS_clustalo/2017-10-26_low_expr_RBS_seq"
-RBSHIGH="${PBS_O_HOME}/work/Bsu_6frame/RBS_clustalo/2017-10-26_high_expr_RBS_seq"
+RBSLOW="${PBS_O_HOME}/work/Bsu_6frame/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
+RBSHIGH="${PBS_O_HOME}/work/Bsu_6frame/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
