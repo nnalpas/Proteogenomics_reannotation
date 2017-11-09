@@ -223,7 +223,7 @@ tblastn_ref_vs_genome_best <- best_blast(
         sseq = list(AAString(sseq))) %<>%
     dplyr::left_join(., ref_details, by = c("qseqid" = "Entry"))
 
-# Define exact genomic coordinate, frame and strand
+# Define genomic strand
 tblastn_ref_vs_genome_best %<>%
     dplyr::mutate(
         .,
@@ -233,11 +233,41 @@ tblastn_ref_vs_genome_best %<>%
             "Approximate"),
         strand = ifelse(
             test = sstart < send, yes = 1, no = -1))
+
+# Define translation frame
 tblastn_ref_vs_genome_best <- get_frame(
     data = tblastn_ref_vs_genome_best,
     start = "sstart",
     strand = "strand",
     genome_size = geno_size)
+
+# Adjust genomic coordinate if blast is not from start to end of query
+tblastn_ref_vs_genome_best %<>%
+    dplyr::mutate(
+        .,
+        start = ifelse(
+            strand == "1",
+            (sstart - ((qstart - 1) * 3)),
+            (sstart + ((qstart - 1) * 3))),
+        end = ifelse(
+            strand == "1",
+            (send + ((qlen - qend) * 3)),
+            (send - ((qlen - qend) * 3))),
+        nucl_length_qlen = qlen * 3,
+        nucl_length_str_end = abs(end - start) + 1,
+        nucl_length = nucl_length_str_end,
+        Comment = ifelse(
+            nucl_length_qlen != nucl_length_str_end, "Warning", "OK")) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Include info on the ORF ID 
+tblastn_ref_vs_genome_best <- orf_coord %>%
+    dplyr::select(., "association_id", "id", "UniProtID") %>%
+    unique(.) %>%
+    dplyr::left_join(
+        x = tblastn_ref_vs_genome_best, y = ., by = c("qseqid" = "UniProtID")) %>%
+    dplyr::group_by(., qseqid) %>%
+    dplyr::summarise_all(funs(toString(x = unique(.), width = NULL)))
 
 
 
@@ -273,8 +303,13 @@ saveRDS(
 ### Create GRange of ORFs and other entries ------------------------------
 
 # Format dataframe as genomic position and other info for each reference ORF
-tmp <- orf_coord %>%
-    dplyr::filter(., !is.na(UniProtID)) %>%
+tmp <- tblastn_ref_vs_genome_best %>%
+    dplyr::select(
+        ., qseqid, association_id, id, start, end, strand, frame,
+        `Entry.name`, Status, `Protein.names`, `Gene.names`, Organism,
+        Length, `Subcellular.location..CC.`, Gene_name, Locus,
+        ExactCoord, qlen, nucl_length, Comment) %>%
+    plyr::rename(., c("qseqid" = "UniProtID", "qlen" = "aa_length")) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 tmp %<>%
     dplyr::mutate(
