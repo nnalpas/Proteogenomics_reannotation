@@ -1229,26 +1229,29 @@ data <- evid_match %>%
 
 # Get the most and lowest expressed protein
 low_express <- data %>%
-    dplyr::slice(., 1:211)
+    dplyr::slice(., 1:1525)
 high_express <- data %>%
-    dplyr::slice(., c((nrow(.)-201):nrow(.)))
+    dplyr::slice(., c((nrow(.)-1524):nrow(.)))
 
 # Create GRange object to study RBS nucleotide frequence (+/- 50bp of start)
 rbs_low_grange <- subset(
     ref_grange, strand == "+" & UniProtKBID %in% low_express$Proteins)
 ranges(rbs_low_grange) <- IRanges(
-    start = ifelse(
-        strand(rbs_low_grange) == "+",
-        (start(rbs_low_grange) - 50),
-        (end(rbs_low_grange) - 50)),
-    end = ifelse(
-        strand(rbs_low_grange) == "+",
-        (start(rbs_low_grange) + 50),
-        (end(rbs_low_grange) + 50)))
+    start = (start(rbs_low_grange) - 25),
+    end = (start(rbs_low_grange) + 2))
 names(rbs_low_grange) <- sub("^", "rbs_", rbs_low_grange$UniProtKBID)
 
 # Get the nucleotide sequence associated with the start codon
 rbs_low_seq <- getSeq(x = bsu, names = rbs_low_grange)
+rbs_low_seq_list <- as.vector(rbs_low_seq)
+
+# Draw consensus logo sequence of RBS for most highly expressed protein
+ggplot() +
+    geom_logo(
+        data = rbs_low_seq_list,
+        method = "bits",
+        seq_type = "dna") +
+    theme_logo()
 
 # Export sequences to fasta file
 Biostrings::writeXStringSet(
@@ -1261,18 +1264,21 @@ Biostrings::writeXStringSet(
 rbs_high_grange <- subset(
     ref_grange, strand == "+" & UniProtKBID %in% high_express$Proteins)
 ranges(rbs_high_grange) <- IRanges(
-    start = ifelse(
-        strand(rbs_high_grange) == "+",
-        (start(rbs_high_grange) - 50),
-        (end(rbs_high_grange) - 50)), 
-    end = ifelse(
-        strand(rbs_high_grange) == "+",
-        (start(rbs_high_grange) + 50),
-        (end(rbs_high_grange) + 50)))
+    start = (start(rbs_high_grange) - 25),
+    end = (start(rbs_high_grange) + 2))
 names(rbs_high_grange) <- sub("^", "rbs_", rbs_high_grange$UniProtKBID)
 
 # Get the nucleotide sequence associated with the start codon
 rbs_high_seq <- getSeq(x = bsu, names = rbs_high_grange)
+rbs_high_seq_list <- as.vector(rbs_high_seq)
+
+# Draw consensus logo sequence of RBS for most highly expressed protein
+ggplot() +
+    geom_logo(
+        data = rbs_high_seq_list,
+        method = "bits",
+        seq_type = "dna") +
+    theme_logo()
 
 # Export sequences to fasta file
 Biostrings::writeXStringSet(
@@ -1280,5 +1286,49 @@ Biostrings::writeXStringSet(
     filepath = paste0(opt$out_path, "/", date_str, "_high_expr_RBS_seq.fasta"),
     append = FALSE, compress = FALSE,
     compression_level = NA, format = "fasta")
+
+
+
+
+# Try to define the RBS motif sequence
+#rbs_low_motifs <- oligonucleotideFrequency(
+#    x = rbs_low_seq, width = 8, step = 1, as.prob = FALSE,
+#    as.array = FALSE, fast.moving.side = "right", with.labels = TRUE,
+#    simplify.as = "collapsed")
+
+
+load_package("motifRG")
+
+bg_low_grange <- subset(
+    ref_grange, strand == "+" & UniProtKBID %in% low_express$Proteins)
+ranges(bg_low_grange) <- IRanges(
+    start = (end(bg_low_grange) - 25),
+    end = (end(bg_low_grange) + 2))
+names(bg_low_grange) <- sub("^", "bg_", bg_low_grange$UniProtKBID)
+
+bg_low_seq <- getSeq(x = bsu, names = bg_low_grange)
+
+
+rbs_low_motifs <- findMotifFgBg(
+    fg.seq = rbs_low_seq, bg.seq = bg_low_seq,
+    start.width = 6, both.strand = FALSE, flank = 1,
+    enriched.only = TRUE, max.width = 16)
+
+
+
+bg_high_grange <- subset(
+    ref_grange, strand == "+" & UniProtKBID %in% high_express$Proteins)
+ranges(bg_high_grange) <- IRanges(
+    start = (end(bg_high_grange) - 25),
+    end = (end(bg_high_grange) + 2))
+names(bg_high_grange) <- sub("^", "bg_", bg_high_grange$UniProtKBID)
+
+bg_high_seq <- getSeq(x = bsu, names = bg_high_grange)
+
+
+rbs_high_motifs <- findMotifFgBg(
+    fg.seq = rbs_high_seq, bg.seq = bg_high_seq,
+    start.width = 6, both.strand = FALSE, flank = 1,
+    enriched.only = TRUE, max.width = 16)
 
 
