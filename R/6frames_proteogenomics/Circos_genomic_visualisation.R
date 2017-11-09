@@ -1073,7 +1073,8 @@ dev.off()
 
 ### Temporary code -------------------------------------------------------
 
-to_import <- list.files(opt$out_path, pattern = "\\.RDS$", full.names = T)
+to_import <- list.files(
+    opt$out_path, pattern = "^bsu.*\\.RDS$", full.names = T)
 
 to_import %<>%
     set_names(sub("bsu_AL009126.3_(.*)\\.RDS", "\\1", basename(.)))
@@ -1192,9 +1193,10 @@ end(start_grange) <- (start(start_grange) + 2)
 # Get the nucleotide sequence associated with the start codon
 tmp <- getSeq(x = bsu, names = start_grange)
 
-# Weird results obtained here, indeed it's reported that
-# in B. subtilis ATG, TTG and GTG start codons are used in 78%, 13% and 9%
-# of CDSs, respectively
+# After blasting of reference protein against genome, the genomic coordinates
+# were corrected and the weird results previously observed here are no longer
+# seen, indeed B. subtilis start codon should be as follows:
+# ATG, TTG and GTG start codons are used in 78%, 13% and 9% of CDSs
 nucleotideFrequencyAt(
     x = tmp, at = 1, as.prob = FALSE, as.array = TRUE,
     fast.moving.side = "right", with.labels = TRUE)
@@ -1227,18 +1229,18 @@ data <- evid_match %>%
 
 # Get the most and lowest expressed protein
 low_express <- data %>%
-    dplyr::slice(., 1:102)
+    dplyr::slice(., 1:211)
 high_express <- data %>%
-    dplyr::slice(., c((nrow(.)-101):nrow(.)))
+    dplyr::slice(., c((nrow(.)-201):nrow(.)))
 
 # Create GRange object to study RBS nucleotide frequence (+/- 50bp of start)
 rbs_low_grange <- subset(
-    ref_grange, UniProtKBID %in% low_express$Proteins)
+    ref_grange, strand == "+" & UniProtKBID %in% low_express$Proteins)
 ranges(rbs_low_grange) <- IRanges(
     start = ifelse(
         strand(rbs_low_grange) == "+",
         (start(rbs_low_grange) - 50),
-        (end(rbs_low_grange) - 50)), 
+        (end(rbs_low_grange) - 50)),
     end = ifelse(
         strand(rbs_low_grange) == "+",
         (start(rbs_low_grange) + 50),
@@ -1257,7 +1259,7 @@ Biostrings::writeXStringSet(
 
 # Create GRange object to study RBS nucleotide frequence (+/- 50bp of start)
 rbs_high_grange <- subset(
-    ref_grange, UniProtKBID %in% high_express$Proteins)
+    ref_grange, strand == "+" & UniProtKBID %in% high_express$Proteins)
 ranges(rbs_high_grange) <- IRanges(
     start = ifelse(
         strand(rbs_high_grange) == "+",
