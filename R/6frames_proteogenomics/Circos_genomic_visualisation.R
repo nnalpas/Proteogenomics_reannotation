@@ -314,8 +314,8 @@ tmp <- tblastn_ref_vs_genome_best %>%
 tmp %<>%
     dplyr::mutate(
         .,
-        Start = ifelse(test = strand == 1, yes = start, no = end),
-        End = ifelse(test = strand == 1, yes = end, no = start),
+        Start = as.integer(ifelse(test = strand == 1, yes = start, no = end)),
+        End = as.integer(ifelse(test = strand == 1, yes = end, no = start)),
         Strand = ifelse(test = strand == 1, yes = "+", no = "-"),
         UniProtKBID = UniProtID,
         Expressed = ifelse(UniProtID %in% evid_expr_known, TRUE, FALSE),
@@ -327,7 +327,8 @@ tmp %<>%
     dplyr::select(
         .,
         UniProtKBID, id, association_id, Start, End, Strand, frame, Expressed,
-        Chromosome, `chr.name`, length, Type, geno, Gene_name, Locus) %>%
+        Chromosome, `chr.name`, length, Type, geno, Gene_name, Locus,
+        ExactCoord, Comment) %>%
     dplyr::group_by(
         ., UniProtKBID, Start, End, Strand, frame, Chromosome, chr.name) %>%
     summarise_each(
@@ -348,7 +349,7 @@ ref_grange <- with(
 values(ref_grange) <- tmp %>%
     dplyr::select(
         ., id, UniProtKBID, association_id, frame, Expressed,
-        Chromosome, Gene_name, Locus)
+        Chromosome, Gene_name, Locus, ExactCoord, Comment)
 seqinfo(ref_grange) <- Seqinfo(
     seqnames = tmp$chr.name %>% unique(.) %>% as.character(.),
     seqlengths = tmp$length %>% unique(.) %>% as.integer(.),
