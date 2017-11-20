@@ -7,13 +7,13 @@ GetOrf=0
 GetNovelEntries=0
 MakeBlastDbProt=0
 MakeBlastDbNuc=0
-BlastDbBlasting=0
+BlastDbBlasting=1
 BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
 ProteinCoordinate=0
 SangerCoordinate=0
-ClustalAlign=1
+ClustalAlign=0
 
 # EmbossParam
 FRAME=6
