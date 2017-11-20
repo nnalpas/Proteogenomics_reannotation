@@ -30,7 +30,7 @@ UNIREFGENE=""
 ALLUNIPROT="${PBS_O_HOME}/BlastDB/uniprot_sprot_trembl.fasta"
 ALLNCBIPROT="${PBS_O_HOME}/BlastDB/refseq_protein"
 ALLNCBIRNA="${PBS_O_HOME}/BlastDB/refseq_rna"
-SANGER="${PBS_O_HOME}/work/Bsu_6frame/Sanger_validation/Sanger_validation.fasta"
+#SANGER="${PBS_O_HOME}/work/Bsu_6frame/Sanger_validation/Sanger_validation.fasta"
 
 # BlastDatab
 InputType="fasta"
@@ -40,5 +40,5 @@ Eval=0.1
 NumAlign=100
 
 # ClustalParam
-RBSLOW="${PBS_O_HOME}/work/Bsu_6frame/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
-RBSHIGH="${PBS_O_HOME}/work/Bsu_6frame/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
+#RBSLOW="${PBS_O_HOME}/work/Bsu_6frame/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
+#RBSHIGH="${PBS_O_HOME}/work/Bsu_6frame/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
