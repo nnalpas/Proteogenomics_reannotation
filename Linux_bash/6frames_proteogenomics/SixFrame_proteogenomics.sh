@@ -92,7 +92,6 @@ fi
 if [ $MakeBlastDbProt == 1 ]; then
     
     ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "prot" -t ${TaxId} ${UNIREFPROT} ${SIXFRAMEPROT} ${COORDSIXFRAMEPROT} > ${LogDir}/MakeBlastDb.log 2>&1
-
     
 fi
 
@@ -101,8 +100,7 @@ fi
 # Check whether to create a blast database for genome data
 if [ $MakeBlastDbNuc == 1 ]; then
     
-    #${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "nucl" -t ${TaxId} ${UNIREFGENE} ${SIXFRAMEGENE} ${GENOME} >> ${LogDir}/MakeBlastDb.log 2>&1
-    ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "nucl" -t ${TaxId} ${GENOME} > ${LogDir}/MakeBlastDb.log 2>&1
+    ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "nucl" -t ${TaxId} ${UNIREFGENE} ${SIXFRAMEGENE} ${GENOME} >> ${LogDir}/MakeBlastDb.log 2>&1
     
 fi
 
@@ -120,8 +118,9 @@ if [ $BlastDbBlasting == 1 ]; then
     #${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l ${ProjDir}/Novel_res/*_Novel_ORF.txt -a "blastp" -s ${SIXFRAMEPROT} -q ${ALLNCBIPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFprot_vs_NCBIprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
     #${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "nucl" -l "all" -a "blastn" -s ${SIXFRAMEGENE} -q ${UNIREFGENE} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFnucl_vs_Refrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
     #${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "nucl" -l ${ProjDir}/Novel_res/Novel_ORF.txt -a "blastn" -s ${SIXFRAMEGENE} -q ${ALLNCBIRNA} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFnucl_vs_NCBIrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l "all" -a "tblastn" -s ${UNIREFPROT} -q ${GENOME} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Refprot_vs_Genome" > ${LogDir}/BlastDbBlasting.log 2>&1
-
+    #${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l "all" -a "tblastn" -s ${UNIREFPROT} -q ${GENOME} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Refprot_vs_Genome" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l "all" -a "tblastn" -s ${SIXFRAMEPROT} -q ${GENOME} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFprot_vs_Genome" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    
 fi
 
 
@@ -155,7 +154,7 @@ if [ $ReciprocalBlast == 1 ]; then
     ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/ReciprocalBlast -y "prot" -l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_NCBIprot -a "blastp" -s ${ALLNCBIPROT} -q ${SIXFRAMEPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "NCBIprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
     #${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "nucl" -l ${ProjDir}/Blast/ORFnucl_vs_Refrna_besthit.txt -a "blastn" -s ${UNIREFGENE} -q ${SIXFRAMEGENE} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Refrna_vs_ORFnucl" >> ${LogDir}/ReciprocalBlast.log 2>&1
     #${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "nucl" -l ${ProjDir}/Blast/ORFnucl_vs_NCBIrna_besthit.txt -a "blastn" -s ${ALLNCBIRNA} -q ${SIXFRAMEGENE} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "NCBIrna_vs_ORFnucl" >> ${LogDir}/ReciprocalBlast.log 2>&1
-
+    
 fi
 
 
@@ -172,7 +171,7 @@ if [ $ReciprocalBestBlast == 1 ]; then
     ${PBS_O_HOME}/bin/Reciprocal_best_blast.R -b ${ProjDir}/Blast/ORFprot_vs_NCBIprot -r ${ProjDir}/ReciprocalBlast/NCBIprot_vs_ORFprot -o ${ProjDir}/ReciprocalBlast >> ${LogDir}/ReciprocalBestBlast.log 2>&1
     #${PBS_O_HOME}/bin/Reciprocal_best_blast.R -b ${ProjDir}/Blast/ORFnucl_vs_Refrna -r ${ProjDir}/Blast/Refrna_vs_ORFnucl -o ${ProjDir}/Blast/ORFnucl_vs_Refrna_reciprocbesthit.txt >> ${LogDir}/ReciprocalBestBlast.log 2>&1
     #${PBS_O_HOME}/bin/Reciprocal_best_blast.R -b ${ProjDir}/Blast/ORFnucl_vs_NCBIrna -r ${ProjDir}/Blast/NCBIrna_vs_ORFnucl -o ${ProjDir}/Blast/ORFnucl_vs_NCBIrna_reciprocbesthit.txt >> ${LogDir}/ReciprocalBestBlast.log 2>&1
-
+    
 fi
 
 
@@ -188,7 +187,7 @@ if [ $ProteinCoordinate == 1 ]; then
     #${PBS_O_HOME}/bin/Best_blast.R -i ${ProjDir}/ProtPosition/ORFprot_vs_coordORF -f "pident == 100 & nident == length & qstart == sstart & qend == send" -m "uniquify" -o ${ProjDir}/ProtPosition >> ${LogDir}/ProteinCoordinate.log 2>&1
     #${PBS_O_HOME}/bin/ORF_coordinates.R -f ${COORDSIXFRAMEPROT} -o ${ProjDir}/ProtPosition/tmp_orf_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
     ${PBS_O_HOME}/bin/ORF_coordinates_transfer.R -i ${ProjDir}/ProtPosition/Blast_cross-map_ORFprot_vs_coordORF -c ${ProjDir}/ProtPosition/tmp_orf_coordinates.txt -o ${ProjDir}/ProtPosition/orf_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
-
+    
 fi
 
 
