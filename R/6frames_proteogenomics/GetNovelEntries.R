@@ -110,6 +110,22 @@ evid <- mq_read(
     name = "evidence.txt",
     integer64 = "double")
 
+# Import the maxquant proteingroups table
+pg <- mq_read(
+    path = txt_dir,
+    name = "proteinGroups.txt",
+    integer64 = "double")
+
+# Keep evidence IDs for all protein groups that are NOT only identified by site
+pg_not_sites <- pg %>%
+    dplyr::filter(., `Only identified by site` == "") %>%
+    cSplit(
+        indt = ., splitCols = "Evidence IDs",
+        sep = ";", direction = "long") %>%
+    .[["Evidence IDs"]] %>%
+    as.integer(.) %>%
+    unique(.)
+
 # Import the fasta files
 fasta <- c(Known = opt$reference, Novel = opt$novel) %>%
     purrr::map(
@@ -123,8 +139,9 @@ names(fasta$Known) %<>%
 
 # Format association of peptide to protein
 data <- evid %>%
-    cSplit(indt = ., splitCols = "Proteins", sep = ";", direction = "long") %>%
+    dplyr::filter(., id %in% pg_not_sites) %>%
     dplyr::select(., Sequence, Proteins) %>%
+    cSplit(indt = ., splitCols = "Proteins", sep = ";", direction = "long") %>%
     unique(.) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
