@@ -112,7 +112,7 @@ evid <- mq_read(
 
 # Import the maxquant proteingroups table
 pg <- mq_read(
-    path = txt_dir,
+    path = opt$maxquant,
     name = "proteinGroups.txt",
     integer64 = "double")
 
