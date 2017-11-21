@@ -1246,6 +1246,7 @@ rbs_low_seq <- getSeq(x = bsu, names = rbs_low_grange)
 rbs_low_seq_list <- as.vector(rbs_low_seq)
 
 # Draw consensus logo sequence of RBS for most highly expressed protein
+load_package("ggseqlogo")
 ggplot() +
     geom_logo(
         data = rbs_low_seq_list,
@@ -1308,12 +1309,23 @@ names(bg_low_grange) <- sub("^", "bg_", bg_low_grange$UniProtKBID)
 
 bg_low_seq <- getSeq(x = bsu, names = bg_low_grange)
 
-
-rbs_low_motifs <- findMotifFgBg(
-    fg.seq = rbs_low_seq, bg.seq = bg_low_seq,
-    start.width = 6, both.strand = FALSE, flank = 1,
-    enriched.only = TRUE, max.width = 16)
-
+load_package("motifRG")
+rbs_low_motifs <- c()
+for (x in c(6:12)) {
+    
+    tmp <- findMotifFgBg(
+        fg.seq = rbs_low_seq, bg.seq = bg_low_seq,
+        start.width = x, both.strand = FALSE, flank = 1,
+        max.width = 16, enriched.only = TRUE)
+    
+    if (length(tmp$motifs) != 0) {
+        for (y in c(1:length(tmp$motifs))) {
+            rbs_low_motifs %<>%
+                c(., tmp$motifs[[y]]@pattern)
+        }
+    }
+    
+}
 
 
 bg_high_grange <- subset(
@@ -1325,10 +1337,22 @@ names(bg_high_grange) <- sub("^", "bg_", bg_high_grange$UniProtKBID)
 
 bg_high_seq <- getSeq(x = bsu, names = bg_high_grange)
 
+rbs_high_motifs <- c()
+for (x in c(6:12)) {
+    
+    tmp <- findMotifFgBg(
+        fg.seq = rbs_high_seq, bg.seq = bg_high_seq,
+        start.width = x, both.strand = FALSE, flank = 1,
+        max.width = 16, enriched.only = TRUE)
+    
+    if (length(tmp$motifs) != 0) {
+        for (y in c(1:length(tmp$motifs))) {
+            rbs_high_motifs %<>%
+                c(., tmp$motifs[[y]]@pattern)
+        }
+    }
+    
+}
 
-rbs_high_motifs <- findMotifFgBg(
-    fg.seq = rbs_high_seq, bg.seq = bg_high_seq,
-    start.width = 6, both.strand = FALSE, flank = 1,
-    enriched.only = TRUE, max.width = 16)
 
 
