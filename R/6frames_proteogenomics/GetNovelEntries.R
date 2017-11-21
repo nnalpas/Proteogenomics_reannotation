@@ -139,7 +139,6 @@ names(fasta$Known) %<>%
 
 # Format association of peptide to protein
 data <- evid %>%
-    dplyr::filter(., id %in% pg_not_sites) %>%
     dplyr::select(., Sequence, Proteins) %>%
     cSplit(indt = ., splitCols = "Proteins", sep = ";", direction = "long") %>%
     unique(.) %>%
@@ -194,7 +193,9 @@ evid_match <- plyr::ldply(
                     test = group == "Novel",
                     yes = "Novel",
                     no = NA_character_)))) %>%
-    dplyr::left_join(x = evid, y = ., by = c("Sequence" = "pep"))
+    dplyr::left_join(x = evid, y = ., by = c("Sequence" = "pep")) %>%
+	dplyr::mutate(
+		., OnlyIdBySite = ifelse(id %in% pg_not_sites, TRUE, FALSE))
 
 # Print warning for unidentified sequence origin
 print(paste(
