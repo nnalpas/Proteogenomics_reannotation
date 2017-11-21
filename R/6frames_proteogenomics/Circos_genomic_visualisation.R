@@ -1354,5 +1354,70 @@ for (x in c(6:12)) {
     
 }
 
+all_rbs_motifs <- c(rbs_low_motifs, rbs_high_motifs) %>%
+    c(., toupper(c(
+        "aaaggaggtgt", "agaggtggtgt",
+        "atattaagaggaggag", "agagaacaaggagggg"))) %>%
+    unique(.)
+
+pattern_rbs_motifs <- paste(all_rbs_motifs, collapse = "|") %>%
+    paste0("(", ., ")") %>%
+    paste0(., ".{4,10}(ATG|TTG|GTG)")
+
+# Define the novel ORF of interest
+Target_ids <- c(
+    "seq_49263", "seq_51322", "seq_134853", "seq_145510",
+    "seq_154909", "seq_163507", "seq_223100")
+
+rbs_res <- lapply(X = Target_ids, FUN = function(x) {
+    tmp_grange <- subset(
+        orf_grange, id == x)
+    
+    if (as.character(strand(tmp_grange)) == "+") {
+        ranges(tmp_grange) <- IRanges(
+            start = (start(tmp_grange) - 25),
+            end = (end(tmp_grange)))
+    } else if (as.character(strand(tmp_grange)) == "-") {
+        ranges(tmp_grange) <- IRanges(
+            start = (start(tmp_grange)),
+            end = (end(tmp_grange) + 25))
+    } else {
+        stop("Strand unknown!")
+    }
+    names(tmp_grange) <- x
+    
+    tmp_seq <- getSeq(x = bsu, names = tmp_grange)
+    
+    tmp <- tmp_seq %>%
+        str_locate_all(
+            string = .,
+            pattern = pattern_rbs_motifs)
+    
+    # Check whether locations were obtained
+    if (
+        length(tmp[[1]][, "start"]) == 0 |
+        length(tmp[[1]][, "end"]) == 0) {
+        
+        # Add explicitely NA if there is no match
+        tmp <- base::data.frame(
+            id = names(tmp_seq),
+            start = NA_integer_, end = NA_integer_,
+            stringsAsFactors = FALSE)
+        
+    } else {
+        
+        # Format as dataframe the current peptide positions
+        tmp <- base::data.frame(
+            id = names(tmp_seq), tmp[[1]], stringsAsFactors = FALSE)
+        
+    }
+    return(tmp)
+}) %>%
+    plyr::ldply(., "data.frame")
+
+
+
+
+
 
 
