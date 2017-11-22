@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
-# This script determines the reference protein genomic coordinates based on
-# blast results against ORF of known coordinates
+# This script determines the protein genomic coordinates based on
+# blast results against genome
 
 
 
@@ -22,63 +22,106 @@ user <- Sys.info()[["user"]]
 ### List of required packages -----------------------------------------------
 
 # Source the custom user functions
-#source(
-#    file = paste(
-#        "C:/Users",
-#        user,
-#        "Documents/GitHub/Miscellaneous/R/General/General_function.R",
-#        sep = "/"))
-source(
-    file = paste(
-        "/home-link",
-        user,
-        "bin/General_function.R",
-        sep = "/"))
+if (interactive()) {
+    source(
+        file = paste(
+            "C:/Users",
+            user,
+            "Documents/GitHub/Miscellaneous/R/General/General_function.R",
+            sep = "/"))
+} else {
+    source(
+        file = paste(
+            "/home-link",
+            user,
+            "bin/General_function.R",
+            sep = "/"))
+}
 
 # Load the required packages (or install if not already in library)
-load_package(plyr)
-load_package(dplyr)
-load_package(magrittr)
-load_package(data.table)
-load_package(splitstackshape)
-load_package(stringr)
-load_package(optparse)
-load_package(seqinr)
+load_package("plyr")
+load_package("dplyr")
+load_package("magrittr")
+load_package("data.table")
+load_package("splitstackshape")
+load_package("stringr")
+load_package("optparse")
+load_package("seqinr")
 
 
 
 ### Parameters setting up ------------------------------------------------
 
-# Define the list of command line parameters
-option_list <- list(
-    make_option(
-        opt_str = c("-f", "--fasta"),
-        type = "character", default = NULL,
-        help = "Fasta file", metavar = "character"),
-    make_option(
-        opt_str = c("-b", "--blast"),
-        type = "character", default = NULL,
-        help = "Blast file", metavar = "character"),
-    make_option(
-        opt_str = c("-g", "--genomic_position"),
-        type = "character", default = NULL,
-        help = "Genomic position file", metavar = "character"),
-    make_option(
-        opt_str = c("-o", "--output"),
-        type = "character", default = "protein_location.txt", 
-        help = "Output file name [default= %default]", metavar = "character"))
+# Define input parameters (interactively or from command line)
+if (interactive()) {
+    
+    # Define the list of input parameters
+    opt <- list()
+    opt["fasta"] <- choose.files(
+        caption = "Choose Fasta file containing entries to get coordinates",
+        multi = FALSE) %>%
+        list(.)
+    opt["blast"] <- choose.files(
+        caption = "Choose Blast results from which to get coordinates",
+        multi = FALSE) %>%
+        list(.)
+    opt["genome"] <- choose.files(
+        caption = "Choose Fasta file of the genome",
+        multi = FALSE) %>%
+        list(.)
+    opt["output"] <- list(paste(date_str, "protein_location.txt", sep = "_"))
+    
+} else {
+    
+    # Define the list of command line parameters
+    option_list <- list(
+        make_option(
+            opt_str = c("-f", "--fasta"),
+            type = "character", default = NULL,
+            help = "Fasta file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-b", "--blast"),
+            type = "character", default = NULL,
+            help = "Blast file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-g", "--genome"),
+            type = "character", default = NULL,
+            help = "Genome fasta file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-o", "--output"),
+            type = "character", default = "protein_location.txt", 
+            help = "Output file name [default= %default]",
+            metavar = "character"))
+    
+    # Parse the parameters provided on command line by user
+    opt_parser <- OptionParser(option_list = option_list)
+    opt <- parse_args(opt_parser)
+    
+}
 
-# Parse the parameters provided on command line by user
-opt_parser <- OptionParser(option_list = option_list)
-opt <- parse_args(opt_parser)
-
-# Check whether inputs parameter was provided
-if (is.null(opt$fasta) | is.null(opt$blast) | is.null(opt$genomic_position)) {
+# Check whether inputs parameter were provided
+if (is.null(opt$fasta)) {
     
     print_help(opt_parser)
     stop(paste(
-        "The three input arguments must be supplied",
-        "(fasta, blast and genomic position files)!"))
+        "Fasta file required!"))
+    
+}
+if (is.null(opt$blast)) {
+    
+    print_help(opt_parser)
+    stop(paste(
+        "Blast results required!"))
+    
+}
+if (is.null(opt$genome)) {
+    
+    print_help(opt_parser)
+    stop(paste(
+        "Genome fasta file required!"))
     
 }
 
@@ -100,92 +143,95 @@ fasta <- opt$fasta %>%
         file = ., seqtype = "AA", as.string = TRUE) %>%
     set_names(uni_id_clean(names(.)))
 
-# Get all protein IDs
-uni_ids <- names(fasta) %>%
+# Import the fasta file
+geno_size <- opt$genome %>%
     as.character(.) %>%
-    unique(.)
+    seqinr::read.fasta(
+        file = ., seqtype = "DNA", as.string = TRUE) %>%
+    getLength(.)
 
 # Import the Blast results
-blast_data <- opt$blast%>%
-    as.character(.) %>%
-    read.table(
-        file = .,
-        header = FALSE,
-        sep = "\t",
-        quote = "",
-        col.names = c(
-            "qseqid", "sseqid", "pident", "nident", "mismatch", "length",
-            "gapopen", "qstart", "qend", "sstart", "send", "evalue",
-            "bitscore", "score"),
-        as.is = TRUE) %>%
+blast_data <- blast_read(file = opt$blast, blast_format = "6") %>%
     dplyr::mutate(
         .,
         qseqid = uni_id_clean(qseqid),
         sseqid = uni_id_clean(sseqid))
 
-# Import the genomic position data
-orf_pos <- opt$genomic_position %>%
-    as.character(.) %>%
-    read.table(
-        file = ., header = TRUE, sep = "\t", quote = "")
 
 
+### Compute strand, frame and genomic coordinate per entry ---------------
 
-### Get target ID position based on blast --------------------------------
+# Get the best blast and format sequence as stringset
+blast_data_best <- best_blast(
+    data = blast_data, key = "qseqid", multi_match = "uniquify") %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(
+        .,
+        qseq = list(AAString(qseq)),
+        sseq = list(AAString(sseq)))
 
-# Determine the best blast for each queried protein
-best_blast_data <- best_blast(data = blast_data, key = "qseqid") %>%
-    dplyr::filter(., evalue < 0.0001)
+# Define genomic strand
+blast_data_best %<>%
+    dplyr::mutate(
+        .,
+        ExactCoord = ifelse(
+            qstart == 1 & qend == qlen,
+            "Exact",
+            "Approximate"),
+        strand = ifelse(
+            test = sstart < send, yes = "+", no = "-"))
 
-# Give warning when a single best blast could not be found per query
-if (any(best_blast_data$best_count != 1)) {
-    
-    warning(paste(
-        "There are",
-        length(unique(
-            best_blast_data[best_blast_data$best_count != 1, "qseqid"])),
-        "queries without a single best blast!", sep = " "))
-    
-}
+# Check that all entries in fasta file have a blast results
+missing_entries <- names(fasta)[
+    !names(fasta) %in% unique(blast_data_best$qseqid)]
+warning(paste0(
+    "There are ", length(missing_entries), " entries without blast!\n",
+    "Please check the missing following entries and manually",
+    " record coordinates if necessary:\n",
+    paste(missing_entries, collapse = "\n")))
 
-# Add the orf position to the blast data
-best_blast_pos <- best_blast_data %>%
-    dplyr::left_join(x = ., y = orf_pos, by = c("sseqid" = "id"))
+# Define translation frame
+blast_data_best <- get_frame(
+    data = blast_data_best,
+    start = "sstart",
+    strand = "strand",
+    genome_size = geno_size)
 
-# Compute aa and nucleotide length of reference entries
-ref_pos <- lapply(X = fasta, FUN = nchar) %>%
-    plyr::ldply(., "data.frame") %>%
-    set_colnames(c("id", "aa_length")) %>%
-    dplyr::mutate(., nucl_length = aa_length * 3)
+# Adjust genomic coordinate if blast is not from start to end of query
+blast_data_best %<>%
+    dplyr::mutate(
+        .,
+        start = ifelse(
+            strand == "+",
+            (sstart - ((qstart - 1) * 3)),
+            (sstart + ((qstart - 1) * 3))),
+        end = ifelse(
+            strand == "+",
+            (send + ((qlen - qend) * 3)),
+            (send - ((qlen - qend) * 3))),
+        nucl_length_qlen = qlen * 3,
+        nucl_length_str_end = abs(end - start) + 1,
+        nucl_length = nucl_length_str_end,
+        Comment = ifelse(
+            nucl_length_qlen != nucl_length_str_end, "Warning", "OK")) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
 
-# Get the genomic start position for reference entries
-best_blast_pos %<>%
-    dplyr::mutate(., ref_start = case_when(
-        .$strand == 1 ~ (.$start + (.$sstart * 3) - (.$qstart * 3)),
-        .$strand == -1 ~ (.$start - (.$sstart * 3) + (.$qstart * 3))))
-
-# Add the reference entries start position
-ref_pos %<>%
-    dplyr::left_join(
-        x = .,
-        y = best_blast_pos %>%
-            dplyr::select(., qseqid, ref_start, strand, frame, best_count),
-        by = c("id" = "qseqid"))
-
-# Compute the reference entries end position
-ref_pos %<>%
-    dplyr::mutate(., ref_end = case_when(
-        is.na(.$strand) ~ NA_integer_,
-        .$strand == 1 ~ as.integer(.$ref_start + (.$aa_length * 3) - 1),
-        .$strand == -1 ~ as.integer(.$ref_start - (.$aa_length * 3) + 1))) %>%
+# Keep only required columns (related to genomic coordinates)
+data_final <- blast_data_best %>%
     dplyr::select(
-        ., id, ref_start, ref_end, nucl_length, aa_length, strand, frame)
-colnames(ref_pos) %<>%
-    sub("^ref_", "", .)
+        ., qseqid, sseqid, strand, frame, start, end,
+        nucl_length, qlen, ExactCoord, Comment) %>%
+    set_colnames(c(
+        "id", "genome", "strand", "frame", "start", "end",
+        "nucl_length", "aa_length", "ExactCoord", "Comment"))
+
+
+
+### Results export -------------------------------------------------------
 
 # Export the reference entries coordinates data
 write.table(
-    x = ref_pos, file = opt$output,
+    x = data_final, file = opt$output,
     quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
 
