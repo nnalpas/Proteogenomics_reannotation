@@ -27,14 +27,14 @@ if (interactive()) {
         file = paste(
             "C:/Users",
             user,
-            "Documents/GitHub/Miscellaneous/R/General/General_function.R",
+            "Documents/GitHub/Miscellaneous/R/6frames_proteogenomics/helper.R",
             sep = "/"))
 } else {
     source(
         file = paste(
             "/home-link",
             user,
-            "bin/General_function.R",
+            "bin/helper.R",
             sep = "/"))
 }
 
@@ -69,7 +69,7 @@ if (interactive()) {
         caption = "Choose Fasta file of the genome",
         multi = FALSE) %>%
         list(.)
-    opt["output"] <- list(paste(date_str, "protein_location.txt", sep = "_"))
+    opt["output"] <- list("protein_location.txt")
     
 } else {
     
@@ -128,7 +128,11 @@ if (is.null(opt$genome)) {
 # Check whether output parameter was provided
 if (opt$output == "protein_location.txt") {
     
-    warning("Output results to protein_location.txt!")
+    opt$output <- list(paste(date_str, "protein_location.txt", sep = "_"))
+    warning(paste0(
+        "Output results to '",
+        paste(date_str, "protein_location.txt", sep = "_"),
+        "'!"))
     
 }
 
@@ -148,7 +152,7 @@ geno_size <- opt$genome %>%
     as.character(.) %>%
     seqinr::read.fasta(
         file = ., seqtype = "DNA", as.string = TRUE) %>%
-    getLength(.)
+    seqinr::getLength(.)
 
 # Import the Blast results
 blast_data <- blast_read(file = opt$blast, blast_format = "6") %>%
