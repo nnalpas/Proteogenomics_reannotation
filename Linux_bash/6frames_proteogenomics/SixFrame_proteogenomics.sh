@@ -183,11 +183,9 @@ fi
 # Check whether to perform protein coordinate identification
 if [ $ProteinCoordinate == 1 ]; then
 
-    #${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/ProtPosition -y "prot" -l "all" -a "blastp" -s ${SIXFRAMEPROT} -q ${COORDSIXFRAMEPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFprot_vs_coordORF" > ${LogDir}/ProteinCoordinate.log 2>&1
-    #${PBS_O_HOME}/bin/Best_blast.R -i ${ProjDir}/ProtPosition/ORFprot_vs_coordORF -f "pident == 100 & nident == length & qstart == sstart & qend == send" -m "uniquify" -o ${ProjDir}/ProtPosition >> ${LogDir}/ProteinCoordinate.log 2>&1
-    #${PBS_O_HOME}/bin/ORF_coordinates.R -f ${COORDSIXFRAMEPROT} -o ${ProjDir}/ProtPosition/tmp_orf_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
-    ${PBS_O_HOME}/bin/ORF_coordinates_transfer.R -i ${ProjDir}/ProtPosition/Blast_cross-map_ORFprot_vs_coordORF -c ${ProjDir}/ProtPosition/tmp_orf_coordinates.txt -o ${ProjDir}/ProtPosition/orf_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
-    
+    ${PBS_O_HOME}/bin/Genomic_position_from_blast.R -f ${UNIREFPROT} -b ${ProjDir}/Blast/Refprot_vs_Genome -g ${GENOME} -o ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt > ${LogDir}/ProteinCoordinate.log 2>&1
+	${PBS_O_HOME}/bin/Genomic_position_from_blast.R -f ${SIXFRAMEPROT} -b ${ProjDir}/Blast/ORFprot_vs_Genome -g ${GENOME} -o ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
+	
 fi
 
 
