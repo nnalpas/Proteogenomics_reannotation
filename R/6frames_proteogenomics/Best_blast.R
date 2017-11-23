@@ -22,18 +22,21 @@ user <- Sys.info()[["user"]]
 ### List of required packages -----------------------------------------------
 
 # Source the custom user functions
-#source(
-#    file = paste(
-#        "C:/Users",
-#        user,
-#        "Documents/GitHub/Miscellaneous/R/General/General_function.R",
-#        sep = "/"))
-source(
-    file = paste(
-        "/home-link",
-        user,
-        "bin/General_function.R",
-        sep = "/"))
+if (interactive()) {
+    source(
+        file = paste(
+            "C:/Users",
+            user,
+            "Documents/GitHub/Miscellaneous/R/6frames_proteogenomics/helper.R",
+            sep = "/"))
+} else {
+    source(
+        file = paste(
+            "/home-link",
+            user,
+            "bin/helper.R",
+            sep = "/"))
+}
 
 # Load the required packages (or install if not already in library)
 load_package("plyr")
@@ -48,24 +51,53 @@ load_package("optparse")
 
 ### Parameters setting up ------------------------------------------------
 
-# Define the list of command line parameters
-option_list <- list(
-    make_option(
-        opt_str = c("-i", "--input"), type = "character", default = NULL, 
-        help = "Blast data file name", metavar = "character"),
-    make_option(
-        opt_str = c("-f", "--filter"), type = "character", default = NULL, 
-        help = "Specific filtering to apply", metavar = "character"),
-    make_option(
-        opt_str = c("-m", "--multi_match"), type = "character", default = NULL, 
-        help = "Filter for multi hits entry", metavar = "character"),
-    make_option(
-        opt_str = c("-o", "--output"), type = "character", default = NULL, 
-        help = "Output directory", metavar = "character"))
-
-# Parse the parameters provided on command line by user
-opt_parser <- OptionParser(option_list = option_list)
-opt <- parse_args(opt_parser)
+# Define input parameters (interactively or from command line)
+if (interactive()) {
+    
+    # Define the list of input parameters
+    opt <- list()
+    opt["input"] <- choose.files(
+        caption = "Choose input Blast results",
+        multi = FALSE) %>%
+        list(.)
+    opt["filter"] <- readline(
+        prompt = paste(
+            "What filter to use to determine best blast",
+            "(do not provide value for default)?")) %>%
+        list(.)
+    opt["multi_match"] <- readline(
+        prompt = paste(
+            "What to do for multihit entries",
+            "(either: remove, keep, uniquify)?")) %>%
+        list(.)
+    opt["output"] <- list(".")
+    
+} else {
+    
+    # Define the list of command line parameters
+    option_list <- list(
+        make_option(
+            opt_str = c("-i", "--input"), type = "character",
+            default = NULL, help = "Blast data file name",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-f", "--filter"), type = "character",
+            default = NULL, help = "Specific filtering to apply",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-m", "--multi_match"), type = "character",
+            default = NULL, help = "Filter for multi hits entry",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-o", "--output"), type = "character",
+            default = ".", help = "Output directory",
+            metavar = "character"))
+    
+    # Parse the parameters provided on command line by user
+    opt_parser <- OptionParser(option_list = option_list)
+    opt <- parse_args(opt_parser)
+    
+}
 
 # Check whether input parameter was provided
 if (is.null(opt$input)){
