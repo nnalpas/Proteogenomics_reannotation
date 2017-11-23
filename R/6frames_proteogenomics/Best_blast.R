@@ -113,17 +113,17 @@ if (is.null(opt$output)){
 }
 
 # If filter and multi_match parameters are undefined, define as null
-if (opt$filter == "") {
-    
+if (is.null(opt$filter)) {
     opt["filter"] <- list(NULL)
-    
+} else if (opt$filter == "") {
+    opt["filter"] <- list(NULL)
 } else {
     opt$filter <- enquote(opt$filter)
 }
-if (opt$multi_match == "") {
-    
+if (is.null(opt$multi_match)) {
     opt["multi_match"] <- list(NULL)
-    
+} else if (opt$multi_match == "") {
+    opt["multi_match"] <- list(NULL)
 }
 
 # Create output directory if not already existing
