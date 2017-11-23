@@ -55,22 +55,19 @@ load_package("optparse")
 if (interactive()) {
     
     # Define the list of input parameters
-    opt <- list()
-    opt["input"] <- choose.files(
-        caption = "Choose input Blast results",
-        multi = FALSE) %>%
-        list(.)
-    opt["filter"] <- readline(
-        prompt = paste(
-            "What filter to use to determine best blast",
-            "(do not provide value for default)?")) %>%
-        list(.)
-    opt["multi_match"] <- readline(
-        prompt = paste(
-            "What to do for multihit entries",
-            "(either: remove, keep, uniquify)?")) %>%
-        list(.)
-    opt["output"] <- list(".")
+    opt <- list(
+        input = choose.files(
+            caption = "Choose input Blast results",
+            multi = FALSE),
+        filter = readline(
+            prompt = paste(
+                "What filter to use to determine best blast",
+                "(do not provide value for default)?")),
+        multi_match = readline(
+            prompt = paste(
+                "What to do for multihit entries",
+                "(either: remove, keep, uniquify)?")),
+        output = ".")
     
 } else {
     
@@ -116,24 +113,18 @@ if (is.null(opt$output)){
 }
 
 # If filter and multi_match parameters are undefined, define as null
-if (is.null(opt$filter)) {
+if (opt$filter == "") {
     
-    opt$filter <- NULL
+    opt["filter"] <- list(NULL)
+    
+} else {
+    opt$filter <- enquote(opt$filter)
+}
+if (opt$multi_match == "") {
+    
+    opt["multi_match"] <- list(NULL)
     
 }
-opt$filter <- enquote(opt$filter)
-if (is.null(opt$multi_match)) {
-    
-    opt$multi_match <- NULL
-    
-}
-
-# For manual parameters set-up
-#opt <- list(
-#    input = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/blastp_ORF_Nicolas_vs_Karsten_11012017",
-#    filter = "pident == 100 & nident == length & qstart == sstart & qend == send",
-#    multi_match = "uniquify",
-#    output = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases")
 
 # Create output directory if not already existing
 dir.create(opt$output)
@@ -166,7 +157,7 @@ write.table(
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
-    col.names = FALSE)
+    col.names = TRUE)
 
 # Export the blast ID map results
 write.table(
@@ -176,7 +167,7 @@ write.table(
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
-    col.names = FALSE)
+    col.names = TRUE)
 
 # Define end time
 print(paste("Complete", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
