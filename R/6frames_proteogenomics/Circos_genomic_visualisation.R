@@ -1184,6 +1184,11 @@ for (Target_id in Target_ids) {
 
 ### Nucleotide sequence analysis -----------------------------------------
 
+
+load_package("motifRG")
+load_package("ggseqlogo")
+
+
 # Create new GRange object to study nucleotide frequence of start codon
 start_grange <- subset(ref_grange, strand == "+")
 names(start_grange) %<>%
@@ -1237,7 +1242,7 @@ high_express <- data %>%
 rbs_low_grange <- subset(
     ref_grange, strand == "+" & UniProtKBID %in% low_express$Proteins)
 ranges(rbs_low_grange) <- IRanges(
-    start = (start(rbs_low_grange) - 25),
+    start = (start(rbs_low_grange) - 30),
     end = (start(rbs_low_grange) + 2))
 names(rbs_low_grange) <- sub("^", "rbs_", rbs_low_grange$UniProtKBID)
 
@@ -1245,72 +1250,17 @@ names(rbs_low_grange) <- sub("^", "rbs_", rbs_low_grange$UniProtKBID)
 rbs_low_seq <- getSeq(x = bsu, names = rbs_low_grange)
 rbs_low_seq_list <- as.vector(rbs_low_seq)
 
-# Draw consensus logo sequence of RBS for most highly expressed protein
-load_package("ggseqlogo")
-ggplot() +
-    geom_logo(
-        data = rbs_low_seq_list,
-        method = "bits",
-        seq_type = "dna") +
-    theme_logo()
-
-# Export sequences to fasta file
-Biostrings::writeXStringSet(
-    x = rbs_low_seq,
-    filepath = paste0(opt$out_path, "/", date_str, "_low_expr_RBS_seq.fasta"),
-    append = FALSE, compress = FALSE,
-    compression_level = NA, format = "fasta")
-
-# Create GRange object to study RBS nucleotide frequence (+/- 50bp of start)
-rbs_high_grange <- subset(
-    ref_grange, strand == "+" & UniProtKBID %in% high_express$Proteins)
-ranges(rbs_high_grange) <- IRanges(
-    start = (start(rbs_high_grange) - 25),
-    end = (start(rbs_high_grange) + 2))
-names(rbs_high_grange) <- sub("^", "rbs_", rbs_high_grange$UniProtKBID)
-
-# Get the nucleotide sequence associated with the start codon
-rbs_high_seq <- getSeq(x = bsu, names = rbs_high_grange)
-rbs_high_seq_list <- as.vector(rbs_high_seq)
-
-# Draw consensus logo sequence of RBS for most highly expressed protein
-ggplot() +
-    geom_logo(
-        data = rbs_high_seq_list,
-        method = "bits",
-        seq_type = "dna") +
-    theme_logo()
-
-# Export sequences to fasta file
-Biostrings::writeXStringSet(
-    x = rbs_high_seq,
-    filepath = paste0(opt$out_path, "/", date_str, "_high_expr_RBS_seq.fasta"),
-    append = FALSE, compress = FALSE,
-    compression_level = NA, format = "fasta")
-
-
-
-
-# Try to define the RBS motif sequence
-#rbs_low_motifs <- oligonucleotideFrequency(
-#    x = rbs_low_seq, width = 8, step = 1, as.prob = FALSE,
-#    as.array = FALSE, fast.moving.side = "right", with.labels = TRUE,
-#    simplify.as = "collapsed")
-
-
-load_package("motifRG")
-
 bg_low_grange <- subset(
     ref_grange, strand == "+" & UniProtKBID %in% low_express$Proteins)
 ranges(bg_low_grange) <- IRanges(
-    start = (end(bg_low_grange) - 25),
+    start = (end(bg_low_grange) - 30),
     end = (end(bg_low_grange) + 2))
 names(bg_low_grange) <- sub("^", "bg_", bg_low_grange$UniProtKBID)
 
 bg_low_seq <- getSeq(x = bsu, names = bg_low_grange)
 
-load_package("motifRG")
-rbs_low_motifs <- c()
+rbs_low_motifs <- list()
+rbs_low_motifs_score <- c()
 for (x in c(6:12)) {
     
     tmp <- findMotifFgBg(
@@ -1319,25 +1269,56 @@ for (x in c(6:12)) {
         max.width = 16, enriched.only = TRUE)
     
     if (length(tmp$motifs) != 0) {
-        for (y in c(1:length(tmp$motifs))) {
-            rbs_low_motifs %<>%
-                c(., tmp$motifs[[y]]@pattern)
+        rbs_low_motifs[paste0("length_", x)] <- list(tmp)
+        for (y in names(tmp$motifs)) {
+            rbs_low_motifs_score <- c(
+                rbs_low_motifs_score, tmp$motifs[[y]]@score)
         }
     }
     
 }
 
+rbs_low_motifs_score %<>%
+    ldply(., "data.frame") %>%
+    set_colnames(c("Motifs", "Score"))
+
+# Draw consensus logo sequence of RBS for most highly expressed protein
+ggplot() +
+    geom_logo(
+        data = rbs_low_seq_list,
+        method = "bits",
+        seq_type = "dna") +
+    theme_logo() +
+    annotation_custom(
+        grob = tableGrob(
+            d = rbs_low_motifs_score, theme = ttheme_minimal(), rows = NULL),
+        xmin = 1, xmax = 10, ymin = 1, ymax = 2)
+
+
+
+# Create GRange object to study RBS nucleotide frequence (+/- 50bp of start)
+rbs_high_grange <- subset(
+    ref_grange, strand == "+" & UniProtKBID %in% high_express$Proteins)
+ranges(rbs_high_grange) <- IRanges(
+    start = (start(rbs_high_grange) - 30),
+    end = (start(rbs_high_grange) + 2))
+names(rbs_high_grange) <- sub("^", "rbs_", rbs_high_grange$UniProtKBID)
+
+# Get the nucleotide sequence associated with the start codon
+rbs_high_seq <- getSeq(x = bsu, names = rbs_high_grange)
+rbs_high_seq_list <- as.vector(rbs_high_seq)
 
 bg_high_grange <- subset(
     ref_grange, strand == "+" & UniProtKBID %in% high_express$Proteins)
 ranges(bg_high_grange) <- IRanges(
-    start = (end(bg_high_grange) - 25),
+    start = (end(bg_high_grange) - 30),
     end = (end(bg_high_grange) + 2))
 names(bg_high_grange) <- sub("^", "bg_", bg_high_grange$UniProtKBID)
 
 bg_high_seq <- getSeq(x = bsu, names = bg_high_grange)
 
 rbs_high_motifs <- c()
+rbs_high_motifs_score <- c()
 for (x in c(6:12)) {
     
     tmp <- findMotifFgBg(
@@ -1346,15 +1327,35 @@ for (x in c(6:12)) {
         max.width = 16, enriched.only = TRUE)
     
     if (length(tmp$motifs) != 0) {
-        for (y in c(1:length(tmp$motifs))) {
-            rbs_high_motifs %<>%
-                c(., tmp$motifs[[y]]@pattern)
+        rbs_high_motifs[paste0("length_", x)] <- list(tmp)
+        for (y in names(tmp$motifs)) {
+            rbs_high_motifs_score <- c(
+                rbs_high_motifs_score, tmp$motifs[[y]]@score)
         }
     }
     
 }
 
-all_rbs_motifs <- c(rbs_low_motifs, rbs_high_motifs) %>%
+rbs_high_motifs_score %<>%
+    ldply(., "data.frame") %>%
+    set_colnames(c("Motifs", "Score"))
+
+# Draw consensus logo sequence of RBS for most highly expressed protein
+ggplot() +
+    geom_logo(
+        data = rbs_high_seq_list,
+        method = "bits",
+        seq_type = "dna") +
+    theme_logo() +
+    annotation_custom(
+        grob = tableGrob(
+            d = rbs_high_motifs_score, theme = ttheme_minimal(), rows = NULL),
+        xmin = 1, xmax = 10, ymin = 0.5, ymax = 2)
+
+
+
+
+all_rbs_motifs <- c(rbs_low_motifs_score$Motifs, rbs_high_motifs_score$Motifs) %>%
     c(., toupper(c(
         "aaaggaggtgt", "agaggtggtgt",
         "atattaagaggaggag", "agagaacaaggagggg"))) %>%
@@ -1362,7 +1363,7 @@ all_rbs_motifs <- c(rbs_low_motifs, rbs_high_motifs) %>%
 
 pattern_rbs_motifs <- paste(all_rbs_motifs, collapse = "|") %>%
     paste0("(", ., ")") %>%
-    paste0(., ".{4,10}(ATG|TTG|GTG)")
+    paste0(., ".{1,14}(ATG|TTG|GTG)")
 
 # Define the novel ORF of interest
 Target_ids <- c(
@@ -1375,12 +1376,12 @@ rbs_res <- lapply(X = Target_ids, FUN = function(x) {
     
     if (as.character(strand(tmp_grange)) == "+") {
         ranges(tmp_grange) <- IRanges(
-            start = (start(tmp_grange) - 25),
+            start = (start(tmp_grange) - 30),
             end = (end(tmp_grange)))
     } else if (as.character(strand(tmp_grange)) == "-") {
         ranges(tmp_grange) <- IRanges(
             start = (start(tmp_grange)),
-            end = (end(tmp_grange) + 25))
+            end = (end(tmp_grange) + 30))
     } else {
         stop("Strand unknown!")
     }
@@ -1402,20 +1403,24 @@ rbs_res <- lapply(X = Target_ids, FUN = function(x) {
         tmp <- base::data.frame(
             id = names(tmp_seq),
             start = NA_integer_, end = NA_integer_,
+            seq = NA_character_,
             stringsAsFactors = FALSE)
         
     } else {
         
         # Format as dataframe the current peptide positions
         tmp <- base::data.frame(
-            id = names(tmp_seq), tmp[[1]], stringsAsFactors = FALSE)
+            id = names(tmp_seq), tmp[[1]],
+            seq = substring(
+                text = tmp_seq, first = tmp[[1]][[1]], last = tmp[[1]][[2]]),
+            stringsAsFactors = FALSE)
         
     }
     return(tmp)
 }) %>%
     plyr::ldply(., "data.frame")
 
-
+rbs_res
 
 
 
