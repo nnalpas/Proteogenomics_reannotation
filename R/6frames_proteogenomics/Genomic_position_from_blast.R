@@ -47,6 +47,7 @@ load_package("splitstackshape")
 load_package("stringr")
 load_package("optparse")
 load_package("seqinr")
+load_package("Biostrings")
 
 
 
@@ -128,13 +129,16 @@ if (is.null(opt$genome)) {
 # Check whether output parameter was provided
 if (opt$output == "protein_location.txt") {
     
-    opt$output <- list(paste(date_str, "protein_location.txt", sep = "_"))
+    opt$output <- list(paste0("./", date_str, "_protein_location.txt"))
     warning(paste0(
         "Output results to '",
-        paste(date_str, "protein_location.txt", sep = "_"),
+        opt$output,
         "'!"))
     
 }
+
+# Create output directory if not already existing
+dir.create(dirname(opt$output))
 
 
 
@@ -171,8 +175,8 @@ blast_data_best <- best_blast(
     dplyr::rowwise() %>%
     dplyr::mutate(
         .,
-        qseq = list(AAString(qseq)),
-        sseq = list(AAString(sseq)))
+        qseq = list(Biostrings::AAString(qseq)),
+        sseq = list(Biostrings::AAString(sseq)))
 
 # Define genomic strand
 blast_data_best %<>%
