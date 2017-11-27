@@ -10,8 +10,8 @@ MakeBlastDbNuc=0
 BlastDbBlasting=0
 BestBlast=0
 ReciprocalBlast=0
-ReciprocalBestBlast=1
-ProteinCoordinate=0
+ReciprocalBestBlast=0
+ProteinCoordinate=1
 SangerCoordinate=0
 ClustalAlign=0
 
