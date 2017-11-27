@@ -382,3 +382,12 @@ get_frame <- function(
 }
 
 
+
+### Number utilities functions -------------------------------------------
+
+# Function to keep only decimals
+keep_decimals <- function(x) {
+    x - floor(x)
+}
+
+
