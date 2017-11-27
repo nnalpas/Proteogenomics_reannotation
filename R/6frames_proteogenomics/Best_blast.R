@@ -141,6 +141,10 @@ best_blast_data <- best_blast(
     data = blast_data, key = "qseqid",
     filter = opt$filter, multi_match = opt$multi_match)
 
+
+
+### Results export -------------------------------------------------------
+
 # Export the best hits protein IDs that needs to be reciprocally blasted
 write.table(
     x = unique(best_blast_data$sseqid),
