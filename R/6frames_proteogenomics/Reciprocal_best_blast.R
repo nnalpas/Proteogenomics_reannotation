@@ -62,7 +62,7 @@ if (interactive()) {
         reciprocal_blast = choose.files(
             caption = "Choose input reciprocal Blast results",
             multi = FALSE),
-        output = ".")
+        output = NULL)
     
 } else {
     
@@ -104,6 +104,9 @@ if (is.null(opt$output)){
     warning(paste("Output results to path: ", opt$output, "!", sep = ""))
     
 }
+
+# Create output directory if not already existing
+dir.create(opt$output)
 
 
 
