@@ -67,7 +67,7 @@ if (interactive()) {
             prompt = paste(
                 "What to do for multihit entries",
                 "(either: remove, keep, uniquify)?")),
-        output = ".")
+        output = NULL)
     
 } else {
     
