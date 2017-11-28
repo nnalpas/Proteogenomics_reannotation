@@ -381,6 +381,90 @@ get_frame <- function(
     
 }
 
+# Function to determine the position of a peptide within associated proteins
+pept_locate <- function(
+    data = NULL,
+    peptide = "Sequence",
+    proteins = "Proteins",
+    fasta = NULL) {
+    
+    # Safety: defined parameters
+    if (is.null(data)) {
+        stop(paste(
+            "No defined data, data should contain at least",
+            " peptides and proteins columns!",
+            sep = ""))
+    }
+    if (is.null(fasta)) {
+        stop("No defined fasta file, recommended in 'SeqFastaAA' format!")
+    }
+    
+    # Make sure the data is in character format
+    data[[peptide]] <- as.character(data[[peptide]])
+    data[[proteins]] <- as.character(data[[proteins]])
+    
+    # Check protein presence in database
+    tmp <- nrow(data[!(data[[proteins]] %in% names(fasta)), ])
+    if (tmp > 0) {
+        warning(paste0(
+            "There are ", tmp, " proteins from the peptide dataset that",
+            " cannot be found in the database! These will be filtered out!"))
+    }
+    data <- data[data[[proteins]] %in% names(fasta), ]
+    
+    # Loop through all rows of peptide
+    val <- apply(X = data, MARGIN = 1, FUN = function(x) {
+        
+        # Assign current entries to temporary variable
+        pep <- x[[peptide]]
+        prot <- x[[proteins]]
+        prot.seq <- fasta[prot]
+        
+        # Locate all peptide pattern within protein sequence
+        tmp <- str_locate_all(
+            string = prot.seq %>%
+                as.character(.),
+            pattern = coll(pattern = pep, ignore_case = FALSE)) %>%
+            set_names(prot)
+        
+        # Check whether locations were obtained
+        if (
+            length(tmp[[1]][, "start"]) == 0 |
+            length(tmp[[1]][, "end"]) == 0) {
+            
+            # Warn user that there is no match for current peptide/protein
+            warning(paste(
+                "Current entry:", pep, "does not match in:", prot, sep = " "))
+            
+            # Add explicitely NA if there is no match
+            tmp <- base::data.frame(
+                pep, prot,
+                start = NA_integer_, end = NA_integer_,
+                stringsAsFactors = FALSE)
+            
+        } else {
+            
+            # Format as dataframe the current peptide positions
+            tmp <- base::data.frame(
+                pep, prot, tmp[[1]], stringsAsFactors = FALSE)
+            
+        }
+        
+        # Return the location data for current peptide
+        return(tmp)
+        
+    }) %>%
+        data.table::rbindlist(.)
+    
+    # Convert to numeric the peptidde positions
+    val$start <- as.numeric(val$start)
+    val$end <- as.numeric(val$end)
+    
+    # Return the overall location data
+    return(val)
+    
+}
+
 
 
 ### Number utilities functions -------------------------------------------
@@ -388,6 +472,626 @@ get_frame <- function(
 # Function to keep only decimals
 keep_decimals <- function(x) {
     x - floor(x)
+}
+
+
+
+### MaxQuant related functions -------------------------------------------
+
+# Function to read in any MaxQuant file from specified path
+mq_read <- function(
+    path = NULL,
+    name = NULL,
+    ...) {
+    
+    # Safety: defined parameters
+    if (is.null(path)) {
+        stop("No defined path to maxquant file!")
+    }
+    if (is.null(name)) {
+        stop("No defined maxquant file name!")
+    }
+    
+    # Locate the table file
+    maxq.file <- list.files(
+        path = path,
+        pattern = name,
+        full.names = TRUE)
+    
+    # Safety: located msScan table
+    if (length(maxq.file) != 1) {
+        stop("Number of located maxquant file not appropriate!")
+    }
+    
+    # Read in the maxquant file
+    maxquant <- fread(
+        input = maxq.file, sep = "\t", header = TRUE,
+        na.strings = c("NA", "N/A"), stringsAsFactors = FALSE,
+        strip.white = TRUE, ...)
+    
+    # Return the maxquant data
+    return(as.data.frame(x = maxquant, stringsAsFactors = FALSE))
+    
+}
+
+# Define the function that filter Reverse and Contaminants hits from data
+mq_rev_con_filt <- function (
+    data = NULL) {
+    
+    # Check that the data variable have been provided
+    if (is.null(data)) {
+        stop("Error: User did not provide data!")
+    }
+    
+    # Check that the data variable is of class dataframe
+    if (!is.data.frame(data)) {
+        stop("Error: User must provide data of class dataframe!")
+    }
+    
+    # Define the column names to look for in data variable
+    rev.col <- "Reverse"
+    cont <- c("Potential.contaminant", "Potential contaminant")
+    
+    # Check whether filtering can be performed on Reverse column
+    if (rev.col %in% colnames(data) & all(!is.na(data[[rev.col]]))) {
+        data.noRev <- data[data[[rev.col]] != "+", ]
+    } else {
+        warning("Warning: No Reverse column in the provided data!")
+        data.noRev <- data
+    }
+    
+    # Check whether filtering can be performed on Contaminant column
+    if (
+        any(cont %in% colnames(data)) &
+        all(!is.na(data[[cont[cont %in% colnames(data)]]]))) {
+        cont.col <- cont[cont %in% colnames(data)]
+        data.noCont <- data.noRev[data.noRev[[cont.col]] != "+", ]
+    } else {
+        warning("Warning: No Contaminant column in the provided data!")
+        data.noCont <- data.noRev
+    }
+    
+    # Output filtered data
+    return(data.noCont)
+}
+
+
+
+### Plotting wrapper function --------------------------------------------
+
+# Create function to draw boxplot (with-without zoom) acccording to
+# certain key-values parameters
+plots_box <- function(
+    data = NULL,
+    key = NULL,
+    value = NULL,
+    fill = "white",
+    colour = "black",
+    main = "Boxplot",
+    xlabel = NULL,
+    ylabel = NULL,
+    textsize = 15,
+    zoom = NULL,
+    transf = "none",
+    outlier_simplify = FALSE,
+    label = NULL,
+    bw = FALSE,
+    xdir = "horizontal",
+    ydir = "horizontal",
+    auto_scale = 1) {
+    
+    # Check whether the data, key and value have been submitted by users
+    if (is.null(data)) {
+        stop("Error: No data were provided!")
+    }
+    if (is.null(key)) {
+        stop("Error: No key column was provided!")
+    }
+    if (is.null(value)) {
+        stop("Error: No value column was provided!")
+    }
+    xdir %<>%
+        match.arg(arg = ., choices = c("horizontal", "vertical"))
+    ydir %<>%
+        match.arg(arg = ., choices = c("horizontal", "vertical"))
+    
+    # Create the list that will hold all generated plots
+    myplot <- list()
+    
+    # Check whether the data values are integer64 or not numeric class
+    if (is.integer64(data[[value]])) {
+        
+        # Give warning that values are integer64
+        warning(paste(
+            "Data values: '", value,
+            "' are in integer 64, will attempt transformation to double!",
+            sep = ""))
+        
+        # Change the data from integer64 to double for compatibility
+        data[[value]] <- as.double(data[[value]])
+        
+    }
+    if (!is.numeric(data[[value]])) {
+        
+        # Give warning that values are not numeric
+        warning(paste(
+            "Data values: '", value,
+            "' are not numeric, will attempt transformation to numeric!",
+            sep = ""))
+        
+        # Change the data to numeric
+        data[[value]] <- as.numeric(as.character(data[[value]]))
+        
+    }
+    
+    # Reformat the key as factor
+    data[[key]] <- factor(
+        x = data[[key]],
+        levels = as.character(unique(data[[key]])),
+        labels = as.character(unique(data[[key]])),
+        ordered = TRUE)
+    
+    # Format category name
+    #cat.names <- data[[key]] %>%
+    #    levels(.) %>%
+    #    stringr::str_wrap(string = ., width = 15)
+    
+    # Check which direction to display x axis labels
+    if (xdir == "horizontal") {
+        x_custom <- element_text(
+            angle = 0, vjust = 0.5, hjust = 0.5)
+    } else if (xdir == "vertical") {
+        x_custom <- element_text(
+            angle = 90, vjust = 0.5, hjust = 1)
+    }
+    
+    # Check which direction to display y axis labels
+    if (ydir == "horizontal") {
+        y_custom <- element_text(
+            angle = 0, vjust = 0.5, hjust = 1)
+    } else if (ydir == "vertical") {
+        y_custom <- element_text(
+            angle = 90, vjust = 0.5, hjust = 0.5)
+    }
+    
+    # Check if fill value is a column or not and should be aes or not
+    if (fill %in% colnames(data)) {
+        
+        # Reformat the fill as factor
+        data[[fill]] <- factor(
+            x = data[[fill]],
+            levels = as.character(unique(data[[fill]])),
+            labels = as.character(unique(data[[fill]])),
+            ordered = TRUE)
+        
+        # Create the plot with fill as aes
+        plot <- ggplot(
+            data = data,
+            mapping = aes_string(
+                x = key, y = value, fill = fill)) +
+            stat_boxplot(geom = "errorbar") +
+            geom_boxplot(colour = colour)
+        
+    } else {
+        
+        # Create the plot with fill as not aes
+        plot <- ggplot(
+            data = data,
+            mapping = aes_string(
+                x = key, y = value)) +
+            stat_boxplot(geom = "errorbar", width = 0.1) +
+            geom_boxplot(fill = fill, colour = colour)
+        
+    }
+    
+    # Check whether axis labels were provided
+    if (is.null(xlabel)) {
+        xlabel <- key
+    }
+    if (is.null(ylabel)) {
+        ylabel <- value
+    }
+    
+    # Continue plot creation
+    plot <- plot +
+        xlab(label = xlabel) +
+        ylab(label = ylabel) +
+        ggtitle(label = main) +
+        theme_bw() +
+        theme(
+            legend.position = "bottom",
+            title = element_text(
+                face = "bold",
+                size = (textsize * 1.25)),
+            text = element_text(size = textsize),
+            plot.title = element_text(
+                face = "bold",
+                size = (textsize * 1.5)),
+            axis.text.x = x_custom,
+            axis.text.y = y_custom)# +
+    #scale_x_discrete(labels = cat.names)
+    
+    # Check whether the plot should use black and white colors
+    if (bw) {
+        plot <- plot +
+            scale_fill_grey(name = fill)
+    } else {
+        plot <- plot +
+            scale_fill_discrete(name = fill)
+    }
+    
+    # Check whether individual label should also be displayed
+    if (!is.null(label)) {
+        
+        # Define whether fill should be used for grouping data
+        group_var <- key
+        if (fill %in% colnames(data)) {
+            group_var <- c(group_var, fill)
+        }
+        
+        # Define variable for grouping
+        group_var %<>%
+            lapply(., as.symbol)
+        
+        # Define variable to calculate on
+        calc_var <- as.symbol(value)
+        
+        # Compute IQR, size, mean for the current data
+        iqr <- data %>%
+            as.data.frame(.) %>%
+            dplyr::group_by_(., .dots = group_var) %>%
+            dplyr::summarise_(
+                .,
+                N = ~n(),
+                Median = lazyeval::interp(~ median(var), var = calc_var),
+                Mean = lazyeval::interp(~ mean(var), var = calc_var),
+                Min = lazyeval::interp(~ min(var), var = calc_var),
+                Q1 = lazyeval::interp(~ quantile(var, probs = 0.25), var = calc_var),
+                Q3 = lazyeval::interp(~ quantile(var, probs = 0.75), var = calc_var),
+                Max = lazyeval::interp(~ max(var), var = calc_var)) %>%
+            dplyr::mutate(
+                .,
+                IQR =  (Q3 - Q1),
+                Q1_outlier = (Q1 - (1.5 * IQR)),
+                Q3_outlier = (Q3 + (1.5 * IQR)),
+                N_label = paste0("n = ", N),
+                Md_label = paste0(
+                    "md = ",
+                    format(x = round(x = Median, digits = 1), nsmall = 1)),
+                M_label = paste0(
+                    "M = ",
+                    format(x = round(x = Mean, digits = 1), nsmall = 1)))
+        
+        # Include all the labels requested by user
+        v_adjust <- (0.05 * length(label)) + 0.05
+        for (j in 1:length(label)) {
+            
+            iqr %<>%
+                ungroup() %>%
+                dplyr::mutate(
+                    .,
+                    y_val = (Max + (max(Max) * (v_adjust - (0.05 * j)))))
+            y_val <- "y_val"
+            plot <- plot +
+                stat_summary(
+                    data = iqr,
+                    mapping = aes_string(
+                        x = key,
+                        y = y_val,
+                        group = fill,
+                        label = label[j]),
+                    geom = "text",
+                    position = position_dodge(width = 0.75))
+            iqr$y_val <- NULL
+            
+        }
+        
+    }
+    
+    # Check whether key are of factor type
+    if (is.factor(data[[key]])) {
+        
+        # Get the break value to display on x-axis
+        breaks <- custom_scale(x = data[[key]] %>% levels(.), n = auto_scale)
+        
+        # Add a discrete x-axis with breaks to plot
+        plot <- plot +
+            scale_x_discrete(
+                breaks = breaks,
+                labels = breaks)
+        
+    }
+    
+    # Check whether the y axis need to be updated
+    if (transf != "none") {
+        
+        plot <- conti_axis(
+            plot = plot,
+            axis = "y",
+            transf = transf)
+        
+    }
+    
+    # Store the gTree plot into a list
+    myplot["Boxplot"] <- list(plot)
+    
+    # Check whether the y axis need to be updated
+    if (!is.null(zoom)) {
+        
+        plot <- conti_axis(
+            plot = plot,
+            axis = "y",
+            zoom = zoom,
+            transf = transf)
+        
+        # Store the gTree plot into a list
+        myplot["Boxplot_zoom"] <- list(plot)
+        
+    }
+    
+    # Check whether outlier simplification was requested
+    if (outlier_simplify) {
+        
+        myplot <- purrr::map(.x = myplot, .f = outlier_sampling)
+        
+    }
+    
+    # Return the plot list
+    return(myplot)
+    
+}
+
+# Create function to draw histogram (with-without zoom) acccording to
+# certain key-values parameters
+plots_hist <- function(
+    data = NULL,
+    key = NULL,
+    value = NULL,
+    group = NULL,
+    fill = "grey",
+    colour = "black",
+    alpha = NULL,
+    main = "Histogram",
+    xlabel = NULL,
+    ylabel = NULL,
+    posit = "dodge",
+    textsize = 15,
+    zoom = NULL,
+    transf = "none",
+    label = NULL,
+    legend = c("none", "bottom", "top", "left", "right"),
+    bw = FALSE,
+    xdir = "horizontal",
+    ydir = "horizontal",
+    auto_scale = 1) {
+    
+    # Check whether the data, key and value have been submitted by users
+    if (is.null(data)) {
+        stop("Error: No data were provided!")
+    }
+    if (is.null(key)) {
+        stop("Error: No key column was provided!")
+    }
+    if (is.null(group)) {
+        stop("Error: No group column was provided!")
+    }
+    if (is.null(fill)) {
+        stop("Error: No fill column was provided!")
+    }
+    if (is.null(value)) {
+        stop("Error: No value column was provided!")
+    }
+    xdir %<>%
+        match.arg(arg = ., choices = c("horizontal", "vertical"))
+    ydir %<>%
+        match.arg(arg = ., choices = c("horizontal", "vertical"))
+    
+    # Create the list that will hold all generated plots
+    myplot <- list()
+    
+    # Check whether the data values are integer64 or not numeric class
+    if (is.integer64(data[[value]])) {
+        
+        # Give warning that values are integer64
+        warning(paste(
+            "Data values: '", value,
+            "' are in integer 64, will attempt transformation to double!",
+            sep = ""))
+        
+        # Change the data from integer64 to double for compatibility
+        data[[value]] <- as.double(data[[value]])
+        
+    }
+    if (!is.numeric(data[[value]])) {
+        
+        # Give warning that values are not numeric
+        warning(paste(
+            "Data values: '", value,
+            "' are not numeric, will attempt transformation to numeric!",
+            sep = ""))
+        
+        # Change the data to numeric
+        data[[value]] <- as.numeric(as.character(data[[value]]))
+        
+    }
+    
+    # Check whether a legend is required
+    leg <- match.arg(legend)
+    
+    # Reformat the key as factor
+    if (!is.factor(data[[key]])) {
+        
+        data[[key]] <- factor(
+            x = data[[key]],
+            levels = as.character(unique(data[[key]])),
+            labels = as.character(unique(data[[key]])),
+            ordered = TRUE)
+        
+    }
+    
+    # Reformat the group as factor
+    data[[group]] <- factor(
+        x = data[[group]],
+        levels = as.character(unique(data[[group]])),
+        labels = as.character(unique(data[[group]])),
+        ordered = TRUE)
+    
+    # Format category name
+    cat.names <- data[[key]] %>%
+        levels(.) %>%
+        stringr::str_wrap(string = ., width = 15) %>%
+        gsub("_", " ", .)
+    
+    # Check whether axis labels were provided
+    if (is.null(xlabel)) {
+        xlabel <- key
+    }
+    if (is.null(ylabel)) {
+        ylabel <- value
+    }
+    
+    # Check which direction to display x axis labels
+    if (xdir == "horizontal") {
+        x_custom <- element_text(
+            angle = 0, vjust = 0.5, hjust = 0.5)
+    } else if (xdir == "vertical") {
+        x_custom <- element_text(
+            angle = 90, vjust = 0.5, hjust = 1)
+    }
+    
+    # Check which direction to display y axis labels
+    if (ydir == "horizontal") {
+        y_custom <- element_text(
+            angle = 0, vjust = 0.5, hjust = 1)
+    } else if (ydir == "vertical") {
+        y_custom <- element_text(
+            angle = 90, vjust = 0.5, hjust = 0.5)
+    }
+    
+    # Check if fill value is a column or not and should be aes or not
+    if (fill %in% colnames(data)) {
+        
+        # Reformat the fill as factor
+        data[[fill]] <- factor(
+            x = data[[fill]],
+            levels = as.character(unique(data[[fill]])),
+            labels = as.character(unique(data[[fill]])),
+            ordered = TRUE)
+        
+        # Create the plot with fill as aes
+        plot <- ggplot(
+            data = data,
+            mapping = aes_string(
+                x = key,
+                y = value,
+                group = group,
+                fill = fill)) +
+            geom_bar(
+                stat = "identity",
+                position = posit,
+                colour = colour)
+        
+    } else {
+        
+        # Create the plot with fill as not aes
+        plot <- ggplot(
+            data = data,
+            mapping = aes_string(
+                x = key,
+                y = value,
+                group = group)) +
+            geom_bar(
+                stat = "identity",
+                position = posit,
+                fill = fill,
+                colour = colour)
+        
+    }
+    
+    # Continue plot creation
+    plot <- plot +
+        ggtitle(label = main) +
+        xlab(label = xlabel) +
+        ylab(label = ylabel) +
+        theme_bw() +
+        theme(
+            legend.position = leg,
+            title = element_text(
+                face = "bold",
+                size = (textsize * 1.4)),
+            text = element_text(size = textsize),
+            plot.title = element_text(
+                face = "bold",
+                size = (textsize * 1.7)),
+            axis.text.x = x_custom,
+            axis.text.y = y_custom)# +
+    #scale_x_discrete(labels = cat.names)
+    
+    # Check whether the plot should use black and white colors
+    if (bw) {
+        plot <- plot +
+            scale_fill_grey(name = fill)
+    } else {
+        plot <- plot +
+            scale_fill_discrete(name = fill)
+    }
+    
+    # Check whether individual label should also be displayed
+    if (!is.null(label)) {
+        
+        plot <- gg_labels(
+            plot = plot,
+            data = data,
+            label = label,
+            posit = posit,
+            textsize = textsize)
+        
+    }
+    
+    # Check whether key are of factor type
+    if (is.factor(data[[key]])) {
+        
+        # Get the break value to display on x-axis
+        breaks <- custom_scale(x = data[[key]] %>% levels(.), n = auto_scale)
+        
+        # Add a discrete x-axis with breaks to plot
+        plot <- plot +
+            scale_x_discrete(
+                breaks = breaks,
+                labels = breaks)
+        
+    }
+    
+    # Check whether the y axis need to be updated
+    if (transf != "none") {
+        
+        plot <- conti_axis(
+            plot = plot,
+            axis = "y",
+            transf = transf)
+        
+    }
+    
+    # Store the gTree plot into a list
+    myplot["histplot"] <- list(plot)
+    
+    # Check whether the y axis need to be updated
+    if (!is.null(zoom)) {
+        
+        plot <- conti_axis(
+            plot = plot,
+            axis = "y",
+            zoom = zoom,
+            transf = transf)
+        
+        # Store the gTree plot into a list
+        myplot["histplot_zoom"] <- list(plot)
+        
+    }
+    
+    # Return the plot list
+    return(myplot)
+    
 }
 
 
