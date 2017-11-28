@@ -163,6 +163,10 @@ ideo <- with(
             genome = geno)))
 names(ideo) <- data$Chromosome
 
+
+
+### Results export -------------------------------------------------------
+
 # Export the bsu ideogram for reuse at later stage
 saveRDS(
     object = ideo,
