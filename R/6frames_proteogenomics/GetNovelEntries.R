@@ -22,18 +22,21 @@ user <- Sys.info()[["user"]]
 ### List of required packages -----------------------------------------------
 
 # Source the custom user functions
-#source(
-#    file = paste(
-#        "C:/Users",
-#        user,
-#        "Documents/GitHub/Miscellaneous/R/General/General_function.R",
-#        sep = "/"))
-source(
-    file = paste(
-        "/home-link",
-        user,
-        "bin/General_function.R",
-        sep = "/"))
+if (interactive()) {
+    source(
+        file = paste(
+            "C:/Users",
+            user,
+            "Documents/GitHub/Miscellaneous/R/6frames_proteogenomics/helper.R",
+            sep = "/"))
+} else {
+    source(
+        file = paste(
+            "/home-link",
+            user,
+            "bin/helper.R",
+            sep = "/"))
+}
 
 # Load the required packages (or install if not already in library)
 # Note: the select function from dplyr and UniProt.ws is overlapping,
@@ -57,30 +60,50 @@ load_package("purrr")
 
 ### Parameters setting up ------------------------------------------------
 
-# Define the list of command line parameters
-option_list <- list(
-    make_option(
-        opt_str = c("-o", "--output"),
-        type = "character", default = NULL,
-        help = "Output directory", metavar = "character"),
-    make_option(
-        opt_str = c("-m", "--maxquant"),
-        type = "character", default = NULL,
-        help = "MaxQuant txt results folder", metavar = "character"),
-    make_option(
-        opt_str = c("-r", "--reference"),
-        type = "character", default = NULL,
-        help = "Reference protein fasta file", metavar = "character"),
-    make_option(
-        opt_str = c("-n", "--novel"),
-        type = "character", default = NULL,
-        help = "ORF fasta file", metavar = "character"))
+# Define input parameters (interactively or from command line)
+if (interactive()) {
+    
+    # Define the list of input parameters
+    opt <- list(
+        output = readline(
+            prompt = "Define the output directory!"),
+        maxquant = choose.dir(
+            caption = "Choose the MaxQuant txt folder!"),
+        reference = choose.files(
+            caption = "Choose fasta file containing known proteins!",
+            multi = FALSE),
+        novel = choose.files(
+            caption = "Choose fasta file containing ORF proteins!",
+            multi = FALSE))
+    
+} else {
+    
+    # Define the list of command line parameters
+    option_list <- list(
+        make_option(
+            opt_str = c("-o", "--output"),
+            type = "character", default = NULL,
+            help = "Output directory", metavar = "character"),
+        make_option(
+            opt_str = c("-m", "--maxquant"),
+            type = "character", default = NULL,
+            help = "MaxQuant txt results folder", metavar = "character"),
+        make_option(
+            opt_str = c("-r", "--reference"),
+            type = "character", default = NULL,
+            help = "Reference protein fasta file", metavar = "character"),
+        make_option(
+            opt_str = c("-n", "--novel"),
+            type = "character", default = NULL,
+            help = "ORF fasta file", metavar = "character"))
+    
+    # Parse the parameters provided on command line by user
+    opt_parser <- OptionParser(option_list = option_list)
+    opt <- parse_args(opt_parser)
+    
+}
 
-# Parse the parameters provided on command line by user
-opt_parser <- OptionParser(option_list = option_list)
-opt <- parse_args(opt_parser)
-
-# Check whether inputs parameter was provided
+# Check whether inputs parameters were provided
 if (
     is.null(opt$output) | is.null(opt$maxquant) |
     is.null(opt$reference) | is.null(opt$novel)) {
@@ -89,13 +112,6 @@ if (
     stop("All arguments must be supplied!")
     
 }
-
-# For manual parameters set-up
-#opt <- list(
-#    output = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/15082017",
-#    maxquant = "G:/data/Vaishnavi/combined - 6 frame translation/txt",
-#    reference = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta",
-#    novel = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta")
 
 # Create output directory if not already existing
 dir.create(opt$output)
