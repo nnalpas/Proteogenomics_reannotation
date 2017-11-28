@@ -1,6 +1,6 @@
 # GeneralParam
 ProjectName="Bsu_6frame_NEW"
-TaxId="1423"
+TaxId="224308"
 
 # ProcessSteps
 GetOrf=0
