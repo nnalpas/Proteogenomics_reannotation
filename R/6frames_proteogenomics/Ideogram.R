@@ -127,7 +127,7 @@ dir.create(dirname(opt$output))
 
 # Import the fasta files
 genome <- seqinr::read.fasta(
-    file = opt$genome, seqtype = "AA", as.string = TRUE)
+    file = opt$genome, seqtype = "DNA", as.string = TRUE)
 
 
 
