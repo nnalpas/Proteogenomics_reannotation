@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 
-# This script generates a GRange for the genome of interest
+# This script retrieve column annotations based on specific keys using
+# uniprot.ws package
 
 
 
@@ -154,11 +155,9 @@ if (any(colnames(data) %in% c("GENES"))) {
         dplyr::mutate(
             .,
             `GENE-NAME` = sub(
-                "^(.*?)( .*)? BSU\\d+.*$", "\\1", GENES, perl = TRUE),
-            LOCUS = sub(
-                "^.* (BSU\\d+).*$", "\\1", GENES, perl = TRUE),
+                "^(.*?) .*$", "\\1", GENES, perl = TRUE),
             `ALT-GENE-NAME` = sub(
-                "^.*?( (.*))? BSU\\d+.*$", "\\1", GENES, perl = TRUE))
+                "^.*? (.*)$", "\\1", GENES, perl = TRUE))
 } else {
     data_final <- data
 }
