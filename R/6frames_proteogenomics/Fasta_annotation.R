@@ -64,7 +64,9 @@ if (interactive()) {
         taxon = readline(
             prompt = "Provide the taxon identifier!"),
         columns = readline(
-            prompt = "Provide the annotation columns to retrieve!"),
+            prompt = "Give comma-separated annotation names to retrieve!") %>%
+            strsplit(x = ., split = ",", fixed = TRUE) %>%
+            unlist(.),
         key = readline(
             prompt = "Provide the key name to use for cross-annotation!"),
         output = readline(
@@ -107,7 +109,9 @@ if (interactive()) {
 }
 
 # Check whether inputs parameter were provided
-if (is.null(opt$fasta) | is.null(taxon) | is.null(columns) | is.null(key)) {
+if (
+    is.null(opt$fasta) | is.null(opt$taxon) |
+    is.null(opt$columns) | is.null(opt$key)) {
     
     print_help(opt_parser)
     
@@ -143,11 +147,11 @@ fasta <- seqinr::read.fasta(
 names(fasta) <- uni_id_clean(names(fasta))
 
 # Create UniProt.ws object for submitted taxon ID
-up <- UniProt.ws(taxId = as.numeric(as.character(taxon)))
+up <- UniProt.ws(taxId = as.numeric(as.character(opt$taxon)))
 
 # Get all the columns specified by user
 data <- UniProt.ws::select(
-    x = up, keys = names(fasta), columns = columns, keytype = keytype)
+    x = up, keys = names(fasta), columns = opt$columns, keytype = opt$key)
 
 # Extract the gene name and locus from the GENES column if existing
 if (any(colnames(data) %in% c("GENES"))) {
