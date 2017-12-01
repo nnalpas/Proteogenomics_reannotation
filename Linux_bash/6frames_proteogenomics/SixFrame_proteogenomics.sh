@@ -190,6 +190,20 @@ fi
 
 
 
+######################
+# Protein annotation #
+######################
+
+# Check whether to perform protein annotation
+if [ $ProteinAnnotation == 1 ]; then
+
+    ${PBS_O_HOME}/bin/Fasta_annotation.R -f ${UNIREFPROT} -t ${TaxId} -c "ENTRY-NAME,GENES,PROTEIN-NAMES,SUBCELLULAR-LOCATIONS,FAMILIES" -k "UNIPROTKB" -o ${ProjDir}/ProtAnnotation/Ref_prot_annotations.txt > ${LogDir}/ProteinAnnotation.log 2>&1
+	${PBS_O_HOME}/bin/Transfer_annotation.R -c ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_cross-map_Refprot_vs_ORFprot -a ${ProjDir}/ProtAnnotation/Ref_prot_annotations.txt -k "UNIPROTKB" -r "sseqid" -o ${ProjDir}/ProtAnnotation/Orf_prot_annotations.txt >> ${LogDir}/ProteinAnnotation.log 2>&1
+	
+fi
+
+
+
 ################################
 # Sanger validation coordinate #
 ################################
