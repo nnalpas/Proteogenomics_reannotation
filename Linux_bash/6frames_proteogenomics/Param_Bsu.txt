@@ -11,7 +11,8 @@ BlastDbBlasting=0
 BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
-ProteinCoordinate=1
+ProteinCoordinate=0
+ProteinAnnotation=1
 SangerCoordinate=0
 ClustalAlign=0
 
