@@ -64,9 +64,7 @@ if (interactive()) {
         taxon = readline(
             prompt = "Provide the taxon identifier!"),
         columns = readline(
-            prompt = "Give comma-separated annotation names to retrieve!") %>%
-            strsplit(x = ., split = ",", fixed = TRUE) %>%
-            unlist(.),
+            prompt = "Give comma-separated annotation names to retrieve!"),
         key = readline(
             prompt = "Provide the key name to use for cross-annotation!"),
         output = readline(
@@ -89,7 +87,7 @@ if (interactive()) {
         make_option(
             opt_str = c("-c", "--columns"),
             type = "character", default = NULL,
-            help = "The annotation column to retrieve!",
+            help = "The annotation columns (comma-separated) to retrieve!",
             metavar = "character"),
         make_option(
             opt_str = c("-k", "--key"),
@@ -116,6 +114,11 @@ if (
     print_help(opt_parser)
     
 }
+
+# Store the annotation column name into vector
+opt$columns %<>%
+    strsplit(x = ., split = ",", fixed = TRUE) %>%
+    unlist(.)
 
 # Check whether output parameter was provided
 if (opt$output == "") {
