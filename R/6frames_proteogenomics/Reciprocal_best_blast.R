@@ -191,7 +191,7 @@ write.table(
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
-    col.names = FALSE)
+    col.names = TRUE)
 
 # Define end time
 print(paste("Complete", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
