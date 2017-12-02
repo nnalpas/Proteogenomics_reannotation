@@ -66,7 +66,7 @@ if (interactive()) {
         geno_name = readline(
             prompt = "Provide the genome name!"),
         circular = readline(
-            prompt = "Is the chromosome circular or linear (logical)!") %>%
+            prompt = "Is the chromosome circular (logical)?") %>%
             as.logical(.),
         annotation = choose.files(
             caption = "Choose an annotation file!",
@@ -81,7 +81,7 @@ if (interactive()) {
         make_option(
             opt_str = c("-c", "--coordinates"),
             type = "character", default = "",
-            help = "Entries coordinate file",
+            help = "Entries coordinate file (first column must be the key)",
             metavar = "character"),
         make_option(
             opt_str = c("-g", "--genome"),
@@ -96,12 +96,12 @@ if (interactive()) {
         make_option(
             opt_str = c("-t", "--circular"),
             type = "logical", default = NULL,
-            help = "Genome type is circular or linear",
+            help = "Genome type is circular?",
             metavar = "character"),
         make_option(
             opt_str = c("-a", "--annotation"),
             type = "character", default = "",
-            help = "Entries annotation file",
+            help = "Entries annotation file (first column must be the key)",
             metavar = "character"),
         make_option(
             opt_str = c("-o", "--output"),
@@ -159,14 +159,14 @@ genome <- seqinr::read.fasta(
 
 # Check whether coordinates data are present
 if (opt$coordinates != "") {
-    crossmap <- data.table::fread(
+    coordinates <- data.table::fread(
         input = opt$coordinates, sep = "\t", header = TRUE,
         stringsAsFactors = FALSE, quote = "")
 }
 
 # Check whether annotation data are present
 if (opt$annotation != "") {
-    crossmap <- data.table::fread(
+    annotations <- data.table::fread(
         input = opt$annotation, sep = "\t", header = TRUE,
         stringsAsFactors = FALSE, quote = "")
 }
@@ -178,38 +178,106 @@ if (opt$annotation != "") {
 # Get genome length
 geno_size <- seqinr::getLength(genome)
 
-# Dataframe holding genome information for bacillus subtilis
-data <- base::data.frame(
-    Chromosome = names(genome),
-    Strand = "*",
-    Start = 1,
-    End = geno_size,
-    name = names(genome),
-    length = geno_size,
-    Type = opt$circular,
-    geno = opt$geno_name,
+# Chromosomes information based on genome fasta sequences
+chromos <- base::data.frame(
+    id = names(genome),
+    chromosome = names(genome),
+    strand = "*",
+    start = 1,
+    end = geno_size,
+    type = opt$circular,
+    genome = opt$geno_name,
     stringsAsFactors = FALSE)
 
-# Create an Ideogram (GRanges object)
+# Check whether coordinates were provided by user
+if (opt$coordinates == "") {
+    
+    # Data holding genomic ranges information for the genome only
+    grange_data <- chromos %>%
+        dplyr::select(., -type, -genome)
+    
+} else {
+    
+    # Check that required columns are present in the coordinates data
+    if (!all(c(
+        "id", "strand", "chromosome", "start", "end") %in% colnames(
+            coordinates))) {
+        stop(paste0(
+            'Columns: "id", "strand", "chromosome", "start", "end" are',
+            ' missing from coordinates'))
+    }
+    
+    # Data holding genomic ranges information for submitted entries
+    grange_data <- coordinates
+    
+    # Check whether annotations were provided by user
+    if (opt$annotation != "") {
+        
+        # Rename the first column name from annotation to match the one fro
+        # the coordinates
+        colnames(annotations)[1] <- colnames(grange_data)[1]
+        
+        # Check that the column renaming did not create duplicate
+        if (any(duplicated(colnames(annotation)))) {
+            stop("Duplicated column name in annotation after renaming!")
+        }
+        
+        # Include the annotation to the coordinates
+        grange_data %<>%
+            dplyr::left_join(x = ., y = annotations)
+        
+    }
+    
+    # Format the start-end position so that start is always inferior to end
+    grange_data %<>%
+        dplyr::mutate(., start_tmp = start, end_tmp = end) %>%
+        dplyr::mutate(
+            .,
+            start = ifelse(strand == "+", start_tmp, end_tmp),
+            end = ifelse(strand == "+", end_tmp, start_tmp)) %>%
+        dplyr::select(., -end_tmp, -start_tmp)
+    
+}
+
+# Format columns to their right class (numeric)
+grange_data %<>%
+    dplyr::mutate(
+        .,
+        id = as.character(id),
+        strand = as.character(strand),
+        chromosome = as.character(chromosome),
+        start = as.integer(start),
+        end = as.integer(end)) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Create a GRanges object for all entries with coordinates
 grange <- with(
-    data = data,
+    data = grange_data,
     expr = GRanges(
-        seqnames = name,
-        ranges = IRanges(Start, End),
-        strand = Strand,
-        Chromosome = Chromosome,
-        seqinfo = Seqinfo(
-            seqnames = name,
-            seqlengths = length,
-            isCircular = Type,
-            genome = geno)))
-names(grange) <- data$Chromosome
+        seqnames = chromosome,
+        ranges = IRanges(start, end),
+        strand = strand))
+
+# Add seqinfo to the created GRanges object
+seqinfo(grange) <- Seqinfo(
+    seqnames = chromos$chromosome %>% as.character(.),
+    seqlengths = chromos$end %>% as.integer(.),
+    isCircular = chromos$type %>% as.logical(.),
+    genome = chromos$genome %>% as.character(.))
+
+# Add values to the created GRanges object
+values(grange) <- grange_data %>%
+    dplyr::select(
+        ., -chromosome, -start, -end, -strand)
+
+# Define names of the GRange entries
+names(grange) <- grange_data$id
 
 
 
 ### Results export -------------------------------------------------------
 
-# Export the bsu grange for reuse at later stage
+# Export the grange for reuse at later stage
 saveRDS(
     object = grange,
     file = opt$output)
