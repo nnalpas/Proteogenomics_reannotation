@@ -100,7 +100,7 @@ if (is.null(opt$blast) | is.null(opt$reciprocal_blast)){
 # Check whether output parameter was provided
 if (is.null(opt$output)){
     
-    opt$output <- dirname(opt$input)
+    opt$output <- dirname(opt$reciprocal_blast)
     warning(paste("Output results to path: ", opt$output, "!", sep = ""))
     
 }
@@ -146,10 +146,12 @@ blast_merge <- best_blast_data %>%
         suffix = c("_blast", "_reciproc"))
 
 # Determine which entry have a reciprocal best hits
-# this requires checking how many distinct subject ID are matched per query id
+# this requires filtering out all query ID without a reciprocal best hit
+# and checking how many distinct subject ID are matched per query id
 # as well as checking how many distinct subject sequence exist
 # (the same sequence can have different IDs across different taxon)
 blast_merge_confirmed <- blast_merge %>%
+    dplyr::filter(., !is.na(qseq_reciproc)) %>%
     dplyr::group_by(., qseqid) %>%
     dplyr::mutate(
         .,
