@@ -230,7 +230,7 @@ data_final <- blast_data_best %>%
         ., qseqid, sseqid, strand, frame, start, end,
         nucl_length, qlen, ExactCoord, Comment) %>%
     set_colnames(c(
-        "id", "genome", "strand", "frame", "start", "end",
+        "id", "chromosome", "strand", "frame", "start", "end",
         "nucl_length", "aa_length", "ExactCoord", "Comment"))
 
 
