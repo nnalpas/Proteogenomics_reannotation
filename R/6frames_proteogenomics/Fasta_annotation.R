@@ -68,7 +68,7 @@ if (interactive()) {
         key = readline(
             prompt = "Provide the key name to use for cross-annotation!"),
         output = readline(
-            prompt = "Define the output directory!"))
+            prompt = "Define the output file name!"))
     
 } else {
     
@@ -123,7 +123,10 @@ opt$columns %<>%
 # Check whether output parameter was provided
 if (opt$output == "") {
     
-    opt$output <- dirname(opt$fasta)
+    opt$output <- sub(
+        pattern = "^(.*)(\\..*)?",
+        replacement = "\\1_annot.txt",
+        x = opt$fasta)
     warning(paste0(
         "Output results to '",
         opt$output,
@@ -176,10 +179,7 @@ if (any(colnames(data) %in% c("GENES"))) {
 # Export the bsu ideogram for reuse at later stage
 write.table(
     x = data_final,
-    file = paste0(
-        opt$output, "/",
-        sub("\\.(fasta|fa)", "", basename(opt$fasta)),
-        "_annotation.txt"),
+    file = opt$output,
     quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 # Define end time
