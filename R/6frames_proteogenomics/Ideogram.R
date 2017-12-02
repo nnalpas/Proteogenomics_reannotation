@@ -77,7 +77,7 @@ if (interactive()) {
     option_list <- list(
         make_option(
             opt_str = c("-c", "--coordinates"),
-            type = "character", default = NULL,
+            type = "character", default = "",
             help = "Entries coordinate file",
             metavar = "character"),
         make_option(
@@ -92,7 +92,7 @@ if (interactive()) {
             metavar = "character"),
         make_option(
             opt_str = c("-a", "--annotation"),
-            type = "character", default = NULL,
+            type = "character", default = "",
             help = "Entries annotation file",
             metavar = "character"),
         make_option(
@@ -141,6 +141,20 @@ dir.create(dirname(opt$output))
 # Import the fasta files
 genome <- seqinr::read.fasta(
     file = opt$genome, seqtype = "DNA", as.string = TRUE)
+
+# Check whether coordinates data are present
+if (opt$coordinates != "") {
+    crossmap <- data.table::fread(
+        input = opt$coordinates, sep = "\t", header = TRUE,
+        stringsAsFactors = FALSE, quote = "")
+}
+
+# Check whether annotation data are present
+if (opt$annotation != "") {
+    crossmap <- data.table::fread(
+        input = opt$annotation, sep = "\t", header = TRUE,
+        stringsAsFactors = FALSE, quote = "")
+}
 
 
 
