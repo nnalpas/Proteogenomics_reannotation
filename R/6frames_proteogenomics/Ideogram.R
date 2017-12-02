@@ -65,6 +65,9 @@ if (interactive()) {
             multi = FALSE),
         geno_name = readline(
             prompt = "Provide the genome name!"),
+        circular = readline(
+            prompt = "Is the chromosome circular or linear (logical)!") %>%
+            as.logical(.),
         annotation = choose.files(
             caption = "Choose an annotation file!",
             multi = FALSE),
@@ -89,6 +92,11 @@ if (interactive()) {
             opt_str = c("-n", "--geno_name"),
             type = "character", default = NULL,
             help = "Genome name",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-t", "--circular"),
+            type = "logical", default = NULL,
+            help = "Genome type is circular or linear",
             metavar = "character"),
         make_option(
             opt_str = c("-a", "--annotation"),
@@ -120,6 +128,13 @@ if (is.null(opt$geno_name)) {
     print_help(opt_parser)
     stop(paste(
         "Genome name is required!"))
+    
+}
+if (is.null(opt$circular)) {
+    
+    print_help(opt_parser)
+    stop(paste(
+        "Chromosome circular or linear (logical) required!"))
     
 }
 
@@ -171,7 +186,7 @@ data <- base::data.frame(
     End = geno_size,
     name = names(genome),
     length = geno_size,
-    Type = TRUE,
+    Type = opt$circular,
     geno = opt$geno_name,
     stringsAsFactors = FALSE)
 
