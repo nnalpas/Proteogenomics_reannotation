@@ -57,18 +57,29 @@ if (interactive()) {
     
     # Define the list of input parameters
     opt <- list(
+        coordinates = choose.files(
+            caption = "Choose entries coordinate file!",
+            multi = FALSE),
         genome = choose.files(
             caption = "Choose Fasta file of the genome!",
             multi = FALSE),
         geno_name = readline(
             prompt = "Provide the genome name!"),
+        annotation = choose.files(
+            caption = "Choose an annotation file!",
+            multi = FALSE),
         output = readline(
-            prompt = "Define the output directory!"))
+            prompt = "Define the output filename (with .RDS extension)!"))
     
 } else {
     
     # Define the list of command line parameters
     option_list <- list(
+        make_option(
+            opt_str = c("-c", "--coordinates"),
+            type = "character", default = NULL,
+            help = "Entries coordinate file",
+            metavar = "character"),
         make_option(
             opt_str = c("-g", "--genome"),
             type = "character", default = NULL,
@@ -78,6 +89,11 @@ if (interactive()) {
             opt_str = c("-n", "--geno_name"),
             type = "character", default = NULL,
             help = "Genome name",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-a", "--annotation"),
+            type = "character", default = NULL,
+            help = "Entries annotation file",
             metavar = "character"),
         make_option(
             opt_str = c("-o", "--output"),
@@ -108,13 +124,10 @@ if (is.null(opt$geno_name)) {
 }
 
 # Check whether output parameter was provided
-if (opt$output == "") {
+if (opt$output == "" | length(grep("\\.RDS$", opt$output)) == 0) {
     
-    opt$output <- dirname(opt$genome)
-    warning(paste0(
-        "Output results to '",
-        opt$output,
-        "'!"))
+    print_help(opt_parser)
+    stop(paste("Output filename is required (with .RDS extension)!"))
     
 }
 
@@ -149,7 +162,7 @@ data <- base::data.frame(
     stringsAsFactors = FALSE)
 
 # Create an Ideogram (GRanges object)
-ideo <- with(
+grange <- with(
     data = data,
     expr = GRanges(
         seqnames = name,
@@ -161,16 +174,16 @@ ideo <- with(
             seqlengths = length,
             isCircular = Type,
             genome = geno)))
-names(ideo) <- data$Chromosome
+names(grange) <- data$Chromosome
 
 
 
 ### Results export -------------------------------------------------------
 
-# Export the bsu ideogram for reuse at later stage
+# Export the bsu grange for reuse at later stage
 saveRDS(
-    object = ideo,
-    file = paste0(opt$output, "/", basename(opt$genome), "_ideogram.RDS"))
+    object = grange,
+    file = opt$output)
 
 # Define end time
 print(paste("Complete", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
