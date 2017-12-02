@@ -1,0 +1,90 @@
+#%Module1.0
+#
+# Module:          modulefiles/curl/7.57.0
+# Revision:        kxmna01
+# TargetSystem:   el7
+# Priority:        normal
+#
+##### (A) Revision history:
+#
+# 02 December 2017
+#
+##### (B) Dependencies:
+#
+# No dependencies
+#
+##### (C) How to obtain software?
+# 
+# see https://curl.haxx.se/download.html
+#
+##### (D) How compile and install
+#
+# mkdir ~/Software/curl
+# cd ~/Software/curl
+# wget "https://curl.haxx.se/download/curl-7.57.0.tar.gz"
+# tar -xzvf curl-7.57.0.tar.gz
+# mkdir 7.57.0
+# cd curl-7.57.0
+# ./configure --prefix=/home-link/kxmna01/Software/curl/7.57.0
+# make
+# make test
+# make install
+#
+# the make test failed for test 2023...
+#
+# mkdir ~/modulefiles/curl
+# ln -s ~/GitHub/Proteogenomics_reannotation/Linux_bash/6frames_proteogenomics/curl_7.57.0 ~/modulefiles/curl/7.57.0
+#
+### Set version, base_dir and whatis entry:
+
+set                version             "7.57.0"
+set                base_dir            "/home-link/kxmna01/Software/curl/7.57.0"
+module-whatis      "curl Version $version  https://curl.haxx.se/docs/"
+
+### Set basic environment variables:
+
+setenv       CURL_VERSION           "$version"
+setenv       CURL_HOME              "$base_dir"
+setenv       CURL_BIN              "$base_dir/bin"
+
+### Append bin variables:
+prepend-path  PATH                     "$base_dir/bin"
+prepend-path  LIBRARY_PATH             "$base_dir/lib"
+prepend-path  INCLUDE                  "$base_dir/include"
+
+### Define help text:
+
+proc ModulesHelp { } {
+  global env
+
+  puts stderr "
+
+curl command line tool and library for transferring data with URLs
+----------
+
+In case of problems, please contact 'hpcmaster (at) uni-tuebingen.de'.
+
+"
+}
+
+# Conflicts and prerequirements should be after 'proc ModulesHelp'.
+# Otherwise, the 'module help' command will not work, if any of the
+# dependencies fails (which is odd, since 'module help'
+# should help the user to solve problems like this one).
+#
+
+### Display module load message:
+if { [module-info mode] == "load" } {
+   global env
+
+   puts stderr "
+----------
+Loading CURL Version 7.57.0.
+Invoke using:
+    (1) curl
+    
+INFO: Please read module help and references therein for additional infos.
+"
+
+}
+
