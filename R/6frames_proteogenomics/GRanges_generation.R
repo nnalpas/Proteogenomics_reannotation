@@ -26,7 +26,8 @@ if (interactive()) {
         file = paste(
             "C:/Users",
             user,
-            "Documents/GitHub/Miscellaneous/R/6frames_proteogenomics/helper.R",
+            "Documents/GitHub/Proteogenomics_reannotation/",
+            "R/6frames_proteogenomics/helper.R",
             sep = "/"))
 } else {
     source(
