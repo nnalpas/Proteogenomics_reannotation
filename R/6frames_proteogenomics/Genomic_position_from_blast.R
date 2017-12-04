@@ -71,7 +71,7 @@ if (interactive()) {
         caption = "Choose Fasta file of the genome",
         multi = FALSE) %>%
         list(.)
-    opt["output"] <- list("protein_location.txt")
+    opt["output"] <- "protein_location.txt"
     
 } else {
     
@@ -130,7 +130,7 @@ if (is.null(opt$genome)) {
 # Check whether output parameter was provided
 if (opt$output == "protein_location.txt") {
     
-    opt$output <- list(paste0("./", date_str, "_protein_location.txt"))
+    opt$output <- paste0("./", date_str, "_protein_location.txt")
     warning(paste0(
         "Output results to '",
         opt$output,
