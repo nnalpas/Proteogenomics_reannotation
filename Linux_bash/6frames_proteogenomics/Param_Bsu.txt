@@ -6,12 +6,12 @@ TaxId="224308"
 GetOrf=0
 GetNovelEntries=0
 MakeBlastDbProt=0
-MakeBlastDbNuc=1
-BlastDbBlasting=1
+MakeBlastDbNuc=0
+BlastDbBlasting=0
 BestBlast=0
 ReciprocalBlast=0
-ReciprocalBestBlast=1
-ProteinCoordinate=1
+ReciprocalBestBlast=0
+ProteinCoordinate=0
 ProteinAnnotation=0
 BSgenomeForge=1
 GRangeCreate=1
@@ -42,7 +42,8 @@ InputType="fasta"
 # BlastParam
 Eval=0.1
 NumAlign=100
-TblastnParam='-word_size 7'
+#TblastnParam='-word_size 7'
+TblastnParam=''
 
 # BSgenomeParam
 SEED="${PBS_O_HOME}/Genome/Bacillus_subtilis/seed"
