@@ -101,8 +101,9 @@ fi
 # Check whether to create a blast database for genome data
 if [ $MakeBlastDbNuc == 1 ]; then
     
-    ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "nucl" -t ${TaxId} ${UNIREFGENE} ${SIXFRAMEGENE} ${GENOME} >> ${LogDir}/MakeBlastDb.log 2>&1
-    
+ #   ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "nucl" -t ${TaxId} ${UNIREFGENE} ${SIXFRAMEGENE} ${GENOME} >> ${LogDir}/MakeBlastDb.log 2>&1
+	${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "nucl" -t ${TaxId} ${GENOME} >> ${LogDir}/MakeBlastDb.log 2>&1
+
 fi
 
 
@@ -114,9 +115,9 @@ fi
 # Check whether to blast the ORFs against taxon reference protein and RNA and against all uniprot and ncbi
 if [ $BlastDbBlasting == 1 ]; then
     
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l "all" -a "blastp" -s ${SIXFRAMEPROT} -q ${UNIREFPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFprot_vs_Refprot" > ${LogDir}/BlastDbBlasting.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l ${ProjDir}/Novel_res/*_Novel_ORF.txt -a "blastp" -s ${SIXFRAMEPROT} -q ${ALLUNIPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFprot_vs_Uniprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l ${ProjDir}/Novel_res/*_Novel_ORF.txt -a "blastp" -s ${SIXFRAMEPROT} -q ${ALLNCBIPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFprot_vs_NCBIprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    #${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l "all" -a "blastp" -s ${SIXFRAMEPROT} -q ${UNIREFPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFprot_vs_Refprot" > ${LogDir}/BlastDbBlasting.log 2>&1
+    #${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l ${ProjDir}/Novel_res/*_Novel_ORF.txt -a "blastp" -s ${SIXFRAMEPROT} -q ${ALLUNIPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFprot_vs_Uniprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    #${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l ${ProjDir}/Novel_res/*_Novel_ORF.txt -a "blastp" -s ${SIXFRAMEPROT} -q ${ALLNCBIPROT} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFprot_vs_NCBIprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
     #${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "nucl" -l "all" -a "blastn" -s ${SIXFRAMEGENE} -q ${UNIREFGENE} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFnucl_vs_Refrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
     #${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "nucl" -l ${ProjDir}/Novel_res/Novel_ORF.txt -a "blastn" -s ${SIXFRAMEGENE} -q ${ALLNCBIRNA} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "ORFnucl_vs_NCBIrna" >> ${LogDir}/BlastDbBlasting.log 2>&1
     ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Blast -y "prot" -l "all" -a "tblastn" -s ${UNIREFPROT} -q ${GENOME} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Refprot_vs_Genome" >> ${LogDir}/BlastDbBlasting.log 2>&1
@@ -212,9 +213,10 @@ fi
 # Check whether to compute coordinate of Sanger sequence
 if [ $SangerCoordinate == 1 ]; then
     
-    ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "nucl" -t ${TaxId} ${SANGER} ${GENOME} > ${LogDir}/MakeBlastDb.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Sanger_validation -y "nucl" -l "all" -a "blastn" -s ${SANGER} -q ${GENOME} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Sanger_vs_Genome" > ${LogDir}/SangerCoordinate.log 2>&1
-    
+    ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "nucl" -t ${TaxId} ${SANGER} ${GENOME} > ${LogDir}/SangerCoordinate.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Sanger_validation -y "nucl" -l "all" -a "blastn" -s ${SANGER} -q ${GENOME} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Sanger_vs_Genome" >> ${LogDir}/SangerCoordinate.log 2>&1
+	${PBS_O_HOME}/bin/Genomic_position_from_blast.R -f ${SANGER} -b ${ProjDir}/Sanger_validation/Sanger_vs_Genome -g ${GENOME} -o ${ProjDir}/Sanger_validation/Sanger_seq_coordinates.txt >> ${LogDir}/SangerCoordinate.log 2>&1
+
 fi
 
 
