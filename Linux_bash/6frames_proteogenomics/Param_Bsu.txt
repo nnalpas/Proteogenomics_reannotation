@@ -39,6 +39,7 @@ InputType="fasta"
 # BlastParam
 Eval=0.1
 NumAlign=100
+TblastnParam='-word_size 7'
 
 # ClustalParam
 #RBSLOW="${PBS_O_HOME}/work/Bsu_6frame/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
