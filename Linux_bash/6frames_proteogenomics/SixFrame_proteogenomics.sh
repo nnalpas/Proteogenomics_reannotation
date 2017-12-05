@@ -63,12 +63,10 @@ if [ $GetOrf == 1 ]; then
 
     ${PBS_O_HOME}/bin/GetOrf.sh ${ProjDir}/Nuc_translation 0 ${TABLE} ${MINSIZE} ${CIRCULAR} ${GENOME} > ${LogDir}/GetOrf.log 2>&1
     ${PBS_O_HOME}/bin/GetOrf.sh ${ProjDir}/Nuc_translation 2 ${TABLE} ${MINSIZE} ${CIRCULAR} ${GENOME} >> ${LogDir}/GetOrf.log 2>&1
-    
-fi
+	#SIXFRAMEPROT=`echo $GENOME | perl -p -e 's/^(.*\\/)(.*)\\.fasta/$1Find0_$2_FIXED.fasta/'`
+	#SIXFRAMEGENE=`echo $GENOME | perl -p -e 's/^(.*\\/)(.*)\\.fasta/$1Find2_$2_FIXED.fasta/'`
 
-# Define the file names for the ORF of the genomic sequence
-#SIXFRAMEPROT=`echo $GENOME | perl -p -e 's/^(.*\\/)(.*)\\.fasta/$1Find0_$2_FIXED.fasta/'`
-#SIXFRAMEGENE=`echo $GENOME | perl -p -e 's/^(.*\\/)(.*)\\.fasta/$1Find2_$2_FIXED.fasta/'`
+fi
 
 
 
@@ -219,6 +217,35 @@ fi
 
 
 
+##########################
+# GRange object creation #
+##########################
+
+# Check whether to perform GRange object creation
+if [ $GRangesGeneration == 1 ]; then
+	
+	${PBS_O_HOME}/bin/GRanges_generation.R -g ${GENOME} -n ${GenomeName} -t ${Circular} -o ${ProjDir}/GRanges/Genome_grange.RDS > ${LogDir}/GRangesGeneration.log 2>&1
+    ${PBS_O_HOME}/bin/GRanges_generation.R -c ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt -g ${GENOME} -n ${GenomeName} -t ${Circular} -a ${ProjDir}/ProtAnnotation/Ref_prot_annotations.txt -o ${ProjDir}/GRanges/Ref_prot_grange.RDS > ${LogDir}/GRangesGeneration.log 2>&1
+	${PBS_O_HOME}/bin/GRanges_generation.R -c ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt -g ${GENOME} -n ${GenomeName} -t ${Circular} -a ${ProjDir}/ProtAnnotation/Orf_prot_annotations.txt -o ${ProjDir}/GRanges/Orf_prot_grange.RDS > ${LogDir}/GRangesGeneration.log 2>&1
+	
+fi
+
+
+
+##################################
+# Peptide coordinate computation #
+##################################
+
+# Check whether to perform peptide coordinate identification
+if [ $PeptideCoordinate == 1 ]; then
+
+    ${PBS_O_HOME}/bin/Genomic_position_for_peptides.R -p ${ProjDir}/Novel_res/Peptides_location.RDS -k ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt -n ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt -o ${ProjDir}/PeptPosition/Pept_seq_coordinates.txt > ${LogDir}/ProteinCoordinate.log 2>&1
+	${PBS_O_HOME}/bin/GRanges_generation.R -c ${ProjDir}/PeptPosition/Pept_seq_coordinates.txt -g ${GENOME} -n ${GenomeName} -t ${Circular} -o ${ProjDir}/GRanges/Pept_seq_grange.RDS > ${LogDir}/GRangesGeneration.log 2>&1
+	
+fi
+
+
+
 ################################
 # Sanger validation coordinate #
 ################################
@@ -229,7 +256,9 @@ if [ $SangerCoordinate == 1 ]; then
     ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "nucl" -t ${TaxId} ${SANGER} ${GENOME} > ${LogDir}/SangerCoordinate.log 2>&1
     ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Sanger_validation -y "nucl" -l "all" -a "blastn" -s ${SANGER} -q ${GENOME} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Sanger_vs_Genome" >> ${LogDir}/SangerCoordinate.log 2>&1
 	${PBS_O_HOME}/bin/Genomic_position_from_blast.R -f ${SANGER} -b ${ProjDir}/Sanger_validation/Sanger_vs_Genome -g ${GENOME} -o ${ProjDir}/Sanger_validation/Sanger_seq_coordinates.txt >> ${LogDir}/SangerCoordinate.log 2>&1
+	${PBS_O_HOME}/bin/GRanges_generation.R -c ${ProjDir}/Sanger_validation/Sanger_seq_coordinates.txt -g ${GENOME} -n ${GenomeName} -t ${Circular} -o ${ProjDir}/GRanges/Sanger_seq_grange.RDS > ${LogDir}/GRangesGeneration.log 2>&1
 
+	
 fi
 
 
