@@ -14,6 +14,8 @@ ReciprocalBestBlast=1
 ProteinCoordinate=1
 ProteinAnnotation=0
 BSgenomeForge=1
+GRangeCreate=1
+PeptideCoordinate=1
 SangerCoordinate=0
 ClustalAlign=0
 
@@ -32,7 +34,7 @@ UNIREFGENE=""
 ALLUNIPROT="${PBS_O_HOME}/BlastDB/uniprot_sprot_trembl.fasta"
 ALLNCBIPROT="${PBS_O_HOME}/BlastDB/refseq_protein"
 ALLNCBIRNA="${PBS_O_HOME}/BlastDB/refseq_rna"
-#SANGER="${PBS_O_HOME}/work/Bsu_6frame/Sanger_validation/Sanger_validation.fasta"
+#SANGER="${PBS_O_HOME}/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
 
 # BlastDatab
 InputType="fasta"
@@ -45,6 +47,10 @@ TblastnParam='-word_size 7'
 # BSgenomeParam
 SEED="${PBS_O_HOME}/Genome/Bacillus_subtilis/seed"
 
+# GRangesParam
+GenomeName="AL009126.3"
+Circular=TRUE
+
 # ClustalParam
-#RBSLOW="${PBS_O_HOME}/work/Bsu_6frame/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
-#RBSHIGH="${PBS_O_HOME}/work/Bsu_6frame/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
+#RBSLOW="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
+#RBSHIGH="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
