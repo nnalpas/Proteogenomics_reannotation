@@ -21,6 +21,7 @@ display_usage() {
 			-e	[float]	The e-value threshold for blast to be reported
 			-n	[int]	The maximum number of alignment to report
         	-t	[int]	Number of threads. Only applicable to FastQC.
+			-m	[str]	Additional blast parameters.
 			-b	[str]	The name of the output file
         	-h	[]	To display the help.
 	"
@@ -32,9 +33,10 @@ l_default="all"
 e_default=0.1
 n_default=100
 t_default=1
+m_default=""
 
 # Parse user parameters
-while getopts "o:y:l:a:s:q:e:n:b:t:h" opt; do
+while getopts "o:y:l:a:s:q:e:n:m:b:t:h" opt; do
 	case $opt in
 		o)
 			WKDIR=$OPTARG
@@ -73,6 +75,10 @@ while getopts "o:y:l:a:s:q:e:n:b:t:h" opt; do
 			BASENAME=$OPTARG
 			shift $((OPTIND-1)); OPTIND=1
 			;;
+		m)
+			ADDITIONAL=$OPTARG
+			shift $((OPTIND-1)); OPTIND=1
+			;;
 		t)
 			THREADS=$OPTARG
 			shift $((OPTIND-1)); OPTIND=1
@@ -101,6 +107,7 @@ done
 : ${EVAL=$e_default}
 : ${NUMALIGN=$n_default}
 : ${THREADS=$t_default}
+: ${ADDITIONAL=$m_default}
 
 # Check for mandatory parameters
 if [ -z "${DBTYPE}" ]; then
@@ -147,7 +154,7 @@ if [ ${ENTRY} == 'all' ]; then
         -out ${WKDIR}/${BASENAME} \
         -evalue ${EVAL} \
         -num_alignments ${NUMALIGN} \
-        -num_threads ${THREADS} \
+        -num_threads ${THREADS} ${ADDITIONAL} \
         -outfmt '6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qlen qframe qseq sstart send slen sframe sseq staxid ssciname sstrand evalue bitscore score'"
 
 else
