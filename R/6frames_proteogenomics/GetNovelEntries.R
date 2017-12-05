@@ -228,7 +228,7 @@ print(table(evid_match$group, useNA = "always"))
 
 # Open a file for plot visualisation
 pdf(
-    file = paste0(opt$output, "/", date_str, "_GetNovelEntries.pdf"),
+    file = paste0(opt$output, "/", "GetNovelEntries.pdf"),
     width = 10, height = 10)
 
 # Histogram of evidence counts
@@ -402,19 +402,19 @@ dev.off()
 saveRDS(
     object = evid_match,
     file = paste(
-        opt$output, "/", date_str, "_Sequence_group_mapping.RDS", sep = ""))
+        opt$output, "/", "Sequence_group_mapping.RDS", sep = ""))
 
 # Save the peptide location data
 saveRDS(
     object = pep_loc,
     file = paste(
-        opt$output, "/", date_str, "_Peptides_location.RDS", sep = ""))
+        opt$output, "/", "Peptides_location.RDS", sep = ""))
 
 # Export complete evidence info for these novel evidence
 write.table(
     x = evid_match,
     file = paste(
-        opt$output, "/", date_str, "_group_evidence.txt", sep = ""),
+        opt$output, "/", "Group_evidence.txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
@@ -430,7 +430,7 @@ write.table(
         .[["Proteins"]] %>%
         unique(.),
     file = paste(
-        opt$output, "/", date_str, "_Novel_ORF.txt", sep = ""),
+        opt$output, "/", "Novel_ORF.txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
