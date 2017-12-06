@@ -77,7 +77,7 @@ for file in `ls ${FASTAS}`; do
 	nmb_entries=`grep -c "^>" $file`
 	if [[ "$nmb_entries" -eq 1 ]]; then
 		name=`grep "^>" $FASTAS | sed -E "s/^>([^ ]*).*/\1/"`
-		ext=`basename ${file} | sed -E "s/.*(\.fa(sta)?(\.gz)?)$/\1/"`
+		ext=`basename ${file} | sed -E "s/.*(\.fa(sta)?(\.gz)?)$/\1/" | sed -E "s/sta//"`
 		cp ${file} ${WKDIR}/${name}${ext}
 	else
 		echo "More than one fasta header at: ${file}!"
