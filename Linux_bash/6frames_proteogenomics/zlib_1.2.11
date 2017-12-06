@@ -1,0 +1,84 @@
+#%Module1.0
+#
+# Module:          modulefiles/zlib/1.2.11
+# Revision:        kxmna01
+# TargetSystem:   el7
+# Priority:        normal
+#
+##### (A) Revision history:
+#
+# 06 December 2017
+#
+##### (B) Dependencies:
+#
+# No dependencies
+#
+##### (C) How to obtain software?
+# 
+# see https://zlib.net/
+#
+##### (D) How compile and install
+#
+# mkdir ~/Software/zlib
+# cd ~/Software/zlib
+# wget "https://zlib.net/zlib-1.2.11.tar.gz"
+# tar -xzvf zlib-1.2.11.tar.gz
+# mkdir 1.2.11
+# cd ./zlib-1.2.11
+# ./configure --prefix=/home-link/kxmna01/Software/zlib/1.2.11
+# make
+# make test
+# make install
+# mkdir ~/modulefiles/zlib
+# ln -s ~/GitHub/Proteogenomics_reannotation/Linux_bash/6frames_proteogenomics/zlib_1.2.11 ~/modulefiles/zlib/1.2.11
+#
+### Set version, base_dir and whatis entry:
+
+set                version             "1.2.11"
+set                base_dir            "/home-link/kxmna01/Software/zlib/1.2.11"
+module-whatis      "zlib Version $version  https://zlib.net/"
+
+### Set basic environment variables:
+
+setenv       ZLIB_VERSION           "$version"
+setenv       ZLIB_HOME              "$base_dir"
+
+### Append bin variables:
+prepend-path  LIBRARY_PATH             "$base_dir/lib"
+prepend-path  INCLUDE                  "$base_dir/include"
+
+### Define help text:
+
+proc ModulesHelp { } {
+  global env
+
+  puts stderr "
+
+zlib: A Massively Spiffy Yet Delicately Unobtrusive Compression Library
+----------
+
+In case of problems, please contact 'hpcmaster (at) uni-tuebingen.de'.
+
+"
+}
+
+# Conflicts and prerequirements should be after 'proc ModulesHelp'.
+# Otherwise, the 'module help' command will not work, if any of the
+# dependencies fails (which is odd, since 'module help'
+# should help the user to solve problems like this one).
+#
+
+### Display module load message:
+if { [module-info mode] == "load" } {
+   global env
+
+   puts stderr "
+----------
+Loading ZLIB Version 1.2.11.
+No invocation...
+    
+INFO: Please read module help and references therein for additional infos.
+"
+
+}
+
