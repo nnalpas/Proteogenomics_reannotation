@@ -99,11 +99,16 @@ ${PBS_O_HOME}/bin/BSgenome_forging.R -s ${WKDIR}/${NEWSEED} -f ${WKDIR} -o ${WKD
 # Build the source package
 R CMD build ${WKDIR}
 
-# Check the package
-R CMD check ${WKDIR}/*.tar.gz
-
-# Install the package
-R CMD INSTALL ${WKDIR}/*.tar.gz
+# Check for presence of a package tar.gz file
+for pkg in `ls *.tar.gz`; do
+	
+	# Check the package
+	R CMD check ${WKDIR}/${pkg}
+	
+	# Install the package
+	R CMD INSTALL ${WKDIR}/${pkg}
+	
+done
 
 # Time scripts ends
 echo "Completed $(date +"%T %d-%m-%Y")."
