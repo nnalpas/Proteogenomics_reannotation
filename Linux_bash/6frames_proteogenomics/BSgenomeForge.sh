@@ -97,16 +97,17 @@ echo "seqs_srcdir: ${WKDIR}" >> ${WKDIR}/${NEWSEED}
 ${PBS_O_HOME}/bin/BSgenome_forging.R -s ${WKDIR}/${NEWSEED} -f ${WKDIR} -o ${WKDIR}
 
 # Build the source package
-R CMD build ${WKDIR}
+pkg=`grep "^Package: " ${WKDIR}/${NEWSEED} | sed -E "s/^Package: (.+)$/\1/"`
+R CMD build ${WKDIR}/${pkg}
 
 # Check for presence of a package tar.gz file
-for pkg in `ls *.tar.gz`; do
+for tarball in `ls *.tar.gz`; do
 	
 	# Check the package
-	R CMD check ${WKDIR}/${pkg}
+	R CMD check ${WKDIR}/${tarball}
 	
 	# Install the package
-	R CMD INSTALL ${WKDIR}/${pkg}
+	R CMD INSTALL ${WKDIR}/${tarball}
 	
 done
 
