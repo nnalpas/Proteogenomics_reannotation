@@ -72,20 +72,21 @@ if [ ! -d ${WKDIR} ] ; then
 fi
 
 # Copy seed file and all fasta files into the output directory
-cp ${SEED} ${WKDIR}
+echo "cp ${SEED} ${WKDIR}"
 for file in `ls ${TARGETFILES}`; do
-	cp ${file} ${WKDIR}
+	echo "cp ${file} ${WKDIR}"
 done
-
+exit 1
 # Append the genome sequence directory to the seed file
-if [[ `grep "seqs_srcdir" ${WKDIR}/basename ${SEED}` ]]; then
+NEWSEED=`basename ${SEED}`
+if [[ `grep "seqs_srcdir" ${WKDIR}/${NEWSEED}` ]]; then
 	echo "Value already present for seqs_srcdir at ${WKDIR}/`basename ${SEED}`!"
 	exit 1
 fi
-echo "seqs_srcdir: ${WKDIR}" >> ${WKDIR}/`basename ${SEED}`
+echo "seqs_srcdir: ${WKDIR}" >> ${WKDIR}/${NEWSEED}
 
 # Use R script to generate all configuration for BSgenome package
-${PBS_O_HOME}/bin/BSgenome_forging.R -s ${WKDIR}/`basename ${SEED}` -f ${WKDIR} -o ${WKDIR}
+${PBS_O_HOME}/bin/BSgenome_forging.R -s ${WKDIR}/${NEWSEED} -f ${WKDIR} -o ${WKDIR}
 
 # Build the source package
 R CMD build ${WKDIR}
