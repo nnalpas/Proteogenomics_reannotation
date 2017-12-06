@@ -99,7 +99,7 @@ ${PBS_O_HOME}/bin/BSgenome_forging.R -s ${WKDIR}/${NEWSEED} -f ${WKDIR} -o ${WKD
 # Build the source package
 pkg=`grep "^Package: " ${WKDIR}/${NEWSEED} | sed -E "s/^Package: (.+)$/\1/"`
 cd ${WKDIR}
-R CMD build ${WKDIR}/${pkg}
+R CMD build ${WKDIR}/${pkg}/
 cd ${PBS_O_WORKDIR}
 
 # Check for presence of a package tar.gz file
