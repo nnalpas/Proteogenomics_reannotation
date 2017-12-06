@@ -72,11 +72,12 @@ if [ ! -d ${WKDIR} ] ; then
 fi
 
 # Copy seed file and all fasta files into the output directory
-echo "cp ${SEED} ${WKDIR}"
-for file in `ls ${TARGETFILES}`; do
-	echo "cp ${file} ${WKDIR}"
+cp ${SEED} ${WKDIR}
+for file in `ls ${FASTAS}`; do
+	cp ${file} ${WKDIR}
 done
 exit 1
+
 # Append the genome sequence directory to the seed file
 NEWSEED=`basename ${SEED}`
 if [[ `grep "seqs_srcdir" ${WKDIR}/${NEWSEED}` ]]; then

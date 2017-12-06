@@ -214,6 +214,8 @@ pep_coord %<>%
     dplyr::group_by(., pep, start, end) %>%
     dplyr::summarise_all(funs(toString(x = unique(.), width = NULL)))
 
+# Rename the pep column to id (id is a mandatory column for GRange script)
+colnames(pep_coord)[colnames(pep_coord) == "pep"] <- "id"
 
 
 ### Results export -------------------------------------------------------
