@@ -47,6 +47,13 @@ load_package("splitstackshape")
 load_package("stringr")
 load_package("optparse")
 load_package("seqinr")
+load_package("BiocGenerics")
+load_package("S4Vectors")
+load_package("IRanges")
+load_package("GenomeInfoDb")
+load_package("GenomicRanges")
+load_package("Biostrings")
+load_package("rtracklayer")
 load_package("BSgenome")
 
 

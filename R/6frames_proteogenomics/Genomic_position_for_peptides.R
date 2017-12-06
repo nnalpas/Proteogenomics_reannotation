@@ -125,7 +125,7 @@ if (is.null(opt$orf_prot)) {
 # Check whether output parameter was provided
 if (opt$output == "peptide_location.txt") {
     
-    opt$output <- paste0("./", date_str, "peptide_location.txt")
+    opt$output <- paste0("./", "peptide_location.txt")
     warning(paste0(
         "Output results to '",
         opt$output,
@@ -204,7 +204,7 @@ pep_coord <- pep_loc %>%
 # Keep only required columns and remove peptides without coordinates
 pep_coord %<>%
     dplyr::select(
-        ., pep, genome, strand, frame, start, end, nucl_length,
+        ., pep, chromosome, strand, frame, start, end, nucl_length,
         aa_length, prot, startAA, endAA, ExactCoord, Comment, Database) %>%
     dplyr::filter(., !is.na(start)) %>%
     unique(.)
