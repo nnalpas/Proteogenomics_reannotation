@@ -74,7 +74,15 @@ fi
 # Copy seed file and all fasta files into the output directory
 cp ${SEED} ${WKDIR}
 for file in `ls ${FASTAS}`; do
-	cp ${file} ${WKDIR}
+	nmb_entries=`grep -c "^>" $file`
+	if [[ "$nmb_entries" -eq 1 ]]; then
+		name=`grep "^>" $FASTAS | sed -E "s/^>([^ ]*).*/\1/"`
+		ext=`basename ${file} | sed -E "s/.*(\.fa(sta)?(\.gz)?)$/\1/"`
+		cp ${file} ${WKDIR}/${name}${ext}
+	else
+		echo "More than one fasta header at: ${file}!"
+		exit 1
+	fi
 done
 
 # Append the genome sequence directory to the seed file
