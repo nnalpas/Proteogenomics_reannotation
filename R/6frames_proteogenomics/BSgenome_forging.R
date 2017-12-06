@@ -135,7 +135,7 @@ pkg_name <- readLines(con = opt$seed, n = 1) %>%
 orig_dir <- getwd()
 setwd(opt$output)
 system(
-    command = paste0('"R CMD build "', opt$output, "/", pkg_name),
+    command = paste0('"R CMD build ./"', pkg_name),
     wait = TRUE)
 setwd(orig_dir)
 
