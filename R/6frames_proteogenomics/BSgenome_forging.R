@@ -127,6 +127,18 @@ if (is.null(opt$output) | opt$output == "") {
 forgeBSgenomeDataPkg(
     x = opt$seed, seqs_srcdir = opt$fasta, destdir = opt$output)
 
+# Get the name of the package directory
+pkg_name <- readLines(con = opt$seed, n = 1) %>%
+    sub(pattern = "^Package: ", replacement = "", x = .)
+
+# Build the source package
+orig_dir <- getwd()
+setwd(opt$output)
+system(
+    command = paste0('"R CMD build "', opt$output, "/", pkg_name),
+    wait = TRUE)
+setwd(orig_dir)
+
 # Define end time
 print(paste("Complete", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
 
