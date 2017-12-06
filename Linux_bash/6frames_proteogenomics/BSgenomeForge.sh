@@ -76,7 +76,6 @@ cp ${SEED} ${WKDIR}
 for file in `ls ${FASTAS}`; do
 	cp ${file} ${WKDIR}
 done
-exit 1
 
 # Append the genome sequence directory to the seed file
 NEWSEED=`basename ${SEED}`
