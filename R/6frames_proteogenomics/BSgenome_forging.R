@@ -55,6 +55,7 @@ load_package("GenomicRanges")
 load_package("Biostrings")
 load_package("rtracklayer")
 load_package("BSgenome")
+load_package("devtools")
 
 
 
@@ -135,9 +136,12 @@ pkg_name <- readLines(con = opt$seed, n = 1) %>%
 orig_dir <- getwd()
 setwd(opt$output)
 system(
-    command = shQuote(paste0("R CMD build ", pkg_name)),
+    command = paste("R CMD build ", shQuote(pkg_name)),
     wait = TRUE)
 setwd(orig_dir)
+#devtools::build(
+#    pkg = paste0(opt$output, "/", pkg_name),
+#    path = opt$output, binary = FALSE)
 
 # Define end time
 print(paste("Complete", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
