@@ -55,7 +55,7 @@ load_package("GenomicRanges")
 load_package("Biostrings")
 load_package("rtracklayer")
 load_package("BSgenome")
-load_package("devtools")
+#load_package("devtools")
 
 
 
