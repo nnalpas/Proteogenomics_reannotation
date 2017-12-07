@@ -137,7 +137,9 @@ orig_dir <- getwd()
 setwd(opt$output)
 print("Building package...")
 system(
-    command = paste("R CMD build --no-manual --no-build-vignettes ", shQuote(pkg_name)),
+    command = paste(
+        "R CMD build --no-manual --no-build-vignettes ",
+        shQuote(pkg_name)),
     wait = TRUE)
 setwd(orig_dir)
 #devtools::build(
@@ -157,7 +159,7 @@ system(
 print("Installing package...")
 system(
     command = paste(
-        "R CMD install ",
+        "R CMD INSTALL ",
         shQuote(list.files(
             path = opt$output, pattern = pkg_name, full.names = TRUE))),
     wait = TRUE)
