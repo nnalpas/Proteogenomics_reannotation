@@ -135,6 +135,7 @@ pkg_name <- readLines(con = opt$seed, n = 1) %>%
 # Build the source package
 orig_dir <- getwd()
 setwd(opt$output)
+print("Building package...")
 system(
     command = paste("R CMD build ", shQuote(pkg_name)),
     wait = TRUE)
@@ -144,6 +145,7 @@ setwd(orig_dir)
 #    path = opt$output, binary = FALSE)
 
 # Check the package
+print("Checking package...")
 system(
     command = paste(
         "R CMD check ",
@@ -152,6 +154,7 @@ system(
     wait = TRUE)
 
 # Install the package
+print("Installing package...")
 system(
     command = paste(
         "R CMD install ",
