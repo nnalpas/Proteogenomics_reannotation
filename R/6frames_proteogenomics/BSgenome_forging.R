@@ -143,6 +143,22 @@ setwd(orig_dir)
 #    pkg = paste0(opt$output, "/", pkg_name),
 #    path = opt$output, binary = FALSE)
 
+# Check the package
+system(
+    command = paste(
+        "R CMD check ",
+        shQuote(list.files(
+            path = opt$output, pattern = pkg_name, full.names = TRUE))),
+    wait = TRUE)
+
+# Install the package
+system(
+    command = paste(
+        "R CMD install ",
+        shQuote(list.files(
+            path = opt$output, pattern = pkg_name, full.names = TRUE))),
+    wait = TRUE)
+
 # Define end time
 print(paste("Complete", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
 
