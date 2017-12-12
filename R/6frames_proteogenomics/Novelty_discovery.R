@@ -22,82 +22,159 @@ user <- Sys.info()[["user"]]
 ### List of required packages -----------------------------------------------
 
 # Source the custom user functions
-#source(
-#    file = paste(
-#        "C:/Users",
-#        user,
-#        "Documents/GitHub/Miscellaneous/R/General/General_function.R",
-#        sep = "/"))
-source(
-    file = paste(
-        "/home-link",
-        user,
-        "bin/General_function.R",
-        sep = "/"))
+if (interactive()) {
+    source(
+        file = paste(
+            "C:/Users",
+            user,
+            "Documents/GitHub/Proteogenomics_reannotation/",
+            "R/6frames_proteogenomics/helper.R",
+            sep = "/"))
+} else {
+    source(
+        file = paste(
+            "/home-link",
+            user,
+            "bin/helper.R",
+            sep = "/"))
+}
 
 # Load the required packages (or install if not already in library)
-load_package(plyr)
-load_package(dplyr)
-load_package(magrittr)
-load_package(data.table)
-load_package(splitstackshape)
-load_package(stringr)
-load_package(optparse)
-load_package(seqinr)
+load_package("plyr")
+load_package("dplyr")
+load_package("magrittr")
+load_package("data.table")
+load_package("splitstackshape")
+load_package("stringr")
+load_package("optparse")
+load_package("seqinr")
 
 
 
 ### Parameters setting up ------------------------------------------------
 
-# Define the list of command line parameters
-option_list <- list(
-    make_option(
-        opt_str = c("-e", "--evidence"),
-        type = "character", default = NULL,
-        help = "Evidence with peptide group info", metavar = "character"),
-    make_option(
-        opt_str = c("-p", "--peptide_location"),
-        type = "character", default = NULL,
-        help = "Peptide location file", metavar = "character"),
-    make_option(
-        opt_str = c("-r", "--reference_fasta"),
-        type = "character", default = NULL,
-        help = "Reference protein fasta file", metavar = "character"),
-    make_option(
-        opt_str = c("-n", "--novel_fasta"),
-        type = "character", default = NULL,
-        help = "ORF fasta file", metavar = "character"),
-    make_option(
-        opt_str = c("-rr", "--reciprocal_blast_ref"),
-        type = "character", default = NULL,
-        help = "Reciprocal blast against reference", metavar = "character"),
-    make_option(
-        opt_str = c("-ru", "--reciprocal_blast_uniprot"),
-        type = "character", default = NULL,
-        help = "Reciprocal blast against all uniprot", metavar = "character"),
-    make_option(
-        opt_str = c("-o", "--output"),
-        type = "character", default = "", 
-        help = "Output file name [default= %default]", metavar = "character"))
-
-# Parse the parameters provided on command line by user
-opt_parser <- OptionParser(option_list = option_list)
-opt <- parse_args(opt_parser)
+# Define input parameters (interactively or from command line)
+if (interactive()) {
+    
+    # Define the list of input parameters
+    opt <- list(
+        evidence = choose.files(
+            caption = "Choose evidence (.RDS) file containing database info!",
+            multi = FALSE),
+        reference_fasta = choose.files(
+            caption = "Choose Fasta file containing known proteins!",
+            multi = FALSE),
+        output = readline(
+            prompt = "Define the output directory!"))
+    
+    
+    
+    
+        peptide_location = ,
+        
+        novel_fasta = choose.files(
+            caption = "Choose Fasta file containing ORF proteins!",
+            multi = FALSE),
+        blast_ref = ,
+        reciprocal_blast_uniprot = ,
+        reciprocal_blast_ncbi = ,
+        output = )
+    
+} else {
+    
+    # Define the list of command line parameters
+    option_list <- list(
+        make_option(
+            opt_str = c("-e", "--evidence"),
+            type = "character", default = NULL,
+            help = "Evidence with database group info",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-r", "--reference_fasta"),
+            type = "character", default = NULL,
+            help = "Reference protein fasta file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-o", "--output"),
+            type = "character", default = "",
+            help = "Output directory", metavar = "character"))
+    
+    
+    
+    
+    
+    
+        make_option(
+            opt_str = c("-p", "--peptide_location"),
+            type = "character", default = NULL,
+            help = "Peptide location file",
+            metavar = "character"),
+        
+        make_option(
+            opt_str = c("-n", "--novel_fasta"),
+            type = "character", default = NULL,
+            help = "ORF fasta file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-b", "--blast_ref"),
+            type = "character", default = NULL,
+            help = "Blast against reference",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-ru", "--reciprocal_blast_uniprot"),
+            type = "character", default = NULL,
+            help = "Reciprocal blast against all uniprot",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-rn", "--reciprocal_blast_ncbi"),
+            type = "character", default = NULL,
+            help = "Reciprocal blast against all uniprot",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-o", "--output"),
+            type = "character", default = "", 
+            help = "Output file name [default= %default]",
+            metavar = "character"))
+    
+    # Parse the parameters provided on command line by user
+    opt_parser <- OptionParser(option_list = option_list)
+    opt <- parse_args(opt_parser)
+    
+}
 
 # Check whether inputs parameter was provided
-if (is.null(opt$fasta) | is.null(opt$blast) | is.null(opt$genomic_position)) {
+if (is.null(opt$evidence)) {
     
     print_help(opt_parser)
-    stop(paste(
-        "The  input arguments must be supplied",
-        "(fasta, blast and genomic position files)!"))
+    stop("The input evidence must be supplied!")
+    
+}
+if (is.null(opt$reference_fasta)) {
+    
+    print_help(opt_parser)
+    stop("The input reference fasta must be supplied!")
     
 }
 
 # Check whether output parameter was provided
 if (opt$output == "") {
     
-    warning("Output results to !")
+    opt$output <- dirname(opt$evidence)
+    warning(paste("Output results to ", opt$output, "!"))
+    
+}
+
+
+
+
+
+
+if (is.null(opt$fasta) | is.null(opt$blast) | is.null(opt$genomic_position)) {
+    
+    print_help(opt_parser)
+    stop(paste(
+        "The  input arguments must be supplied",
+        "(fasta, blast and genomic position files)!"))
     
 }
 
@@ -110,17 +187,23 @@ evid <- opt$evidence %>%
     as.character(.) %>%
     readRDS(file = .)
 
-# Import the peptide location within proteins
-pep_loc <- opt$peptide_location %>%
-    as.character(.) %>%
-    readRDS(file = .)
-
 # Import the fasta files
-fasta <- c(Known = opt$reference_fasta, Novel = opt$novel_fasta) %>%
+fasta <- c(Known = opt$reference_fasta) %>%
     purrr::map(
         .x = ., .f = seqinr::read.fasta, seqtype = "AA", as.string = TRUE)
 names(fasta$Known) %<>%
     uni_id_clean(.)
+
+
+
+
+
+
+
+# Import the peptide location within proteins
+pep_loc <- opt$peptide_location %>%
+    as.character(.) %>%
+    readRDS(file = .)
 
 # Import the reciprocal blast best hits between novel proteins and reference
 # proteins
@@ -136,28 +219,44 @@ reciprocal_blast_uniprot <- opt$reciprocal_blast_uniprot %>%
 
 
 
+ggplot(data = evid, mapping = aes(x = PEP, fill = Database)) +
+    geom_density(aes(y = ..scaled..), alpha = 0.5) +
+    geom_vline(
+        xintercept = median(evid[evid$Database == "Target", "PEP"]),
+        colour = "red", size = 1, linetype = "dashed") +
+    coord_cartesian(xlim = c(0, quantile(evid$PEP, probs = 0.95))) +
+    ylab(label = "Scaled density") +
+    theme_bw()
+
+
+
 ### Levenshtein distance -------------------------------------------------
 
 # Keep only sequence for novel peptide
-peptides <- evid %>%
+novel_pep <- evid %>%
     dplyr::filter(., group == "Novel") %>%
     .[["Sequence"]] %>%
     unique(.)
 
-# Compute the levenshtein distance for all novel peptide and keep
-# the minimum leven score result per peptide
+# Compute the levenshtein distance for all novel peptide
 leven_data <- adist(
-    x = peptides,
+    x = novel_pep,
     y = fasta$Known,
     partial = TRUE,
-    ignore.case = TRUE) %>%
-    set_rownames(peptides) %>%
+    ignore.case = TRUE)
+
+# Reformat the data (transpose dataframe and gather)
+leven_data %<>%
+    set_rownames(novel_pep) %>%
     t(.) %>%
     base::data.frame(
         id = rownames(.),
         .,
         stringsAsFactors = FALSE) %>%
-    tidyr::gather(data = ., key = "Sequence", value = "leven", -id) %>%
+    tidyr::gather(data = ., key = "Sequence", value = "leven", -id)
+
+# Keep the minimum levenshtein score result per peptide
+leven_data %<>%
     dplyr::group_by(., Sequence) %>%
     dplyr::filter(., leven == min(leven)) %>%
     base::as.data.frame(., stringsAsFActors = FALSE)
