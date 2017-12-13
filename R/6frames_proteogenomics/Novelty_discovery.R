@@ -64,22 +64,31 @@ if (interactive()) {
         reference_fasta = choose.files(
             caption = "Choose Fasta file containing known proteins!",
             multi = FALSE),
+        reciprocal_blast_ref = choose.files(
+            caption = paste(
+                "Choose reciprocal best blast file of",
+                "ORF versus Reference protein!"),
+            multi = FALSE),
+        reciprocal_blast_uniprot = choose.files(
+            caption = paste(
+                "Choose reciprocal best blast file of",
+                "ORF versus UniProt!"),
+            multi = FALSE),
+        reciprocal_blast_ncbi = choose.files(
+            caption = paste(
+                "Choose reciprocal best blast file of",
+                "ORF versus NCBI!"),
+            multi = FALSE),
         output = readline(
             prompt = "Define the output directory!"))
     
     
     
-    
         peptide_location = ,
-        
         novel_fasta = choose.files(
             caption = "Choose Fasta file containing ORF proteins!",
-            multi = FALSE),
-        blast_ref = ,
-        reciprocal_blast_uniprot = ,
-        reciprocal_blast_ncbi = ,
-        output = )
-    
+            multi = FALSE)
+        
 } else {
     
     # Define the list of command line parameters
@@ -93,6 +102,21 @@ if (interactive()) {
             opt_str = c("-r", "--reference_fasta"),
             type = "character", default = NULL,
             help = "Reference protein fasta file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-rr", "--reciprocal_blast_ref"),
+            type = "character", default = NULL,
+            help = "Reciprocal best blast against reference",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-ru", "--reciprocal_blast_uniprot"),
+            type = "character", default = NULL,
+            help = "Reciprocal best blast against all uniprot",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-rn", "--reciprocal_blast_ncbi"),
+            type = "character", default = NULL,
+            help = "Reciprocal best blast against all uniprot",
             metavar = "character"),
         make_option(
             opt_str = c("-o", "--output"),
@@ -109,32 +133,11 @@ if (interactive()) {
             type = "character", default = NULL,
             help = "Peptide location file",
             metavar = "character"),
-        
         make_option(
             opt_str = c("-n", "--novel_fasta"),
             type = "character", default = NULL,
             help = "ORF fasta file",
-            metavar = "character"),
-        make_option(
-            opt_str = c("-b", "--blast_ref"),
-            type = "character", default = NULL,
-            help = "Blast against reference",
-            metavar = "character"),
-        make_option(
-            opt_str = c("-ru", "--reciprocal_blast_uniprot"),
-            type = "character", default = NULL,
-            help = "Reciprocal blast against all uniprot",
-            metavar = "character"),
-        make_option(
-            opt_str = c("-rn", "--reciprocal_blast_ncbi"),
-            type = "character", default = NULL,
-            help = "Reciprocal blast against all uniprot",
-            metavar = "character"),
-        make_option(
-            opt_str = c("-o", "--output"),
-            type = "character", default = "", 
-            help = "Output file name [default= %default]",
-            metavar = "character"))
+            metavar = "character")
     
     # Parse the parameters provided on command line by user
     opt_parser <- OptionParser(option_list = option_list)
@@ -155,6 +158,24 @@ if (is.null(opt$reference_fasta)) {
     stop("The input reference fasta must be supplied!")
     
 }
+if (is.null(opt$reciprocal_blast_ref)) {
+    
+    print_help(opt_parser)
+    stop("The input reciprocal blast against reference must be supplied!")
+    
+}
+if (is.null(opt$reciprocal_blast_uniprot)) {
+    
+    print_help(opt_parser)
+    stop("The input reciprocal blast against UniProt must be supplied!")
+    
+}
+if (is.null(opt$reciprocal_blast_ncbi)) {
+    
+    print_help(opt_parser)
+    stop("The input reciprocal blast against NCBI must be supplied!")
+    
+}
 
 # Check whether output parameter was provided
 if (opt$output == "") {
@@ -164,19 +185,8 @@ if (opt$output == "") {
     
 }
 
-
-
-
-
-
-if (is.null(opt$fasta) | is.null(opt$blast) | is.null(opt$genomic_position)) {
-    
-    print_help(opt_parser)
-    stop(paste(
-        "The  input arguments must be supplied",
-        "(fasta, blast and genomic position files)!"))
-    
-}
+# Create output directory if not already existing
+dir.create(opt$output)
 
 
 
@@ -194,6 +204,30 @@ fasta <- c(Known = opt$reference_fasta) %>%
 names(fasta$Known) %<>%
     uni_id_clean(.)
 
+# Import the reciprocal blast best hits between ORFs and
+# reference proteins
+reciprocal_blast_ref <- opt$reciprocal_blast_ref %>%
+    as.character(.) %>%
+    read.table(
+        file = ., header = TRUE, sep = "\t", quote = "",
+        as.is = TRUE, comment.char = "")
+
+# Import the reciprocal blast best hits between novel ORFs and
+# all uniprot proteins
+reciprocal_blast_uniprot <- opt$reciprocal_blast_uniprot %>%
+    as.character(.) %>%
+    read.table(
+        file = ., header = TRUE, sep = "\t", quote = "",
+        as.is = TRUE, comment.char = "")
+
+# Import the reciprocal blast best hits between novel ORFs and
+# all uniprot proteins
+reciprocal_blast_ncbi <- opt$reciprocal_blast_ncbi %>%
+    as.character(.) %>%
+    read.table(
+        file = ., header = TRUE, sep = "\t", quote = "",
+        as.is = TRUE, comment.char = "")
+
 
 
 
@@ -205,28 +239,7 @@ pep_loc <- opt$peptide_location %>%
     as.character(.) %>%
     readRDS(file = .)
 
-# Import the reciprocal blast best hits between novel proteins and reference
-# proteins
-reciprocal_blast_ref <- opt$reciprocal_blast_ref %>%
-    as.character(.) %>%
-    read.table(file = ., header = TRUE, sep = "\t", quote = "")
 
-# Import the reciprocal blast best hits between novel proteins and all
-# uniprot proteins
-reciprocal_blast_uniprot <- opt$reciprocal_blast_uniprot %>%
-    as.character(.) %>%
-    read.table(file = ., header = TRUE, sep = "\t", quote = "")
-
-
-
-ggplot(data = evid, mapping = aes(x = PEP, fill = Database)) +
-    geom_density(aes(y = ..scaled..), alpha = 0.5) +
-    geom_vline(
-        xintercept = median(evid[evid$Database == "Target", "PEP"]),
-        colour = "red", size = 1, linetype = "dashed") +
-    coord_cartesian(xlim = c(0, quantile(evid$PEP, probs = 0.95))) +
-    ylab(label = "Scaled density") +
-    theme_bw()
 
 
 
@@ -239,14 +252,14 @@ novel_pep <- evid %>%
     unique(.)
 
 # Compute the levenshtein distance for all novel peptide
-leven_data <- adist(
+leven_dist <- adist(
     x = novel_pep,
     y = fasta$Known,
     partial = TRUE,
     ignore.case = TRUE)
 
 # Reformat the data (transpose dataframe and gather)
-leven_data %<>%
+leven_dist_format <- leven_dist %>%
     set_rownames(novel_pep) %>%
     t(.) %>%
     base::data.frame(
@@ -256,10 +269,10 @@ leven_data %<>%
     tidyr::gather(data = ., key = "Sequence", value = "leven", -id)
 
 # Keep the minimum levenshtein score result per peptide
-leven_data %<>%
-    dplyr::group_by(., Sequence) %>%
-    dplyr::filter(., leven == min(leven)) %>%
-    base::as.data.frame(., stringsAsFActors = FALSE)
+#leven_dist_format %<>%
+#    dplyr::group_by(., Sequence) %>%
+#    dplyr::filter(., leven == min(leven)) %>%
+#    base::as.data.frame(., stringsAsFActors = FALSE)
 
 
 
@@ -286,7 +299,7 @@ novelty_reasons <- purrr::map(
     .x = novel_pep,
     .f = novel_pep_classify,
     coordinate = pep_loc$Novel,
-    levenshtein = leven_data,
+    levenshtein = leven_dist,
     blast_ref = reciprocal_blast_ref_filt,
     blast_all = reciprocal_blast_uniprot_filt) %>%
     set_names(novel_pep) %>%
@@ -327,7 +340,21 @@ pep.pos.final <- dplyr::left_join(
     x = pep.pos, y = data, by = "Sequence")
 
 
+### Focus on high quality novel peptide ----------------------------------
 
+
+
+
+### Data visualisation ---------------------------------------------------
+
+ggplot(data = evid, mapping = aes(x = PEP, fill = Database)) +
+    geom_density(aes(y = ..scaled..), alpha = 0.5) +
+    geom_vline(
+        xintercept = median(evid[evid$Database == "Target", "PEP"]),
+        colour = "red", size = 1, linetype = "dashed") +
+    coord_cartesian(xlim = c(0, quantile(evid$PEP, probs = 0.95))) +
+    ylab(label = "Scaled density") +
+    theme_bw()
 
 
 
