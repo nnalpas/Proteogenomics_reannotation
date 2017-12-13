@@ -1249,53 +1249,84 @@ plots_hist <- function(
 
 
 
-### Markdown report functions --------------------------------------------
+### Utility function for plot reformatting -------------------------------
 
-# Function to create ioslides report given any 
-report_markdown <- function(
-    rmd_file = NULL,
-    params = "ask",
-    format = "ioslides_presentation",
-    ext = "html") {
+# Function to add labels on a ggplot in an optimised fashion, such as
+# with vertical or horizontal display
+gg_labels <- function(
+    plot = NULL,
+    data = NULL,
+    label = NULL,
+    posit = NULL,
+    textsize = 15) {
     
-    # Check formatting of the params parameter
-    if (!is.list(params)) {
-        warning("'params' not a named list will try to help you with GUI!")
-        params <- "ask"
+    # Check whether the correct variables have been submitted by users
+    if (is.null(plot)) {
+        stop("Error: No plot was provided!")
+    }
+    if (is.null(data)) {
+        stop("Error: No data were provided!")
+    }
+    if (is.null(label)) {
+        stop("Error: No label values were provided!")
+    }
+    if (is.null(posit)) {
+        stop("Error: No plot position value was provided!")
     }
     
-    # Locate the markdown report file
-    rmd_file_locate <- list.files(
-        path = paste("C:/Users", user, "Documents/GitHub/", sep = "/"),
-        pattern = rmd_file,
-        full.names = TRUE,
-        recursive = TRUE)
+    # Set the label display angle to 0
+    angle <- 0
+    vjust <- -0.3
+    hjust <- 0.5
     
-    # Define temporary location for report generation
-    tmp_report <- file.path(tempdir(), rmd_file)
-    file.copy(
-        from = rmd_file_locate,
-        to = tmp_report,
-        overwrite = TRUE)
+    # If more than 20 labels, use vertical label display
+    if (length(data[[label]]) > 20) {
+        angle <- 90
+        vjust <- 0.5
+        hjust <- -0.3
+    }
     
-    # Define output file name
-    out_file <- paste(
-        getwd(),
-        "/",
-        tools::file_path_sans_ext(rmd_file),
-        "_",
-        format(Sys.time(), '%Y%m%d_%H-%M'),
-        ".",
-        ext,
-        sep = "")
+    # Check the position parameter
+    if (posit == "dodge") {
+        posit <- position_dodge(width = 0.9)
+    } else if (posit == "stack") {
+        posit <- position_stack()
+    } else {
+        stop("This type of position was never tested with geom_text!")
+    }
     
-    # Render the markdown report
-    rmarkdown::render(
-        input = tmp_report,
-        output_format = format,
-        output_file = out_file,
-        params = params,
-        envir = new.env(parent = globalenv()))
+    # Add labels to the plot
+    plot <- plot +
+        geom_text(
+            mapping = aes_string(
+                label = deparse(
+                    formatC(x = data[[label]], format = 'd', big.mark = ','))),
+            position = posit,
+            vjust = vjust,
+            hjust = hjust,
+            size = (textsize * 0.3),
+            check_overlap = TRUE,
+            angle = angle)
+    
+    # Return the updated plot
+    return(plot)
+    
+}
+
+# Function to simplify the x-axis by selecting only a few labels to display
+custom_scale <- function(x = NULL, n = 2) {
+    
+    # Check whether the data has been submitted by users
+    if (is.null(x)) {
+        stop("Error: No vector of factor levels provided!")
+    }
+    
+    # Keep only every n labels
+    filt <- seq(from = 1, to = length(x), by = n)
+    res <- x[filt]
+    
+    # Return the breaks results
+    return(res)
     
 }
 
