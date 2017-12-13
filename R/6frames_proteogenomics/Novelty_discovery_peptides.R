@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-# This script determines the novelty reasons for each peptide and ORF based on
+# This script determines the novelty reasons for each peptide based on
 # genomic coordinates, blast results...
 
 
@@ -79,15 +79,11 @@ if (interactive()) {
                 "Choose reciprocal best blast file of",
                 "ORF versus NCBI!"),
             multi = FALSE),
+        peptide_location = choose.files(
+            caption = "Choose peptide position (.RDS) file!",
+            multi = FALSE),
         output = readline(
             prompt = "Define the output directory!"))
-    
-    
-    
-        peptide_location = ,
-        novel_fasta = choose.files(
-            caption = "Choose Fasta file containing ORF proteins!",
-            multi = FALSE)
         
 } else {
     
@@ -119,25 +115,14 @@ if (interactive()) {
             help = "Reciprocal best blast against all uniprot",
             metavar = "character"),
         make_option(
-            opt_str = c("-o", "--output"),
-            type = "character", default = "",
-            help = "Output directory", metavar = "character"))
-    
-    
-    
-    
-    
-    
-        make_option(
             opt_str = c("-p", "--peptide_location"),
             type = "character", default = NULL,
             help = "Peptide location file",
             metavar = "character"),
         make_option(
-            opt_str = c("-n", "--novel_fasta"),
-            type = "character", default = NULL,
-            help = "ORF fasta file",
-            metavar = "character")
+            opt_str = c("-o", "--output"),
+            type = "character", default = "",
+            help = "Output directory", metavar = "character"))
     
     # Parse the parameters provided on command line by user
     opt_parser <- OptionParser(option_list = option_list)
@@ -174,6 +159,12 @@ if (is.null(opt$reciprocal_blast_ncbi)) {
     
     print_help(opt_parser)
     stop("The input reciprocal blast against NCBI must be supplied!")
+    
+}
+if (is.null(opt$peptide_location)) {
+    
+    print_help(opt_parser)
+    stop("The input peptide position must be supplied!")
     
 }
 
@@ -228,18 +219,10 @@ reciprocal_blast_ncbi <- opt$reciprocal_blast_ncbi %>%
         file = ., header = TRUE, sep = "\t", quote = "",
         as.is = TRUE, comment.char = "")
 
-
-
-
-
-
-
 # Import the peptide location within proteins
 pep_loc <- opt$peptide_location %>%
     as.character(.) %>%
     readRDS(file = .)
-
-
 
 
 
@@ -276,23 +259,11 @@ leven_dist_format <- leven_dist %>%
 
 
 
-### Reciprocal blast analysis --------------------------------------------
-
-# Filter out hits that have e-value above 0.0001
-reciprocal_blast_ref_filt <- reciprocal_blast_ref %>%
-    dplyr::filter(., evalue_blast < 0.0001 & evalue_reciproc < 0.0001)
-reciprocal_blast_uniprot_filt <- reciprocal_blast_uniprot %>%
-    dplyr::filter(., evalue_blast < 0.0001 & evalue_reciproc < 0.0001)
-
-
-
 ### Novelty reason determination -----------------------------------------
 
-# Get the list of novel peptides
-novel_pep <- evid %>%
-    dplyr::filter(., group == "Novel") %>%
-    .[["Sequence"]] %>%
-    unique(.)
+# Compile all reciprocal best hits against UniProt and NCBI
+reciprocal_blast_all <- dplyr::bind_rows(
+    reciprocal_blast_uniprot, reciprocal_blast_ncbi)
 
 # Determine the novelty reasons for each peptide
 novelty_reasons <- purrr::map(
@@ -300,62 +271,120 @@ novelty_reasons <- purrr::map(
     .f = novel_pep_classify,
     coordinate = pep_loc$Novel,
     levenshtein = leven_dist_format,
-    blast_ref = reciprocal_blast_ref_filt,
-    blast_all = reciprocal_blast_uniprot_filt) %>%
+    blast_ref = reciprocal_blast_ref,
+    blast_all = reciprocal_blast_all) %>%
     set_names(novel_pep) %>%
     plyr::ldply(., "data.frame") %>%
-    set_colnames(c("id", "reason"))
+    set_colnames(c("Sequence", "NoveltyReason"))
 
+# Include the novelty reason column to the evidence table
+evid_reason <- evid %>%
+    dplyr::left_join(x = ., y = novelty_reasons, by = "Sequence")
 
-
-
-
-
-
-
-
-
-# Compile a condensed dataframe of novel peptide info
-data <- evid_match %>%
-    dplyr::filter(., group == "Novel") %>%
-    dplyr::select(
-        .,
-        Sequence, Length, Proteins, Mass, `Mass Error [ppm]`,
-        `Mass Error [Da]`, PEP, Score, Intensity) %>%
-    dplyr::group_by(., Sequence) %>%
-    dplyr::summarise(
-        .,
-        Length = toString(x = unique(Length), width = NULL),
-        Proteins = toString(x = unique(Proteins), width = NULL),
-        Mass = toString(x = unique(Mass), width = NULL),
-        minMassErrorppm = min(`Mass Error [ppm]`, na.rm = TRUE),
-        minMassErrorDa = min(`Mass Error [Da]`, na.rm = TRUE),
-        minPEP = min(PEP, na.rm = TRUE),
-        maxScore = max(Score, na.rm = TRUE),
-        maxIntensity = max(Intensity, na.rm = TRUE)) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
-
-# Add the novel peptide info from evidence to position info
-pep.pos.final <- dplyr::left_join(
-    x = pep.pos, y = data, by = "Sequence")
 
 
 ### Focus on high quality novel peptide ----------------------------------
 
+# Define value for PEP filterig of the novel evidences
+pep_threshold <- median(evid[evid$Database == "Target", "PEP"])
+
+# Add a column for the soft PEP filtering (based on median known evidence PEP)
+evid_reason %<>%
+    dplyr::mutate(., PEPfilter = ifelse(PEP <= pep_threshold, TRUE, FALSE))
 
 
 
-### Data visualisation ---------------------------------------------------
+### Data visualisation and export ----------------------------------------
+
+# Save the evidence reasons data
+saveRDS(
+    object = evid_reason,
+    file = paste(
+        opt$output, "/", "Sequence_novelty_reason.RDS", sep = ""))
+
+# Export complete evidence info for these novel evidence
+write.table(
+    x = evid_reason,
+    file = paste(
+        opt$output, "/", "Sequence_novelty_reason.txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE)
+
+
+
 
 ggplot(data = evid, mapping = aes(x = PEP, fill = Database)) +
     geom_density(aes(y = ..scaled..), alpha = 0.5) +
     geom_vline(
-        xintercept = median(evid[evid$Database == "Target", "PEP"]),
+        xintercept = pep_threshold,
         colour = "red", size = 1, linetype = "dashed") +
     coord_cartesian(xlim = c(0, quantile(evid$PEP, probs = 0.95))) +
     ylab(label = "Scaled density") +
     theme_bw()
 
 
+# Source the custom user functions
+if (interactive()) {
+    mark_report <- paste(
+        "C:/Users",
+        user,
+        "Documents/GitHub/Proteogenomics_reannotation/",
+        "R/6frames_proteogenomics/Bsu_proteogenomics_report.rmd",
+        sep = "/")
+} else {
+    mark_report <- paste(
+        "/home-link",
+        user,
+        "bin/Bsu_proteogenomics_report.rmd",
+        sep = "/")
+}
+
+
+report_markdown(rmd_file = mark_report)
+
+
+# Define the report markdown file
+report.file <- paste(
+    "C:/Users",
+    user, 
+    "Documents/GitHub/Miscellaneous/R/6frames_proteogenomics",
+    "Bsu_proteogenomics_report.rmd", sep = "/")
+
+# Define temporary location for report generation
+tempReport <- file.path(tempdir(), basename(report.file))
+file.copy(
+    from = report.file,
+    to = tempReport,
+    overwrite = TRUE)
+
+# Define the required variables as markdown parameters
+param <- list(
+    evidences = evid_match,
+    pept.posit = pep.pos,
+    levenshtein = leven.data,
+    pheno = exp.design,
+    bsu.ideo = bsu.ideo,
+    ref.grange = ref.grange,
+    novel.grange = orf.grange,
+    pep_loc = pep_located,
+    manual.annot = manual.annot) 
+
+# Define output file name
+out_file <- paste(
+    work_space,
+    "/Bsu_proteogenomics_",
+    format(Sys.time(), '%Y%m%d_%H-%M'),
+    ".html",
+    sep = "")
+
+# Render the markdown report
+rmarkdown::render(
+    input = tempReport,
+    output_format = "ioslides_presentation",
+    output_file = out_file,
+    params = param,
+    envir = new.env(parent = globalenv()))
 
 
