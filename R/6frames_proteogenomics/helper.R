@@ -1248,3 +1248,55 @@ plots_hist <- function(
 }
 
 
+
+### Markdown report functions --------------------------------------------
+
+# Function to create ioslides report given any 
+report_markdown <- function(
+    rmd_file = NULL,
+    params = "ask",
+    format = "ioslides_presentation",
+    ext = "html") {
+    
+    # Check formatting of the params parameter
+    if (!is.list(params)) {
+        warning("'params' not a named list will try to help you with GUI!")
+        params <- "ask"
+    }
+    
+    # Locate the markdown report file
+    rmd_file_locate <- list.files(
+        path = paste("C:/Users", user, "Documents/GitHub/", sep = "/"),
+        pattern = rmd_file,
+        full.names = TRUE,
+        recursive = TRUE)
+    
+    # Define temporary location for report generation
+    tmp_report <- file.path(tempdir(), rmd_file)
+    file.copy(
+        from = rmd_file_locate,
+        to = tmp_report,
+        overwrite = TRUE)
+    
+    # Define output file name
+    out_file <- paste(
+        getwd(),
+        "/",
+        tools::file_path_sans_ext(rmd_file),
+        "_",
+        format(Sys.time(), '%Y%m%d_%H-%M'),
+        ".",
+        ext,
+        sep = "")
+    
+    # Render the markdown report
+    rmarkdown::render(
+        input = tmp_report,
+        output_format = format,
+        output_file = out_file,
+        params = params,
+        envir = new.env(parent = globalenv()))
+    
+}
+
+
