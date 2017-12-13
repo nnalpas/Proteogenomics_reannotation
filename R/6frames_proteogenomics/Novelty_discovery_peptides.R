@@ -48,6 +48,12 @@ load_package("splitstackshape")
 load_package("stringr")
 load_package("optparse")
 load_package("seqinr")
+load_package("bit64")
+load_package("ggplot2")
+load_package("gtable")
+load_package("grid")
+load_package("gridExtra")
+load_package("purrr")
 
 
 
@@ -312,79 +318,158 @@ write.table(
     row.names = FALSE,
     col.names = TRUE)
 
+# Open a file for plot visualisation
+pdf(
+    file = paste0(opt$output, "/", "Peptide_novelty_reason.pdf"),
+    width = 10, height = 10)
 
+# Define size of text for all plots
+textsize <- 20
 
-
-ggplot(data = evid, mapping = aes(x = PEP, fill = Database)) +
+# Visualise the PEP for evidences between databases as density
+pl <- ggplot(
+    data = evid_reason,
+    mapping = aes(x = PEP, fill = Database)) +
     geom_density(aes(y = ..scaled..), alpha = 0.5) +
     geom_vline(
         xintercept = pep_threshold,
         colour = "red", size = 1, linetype = "dashed") +
     coord_cartesian(xlim = c(0, quantile(evid$PEP, probs = 0.95))) +
     ylab(label = "Scaled density") +
-    theme_bw()
+    ggtitle(label = "PEP density (with PEP soft threshold)") +
+    theme_bw() +
+    theme(
+        legend.position = "right",
+        title = element_text(
+            face = "bold",
+            size = (textsize * 1.25)),
+        text = element_text(size = textsize),
+        plot.title = element_text(
+            face = "bold",
+            size = (textsize * 1.5)))
+pl
 
 
-# Source the custom user functions
-if (interactive()) {
-    mark_report <- paste(
-        "C:/Users",
-        user,
-        "Documents/GitHub/Proteogenomics_reannotation/",
-        "R/6frames_proteogenomics/Bsu_proteogenomics_report.rmd",
-        sep = "/")
-} else {
-    mark_report <- paste(
-        "/home-link",
-        user,
-        "bin/Bsu_proteogenomics_report.rmd",
-        sep = "/")
-}
+# Compute novel feature count (peptide and ORF) in total
+data <- evid_reason %>%
+    dplyr::filter(., Database == "Novel") %>%
+    cSplit(
+        indt = ., splitCols = "Proteins", sep = ";",
+        direction = "long", fixed = TRUE) %>%
+    dplyr::select(., Sequence, Proteins) %>%
+    unique(.) %>%
+    dplyr::summarise(
+        .,
+        type = "All novel",
+        Number_peptide = n_distinct(Sequence),
+        Number_ORF = n_distinct(Proteins)) %>%
+    tidyr::gather(
+        data = ., key = "feature", value = "Count", -type) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Compute novel feature count (peptide and ORF) that pass PEP filter
+data <- evid_reason %>%
+    dplyr::filter(., Database == "Novel" & OnlyIdBySite & PEPfilter) %>%
+    cSplit(
+        indt = ., splitCols = "Proteins", sep = ";",
+        direction = "long", fixed = TRUE) %>%
+    dplyr::select(., Sequence, Proteins) %>%
+    unique(.) %>%
+    dplyr::summarise(
+        .,
+        type = "Quality filtered",
+        Number_peptide = n_distinct(Sequence),
+        Number_ORF = n_distinct(Proteins)) %>%
+    tidyr::gather(
+        data = ., key = "feature", value = "Count", -type) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE) %>%
+    dplyr::bind_rows(data, .)
+
+# Plot the novel feature count
+pl <- plots_hist(
+    data = data,
+    key = "feature",
+    value = "Count",
+    group = "type",
+    fill = "type",
+    main = "Novel peptide/ORF count",
+    xlabel = "Feature",
+    label = "Count",
+    posit = "dodge",
+    textsize = textsize,
+    legend = "bottom",
+    bw = TRUE)
+pl[[1]]
+
+# Compute the peptide count per novelty reasons
+data <- evid_reason %>%
+    dplyr::filter(., Database == "Novel") %>%
+    dplyr::select(., Sequence, Proteins, NoveltyReason) %>%
+    dplyr::group_by(., NoveltyReason) %>%
+    dplyr::summarise(
+        .,
+        type = "All novel",
+        Number_peptide = n_distinct(Sequence),
+        Number_ORF = n_distinct(Proteins)) %>%
+    tidyr::gather(
+        data = ., key = "feature", value = "Count", -NoveltyReason, -type) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE)
+
+# Compute the peptide count per novelty reasons that pass PEP filter and
+# pass only ID by sites
+data <- evid_reason %>%
+    dplyr::filter(., Database == "Novel" & OnlyIdBySite & PEPfilter) %>%
+    dplyr::select(., Sequence, Proteins, NoveltyReason) %>%
+    dplyr::group_by(., NoveltyReason) %>%
+    dplyr::summarise(
+        .,
+        type = "Quality filtered",
+        Number_peptide = n_distinct(Sequence),
+        Number_ORF = n_distinct(Proteins)) %>%
+    tidyr::gather(
+        data = ., key = "feature", value = "Count", -NoveltyReason, -type) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE) %>%
+    dplyr::bind_rows(data, .)
+
+# Plot the peptide count per novelty reasons
+pl <- plots_hist(
+    data = data %>% dplyr::filter(., feature == "Number_peptide"),
+    key = "NoveltyReason",
+    value = "Count",
+    group = "type",
+    fill = "type",
+    main = "Peptide novelty reasons",
+    xlabel = "Novelty reason",
+    label = "Count",
+    posit = "dodge",
+    textsize = textsize,
+    legend = "right",
+    bw = TRUE,
+    xdir = "vertical")
+pl[[1]]
+
+# Plot the ORF count per novelty reasons
+pl <- plots_hist(
+    data = data %>% dplyr::filter(., feature == "Number_ORF"),
+    key = "NoveltyReason",
+    value = "Count",
+    group = "type",
+    fill = "type",
+    main = "ORF novelty reasons",
+    xlabel = "Novelty reason",
+    label = "Count",
+    posit = "dodge",
+    textsize = textsize,
+    legend = "right",
+    bw = TRUE,
+    xdir = "vertical")
+pl[[1]]
+
+# Close the picture file
+dev.off()
 
 
-report_markdown(rmd_file = mark_report)
 
-
-# Define the report markdown file
-report.file <- paste(
-    "C:/Users",
-    user, 
-    "Documents/GitHub/Miscellaneous/R/6frames_proteogenomics",
-    "Bsu_proteogenomics_report.rmd", sep = "/")
-
-# Define temporary location for report generation
-tempReport <- file.path(tempdir(), basename(report.file))
-file.copy(
-    from = report.file,
-    to = tempReport,
-    overwrite = TRUE)
-
-# Define the required variables as markdown parameters
-param <- list(
-    evidences = evid_match,
-    pept.posit = pep.pos,
-    levenshtein = leven.data,
-    pheno = exp.design,
-    bsu.ideo = bsu.ideo,
-    ref.grange = ref.grange,
-    novel.grange = orf.grange,
-    pep_loc = pep_located,
-    manual.annot = manual.annot) 
-
-# Define output file name
-out_file <- paste(
-    work_space,
-    "/Bsu_proteogenomics_",
-    format(Sys.time(), '%Y%m%d_%H-%M'),
-    ".html",
-    sep = "")
-
-# Render the markdown report
-rmarkdown::render(
-    input = tempReport,
-    output_format = "ioslides_presentation",
-    output_file = out_file,
-    params = param,
-    envir = new.env(parent = globalenv()))
+### END ------------------------------------------------------------------
 
 
