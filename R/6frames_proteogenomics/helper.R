@@ -465,6 +465,159 @@ pept_locate <- function(
     
 }
 
+# Function to classify novel peptide into potential reasons for their novelty
+novel_pep_classify <- function(
+    x = NULL,
+    coordinate = NULL,
+    levenshtein = NULL,
+    blast_ref = NULL,
+    blast_all = NULL) {
+    
+    # Check whether the correct variables have been submitted by users
+    if (is.null(x)) {
+        stop("Error: No novel peptide was provided!")
+    }
+    if (is.null(coordinate)) {
+        stop("Error: No peptide coordinates were provided!")
+    }
+    if (is.null(levenshtein)) {
+        stop("Error: No levenshtein data were provided!")
+    }
+    if (is.null(blast_ref)) {
+        stop("Error: No blast against reference data were provided!")
+    }
+    if (is.null(blast_all)) {
+        stop("Error: No blast against all protein data were provided!")
+    }
+    
+    # Get the peptide position within protein
+    coordinate_tmp <- coordinate %>%
+        dplyr::filter(., pep == x)
+    
+    # Check if a unique peptide location is available
+    if (nrow(coordinate_tmp) != 1) {
+        
+        reason <- "Undetermined peptide location"
+        
+    } else {
+        
+        # Get the blast and levenshtein data
+        blast_ref_tmp <- blast_ref[
+            blast_ref$qseqid == coordinate_tmp$prot, ]
+        blast_all_tmp <- blast_all[
+            blast_all$qseqid == coordinate_tmp$prot, ]
+        levenshtein_tmp <- levenshtein[
+            levenshtein$Sequence == x &
+                levenshtein$id %in% blast_ref_tmp$sseqid, ]
+        
+        # Check for blast data against reference protein
+        if (nrow(blast_ref_tmp) == 0) {
+            
+            # Check for blast data against all uniprot or ncbi
+            if (nrow(blast_all_tmp) == 0) {
+                
+                # Without blast data mark as potentially novel peptide
+                reason <- "Potentially novel"
+                
+            } else {
+                
+                # With blast data against all organism mark as known
+                # in other species
+                reason <- "Known other species"
+                
+            }
+            
+        # Check for multiple reciprocal best hits
+        } else if (nrow(blast_ref_tmp) > 1) {
+            
+            # With multiple best hits mark as so
+            reason <- "Multiple blast hits"
+            
+        # Check for single reciprocal best hit
+        } else {
+            
+            # Check whether the peptide is within the matching blast positions
+            if (
+                coordinate_tmp$start >= blast_ref_tmp$qstart_blast &
+                coordinate_tmp$end <= blast_ref_tmp$qend_blast) {
+                
+                # If yes then mark as potential SAV
+                reason <- "Potential SAV"
+                
+                # Check if the levenshtein data exist and
+                # what is the distance score
+                if (
+                    nrow(levenshtein_tmp) > 0 &
+                    unique(levenshtein_tmp$leven) == 1) {
+                    
+                    # If yes mark as confirmed SAV
+                    reason <- "SAV"
+                    
+                } else if (
+                    nrow(levenshtein_tmp) > 0 &
+                    unique(levenshtein_tmp$leven) == 0) {
+                    
+                    # If yes not novel peptide
+                    reason <- "Not novel"
+                    
+                } else if (
+                    nrow(levenshtein_tmp) > 0 &
+                    unique(levenshtein_tmp$leven) > 1) {
+                    
+                    # If yes multi SAVs or InDels
+                    reason <- "SAVs/InDels"
+                    
+                }
+                
+            # Check whether the peptide overlap the reference protein start
+            } else if (min(
+                coordinate_tmp$start,
+                blast_ref_tmp$qstart_blast) == coordinate_tmp$start) {
+                
+                # Check whether novel ORF and reference protein have
+                # incompatible start site
+                if (blast_ref_tmp$sstart_blast > blast_ref_tmp$qstart_blast) {
+                    
+                    reason <- "Incompatible start site"
+                    
+                } else {
+                    
+                    reason <- "Alternate start site"
+                    
+                }
+                
+            # Check whether the peptide overlap the reference protein end
+            } else if (max(
+                coordinate_tmp$end,
+                blast_ref_tmp$qend_blast) == coordinate_tmp$end) {
+                
+                # Check whether novel ORF and reference protein have
+                # incompatible end site
+                if (blast_ref_tmp$send_blast > blast_ref_tmp$qend_blast) {
+                    
+                    reason <- "Incompatible end site"
+                    
+                } else {
+                    
+                    reason <- "Alternate end site"
+                    
+                }
+                
+            } else {
+                
+                reason <- "Undetermined reason"
+                
+            }
+            
+        }
+        
+    }
+    
+    # Return the reason for novelty
+    return(reason)
+    
+}
+
 
 
 ### Number utilities functions -------------------------------------------
