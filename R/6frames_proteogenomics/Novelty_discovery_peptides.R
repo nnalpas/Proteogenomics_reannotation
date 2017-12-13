@@ -299,7 +299,7 @@ novelty_reasons <- purrr::map(
     .x = novel_pep,
     .f = novel_pep_classify,
     coordinate = pep_loc$Novel,
-    levenshtein = leven_dist,
+    levenshtein = leven_dist_format,
     blast_ref = reciprocal_blast_ref_filt,
     blast_all = reciprocal_blast_uniprot_filt) %>%
     set_names(novel_pep) %>%
