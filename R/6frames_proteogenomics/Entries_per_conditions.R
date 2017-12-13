@@ -71,34 +71,63 @@ prot <- mq_read(
 
 acet <- mq_read(
     path = "E:/processing/Nicolas/Vaishnavi/",
+    name = "Acetyl \\(K\\)Sites.txt")
+
+acet_nr <- mq_read(
+    path = "E:/processing/Nicolas/Vaishnavi/",
     name = "Acetyl \\(K\\)Sites_nonredundant.txt")
 
 phospho <- mq_read(
     path = "E:/processing/Nicolas/Vaishnavi/",
+    name = "Phospho \\(STY\\)Sites.txt")
+
+phospho_nr <- mq_read(
+    path = "E:/processing/Nicolas/Vaishnavi/",
     name = "Phospho \\(STY\\)Sites_nonredundant.txt")
 
 
-all_prot <- strsplit(x = prot$`Evidence IDs`, split = ";", fixed = TRUE) %>%
+all_prot <- strsplit(
+    x = prot[prot$`Only identified by site` != "+" & prot$Reverse != "+" & prot$`Potential contaminant` != "+", "Evidence IDs"],
+    split = ";", fixed = TRUE) %>%
     unlist(.) %>%
     unique(.) %>%
     as.integer(.)
 
-all_acet <- strsplit(x = acet$`Evidence.IDs`, split = ";", fixed = TRUE) %>%
+all_acet <- strsplit(
+    x = acet[acet$Reverse != "+" & acet$`Potential contaminant` != "+", "Evidence IDs"],
+    split = ";", fixed = TRUE) %>%
     unlist(.) %>%
     unique(.) %>%
     as.integer(.)
 
-all_phospho <- strsplit(x = phospho$`Evidence.IDs`, split = ";", fixed = TRUE) %>%
+all_phospho <- strsplit(
+    x = phospho[phospho$Reverse != "+" & phospho$`Potential contaminant` != "+", "Evidence IDs"],
+    split = ";", fixed = TRUE) %>%
     unlist(.) %>%
     unique(.) %>%
     as.integer(.)
 
+all_acet_nr <- strsplit(
+    x = acet_nr[(is.na(acet_nr$Reverse) | acet_nr$Reverse != "+") & (is.na(acet_nr$`Potential.contaminant`) | acet_nr$`Potential.contaminant` != "+"), "Evidence.IDs"],
+    split = ";", fixed = TRUE) %>%
+    unlist(.) %>%
+    unique(.) %>%
+    as.integer(.)
+
+all_phospho_nr <- strsplit(
+    x = phospho_nr[(is.na(phospho_nr$Reverse) | phospho_nr$Reverse != "+") & (is.na(phospho_nr$`Potential.contaminant`) | phospho_nr$`Potential.contaminant` != "+"), "Evidence.IDs"],
+    split = ";", fixed = TRUE) %>%
+    unlist(.) %>%
+    unique(.) %>%
+    as.integer(.)
 
 
 all_filters <- list(
     "All" = all_prot,
     "Acetyl" = all_acet,
-    "Phospho" =  all_phospho)
+    "Phospho" =  all_phospho,
+    "Acetyl_nr" = all_acet_nr,
+    "Phospho_nr" =  all_phospho_nr)
 
 for (filters in c(1:length(all_filters))) {
     
@@ -124,7 +153,11 @@ for (filters in c(1:length(all_filters))) {
     
     data_format_cat <- data_format %>%
         dplyr::group_by(., Proteins) %>%
-        dplyr::summarise_all(funs(toString(x = unique(.), width = NULL)))
+        dplyr::summarise_all(
+            funs(sub(
+                "^, ",
+                "",
+                toString(x = sort(unique(.)), width = NULL))))
     
     write.table(
         x = data_format,
@@ -149,7 +182,12 @@ for (filters in c(2:length(all_filters))) {
         dplyr::select(
             ., `Modified sequence`, Proteins, `Raw file`, id,
             `Protein group IDs`,
-            matches(paste0(names(all_filters)[filters], ".*IDs"))) %>%
+            matches(paste0(
+                sub(
+                    "^([^_]+).*",
+                    "\\1",
+                    names(all_filters)[filters]),
+                ".*IDs"))) %>%
         set_colnames(c(
             "Modified sequence", "Proteins", "Raw file",
             "id", "Protein group IDs", "site IDs")) %>%
@@ -169,8 +207,11 @@ for (filters in c(2:length(all_filters))) {
     
     data_format_cat <- data_format %>%
         dplyr::group_by(., `Modified sequence`) %>%
-        dplyr::summarise_all(funs(toString(x = unique(.), width = NULL)))
-        
+        dplyr::summarise_all(
+            funs(sub(
+                "^, ",
+                "",
+                toString(x = sort(unique(.)), width = NULL))))        
     
     write.table(
         x = data_format,
@@ -187,6 +228,138 @@ for (filters in c(2:length(all_filters))) {
         quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
     
 }
+
+
+
+
+pg_exp <- evid %>%
+    dplyr::select(., `Raw file`, `Protein group IDs`) %>%
+    set_colnames(c("Raw file", "id")) %>%
+    cSplit(
+        indt = ., splitCols = "id", sep = ";",
+        direction = "long", fixed = TRUE) %>%
+    unique(.) %>%
+    dplyr::left_join(
+        x = ., y = exp_design[, c("Name", "Conditions")],
+        by = c("Raw file" = "Name")) %>%
+    dplyr::select(., -`Raw file`) %>%
+    unique(.) %>%
+    dplyr::group_by(., id) %>%
+    dplyr::summarise_all(
+        funs(sub(
+            "^, ",
+            "",
+            toString(x = sort(unique(.)), width = NULL))))
+
+
+acet_exp <- evid %>%
+    dplyr::select(., `Raw file`, `Acetyl (K) site IDs`) %>%
+    set_colnames(c("Raw file", "id")) %>%
+    cSplit(
+        indt = ., splitCols = "id", sep = ";",
+        direction = "long", fixed = TRUE) %>%
+    unique(.) %>%
+    dplyr::left_join(
+        x = ., y = exp_design[, c("Name", "Conditions")],
+        by = c("Raw file" = "Name")) %>%
+    dplyr::select(., -`Raw file`) %>%
+    unique(.) %>%
+    dplyr::group_by(., id) %>%
+    dplyr::summarise_all(
+        funs(sub(
+            "^, ",
+            "",
+            toString(x = sort(unique(.)), width = NULL))))
+
+
+phospho_exp <- evid %>%
+    dplyr::select(., `Raw file`, `Phospho (STY) site IDs`) %>%
+    set_colnames(c("Raw file", "id")) %>%
+    cSplit(
+        indt = ., splitCols = "id", sep = ";",
+        direction = "long", fixed = TRUE) %>%
+    unique(.) %>%
+    dplyr::left_join(
+        x = ., y = exp_design[, c("Name", "Conditions")],
+        by = c("Raw file" = "Name")) %>%
+    dplyr::select(., -`Raw file`) %>%
+    unique(.) %>%
+    dplyr::group_by(., id) %>%
+    dplyr::summarise_all(
+        funs(sub(
+            "^, ",
+            "",
+            toString(x = sort(unique(.)), width = NULL))))
+
+
+
+data_format <- prot %>%
+    dplyr::left_join(
+        x = ., y = pg_exp,
+        by = "id")
+
+write.table(
+    x = data_format,
+    file = paste(
+        "proteinGroups",
+        "per_conditions.txt", sep = "_"),
+    quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+
+
+
+data_format <- acet %>%
+    dplyr::left_join(
+        x = ., y = acet_exp,
+        by = "id")
+
+write.table(
+    x = data_format,
+    file = paste(
+        "Acetyl (K)Sites",
+        "per_conditions.txt", sep = "_"),
+    quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+
+
+
+data_format <- acet_nr %>%
+    dplyr::left_join(
+        x = ., y = acet_exp,
+        by = c("V1" = "id"))
+
+write.table(
+    x = data_format,
+    file = paste(
+        "Acetyl (K)Sites_nonredundant",
+        "per_conditions.txt", sep = "_"),
+    quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+
+
+
+data_format <- phospho %>%
+    dplyr::left_join(
+        x = ., y = phospho_exp,
+        by = "id")
+
+write.table(
+    x = data_format,
+    file = paste(
+        "Phospho (STY)Sites",
+        "per_conditions.txt", sep = "_"),
+    quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+
+
+data_format <- phospho_nr %>%
+    dplyr::left_join(
+        x = ., y = phospho_exp,
+        by = c("V1" = "id"))
+
+write.table(
+    x = data_format,
+    file = paste(
+        "Phospho (STY)Sites_nonredundant",
+        "per_conditions.txt", sep = "_"),
+    quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+
 
 
 
