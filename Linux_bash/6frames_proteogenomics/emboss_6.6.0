@@ -43,7 +43,9 @@
 # make
 # make install
 # make clean
-# 
+# mkdir ~/modulefiles/emboss
+# ln -s ~/GitHub/Proteogenomics_reannotation/Linux_bash/6frames_proteogenomics/emboss_6.6.0 ~/modulefiles/emboss/6.6.0
+#
 ### Set version, base_dir and whatis entry:
 
 set                version             "6.6.0"
