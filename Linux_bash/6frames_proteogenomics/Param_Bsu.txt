@@ -4,18 +4,18 @@ TaxId="224308"
 
 # ProcessSteps
 GetOrf=0
-GetNovelEntries=0
-MakeBlastDbProt=0
-MakeBlastDbNuc=0
-BlastDbBlasting=0
+GetNovelEntries=1
+MakeBlastDbProt=1
+MakeBlastDbNuc=1
+BlastDbBlasting=1
 BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
 ProteinCoordinate=0
 ProteinAnnotation=0
-BSgenomeForge=1
-GRangeCreate=1
-PeptideCoordinate=1
+BSgenomeForge=0
+GRangeCreate=0
+PeptideCoordinate=0
 SangerCoordinate=0
 ClustalAlign=0
 
