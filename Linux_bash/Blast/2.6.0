@@ -49,7 +49,8 @@
 #
 #
 # # Create module link
-#
+# mkdir ~/modulefiles/blast+
+# ln -s ~/GitHub/Proteogenomics_reannotation/Linux_bash/Blast/2.6.0 ~/modulefiles/blast+/2.6.0
 #
 ##### (E) How to integrate pre-compiled software on local bwGRiD site?
 #
