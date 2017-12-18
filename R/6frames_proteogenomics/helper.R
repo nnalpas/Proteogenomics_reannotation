@@ -582,7 +582,23 @@ novel_pep_classify <- function(
                     
                 } else {
                     
-                    reason <- "Alternate start site"
+                    # Without blast data mark as potential alternate start
+                    reason <- "Potential alternate start"
+                    
+                    # Check for blast data against all uniprot or ncbi
+                    if (nrow(blast_all_tmp) != 0) {
+                        
+                        if (any(and(
+                            coordinate_tmp$start >= blast_all_tmp$qstart_blast,
+                            coordinate_tmp$end <= blast_all_tmp$qend_blast))) {
+                            
+                            # With blast data mark as alternate start
+                            # characterised in other species
+                            reason <- "Alternate start (known other species)"
+                            
+                        }
+                        
+                    }
                     
                 }
                 
@@ -599,7 +615,23 @@ novel_pep_classify <- function(
                     
                 } else {
                     
-                    reason <- "Alternate end site"
+                    # Without blast data mark as potential alternate end
+                    reason <- "Potential alternate end"
+                    
+                    # Check for blast data against all uniprot or ncbi
+                    if (nrow(blast_all_tmp) != 0) {
+                        
+                        if (any(and(
+                            coordinate_tmp$start >= blast_all_tmp$qstart_blast,
+                            coordinate_tmp$end <= blast_all_tmp$qend_blast))) {
+                            
+                            # With blast data mark as alternate end
+                            # characterised in other species
+                            reason <- "Alternate end (known other species)"
+                            
+                        }
+                        
+                    }
                     
                 }
                 
