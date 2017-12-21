@@ -1283,6 +1283,59 @@ plots_hist <- function(
 
 ### Utility function for plot reformatting -------------------------------
 
+# Function to modify a ggplot object by removing some outliers data
+# so that in can easily be plotted
+outlier_sampling <- function(
+    plot = NULL) {
+    
+    # Check whether the correct variables have been submitted by users
+    if (is.null(plot)) {
+        stop("Error: No plot was provided!")
+    }
+    
+    # Build the ggplot for rendering
+    gg_build <- ggplot_build(plot)
+    
+    # Loop through the outlier data
+    edit_outlier <- list()
+    for (x in c(1:length(gg_build$data[[1]]$outliers))) {
+        
+        # Check if outlier vector is longer than 2500 values
+        if (length(gg_build$data[[1]]$outliers[[x]]) > 2500) {
+            
+            tmp <- c(
+                min(gg_build$data[[1]]$outliers[[x]]),
+                max(gg_build$data[[1]]$outliers[[x]]),
+                sample(gg_build$data[[1]]$outliers[[x]], 2498))
+            
+            warning("Outliers data were sampled to reduce number of points!")
+            
+        } else {
+            tmp <- gg_build$data[[1]]$outliers[[x]]
+        }
+        
+        # Compile the edited outlier into a new list
+        edit_outlier[[x]] <- tmp
+        
+    }
+    
+    # Loop through all data in ggplot_build
+    orig_outlier <- gg_build$data[[1]]$outliers
+    for (x in c(1:length(gg_build$data))) {
+        
+        if (!identical(orig_outlier, gg_build$data[[x]]$outliers)) {
+            stop("ggplot_build data are not identical!")
+        } else {
+            gg_build$data[[x]]$outliers <- edit_outlier
+        }
+        
+    }
+    
+    # Return the edited ggplot_build object as a gtable
+    return(ggplot_gtable(gg_build))
+    
+}
+
 # Function to add labels on a ggplot in an optimised fashion, such as
 # with vertical or horizontal display
 gg_labels <- function(
@@ -1345,6 +1398,75 @@ gg_labels <- function(
     
 }
 
+# Create a function to make colour coding per condition
+color_grouping <- function(
+    data,
+    filter,
+    reserved = NULL) {
+    
+    # Make a vector of the condition and count unique
+    map <- as.character(data[, filter])
+    
+    if (!is.null(reserved)) {
+        Nmap <- length(unique(map)) + length(reserved)
+    } else {
+        Nmap <- length(unique(map))
+    }
+    
+    # Check colour brewer set to use depending on number of conditions
+    if (Nmap <= 9) {
+        
+        colours <- brewer.pal(
+            n = Nmap, name = "Set1")
+        
+    } else if (Nmap > 9 && Nmap <= 12) {
+        
+        colours <- brewer.pal(
+            n = length(unique(map)), name = "Set3")
+        
+    } else {
+        
+        colours <- rainbow(n = ((Nmap + 1) / 2))
+        colours <- c(colours, rainbow(n = ((Nmap + 1) / 2), alpha = 0.3))
+        
+    }
+    
+    # Remove colours that are reserved
+    if (!is.null(reserved)) {
+        colours %<>%
+            .[!(. %in% reserved)]
+    }
+    
+    # Include a color code column
+    map <- data.frame(condition = map, color = map, stringsAsFactors = FALSE)
+    
+    # Loop through the number of unique conditions
+    for(x in 1:Nmap) {
+        
+        # Replace the condition value by its associated colour
+        map$color <- gsub(
+            pattern = paste(
+                "^", as.character(unique(map$color)[x]), "$", sep = ""),
+            replacement = colours[x], x = map$color)
+    }
+    
+    # Return group colouring
+    legend <- map[!duplicated(map), ]
+    map <- map$color
+    names(map) <- rownames(data)
+    return(list(map = map, legend = legend))
+}
+
+# Function to collect ggplot legend obtained from website: 
+# 'http://stackoverflow.com/questions/11883844/'
+# 'inserting-a-table-under-the-legend-in-a-ggplot2-histogram'
+gg_legend <- function(a.gplot) {
+    tmp <- ggplot_gtable(ggplot_build(a.gplot))
+    leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+    legend <- tmp$grobs[[leg]]
+    return(legend)
+}
+
 # Function to simplify the x-axis by selecting only a few labels to display
 custom_scale <- function(x = NULL, n = 2) {
     
@@ -1359,6 +1481,162 @@ custom_scale <- function(x = NULL, n = 2) {
     
     # Return the breaks results
     return(res)
+    
+}
+
+# Function to modify the axis of an existing ggplot
+conti_axis <- function(
+    plot = NULL,
+    axis = "none",
+    zoom = NULL,
+    transf = "none") {
+    
+    # Check whether the plot has been submitted by users
+    if (is.null(plot)) {
+        stop("Error: No plot was provided!")
+    }
+    
+    # Check arguments for axis against allowed list
+    axis <- match.arg(
+        arg = axis,
+        choices = c("x", "y"))
+    
+    # Check the format of the provided zoom
+    if (!is.null(zoom) & (!is.numeric(zoom) | length(zoom) != 2)) {
+        stop("The axis limits parameter is not a numeric vector of length 2!")
+    }
+    
+    # Check arguments for transform against allowed list
+    transf <- match.arg(
+        arg = transf,
+        choices = c(
+            "none", "asn", "atanh", "boxcox", "exp", "identity", "log",
+            "log10", "log1p", "log2", "logit", "probability", "probit",
+            "reciprocal", "reverse", "sqrt"))
+    
+    # Check that at least one parameters is valid
+    if (is.null(zoom) & transf == "none") {
+        stop("No axis settings are valid!")
+    }
+    
+    # If a zoom parameter has been submitted, define new plot settings
+    if (!is.null(zoom)) {
+        
+        zoom.param <- paste(zoom, collapse = ", ") %>%
+            paste("limits = c(", ., ")", sep = "")
+        plot$labels$title <- paste(zoom, collapse = " / ") %>%
+            paste(plot$labels$title, " (", ., ")", sep = "")
+        
+    } else {
+        
+        zoom.param <- NA
+        
+    }
+    
+    # If a transform parameter has been submitted, define new plot settings
+    if (transf != "none") {
+        
+        transf.param <- transf %>%
+            paste("trans = '", ., "'", sep = "")
+        
+    } else {
+        
+        transf.param <- NA
+        
+    }
+    
+    # Remove the parameters that were not defined
+    params <- c(zoom.param, transf.param)
+    params %<>%
+        .[!is.na(.)]
+    
+    # Combine all new axis parameters into a single command
+    scaleConti <- paste(params, collapse = ", ") %>%
+        paste("scale_", axis, "_continuous(", ., ")", sep = "")
+    
+    # Add the new axis settings to the plot
+    plot <- plot +
+        eval(parse(text = scaleConti))
+    
+    # Return the updated plot
+    return(plot)
+    
+}
+
+# Determine number of row and column required to plot all figures
+# on same plot with grid
+grid_dim <- function(x) {
+    
+    if (!is.null(x) | is.vector(x) | is.integer(x)) {
+        
+        col <- 1
+        for (row in 1:x) {
+            if ((row * col) >= x) {
+                break
+            }
+            else {
+                col <- row
+                if ((row * col) >= x) {
+                    break
+                }
+            }
+        }
+        return(list(x = row, y = col))
+        
+    } else {
+        
+        stop("Submitted data is null or not an integer vector!")
+        
+    }
+    
+}
+
+# Function that determine the number of plot per page and the number
+# of page required to display all plots
+grids_display <- function(
+    myplot = NULL,
+    grid.x = NULL,
+    grid.y = NULL) {
+    
+    # Check whether the plot list has been submitted by users
+    if (is.null(myplot)) {
+        stop("Error: No plot list was provided!")
+    }
+    
+    # Check whether the grid number of rows and columns were submitted by user
+    if (is.null(grid.x) | is.null(grid.y)) {
+        
+        # Determine required number of rows and columns for the plot
+        grids <- grid_dim(x = length(myplot))
+        grid.x <- grids$x
+        grid.y <- grids$y
+        
+    }
+    
+    # Determine the number of page to plot all graphs
+    nmb.page <- length(myplot) / (grid.x * grid.y)
+    
+    # Loop through the total number of page required for plotting
+    for (x in 1:nmb.page) {
+        
+        # Determine the index of the plot that will go on current page
+        plot.y <- (x * (grid.x * grid.y))
+        plot.x <- (plot.y + 1 - (grid.x * grid.y))
+        
+        # Check whether there are less plot than spot on page
+        if (plot.y > length(myplot)) {
+            
+            plot.y <- length(myplot)
+            
+        }
+        
+        # Create a graph
+        do.call(
+            what = "grid.arrange",
+            args = c(myplot[plot.x:plot.y], list(
+                nrow = grid.x, ncol = grid.y)))
+        
+    }
     
 }
 
