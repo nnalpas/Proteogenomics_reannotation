@@ -222,11 +222,11 @@ fi
 ##########################
 
 # Check whether to perform GRange object creation
-if [ $GRangesGeneration == 1 ]; then
+if [ $GRangeCreate == 1 ]; then
 	
 	${PBS_O_HOME}/bin/GRanges_generation.R -g ${GENOME} -n ${GenomeName} -t ${Circular} -o ${ProjDir}/GRanges/Genome_grange.RDS > ${LogDir}/GRangesGeneration.log 2>&1
-    ${PBS_O_HOME}/bin/GRanges_generation.R -c ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt -g ${GENOME} -n ${GenomeName} -t ${Circular} -a ${ProjDir}/ProtAnnotation/Ref_prot_annotations.txt -o ${ProjDir}/GRanges/Ref_prot_grange.RDS > ${LogDir}/GRangesGeneration.log 2>&1
-	${PBS_O_HOME}/bin/GRanges_generation.R -c ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt -g ${GENOME} -n ${GenomeName} -t ${Circular} -a ${ProjDir}/ProtAnnotation/Orf_prot_annotations.txt -o ${ProjDir}/GRanges/Orf_prot_grange.RDS > ${LogDir}/GRangesGeneration.log 2>&1
+    ${PBS_O_HOME}/bin/GRanges_generation.R -c ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt -g ${GENOME} -n ${GenomeName} -t ${Circular} -a ${ProjDir}/ProtAnnotation/Ref_prot_annotations.txt -o ${ProjDir}/GRanges/Ref_prot_grange.RDS >> ${LogDir}/GRangesGeneration.log 2>&1
+	${PBS_O_HOME}/bin/GRanges_generation.R -c ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt -g ${GENOME} -n ${GenomeName} -t ${Circular} -a ${ProjDir}/ProtAnnotation/Orf_prot_annotations.txt -o ${ProjDir}/GRanges/Orf_prot_grange.RDS >> ${LogDir}/GRangesGeneration.log 2>&1
 	
 fi
 
