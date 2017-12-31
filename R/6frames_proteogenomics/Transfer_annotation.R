@@ -184,7 +184,8 @@ data <- dplyr::left_join(x = crossmap, y = annotations, by = opt$key)
 
 # Export the annotated data
 write.table(
-    x = data, file = opt$output, quote = FALSE, sep = "\t", col.names = TRUE)
+    x = data, file = opt$output, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
 
 # Define end time
 print(paste("Complete", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
