@@ -240,12 +240,13 @@ novel_pep <- evid %>%
     .[["Sequence"]] %>%
     unique(.)
 
-# Compute the levenshtein distance for all novel peptide
-leven_dist <- adist(
-    x = novel_pep,
-    y = fasta$Known,
-    partial = TRUE,
-    ignore.case = TRUE)
+# Compute the levenshtein distance for all novel peptide, parallelised process
+leven_dist <- foreach(
+    a = novel_pep, .combine = "rbind", .inorder = TRUE) %dopar% adist(
+        x = a,
+        y = fasta$Known,
+        partial = TRUE,
+        ignore.case = TRUE)
 
 # Reformat the data (transpose dataframe and gather)
 leven_dist_format <- leven_dist %>%
@@ -256,7 +257,7 @@ leven_dist_format <- leven_dist %>%
         .,
         stringsAsFactors = FALSE) %>%
     tidyr::gather(data = ., key = "Sequence", value = "leven", -id)
-
+    
 # Keep the minimum levenshtein score result per peptide
 #leven_dist_format %<>%
 #    dplyr::group_by(., Sequence) %>%
