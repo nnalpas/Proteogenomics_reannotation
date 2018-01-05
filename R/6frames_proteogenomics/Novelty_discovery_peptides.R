@@ -54,6 +54,8 @@ load_package("gtable")
 load_package("grid")
 load_package("gridExtra")
 load_package("purrr")
+load_package("foreach")
+load_package("doParallel")
 
 
 
@@ -88,6 +90,7 @@ if (interactive()) {
         peptide_location = choose.files(
             caption = "Choose peptide position (.RDS) file!",
             multi = FALSE),
+        threads = readline(prompt = "How many cores to use?") %>% as.integer(),
         output = readline(
             prompt = "Define the output directory!"))
         
@@ -124,6 +127,11 @@ if (interactive()) {
             opt_str = c("-p", "--peptide_location"),
             type = "character", default = NULL,
             help = "Peptide location file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-t", "--threads"),
+            type = "integer", default = "",
+            help = "Number of cores to use",
             metavar = "character"),
         make_option(
             opt_str = c("-o", "--output"),
@@ -171,6 +179,17 @@ if (is.null(opt$peptide_location)) {
     
     print_help(opt_parser)
     stop("The input peptide position must be supplied!")
+    
+}
+if (is.null(opt$threads)) {
+    
+    print_help(opt_parser)
+    stop("Number of threads is null!")
+    
+} else {
+    
+    registerDoParallel(cores = opt$threads)
+    print(paste("Number of threads registered:", getDoParWorkers()))
     
 }
 
