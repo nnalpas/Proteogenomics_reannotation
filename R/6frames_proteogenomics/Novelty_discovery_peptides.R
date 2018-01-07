@@ -492,6 +492,9 @@ dev.off()
 
 ### END ------------------------------------------------------------------
 
+# Close the cluster
+stopImplicitCluster()
+
 # Time scripts end
 print(paste("Completed ", format(Sys.time(), "%Y-%m-%d"), sep = ""))
 
