@@ -104,22 +104,22 @@ if (interactive()) {
             help = "Evidence with database group info",
             metavar = "character"),
         make_option(
-            opt_str = c("-r", "--reference_fasta"),
+            opt_str = c("-f", "--reference_fasta"),
             type = "character", default = NULL,
             help = "Reference protein fasta file",
             metavar = "character"),
         make_option(
-            opt_str = c("-rr", "--reciprocal_blast_ref"),
+            opt_str = c("-r", "--reciprocal_blast_ref"),
             type = "character", default = NULL,
             help = "Reciprocal best blast against reference",
             metavar = "character"),
         make_option(
-            opt_str = c("-ru", "--reciprocal_blast_uniprot"),
+            opt_str = c("-u", "--reciprocal_blast_uniprot"),
             type = "character", default = NULL,
             help = "Reciprocal best blast against all uniprot",
             metavar = "character"),
         make_option(
-            opt_str = c("-rn", "--reciprocal_blast_ncbi"),
+            opt_str = c("-n", "--reciprocal_blast_ncbi"),
             type = "character", default = NULL,
             help = "Reciprocal best blast against all uniprot",
             metavar = "character"),
