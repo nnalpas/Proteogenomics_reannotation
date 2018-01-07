@@ -492,4 +492,7 @@ dev.off()
 
 ### END ------------------------------------------------------------------
 
+# Time scripts end
+print(paste("Completed ", format(Sys.time(), "%Y-%m-%d"), sep = ""))
+
 
