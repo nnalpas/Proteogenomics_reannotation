@@ -12,10 +12,11 @@ BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
 ProteinCoordinate=0
-ProteinAnnotation=1
+ProteinAnnotation=0
 BSgenomeForge=0
-GRangeCreate=1
-PeptideCoordinate=1
+GRangeCreate=0
+PeptideCoordinate=0
+NoveltyReason=1
 SangerCoordinate=0
 ClustalAlign=0
 
