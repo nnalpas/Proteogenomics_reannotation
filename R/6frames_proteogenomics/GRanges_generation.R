@@ -86,17 +86,17 @@ if (interactive()) {
             metavar = "character"),
         make_option(
             opt_str = c("-g", "--genome"),
-            type = "character", default = NULL,
+            type = "character", default = "",
             help = "Genome fasta file",
             metavar = "character"),
         make_option(
             opt_str = c("-n", "--geno_name"),
-            type = "character", default = NULL,
+            type = "character", default = "",
             help = "Genome name",
             metavar = "character"),
         make_option(
             opt_str = c("-t", "--circular"),
-            type = "logical", default = NULL,
+            type = "logical", default = "",
             help = "Genome type is circular?",
             metavar = "character"),
         make_option(
@@ -116,31 +116,58 @@ if (interactive()) {
     
 }
 
-# Check whether inputs parameter were provided
-if (is.null(opt$genome)) {
+# Check whether input parameters were provided
+if (
+    identical(opt$coordinates, "") |
+    identical(opt$coordinates, character(0))) {
+    
+    opt["coordinates"] <- list(NULL)
+    warning(paste(
+        "No coordinates provided, skip these steps!!"))
+    
+}
+if (
+    identical(opt$genome, "") |
+    identical(opt$genome, character(0))) {
     
     print_help(opt_parser)
     stop(paste(
         "Genome fasta file required!"))
     
 }
-if (is.null(opt$geno_name)) {
+if (
+    identical(opt$geno_name, "") |
+    identical(opt$geno_name, character(0))) {
     
     print_help(opt_parser)
     stop(paste(
         "Genome name is required!"))
     
 }
-if (is.null(opt$circular)) {
+if (
+    identical(opt$circular, "") |
+    identical(opt$circular, logical(0))) {
     
     print_help(opt_parser)
     stop(paste(
         "Chromosome circular or linear (logical) required!"))
     
 }
+if (
+    identical(opt$annotation, "") |
+    identical(opt$annotation, character(0))) {
+    
+    opt["annotation"] <- list(NULL)
+    warning(paste(
+        "No annotation provided, skip these steps!!"))
+    
+}
 
 # Check whether output parameter was provided
-if (opt$output == "" | length(grep("\\.RDS$", opt$output)) == 0) {
+if (
+    identical(opt$output, "") |
+    identical(opt$output, character(0)) |
+    length(grep("\\.RDS$", opt$output)) == 0) {
     
     print_help(opt_parser)
     stop(paste("Output filename is required (with .RDS extension)!"))
@@ -159,15 +186,15 @@ genome <- seqinr::read.fasta(
     file = opt$genome, seqtype = "DNA", as.string = TRUE)
 
 # Check whether coordinates data are present
-if (opt$coordinates != "") {
+if (!is.null(opt$coordinates)) {
     coordinates <- data.table::fread(
         input = opt$coordinates, sep = "\t", header = TRUE,
         stringsAsFactors = FALSE, quote = "")
 }
 
 # Check whether annotation data are present
-if (opt$annotation != "") {
-    annotations <- data.table::fread(
+if (!is.null(opt$annotation)) {
+    annotation <- data.table::fread(
         input = opt$annotation, sep = "\t", header = TRUE,
         stringsAsFactors = FALSE, quote = "")
 }
@@ -190,8 +217,8 @@ chromos <- base::data.frame(
     genome = opt$geno_name,
     stringsAsFactors = FALSE)
 
-# Check whether coordinates were provided by user
-if (opt$coordinates == "") {
+# Check whether coordinates are present
+if (!exists("coordinates")) {
     
     # Data holding genomic ranges information for the genome only
     grange_data <- chromos %>%
@@ -211,12 +238,12 @@ if (opt$coordinates == "") {
     # Data holding genomic ranges information for submitted entries
     grange_data <- coordinates
     
-    # Check whether annotations were provided by user
-    if (opt$annotation != "") {
+    # Check whether annotation are present
+    if (exists("annotation")) {
         
         # Rename the first column name from annotation to match the one fro
         # the coordinates
-        colnames(annotations)[1] <- colnames(grange_data)[1]
+        colnames(annotation)[1] <- colnames(grange_data)[1]
         
         # Check that the column renaming did not create duplicate
         if (any(duplicated(colnames(annotation)))) {
@@ -225,7 +252,7 @@ if (opt$coordinates == "") {
         
         # Include the annotation to the coordinates
         grange_data %<>%
-            dplyr::left_join(x = ., y = annotations)
+            dplyr::left_join(x = ., y = annotation)
         
     }
     
