@@ -198,6 +198,35 @@ neighbours_list <- gr_near_dist(
     near_type = c("nearest","precede", "follow"),
     select = "all")
 
+# Reformat the neighbour list to dataframe
+neighbours_cat <- neighbours_list %>%
+    plyr::ldply(.data = ., .fun = "data.frame", .id = "Neighbour")
+
+# Filter the neighbour for in-frame (distance is multiple of 3) and
+# close proximity (inferior to 100 bp)
+neighbours_inframe <- neighbours_cat %>%
+    dplyr::filter(., (dist %% 3) == 0 & dist <= 100)
+
+# Interprete the results of the neighbouring entries analysis
+neighbours_analysis <- neighbours_inframe %>%
+    dplyr::mutate(., interpr = dplyr::case_when(
+        queryStrand == "+" & dist <= 3 &
+            Neighbour == "precede" ~ "Five neighbour",
+        queryStrand == "+" & dist <= 3 &
+            Neighbour == "follow" ~ "Three neighbour",
+        queryStrand == "-" & dist <= 3 &
+            Neighbour == "precede" ~ "Three neighbour",
+        queryStrand == "-" & dist <= 3 &
+            Neighbour == "follow" ~ "Five neighbour",
+        queryStrand == "+" & dist > 3 &
+            Neighbour == "precede" ~ "Nearby Five neighbour",
+        queryStrand == "+" & dist > 3 &
+            Neighbour == "follow" ~ "Nearby Three neighbour",
+        queryStrand == "-" & dist > 3 &
+            Neighbour == "precede" ~ "Nearby Three neighbour",
+        queryStrand == "-" & dist > 3 &
+            Neighbour == "follow" ~ "Nearby Five neighbour",
+        TRUE ~ "Unexplained"))
 
 
 
