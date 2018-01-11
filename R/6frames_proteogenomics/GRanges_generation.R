@@ -232,6 +232,7 @@ if (opt$coordinates == "") {
     # Format the start-end position so that start is always inferior to end
     grange_data %<>%
         dplyr::mutate(., start_tmp = start, end_tmp = end) %>%
+        dplyr::rowwise(.) %>%
         dplyr::mutate(
             .,
             start = min(start_tmp, end_tmp),
