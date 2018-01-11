@@ -69,8 +69,8 @@ if (interactive()) {
         circular = readline(
             prompt = "Is the chromosome circular (logical)?") %>%
             as.logical(.),
-        annotation = choose.files(
-            caption = "Choose an annotation file!",
+        annotations = choose.files(
+            caption = "Choose an annotations file!",
             multi = FALSE),
         output = readline(
             prompt = "Define the output filename (with .RDS extension)!"))
@@ -100,9 +100,9 @@ if (interactive()) {
             help = "Genome type is circular?",
             metavar = "character"),
         make_option(
-            opt_str = c("-a", "--annotation"),
+            opt_str = c("-a", "--annotations"),
             type = "character", default = "",
-            help = "Entries annotation file (first column must be the key)",
+            help = "Entries annotations file (first column must be the key)",
             metavar = "character"),
         make_option(
             opt_str = c("-o", "--output"),
@@ -154,12 +154,12 @@ if (
     
 }
 if (
-    identical(opt$annotation, "") |
-    identical(opt$annotation, character(0))) {
+    identical(opt$annotations, "") |
+    identical(opt$annotations, character(0))) {
     
-    opt["annotation"] <- list(NULL)
+    opt["annotations"] <- list(NULL)
     warning(paste(
-        "No annotation provided, skip these steps!!"))
+        "No annotations provided, skip these steps!!"))
     
 }
 
@@ -192,10 +192,10 @@ if (!is.null(opt$coordinates)) {
         stringsAsFactors = FALSE, quote = "")
 }
 
-# Check whether annotation data are present
-if (!is.null(opt$annotation)) {
-    annotation <- data.table::fread(
-        input = opt$annotation, sep = "\t", header = TRUE,
+# Check whether annotations data are present
+if (!is.null(opt$annotations)) {
+    annotations <- data.table::fread(
+        input = opt$annotations, sep = "\t", header = TRUE,
         stringsAsFactors = FALSE, quote = "")
 }
 
@@ -238,21 +238,21 @@ if (!exists("coordinates")) {
     # Data holding genomic ranges information for submitted entries
     grange_data <- coordinates
     
-    # Check whether annotation are present
-    if (exists("annotation")) {
+    # Check whether annotations are present
+    if (exists("annotations")) {
         
-        # Rename the first column name from annotation to match the one fro
+        # Rename the first column name from annotations to match the one fro
         # the coordinates
-        colnames(annotation)[1] <- colnames(grange_data)[1]
+        colnames(annotations)[1] <- colnames(grange_data)[1]
         
         # Check that the column renaming did not create duplicate
-        if (any(duplicated(colnames(annotation)))) {
-            stop("Duplicated column name in annotation after renaming!")
+        if (any(duplicated(colnames(annotations)))) {
+            stop("Duplicated column name in annotations after renaming!")
         }
         
-        # Include the annotation to the coordinates
+        # Include the annotations to the coordinates
         grange_data %<>%
-            dplyr::left_join(x = ., y = annotation)
+            dplyr::left_join(x = ., y = annotations)
         
     }
     
