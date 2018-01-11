@@ -145,43 +145,64 @@ if (interactive()) {
 }
 
 # Check whether inputs parameter was provided
-if (is.null(opt$evidence)) {
+if (
+    identical(opt$evidence, NULL) |
+    identical(opt$evidence, "") |
+    identical(opt$evidence, character(0))) {
     
     print_help(opt_parser)
     stop("The input evidence must be supplied!")
     
 }
-if (is.null(opt$reference_fasta)) {
+if (
+    identical(opt$reference_fasta, NULL) |
+    identical(opt$reference_fasta, "") |
+    identical(opt$reference_fasta, character(0))) {
     
     print_help(opt_parser)
     stop("The input reference fasta must be supplied!")
     
 }
-if (is.null(opt$reciprocal_blast_ref)) {
+if (
+    identical(opt$reciprocal_blast_ref, NULL) |
+    identical(opt$reciprocal_blast_ref, "") |
+    identical(opt$reciprocal_blast_ref, character(0))) {
     
     print_help(opt_parser)
     stop("The input reciprocal blast against reference must be supplied!")
     
 }
-if (is.null(opt$reciprocal_blast_uniprot)) {
+if (
+    identical(opt$reciprocal_blast_uniprot, NULL) |
+    identical(opt$reciprocal_blast_uniprot, "") |
+    identical(opt$reciprocal_blast_uniprot, character(0))) {
     
     print_help(opt_parser)
     stop("The input reciprocal blast against UniProt must be supplied!")
     
 }
-if (is.null(opt$reciprocal_blast_ncbi)) {
+if (
+    identical(opt$reciprocal_blast_ncbi, NULL) |
+    identical(opt$reciprocal_blast_ncbi, "") |
+    identical(opt$reciprocal_blast_ncbi, character(0))) {
     
     print_help(opt_parser)
     stop("The input reciprocal blast against NCBI must be supplied!")
     
 }
-if (is.null(opt$peptide_location)) {
+if (
+    identical(opt$peptide_location, NULL) |
+    identical(opt$peptide_location, "") |
+    identical(opt$peptide_location, character(0))) {
     
     print_help(opt_parser)
     stop("The input peptide position must be supplied!")
     
 }
-if (opt$threads == "") {
+if (
+    identical(opt$threads, NULL) |
+    identical(opt$threads, "") |
+    identical(opt$threads, integer(0))) {
     
     warning("Default number of threads will be used!")
     
@@ -190,7 +211,10 @@ registerDoParallel(cores = opt$threads)
 print(paste("Number of threads registered:", getDoParWorkers()))
 
 # Check whether output parameter was provided
-if (opt$output == "") {
+if (
+    identical(opt$output, NULL) |
+    identical(opt$output, "") |
+    identical(opt$output, integer(0))) {
     
     opt$output <- dirname(opt$evidence)
     warning(paste("Output results to ", opt$output, "!"))
