@@ -76,7 +76,7 @@ if (interactive()) {
     option_list <- list(
         make_option(
             opt_str = c("-i", "--operon"),
-            type = "character", default = NULL,
+            type = "character", default = "",
             help = "Operon file (SubtiWiki)",
             metavar = "character"),
         make_option(
@@ -91,7 +91,10 @@ if (interactive()) {
 }
 
 # Check whether inputs parameter was provided
-if (is.null(opt$operon)) {
+if (
+    identical(opt$operon, NULL) |
+    identical(opt$operon, "") |
+    identical(opt$operon, character(0))) {
     
     print_help(opt_parser)
     stop("The input operon must be supplied!")
@@ -99,7 +102,10 @@ if (is.null(opt$operon)) {
 }
 
 # Check whether output parameter was provided
-if (is.null(opt$output)) {
+if (
+    identical(opt$output, NULL) |
+    identical(opt$output, "") |
+    identical(opt$output, character(0))) {
     
     print_help(opt_parser)
     stop("The output filename must be supplied!")
