@@ -246,6 +246,20 @@ fi
 
 
 
+#################################
+# Operon coordinate computation #
+#################################
+
+# Check whether to perform operon coordinate identification
+if [ $OperonCoordinate == 1 ]; then
+
+    ${PBS_O_HOME}/bin/Operon_reformatting.R -i ${OPERON} -o ${ProjDir}/ProtPosition/Operon_coordinates.txt > ${LogDir}/OperonCoordinate.log 2>&1
+	${PBS_O_HOME}/bin/GRanges_generation.R -c ${ProjDir}/ProtPosition/Operon_coordinates.txt -g ${GENOME} -n ${GenomeName} -t ${Circular} -o ${ProjDir}/GRanges/Operon_grange.RDS >> ${LogDir}/OperonCoordinate.log 2>&1
+	
+fi
+
+
+
 ##############################
 # Novelty reason explanation #
 ##############################
