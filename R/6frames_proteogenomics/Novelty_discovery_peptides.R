@@ -181,17 +181,13 @@ if (is.null(opt$peptide_location)) {
     stop("The input peptide position must be supplied!")
     
 }
-if (is.null(opt$threads)) {
+if (opt$threads == "") {
     
-    print_help(opt_parser)
-    stop("Number of threads is null!")
-    
-} else {
-    
-    registerDoParallel(cores = opt$threads)
-    print(paste("Number of threads registered:", getDoParWorkers()))
+    warning("Default number of threads will be used!")
     
 }
+registerDoParallel(cores = opt$threads)
+print(paste("Number of threads registered:", getDoParWorkers()))
 
 # Check whether output parameter was provided
 if (opt$output == "") {
