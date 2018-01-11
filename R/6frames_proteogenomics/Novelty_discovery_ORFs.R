@@ -73,6 +73,9 @@ if (interactive()) {
         orf_grange = choose.files(
             caption = "Choose ORF entries grange (.RDS) file!",
             multi = FALSE),
+        operon_grange = choose.files(
+            caption = "Choose operon entries grange (.RDS) file!",
+            multi = FALSE),
         threads = readline(prompt = "How many cores to use?") %>% as.integer(),
         output = readline(
             prompt = "Define the output directory!"))
@@ -97,13 +100,18 @@ if (interactive()) {
             help = "ORF entries grange file",
             metavar = "character"),
         make_option(
+            opt_str = c("-p", "--operon_grange"),
+            type = "character", default = NULL,
+            help = "Operon entries grange file",
+            metavar = "character"),
+        make_option(
             opt_str = c("-t", "--threads"),
-            type = "integer", default = "",
+            type = "integer", default = NULL,
             help = "Number of cores to use",
             metavar = "character"),
         make_option(
             opt_str = c("-o", "--output"),
-            type = "character", default = "",
+            type = "character", default = NULL,
             help = "Output directory", metavar = "character"))
     
     # Parse the parameters provided on command line by user
@@ -113,41 +121,61 @@ if (interactive()) {
 }
 
 # Check whether inputs parameter was provided
-if (is.null(opt$novel_reason)) {
+if (
+    identical(opt$novel_reason, NULL) |
+    identical(opt$novel_reason, "") |
+    identical(opt$novel_reason, character(0))) {
     
     print_help(opt_parser)
     stop("The input peptide novelty must be supplied!")
     
 }
-if (is.null(opt$ref_grange)) {
+if (
+    identical(opt$ref_grange, NULL) |
+    identical(opt$ref_grange, "") |
+    identical(opt$ref_grange, character(0))) {
     
     print_help(opt_parser)
     stop("The input reference entries grange must be supplied!")
     
 }
-if (is.null(opt$orf_grange)) {
+if (
+    identical(opt$orf_grange, NULL) |
+    identical(opt$orf_grange, "") |
+    identical(opt$orf_grange, character(0))) {
     
     print_help(opt_parser)
     stop("The input ORF entries grange must be supplied!")
     
 }
-if (is.null(opt$threads)) {
+if (
+    identical(opt$operon_grange, NULL) |
+    identical(opt$operon_grange, "") |
+    identical(opt$operon_grange, character(0))) {
     
-    print_help(opt_parser)
-    stop("Number of threads is null!")
-    
-} else {
-    
-    registerDoParallel(cores = opt$threads)
-    print(paste("Number of threads registered:", getDoParWorkers()))
+    opt["operon_grange"] <- list(NULL)
+    warning("Input operon not supplied, operon processes ignored!")
     
 }
+if (
+    identical(opt$threads, NULL) |
+    identical(opt$threads, "") |
+    identical(opt$threads, integer(0))) {
+    
+    warning("Default number of threads will be used!")
+    
+}
+registerDoParallel(cores = opt$threads)
+print(paste("Number of threads registered:", getDoParWorkers()))
 
 # Check whether output parameter was provided
-if (opt$output == "") {
+if (
+    identical(opt$output, NULL) |
+    identical(opt$output, "") |
+    identical(opt$output, character(0))) {
     
     opt$output <- dirname(opt$novel_reason)
-    warning(paste("Output results to ", opt$output, "!"))
+    warning(paste0("Output results to ", opt$output, "!"))
     
 }
 
@@ -173,6 +201,13 @@ orf_grange <- opt$orf_grange %>%
     as.character(.) %>%
     readRDS(file = .)
 
+# Import the operon genomic ranges file if defined
+if (!is.null(opt$operon)) {
+    operon_grange <- opt$operon %>%
+        as.character(.) %>%
+        readRDS(file = .)
+}
+
 
 
 ### ORF neighbour analysis -----------------------------------------------
@@ -191,7 +226,7 @@ targets_filt <- targets[targets %in% names(orf_grange)]
 # Define the subset of novel ORF that were found expressed
 sub_orf_grange <- orf_grange[targets_filt]
 
-# Identify all neighbours entries to the novel ORFs
+# Identify all reference entries that are neighbour of the novel ORFs
 neighbours_list <- gr_near_dist(
     query = sub_orf_grange,
     subject = ref_grange,
