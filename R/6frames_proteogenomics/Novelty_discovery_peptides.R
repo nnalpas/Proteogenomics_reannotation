@@ -214,7 +214,7 @@ print(paste("Number of threads registered:", getDoParWorkers()))
 if (
     identical(opt$output, NULL) |
     identical(opt$output, "") |
-    identical(opt$output, integer(0))) {
+    identical(opt$output, character(0))) {
     
     opt$output <- dirname(opt$evidence)
     warning(paste("Output results to ", opt$output, "!"))
