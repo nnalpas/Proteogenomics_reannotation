@@ -134,7 +134,7 @@ operon_format <- operon %>%
         length = (end - start),
         chromosome = "chr1") %>%
     set_colnames(c(
-        "ID", "GI", "Synonym", "start", "end",
+        "id", "GI", "Synonym", "start", "end",
         "strand", "length", "chromosome"))
 
 # Export the reformatted data
