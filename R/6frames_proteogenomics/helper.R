@@ -133,6 +133,67 @@ plots_rectvenn <- function(
 
 
 
+### Genomic ranges related functions -------------------------------------
+
+# Function to find preceding, following or nearest neighbour between
+# genomic ranges and then compute their distance
+gr_near_dist <- function(
+    query = NULL,
+    subject = NULL,
+    near_type = c("nearest","precede", "follow"),
+    select = NULL) {
+    
+    # Safety: defined parameters
+    if (is.null(query)) {
+        stop("No query genomic range data provided!")
+    }
+    if (is.null(subject)) {
+        stop("No subject genomic range data provided!")
+    }
+    near_type %<>%
+        match.arg(
+            arg = .,
+            choices = c("nearest","precede", "follow"),
+            several.ok = TRUE)
+    if (is.null(select)) {
+        stop("No selection value for data provided!")
+    }
+    select %<>%
+        match.arg(
+            arg = .,
+            choices = c("all","first", "last"),
+            several.ok = FALSE)
+    
+    # List to compile data
+    data_list <- list()
+    
+    # Loop through all function to apply
+    for (fun in near_type) {
+        
+        # Call the specified function
+        my_data <- do.call(
+            what = fun,
+            args = list(x = query, subject = subject, select = select))
+        
+        # Format data and compute distance between query and subject
+        data_list[[fun]] <- my_data %>%
+            as.data.frame(.) %>%
+            dplyr::mutate(
+                .,
+                queryID = names(query)[queryHits],
+                subjectID = names(subject)[subjectHits],
+                dist = GenomicRanges::distance(
+                    query[queryID], subject[subjectID]))
+        
+    }
+    
+    # Return the results
+    return(data_list)
+    
+}
+
+
+
 ### Packages import ------------------------------------------------------
 
 # Create a function to load or install (then load) the required packages
