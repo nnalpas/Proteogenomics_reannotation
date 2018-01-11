@@ -234,8 +234,22 @@ if (opt$coordinates == "") {
         dplyr::mutate(., start_tmp = start, end_tmp = end) %>%
         dplyr::mutate(
             .,
-            start = ifelse(strand == "+", start_tmp, end_tmp),
-            end = ifelse(strand == "+", end_tmp, start_tmp)) %>%
+            start = min(start_tmp, end_tmp),
+            end = max(start_tmp, end_tmp))
+    
+    # Check whether entries on + strand had their start-end inverted
+    if (
+        grange_data %>%
+        dplyr::filter(., strand == "+" & start_tmp != start) %>%
+        nrow(.) %>%
+        is_greater_than(., 0)) {
+        
+        warning("Positive strand entries had their start-end inverted!")
+        
+    }
+    
+    # Clean up the grange data
+    grange_data %<>%
         dplyr::select(., -end_tmp, -start_tmp)
     
 }
