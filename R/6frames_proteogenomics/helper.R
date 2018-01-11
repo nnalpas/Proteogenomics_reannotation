@@ -181,7 +181,9 @@ gr_near_dist <- function(
             dplyr::mutate(
                 .,
                 queryID = names(query)[queryHits],
+                queryStrand = as.character(strand(query)[queryHits]),
                 subjectID = names(subject)[subjectHits],
+                subjectStrand = as.character(strand(subject)[subjectHits]),
                 dist = GenomicRanges::distance(
                     query[queryID], subject[subjectID]))
         
