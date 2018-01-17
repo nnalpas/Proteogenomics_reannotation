@@ -267,6 +267,30 @@ neighbours_analysis <- neighbours_inframe %>%
 
 
 
+### Operon overlap analysis ----------------------------------------------
+
+# Check whether operon data are present
+if (exists("operon_grange")) {
+    
+    # Identify the operon that overlap with putative novel ORF
+    overlap_operon <- findOverlaps(
+        query = sub_orf_grange, subject = operon_grange,
+        type = "any", select = "all")
+    
+    # Include the entries ID and strand in the dataframe
+    overlap_operon %<>%
+        as.data.frame(.) %>%
+        dplyr::mutate(
+            .,
+            queryID = names(sub_orf_grange)[queryHits],
+            queryStrand = as.character(strand(sub_orf_grange)[queryHits]),
+            subjectID = names(operon_grange)[subjectHits],
+            subjectStrand = as.character(strand(operon_grange)[subjectHits]))
+    
+}
+
+
+
 ### Data visualisation and export ----------------------------------------
 
 # Loop through each neighbour type
