@@ -52,7 +52,7 @@ TblastnParam=''
 SEED="${PBS_O_HOME}/Genome/Bacillus_subtilis/seed"
 
 # GRangesParam
-GenomeName="AL009126.3"
+GenomeName="AL0091263"
 Circular=TRUE
 
 # ClustalParam
