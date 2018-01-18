@@ -528,14 +528,15 @@ for (x in names(sub_orf_grange)) {
             # Add explicitely NA if there is no match
             tmp <- base::data.frame(
                 id = names(tmp_seq),
-                start = NA_integer_, end = NA_integer_,
+                start = NA_integer_,
+                end = NA_integer_,
                 seq = NA_character_,
                 stringsAsFactors = FALSE)
             
         } else {
             
             # Format as dataframe the current peptide positions
-            tmp2 <- tmp %>%
+            tmp %<>%
                 set_names(x) %>%
                 ldply(., "data.frame", .id = "id") %>%
                 dplyr::rowwise(.) %>%
