@@ -54,8 +54,8 @@ load_package("gtable")
 load_package("grid")
 load_package("gridExtra")
 load_package("purrr")
-load_package("foreach")
-load_package("doParallel")
+#load_package("foreach")
+#load_package("doParallel")
 load_package("motifRG")
 load_package("ggseqlogo")
 load_package("BSgenome.Bsubtilis.EMBL.AL0091263")
@@ -80,6 +80,9 @@ if (interactive()) {
             multi = FALSE),
         operon_grange = choose.files(
             caption = "Choose operon entries grange (.RDS) file!",
+            multi = FALSE),
+        pep_pos = choose.files(
+            caption = "Choose peptide position within protein (.RDS) file!",
             multi = FALSE),
         add_rbs = readline(prompt = paste0(
             "Provide additional RBS sequence",
@@ -112,6 +115,11 @@ if (interactive()) {
             opt_str = c("-p", "--operon_grange"),
             type = "character", default = NULL,
             help = "Operon entries grange file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-e", "--pep_pos"),
+            type = "character", default = NULL,
+            help = "Peptide position file",
             metavar = "character"),
         make_option(
             opt_str = c("-a", "--add_rbs"),
@@ -172,6 +180,15 @@ if (
     
 }
 if (
+    identical(opt$pep_pos, NULL) |
+    identical(opt$pep_pos, "") |
+    identical(opt$pep_pos, character(0))) {
+    
+    print_help(opt_parser)
+    stop("The input peptide position within proteins must be supplied!")
+    
+}
+if (
     identical(opt$add_rbs, NULL) |
     identical(opt$add_rbs, "") |
     identical(opt$add_rbs, character(0))) {
@@ -224,6 +241,11 @@ orf_grange <- opt$orf_grange %>%
     as.character(.) %>%
     readRDS(file = .)
 
+# Import the peptide position file
+pep_loc_data <- opt$pep_pos %>%
+    as.character(.) %>%
+    readRDS(file = .)
+ 
 # Import the operon genomic ranges file if defined
 if (!is.null(opt$operon)) {
     operon_grange <- opt$operon %>%
@@ -605,6 +627,35 @@ for (x in names(sub_orf_grange)) {
 rbs_results %<>%
     plyr::ldply(., "data.frame", .id = "id")
 
+# For each novel ORF get the minimum peptide start position and
+# maximum peptide end position
+pep_loc_data_cat <- pep_loc_data[["Novel"]] %>%
+    dplyr::group_by(., prot) %>%
+    dplyr::summarise(
+        .,
+        minStartPep = min(start, na.rm = T),
+        maxEndPep = max(end, na.rm = T))
+
+# For each novel ORF get the minimum start and minimum end RBS position
+rbs_results_cat <- rbs_results %>%
+    dplyr::filter(., !is.na(start)) %>%
+    dplyr::mutate(
+        .,
+        start = (start - nucleotide_before - 1),
+        end = (end - nucleotide_before - 3)) %>%
+    dplyr::group_by(., id) %>%
+    dplyr::summarise(
+        .,
+        minStartRBS = min(start, na.rm = T),
+        minEndRBS = min(end, na.rm = T))
+
+# Combine the peptide and RBS data for each novel ORF and
+# determine whether putative RBS fits the identified peptides position
+rbs_explain <- dplyr::left_join(
+    x = rbs_results_cat, y = pep_loc_data_cat, by = c("id" = "prot")) %>%
+    dplyr::mutate(
+        ., RBS_fits_PeptideId = ifelse(minEndRBS <= minStartPep, TRUE, FALSE))
+
 
 
 ### Novelty reason determination -----------------------------------------
@@ -651,7 +702,8 @@ orf_reason_cat %<>%
         all_sum_Intensity = unique(all_sum_Intensity),
         group = paste(unique(group), collapse = ";"),
         Database = paste(unique(Database), collapse = ";"),
-        PepNoveltyReason = paste(sort(unique(NoveltyReason)), collapse = ";"),
+        PepNoveltyReason = paste(
+            sort(as.character(unique(NoveltyReason))), collapse = ";"),
         OnlyIdBySite = ifelse(all(OnlyIdBySite == FALSE), FALSE, TRUE),
         PEPfilter = ifelse(all(PEPfilter == FALSE), FALSE, TRUE)) %>%
     dplyr::arrange(., desc(novel_peptide_count))
@@ -661,13 +713,29 @@ orf_reason_clean <- orf_reason_cat %>%
     dplyr::mutate(., ORFNoveltyReason = sub(
         "(;Not novel|Not novel;)", "", PepNoveltyReason))
 
+# Clean-up the ORF novelty reason by removing 'Potential alternate start'
+# if 'Alternate start (known other species)' reason
+orf_reason_clean %<>%
+    dplyr::mutate(., ORFNoveltyReason = sub(
+        "(Alternate start \\(known other species\\));Potential alternate start",
+        "\\1",
+        ORFNoveltyReason))
+
+# Clean-up the ORF novelty reason by removing 'SAV'
+# if 'SAVs/InDels' reason
+orf_reason_clean %<>%
+    dplyr::mutate(., ORFNoveltyReason = sub(
+        "SAV;(SAVs/InDels)",
+        "\\1",
+        ORFNoveltyReason))
+
 # Include the neighbour reference entry analysis
 orf_reason_neighb <- neighbours_analysis %>%
-    dplyr::filter(Neighbour != "nearest") %>%
-    dplyr::select(., queryID, subjectID, interpr, dist) %>%
-    tidyr::unite(
-        data = ., col = Value, subjectID, dist, sep = " | ") %>%
-    tidyr::spread(data = ., key = interpr, value = Value, convert = FALSE) %>%
+    dplyr::filter(., interpr %in% c("Five neighbour", "Three neighbour")) %>%
+    dplyr::select(., queryID, subjectID, interpr) %>%
+    tidyr::spread(
+        data = ., key = interpr, value = subjectID, convert = FALSE) %>%
+    set_colnames(sub("neighbour", "neighbour (+/-3bp)", colnames(.))) %>%
     dplyr::left_join(
         x = orf_reason_clean, y = ., by = c("Proteins" = "queryID"))
 
@@ -675,26 +743,54 @@ orf_reason_neighb <- neighbours_analysis %>%
 orf_reason_opr <- overlap_operon %>%
     dplyr::select(., queryID, subjectID) %>%
     set_colnames(c("id", "OperonID")) %>%
+    dplyr::group_by(., id) %>%
+    dplyr::summarise(., OperonID = paste(unique(OperonID), collapse = ";")) %>%
     dplyr::left_join(
         x = orf_reason_neighb, y = ., by = c("Proteins" = "id"))
 
 # Include the RBS motif presence analysis
 orf_reason_rbs <- rbs_results %>%
     dplyr::filter(., !is.na(start)) %>%
-    tidyr::unite(data = ., col = rbs_position, start, end, sep = "-") %>%
+    dplyr::mutate(
+        .,
+        start = (start - nucleotide_before - 1),
+        end = (end - nucleotide_before - 1)) %>%
+    tidyr::unite(data = ., col = rbs_position, start, end, sep = "/") %>%
     dplyr::group_by(., id) %>%
-    dplyr::summarise(., rbs_position = paste(unique(rbs_position), collapse = ";")) %>%
+    dplyr::summarise(
+        ., rbs_position = paste(unique(rbs_position), collapse = ";")) %>%
     dplyr::select(., id, rbs_position) %>%
     dplyr::left_join(
-        x = orf_reason_opr, y = ., by = c("Proteins" = "id"))
+        x = orf_reason_opr, y = ., by = c("Proteins" = "id")) %>%
+    dplyr::left_join(
+        x = ., y = rbs_explain %>% dplyr::select(., id, RBS_fits_PeptideId),
+        by = c("Proteins" = "id"))
 
+# Compute final ORF novelty reason based on five prime neighbour and RBS motif
+orf_reason_final <- orf_reason_rbs %>% 
+    dplyr::mutate(., ORFNoveltyReason = dplyr::case_when(
+        ORFNoveltyReason == "Potential alternate start" &
+            !is.na(`Five neighbour (+/-3bp)`) ~ paste(
+                ORFNoveltyReason, "Erroneous termination", sep = ";"),
+        ORFNoveltyReason == "Potentially novel" &
+            !is.na(`Five neighbour (+/-3bp)`) ~ "Erroneous termination",
+        TRUE ~ ORFNoveltyReason))
 
+# Include the nucleotide and amino acid length
+orf_reason_final <- data.frame(
+    Proteins = names(sub_orf_grange),
+    nucl_length = sub_orf_grange@elementMetadata@listData$nucl_length,
+    aa_length = sub_orf_grange@elementMetadata@listData$aa_length) %>%
+    dplyr::left_join(x = orf_reason_final, y = .)
 
 
 
 ### Focus on high quality novel ORF --------------------------------------
 
-# 
+# Keep high quality novel ORF by filtering out the entries only identified
+# by sites and entries above PEP threshold
+orf_reason_highqual <- orf_reason_final %>%
+    dplyr::filter(., OnlyIdBySite & PEPfilter)
 
 
 
@@ -753,22 +849,188 @@ for (x in names(neighbours_list)) {
     
 }
 
+# Plot the neighbour results
+toplot <- neighbours_analysis %>%
+    dplyr::group_by(., interpr) %>%
+    dplyr::summarise(., count = n_distinct(queryID)) %>%
+    dplyr::mutate(., Type = "All novel")
+toplot <- neighbours_analysis %>%
+    dplyr::filter(., queryID %in% unique(orf_reason_highqual$Proteins)) %>%
+    dplyr::group_by(., interpr) %>%
+    dplyr::summarise(., count = n_distinct(queryID)) %>%
+    dplyr::mutate(., Type = "Quality filtered") %>%
+    dplyr::bind_rows(toplot, .)
+plots_hist(
+    data = toplot,
+    key = "interpr",
+    value = "count",
+    group = "Type",
+    fill = "Type",
+    main = "Reference entry neighbouring ORF",
+    xlabel = "Neighbour type",
+    ylabel = "Count of ORF with neighbour",
+    textsize = 15,
+    label = "count",
+    bw = TRUE,
+    legend = "bottom")
+
+# Plot the operon overlap results
+toplot <- orf_reason_final %>%
+    dplyr::mutate(., within_operon = !is.na(OperonID)) %>%
+    dplyr::group_by(., within_operon) %>%
+    dplyr::summarise(., count = n_distinct(Proteins)) %>%
+    dplyr::mutate(., Type = "All novel")
+toplot <- orf_reason_final %>%
+    dplyr::filter(., Proteins %in% unique(orf_reason_highqual$Proteins)) %>%
+    dplyr::mutate(., within_operon = !is.na(OperonID)) %>%
+    dplyr::group_by(., within_operon) %>%
+    dplyr::summarise(., count = n_distinct(Proteins)) %>%
+    dplyr::mutate(., Type = "Quality filtered") %>%
+    dplyr::bind_rows(toplot, .)
+plots_hist(
+    data = toplot,
+    key = "within_operon",
+    value = "count",
+    group = "Type",
+    fill = "Type",
+    main = "ORF within known operon",
+    xlabel = "Within operon",
+    ylabel = "Count of ORF",
+    textsize = 15,
+    label = "count",
+    bw = TRUE,
+    legend = "bottom")
+
 # Display the RBS seqlogo results
 marrangeGrob(grobs = rbs_plot, ncol = 1, nrow = 1, top = NULL)
 
-# Plot the neighbour results
+# Plot the RBS motif results
+toplot <- orf_reason_final %>%
+    dplyr::mutate(., rbs_type = dplyr::case_when(
+        is.na(rbs_position) ~ "No RBS",
+        RBS_fits_PeptideId ~ "Good fit RBS",
+        TRUE ~ "Putative RBS")) %>%
+    dplyr::group_by(., rbs_type) %>%
+    dplyr::summarise(., count = n_distinct(Proteins)) %>%
+    dplyr::mutate(., Type = "All novel")
+toplot <- orf_reason_final %>%
+    dplyr::filter(., Proteins %in% unique(orf_reason_highqual$Proteins)) %>%
+    dplyr::mutate(., rbs_type = dplyr::case_when(
+        is.na(rbs_position) ~ "No RBS",
+        RBS_fits_PeptideId ~ "Good fit RBS",
+        TRUE ~ "Putative RBS")) %>%
+    dplyr::group_by(., rbs_type) %>%
+    dplyr::summarise(., count = n_distinct(Proteins)) %>%
+    dplyr::mutate(., Type = "Quality filtered") %>%
+    dplyr::bind_rows(toplot, .)
+plots_hist(
+    data = toplot,
+    key = "rbs_type",
+    value = "count",
+    group = "Type",
+    fill = "Type",
+    main = "ORF with RBS motifs",
+    xlabel = "RBS motif presence",
+    ylabel = "Count of ORF",
+    textsize = 15,
+    label = "count",
+    bw = TRUE,
+    legend = "bottom")
 
+# Visualise ORF amino acid length repartition
+toplot <- data.frame(
+    Proteins = names(ref_grange),
+    aa_length = ref_grange@elementMetadata@listData$aa_length) %>%
+    dplyr::mutate(., Type = "Known entries")
+toplot <- orf_reason_final %>%
+    dplyr::select(., Proteins, aa_length) %>%
+    dplyr::mutate(., Type = "All novel") %>%
+    dplyr::bind_rows(toplot, .)
+toplot <- orf_reason_final %>%
+    dplyr::filter(., Proteins %in% unique(orf_reason_highqual$Proteins)) %>%
+    dplyr::select(., Proteins, aa_length) %>%
+    dplyr::mutate(., Type = "Quality filtered") %>%
+    dplyr::bind_rows(toplot, .)
+plots_box(
+    data = toplot,
+    key = "Type",
+    value = "aa_length",
+    main = "ORF length",
+    xlabel = "Type",
+    ylabel = "Amino acid length",
+    colour = "black",
+    fill = "grey",
+    textsize = 15)
 
-# Plot the RBS and operon results
+# Export neighbour results (as txt and RDS files)
+saveRDS(
+    object = neighbours_analysis,
+    file = paste(
+        opt$output, "/", "Neighbours_analysis.RDS", sep = ""))
+write.table(
+    x = neighbours_analysis,
+    file = paste(
+        opt$output, "/", "Neighbours_analysis.txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE)
 
-summary(names(sub_orf_grange) %in% unique(overlap_operon$queryID))
+# Export operon overlap results (as txt and RDS files)
+saveRDS(
+    object = overlap_operon,
+    file = paste(
+        opt$output, "/", "Overlap_operon.RDS", sep = ""))
+write.table(
+    x = overlap_operon,
+    file = paste(
+        opt$output, "/", "Overlap_operon.txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE)
 
-# Export neighbour results
+# Export RBS motifs results (as txt and RDS files)
+saveRDS(
+    object = rbs_results,
+    file = paste(
+        opt$output, "/", "RBS_motifs_results.RDS", sep = ""))
+write.table(
+    x = rbs_results,
+    file = paste(
+        opt$output, "/", "RBS_motifs_results.txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE)
 
-# Export operon overlap results
+# Export all ORF novelty reason results (as txt and RDS files)
+saveRDS(
+    object = orf_reason_final,
+    file = paste(
+        opt$output, "/", "ORF_novelty_reason.RDS", sep = ""))
+write.table(
+    x = orf_reason_final,
+    file = paste(
+        opt$output, "/", "ORF_novelty_reason.txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE)
 
-# Export RBS motifs results
-
+# Export all ORF novelty reason results (as txt and RDS files)
+saveRDS(
+    object = orf_reason_highqual,
+    file = paste(
+        opt$output, "/", "HighQual_ORF_novelty_reason.RDS", sep = ""))
+write.table(
+    x = orf_reason_highqual,
+    file = paste(
+        opt$output, "/", "HighQual_ORF_novelty_reason.txt", sep = ""),
+    quote = FALSE,
+    sep = "\t",
+    row.names = FALSE,
+    col.names = TRUE)
 
 
 
