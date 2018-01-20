@@ -81,6 +81,10 @@ if (interactive()) {
         operon_grange = choose.files(
             caption = "Choose operon entries grange (.RDS) file!",
             multi = FALSE),
+        add_rbs = readline(prompt = paste0(
+            "Provide additional RBS sequence",
+            " (separated by space)?")) %>%
+            as.character(),
         threads = readline(prompt = "How many cores to use?") %>% as.integer(),
         output = readline(
             prompt = "Define the output directory!"))
@@ -108,6 +112,11 @@ if (interactive()) {
             opt_str = c("-p", "--operon_grange"),
             type = "character", default = NULL,
             help = "Operon entries grange file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-a", "--add_rbs"),
+            type = "character", default = NULL,
+            help = "Additional RBS sequence (separated by space)",
             metavar = "character"),
         make_option(
             opt_str = c("-t", "--threads"),
@@ -163,6 +172,15 @@ if (
     
 }
 if (
+    identical(opt$add_rbs, NULL) |
+    identical(opt$add_rbs, "") |
+    identical(opt$add_rbs, character(0))) {
+    
+    opt["add_rbs"] <- list(NULL)
+    warning("No RBS sequence provided by user!")
+    
+}
+if (
     identical(opt$threads, NULL) |
     identical(opt$threads, "") |
     identical(opt$threads, integer(0))) {
@@ -211,6 +229,18 @@ if (!is.null(opt$operon)) {
     operon_grange <- opt$operon %>%
         as.character(.) %>%
         readRDS(file = .)
+}
+
+# Format the RBS sequences if defined
+if (!is.null(opt$add_rbs)) {
+    user_rbs <- opt$add_rbs %>%
+        as.character(.) %>%
+        strsplit(x = ., split = " ", fixed = TRUE) %>%
+        unlist(.) %>%
+        toupper(.) %>%
+        unique(.)
+} else {
+    user_rbs <- character(0)
 }
 
 
@@ -299,19 +329,22 @@ if (exists("operon_grange")) {
 # Get the Bsu genome object
 bsu <- BSgenome.Bsubtilis.EMBL.AL0091263
 
+# Define number of nucleotide after first nucleotide (to define start codon)
+nucleotide_after <- 2
+
 # Create new GRange object to study nucleotide frequence of start codon
 # on positive strand
 plus_grange <- subset(ref_grange, strand == "+")
 names(plus_grange) %<>%
     sub("^", "start_", .)
-end(plus_grange) <- (start(plus_grange) + 2)
+end(plus_grange) <- (start(plus_grange) + nucleotide_after)
 
 # Create new GRange object to study nucleotide frequence of start codon
 # on negative strand
 minus_grange <- subset(ref_grange, strand == "-")
 names(minus_grange) %<>%
     sub("^", "start_", .)
-start(minus_grange) <- (end(minus_grange) - 2)
+start(minus_grange) <- (end(minus_grange) - nucleotide_after)
 
 # Compile positive and negative strand entries
 start_codon <- c(plus_grange, minus_grange)
@@ -369,9 +402,13 @@ high_express <- msms_count %>%
 ref_expr_list <- list(
     `Low abundant` = low_express, `High abundant` = high_express)
 
+# Define number of nucleotide before first nucleotide (to define RBS region)
+nucleotide_before <- 30
+
 # Loop through the stratified list of proteins
 rbs_motifs <- list()
 rbs_motifs_score <- list()
+rbs_plot <- list()
 for (i in 1:length(ref_expr_list)) {
     
     # Create foreground GRange object (+/- X bp of start)
@@ -379,13 +416,13 @@ for (i in 1:length(ref_expr_list)) {
     pos_grange <- subset(
         ref_grange, strand == "+" & id %in% ref_expr_list[[i]])
     ranges(pos_grange) <- IRanges(
-        start = (start(pos_grange) - 30),
-        end = (start(pos_grange) + 2))
+        start = (start(pos_grange) - nucleotide_before),
+        end = (start(pos_grange) + nucleotide_after))
     neg_grange <- subset(
         ref_grange, strand == "-" & id %in% ref_expr_list[[i]])
     ranges(neg_grange) <- IRanges(
-        start = (end(neg_grange) - 2),
-        end = (end(neg_grange) + 30))
+        start = (end(neg_grange) - nucleotide_after),
+        end = (end(neg_grange) + nucleotide_before))
     
     # Concatenate the entries from positive and negative strand
     fg_grange <- c(pos_grange, neg_grange)
@@ -400,13 +437,13 @@ for (i in 1:length(ref_expr_list)) {
     pos_grange <- subset(
         ref_grange, strand == "+" & id %in% ref_expr_list[[i]])
     ranges(pos_grange) <- IRanges(
-        start = (end(pos_grange) - 30),
-        end = (end(pos_grange) + 2))
+        start = (end(pos_grange) - nucleotide_before),
+        end = (end(pos_grange) + nucleotide_after))
     neg_grange <- subset(
         ref_grange, strand == "-" & id %in% ref_expr_list[[i]])
     ranges(neg_grange) <- IRanges(
-        start = (start(neg_grange) - 2),
-        end = (start(neg_grange) + 30))
+        start = (start(neg_grange) - nucleotide_after),
+        end = (start(neg_grange) + nucleotide_before))
     
     # Concatenate the entries from positive and negative strand
     bg_grange <- c(pos_grange, neg_grange)
@@ -444,7 +481,7 @@ for (i in 1:length(ref_expr_list)) {
         set_colnames(c("Motifs", "Score"))
     
     # Draw consensus logo sequence of RBS for expressed protein
-    ggplot() +
+    rbs_plot[[names(ref_expr_list)[i]]] <- ggplot() +
         geom_logo(
             data = fg_seq_list,
             method = "bits",
@@ -453,8 +490,14 @@ for (i in 1:length(ref_expr_list)) {
         ggtitle(paste(names(ref_expr_list)[i], "proteins")) +
         scale_x_continuous(
             name = "Nucleotide position prior CDS",
-            breaks = c(seq(from = 1, to = 33, by = 1)),
-            labels = c(seq(from = -30, to = 2, by = 1))) +
+            breaks = c(seq(
+                from = 1,
+                to = (1 + nucleotide_after + nucleotide_before),
+                by = 1)),
+            labels = c(seq(
+                from = -nucleotide_before,
+                to = nucleotide_after,
+                by = 1))) +
         annotation_custom(
             grob = tableGrob(
                 d = tmp_rbs_motifs_score %>%
@@ -469,17 +512,11 @@ for (i in 1:length(ref_expr_list)) {
     
 }
 
-
-# User provided additional RBS motifs sequence
-user_rbs <- c(
-    "aaaggaggtgt", "agaggtggtgt", "atattaagaggaggag", "agagaacaaggagggg")
-
-
 # Concatenate all RBS motifs sequence in single vector
 all_rbs_motifs <- c(
     rbs_motifs_score$`Low abundant`$Motifs,
-    rbs_motifs_score$`High abundant`$Motifs) %>%
-    c(., toupper(user_rbs)) %>%
+    rbs_motifs_score$`High abundant`$Motifs,
+    user_rbs) %>%
     unique(.)
 
 # Create the RBS motifs regular expression
@@ -497,15 +534,15 @@ for (x in names(sub_orf_grange)) {
     # Check if multiple entry with same name
     if (length(tmp_grange) == 1) {
         
-        # Include 30 nucleotides prior to start codon in grange
+        # Include X nucleotides prior to start codon in grange
         if (as.character(strand(tmp_grange)) == "+") {
             ranges(tmp_grange) <- IRanges(
-                start = (start(tmp_grange) - 30),
+                start = (start(tmp_grange) - nucleotide_before),
                 end = (end(tmp_grange)))
         } else if (as.character(strand(tmp_grange)) == "-") {
             ranges(tmp_grange) <- IRanges(
                 start = (start(tmp_grange)),
-                end = (end(tmp_grange) + 30))
+                end = (end(tmp_grange) + nucleotide_before))
         } else {
             stop("Strand unknown!")
         }
@@ -566,6 +603,81 @@ rbs_results %<>%
 
 
 
+### Novelty reason determination -----------------------------------------
+
+# Get all ORF to explain
+orf_reason <- evid_reason %>%
+    dplyr::select(
+        ., Sequence, Proteins, PEP, `MS/MS Count`, Score, Intensity,
+        group, Database, OnlyIdBySite, NoveltyReason, PEPfilter) %>%
+    cSplit(
+        indt = ., splitCols = "Proteins", sep = ";",
+        direction = "long", fixed = TRUE) %>%
+    dplyr::filter(., Proteins %in% targets)
+
+# Compile info for each novel ORFs based on all sequences (target and novel)
+orf_reason_cat <- orf_reason %>%
+    dplyr::group_by(., Proteins) %>%
+    dplyr::mutate(
+        .,
+        all_peptide_count = n_distinct(Sequence),
+        all_Sequence = paste(unique(Sequence), collapse = ";"),
+        all_min_PEP = min(PEP, na.rm = TRUE),
+        all_sum_MSMS_Count = sum(`MS/MS Count`, na.rm = TRUE),
+        all_max_Score = max(Score, na.rm = TRUE),
+        all_sum_Intensity = sum(Intensity, na.rm = TRUE))
+
+# Compile info for each novel ORFs based on novel only sequences
+orf_reason_cat %<>%
+    dplyr::filter(., Database == "Novel") %>%
+    dplyr::group_by(., Proteins) %>%
+    dplyr::summarise(
+        .,
+        novel_peptide_count = n_distinct(Sequence),
+        novel_Sequence = paste(unique(Sequence), collapse = ";"),
+        novel_min_PEP = min(PEP, na.rm = TRUE),
+        novel_sum_MSMS_Count = sum(`MS/MS Count`, na.rm = TRUE),
+        novel_max_Score = max(Score, na.rm = TRUE),
+        novel_sum_Intensity = sum(Intensity, na.rm = TRUE),
+        all_peptide_count = unique(all_peptide_count),
+        all_Sequence = unique(all_Sequence),
+        all_min_PEP = unique(all_min_PEP),
+        all_sum_MSMS_Count = unique(all_sum_MSMS_Count),
+        all_max_Score = unique(all_max_Score),
+        all_sum_Intensity = unique(all_sum_Intensity),
+        group = paste(unique(group), collapse = ";"),
+        Database = paste(unique(Database), collapse = ";"),
+        PepNoveltyReason = paste(unique(NoveltyReason), collapse = ";"),
+        OnlyIdBySite = ifelse(all(OnlyIdBySite == FALSE), FALSE, TRUE),
+        PEPfilter = ifelse(all(PEPfilter == FALSE), FALSE, TRUE)) %>%
+    dplyr::arrange(., desc(novel_peptide_count))
+
+#
+
+
+
+
+
+
+data <- pep.pos %>%
+    dplyr::filter(., ORF %in% filt) %>%
+    dplyr::group_by(., ORF) %>%
+    dplyr::summarise(
+        .,
+        Sequences = toString(x = unique(Sequence), width = NULL),
+        ReasonNovel = toString(x = unique(ReasonNovel), width = NULL),
+        Unique_peptide_count = n_distinct(Sequence)) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE) %>%
+    .[order(.$Unique_peptide_count, decreasing = TRUE), ]
+
+
+
+### Focus on high quality novel ORF --------------------------------------
+
+# 
+
+
+
 ### Data visualisation and export ----------------------------------------
 
 # Loop through each neighbour type
@@ -620,6 +732,15 @@ for (x in names(neighbours_list)) {
     print(pl[[1]])
     
 }
+
+# Display the RBS seqlogo results
+marrangeGrob(grobs = rbs_plot, ncol = 1, nrow = 1, top = NULL)
+
+# Plot the RBS and operon results
+
+summary(names(sub_orf_grange) %in% unique(overlap_operon$queryID))
+
+
 
 
 
