@@ -296,7 +296,7 @@ neighbours_analysis <- neighbours_inframe %>%
             Neighbour == "precede" ~ "Nearby Three neighbour",
         queryStrand == "-" & dist > 3 &
             Neighbour == "follow" ~ "Nearby Five neighbour",
-        TRUE ~ "Unexplained"))
+        TRUE ~ "No neighbour"))
 
 
 
@@ -519,6 +519,10 @@ all_rbs_motifs <- c(
     user_rbs) %>%
     unique(.)
 
+# Order RBS motifs by decreasing length
+all_rbs_motifs <- all_rbs_motifs[
+    order(nchar(all_rbs_motifs), all_rbs_motifs, decreasing = T)]
+
 # Create the RBS motifs regular expression
 pattern_rbs_motifs <- paste(all_rbs_motifs, collapse = "|") %>%
     paste0("(", ., ")") %>%
@@ -647,28 +651,44 @@ orf_reason_cat %<>%
         all_sum_Intensity = unique(all_sum_Intensity),
         group = paste(unique(group), collapse = ";"),
         Database = paste(unique(Database), collapse = ";"),
-        PepNoveltyReason = paste(unique(NoveltyReason), collapse = ";"),
+        PepNoveltyReason = paste(sort(unique(NoveltyReason)), collapse = ";"),
         OnlyIdBySite = ifelse(all(OnlyIdBySite == FALSE), FALSE, TRUE),
         PEPfilter = ifelse(all(PEPfilter == FALSE), FALSE, TRUE)) %>%
     dplyr::arrange(., desc(novel_peptide_count))
 
-#
+# Clean-up the ORF novelty reason by removing 'Not novel' if another reason
+orf_reason_clean <- orf_reason_cat %>%
+    dplyr::mutate(., ORFNoveltyReason = sub(
+        "(;Not novel|Not novel;)", "", PepNoveltyReason))
+
+# Include the neighbour reference entry analysis
+orf_reason_neighb <- neighbours_analysis %>%
+    dplyr::filter(Neighbour != "nearest") %>%
+    dplyr::select(., queryID, subjectID, interpr, dist) %>%
+    tidyr::unite(
+        data = ., col = Value, subjectID, dist, sep = " | ") %>%
+    tidyr::spread(data = ., key = interpr, value = Value, convert = FALSE) %>%
+    dplyr::left_join(
+        x = orf_reason_clean, y = ., by = c("Proteins" = "queryID"))
+
+# Include the operon overlap analysis
+orf_reason_opr <- overlap_operon %>%
+    dplyr::select(., queryID, subjectID) %>%
+    set_colnames(c("id", "OperonID")) %>%
+    dplyr::left_join(
+        x = orf_reason_neighb, y = ., by = c("Proteins" = "id"))
+
+# Include the RBS motif presence analysis
+orf_reason_rbs <- rbs_results %>%
+    dplyr::filter(., !is.na(start)) %>%
+    tidyr::unite(data = ., col = rbs_position, start, end, sep = "-") %>%
+    dplyr::group_by(., id) %>%
+    dplyr::summarise(., rbs_position = paste(unique(rbs_position), collapse = ";")) %>%
+    dplyr::select(., id, rbs_position) %>%
+    dplyr::left_join(
+        x = orf_reason_opr, y = ., by = c("Proteins" = "id"))
 
 
-
-
-
-
-data <- pep.pos %>%
-    dplyr::filter(., ORF %in% filt) %>%
-    dplyr::group_by(., ORF) %>%
-    dplyr::summarise(
-        .,
-        Sequences = toString(x = unique(Sequence), width = NULL),
-        ReasonNovel = toString(x = unique(ReasonNovel), width = NULL),
-        Unique_peptide_count = n_distinct(Sequence)) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE) %>%
-    .[order(.$Unique_peptide_count, decreasing = TRUE), ]
 
 
 
@@ -736,10 +756,18 @@ for (x in names(neighbours_list)) {
 # Display the RBS seqlogo results
 marrangeGrob(grobs = rbs_plot, ncol = 1, nrow = 1, top = NULL)
 
+# Plot the neighbour results
+
+
 # Plot the RBS and operon results
 
 summary(names(sub_orf_grange) %in% unique(overlap_operon$queryID))
 
+# Export neighbour results
+
+# Export operon overlap results
+
+# Export RBS motifs results
 
 
 
