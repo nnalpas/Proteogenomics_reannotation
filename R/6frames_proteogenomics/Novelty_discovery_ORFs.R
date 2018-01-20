@@ -796,6 +796,11 @@ orf_reason_highqual <- orf_reason_final %>%
 
 ### Data visualisation and export ----------------------------------------
 
+# Open a file for plot visualisation
+pdf(
+    file = paste0(opt$output, "/", "ORF_novelty_reason.pdf"),
+    width = 10, height = 10)
+
 # Loop through each neighbour type
 for (x in names(neighbours_list)) {
     
@@ -962,6 +967,9 @@ plots_box(
     fill = "grey",
     textsize = 15)
 
+# Close the pdf file
+dev.off()
+
 # Export neighbour results (as txt and RDS files)
 saveRDS(
     object = neighbours_analysis,
@@ -1037,7 +1045,7 @@ write.table(
 ### END ------------------------------------------------------------------
 
 # Close the cluster
-stopImplicitCluster()
+#stopImplicitCluster()
 
 # Time scripts end
 print(paste("Completed ", format(Sys.time(), "%Y-%m-%d"), sep = ""))
