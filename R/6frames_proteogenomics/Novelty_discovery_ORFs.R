@@ -50,6 +50,7 @@ load_package("optparse")
 load_package("seqinr")
 load_package("bit64")
 load_package("ggplot2")
+load_package("ggbio")
 load_package("gtable")
 load_package("grid")
 load_package("gridExtra")
@@ -83,6 +84,15 @@ if (interactive()) {
             multi = FALSE),
         pep_pos = choose.files(
             caption = "Choose peptide position within protein (.RDS) file!",
+            multi = FALSE),
+        pep_grange = choose.files(
+            caption = "Choose peptide entries grange (.RDS) file!",
+            multi = FALSE),
+        sanger_grange = choose.files(
+            caption = "Choose Sanger seq entries grange (.RDS) file!",
+            multi = FALSE),
+        genome_grange = choose.files(
+            caption = "Choose genome entry grange (.RDS) file!",
             multi = FALSE),
         add_rbs = readline(prompt = paste0(
             "Provide additional RBS sequence",
@@ -120,6 +130,21 @@ if (interactive()) {
             opt_str = c("-e", "--pep_pos"),
             type = "character", default = NULL,
             help = "Peptide position file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-d", "--pep_grange"),
+            type = "character", default = NULL,
+            help = "Peptide entries grange file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-s", "--sanger_grange"),
+            type = "character", default = NULL,
+            help = "Sanger seq entries grange file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-g", "--genome_grange"),
+            type = "character", default = NULL,
+            help = "Genome entry grange file",
             metavar = "character"),
         make_option(
             opt_str = c("-a", "--add_rbs"),
@@ -189,6 +214,33 @@ if (
     
 }
 if (
+    identical(opt$pep_grange, NULL) |
+    identical(opt$pep_grange, "") |
+    identical(opt$pep_grange, character(0))) {
+    
+    print_help(opt_parser)
+    stop("The input peptide entries grange must be supplied!")
+    
+}
+if (
+    identical(opt$sanger_grange, NULL) |
+    identical(opt$sanger_grange, "") |
+    identical(opt$sanger_grange, character(0))) {
+    
+    print_help(opt_parser)
+    stop("The input Sanger seq entries grange must be supplied!")
+    
+}
+if (
+    identical(opt$genome_grange, NULL) |
+    identical(opt$genome_grange, "") |
+    identical(opt$genome_grange, character(0))) {
+    
+    print_help(opt_parser)
+    stop("The input genome entry grange must be supplied!")
+    
+}
+if (
     identical(opt$add_rbs, NULL) |
     identical(opt$add_rbs, "") |
     identical(opt$add_rbs, character(0))) {
@@ -246,6 +298,21 @@ pep_loc_data <- opt$pep_pos %>%
     as.character(.) %>%
     readRDS(file = .)
  
+# Import the peptides genomic ranges file
+pep_grange <- opt$pep_grange %>%
+    as.character(.) %>%
+    readRDS(file = .)
+
+# Import the Sanger seq genomic ranges file
+sanger_grange <- opt$sanger_grange %>%
+    as.character(.) %>%
+    readRDS(file = .)
+
+# Import the genome genomic ranges file
+genome_grange <- opt$genome_grange %>%
+    as.character(.) %>%
+    readRDS(file = .)
+
 # Import the operon genomic ranges file if defined
 if (!is.null(opt$operon)) {
     operon_grange <- opt$operon %>%
@@ -967,8 +1034,83 @@ plots_box(
     fill = "grey",
     textsize = 15)
 
-# Close the pdf file
-dev.off()
+# Visualise ORF per novelty type
+toplot <- orf_reason_final %>%
+    dplyr::select(., Proteins, ORFNoveltyReason) %>%
+    dplyr::group_by(., ORFNoveltyReason) %>%
+    dplyr::summarise(., count = n_distinct(Proteins)) %>%
+    dplyr::mutate(., Type = "All novel")
+toplot <- orf_reason_final %>%
+    dplyr::filter(., Proteins %in% unique(orf_reason_highqual$Proteins)) %>%
+    dplyr::select(., Proteins, ORFNoveltyReason) %>%
+    dplyr::group_by(., ORFNoveltyReason) %>%
+    dplyr::summarise(., count = n_distinct(Proteins)) %>%
+    dplyr::mutate(., Type = "Quality filtered") %>%
+    dplyr::bind_rows(toplot, .)
+plots_hist(
+    data = toplot,
+    key = "ORFNoveltyReason",
+    value = "count",
+    group = "Type",
+    fill = "Type",
+    main = "ORF novelty explanation",
+    xlabel = "Novelty reason type",
+    ylabel = "Count of ORF",
+    textsize = 15,
+    label = "count",
+    bw = TRUE,
+    legend = "right",
+    xdir = "vertical")
+
+# Frequency of ORF per number of novel peptide per novelty type
+toplot <- orf_reason_final %>%
+    dplyr::select(., Proteins, ORFNoveltyReason, novel_peptide_count) %>%
+    plyr::ddply(
+        .data = .,
+        .variables = .(ORFNoveltyReason, novel_peptide_count),
+        .fun = summarise,
+        count = dplyr::n_distinct(Proteins),
+        .drop = FALSE) %>%
+    dplyr::mutate(., Type = "All novel")
+toplot <- orf_reason_final %>%
+    dplyr::filter(., Proteins %in% unique(orf_reason_highqual$Proteins)) %>%
+    dplyr::select(., Proteins, ORFNoveltyReason, novel_peptide_count) %>%
+    plyr::ddply(
+        .data = .,
+        .variables = .(ORFNoveltyReason, novel_peptide_count),
+        .fun = summarise,
+        count = dplyr::n_distinct(Proteins),
+        .drop = FALSE) %>%
+    dplyr::mutate(., Type = "Quality filtered") %>%
+    dplyr::bind_rows(toplot, .)
+plots_hist(
+    data = toplot %>%
+        dplyr::filter(., Type == "All novel"),
+    key = "novel_peptide_count",
+    value = "count",
+    group = "ORFNoveltyReason",
+    fill = "ORFNoveltyReason", posit = "dodge",
+    main = "All ORF frequency per peptide count",
+    xlabel = "Number of novel peptides",
+    ylabel = "Count of ORF",
+    textsize = 15,
+    label = "count",
+    legend = "bottom",
+    xdir = "horizontal")
+plots_hist(
+    data = toplot %>%
+        dplyr::filter(., Type == "Quality filtered"),
+    key = "novel_peptide_count",
+    value = "count",
+    group = "ORFNoveltyReason",
+    fill = "ORFNoveltyReason", posit = "dodge",
+    main = "High quality ORF frequency per peptide count",
+    xlabel = "Number of novel peptides",
+    ylabel = "Count of ORF",
+    textsize = 15,
+    label = "count",
+    legend = "bottom",
+    xdir = "horizontal")
 
 # Export neighbour results (as txt and RDS files)
 saveRDS(
@@ -1042,10 +1184,91 @@ write.table(
 
 
 
+### Genomic visualisation and plots export -------------------------------
+
+# Define reference entries that are expressed
+expr_known <- evid_reason %>%
+    dplyr::filter(., group == "Known") %>%
+    strsplit(x = .[["Proteins"]], split = ";", fixed = TRUE) %>%
+    unlist(.) %>%
+    unique(.) %>%
+    data.frame(id = ., Expressed = TRUE) %>%
+    dplyr::left_join(
+        x = data.frame(id = names(ref_grange)), y = ., by = "id") %>%
+    dplyr::mutate(
+        ., Expressed = ifelse(is.na(Expressed), FALSE, Expressed)) %>%
+    set_rownames(.[["id"]]) %>%
+    dplyr::select(., -id)
+
+# Include the entries epression pattern into the GRange metadata
+ref_grange_expr <- ref_grange
+values(ref_grange_expr) <- cbind(
+    values(ref_grange_expr), expr_known)
+
+# Compute and visualise the genomic coverage based on nucleotide coverage
+pl_rectvenn <- plots_rectvenn(
+    ideo = genome_grange, ref = ref_grange_expr, pep = pep_grange)
+pl_rectvenn
+
+# Define novel entries that are expressed
+expr_novel <- evid_reason %>%
+    dplyr::filter(., group == "Novel") %>%
+    strsplit(x = .[["Proteins"]], split = ";", fixed = TRUE) %>%
+    unlist(.) %>%
+    unique(.) %>%
+    data.frame(id = ., Expressed = TRUE) %>%
+    dplyr::left_join(
+        x = data.frame(id = names(orf_grange)), y = ., by = "id") %>%
+    dplyr::mutate(
+        ., Expressed = ifelse(is.na(Expressed), FALSE, Expressed)) %>%
+    set_rownames(.[["id"]]) %>%
+    dplyr::select(., -id)
+
+# Include the entries epression pattern into the GRange metadata
+orf_grange_expr <- orf_grange
+values(orf_grange_expr) <- cbind(
+    values(orf_grange_expr), expr_novel)
+
+# Use ggbio extension to plot ORF location on genome as a circos graph
+colou <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
+pl_circos <- ggplot() +
+    ggtitle(label = organism(bsu)) +
+    layout_circle(
+        genome_grange, geom = "ideo", fill = "gray70",
+        radius = 30, trackWidth = 2) +
+    layout_circle(
+        genome_grange, geom = "scale", size = 4,
+        radius = 33, trackWidth = 2) +
+    layout_circle(
+        genome_grange, geom = "text", size = 7, aes(label = seqnames),
+        angle = 0, radius = 37, trackWidth = 5) +
+    layout_circle(
+        subset(x = ref_grange_expr, strand == "+" & Expressed),
+        geom = "rect", color = colou[1],
+        radius = 26, trackWidth = 4) +
+    layout_circle(
+        subset(x = ref_grange_expr, strand == "-" & Expressed),
+        geom = "rect", color = colou[2],
+        radius = 22, trackWidth = 4) +
+    layout_circle(
+        subset(x = orf_grange_expr, strand == "+" & Expressed),
+        geom = "rect", color = colou[3],
+        radius = 18, trackWidth = 4) +
+    layout_circle(
+        subset(x = orf_grange_expr, strand == "-" & Expressed),
+        geom = "rect", color = colou[4],
+        radius = 14, trackWidth = 4)
+pl_circos
+
+
+
 ### END ------------------------------------------------------------------
 
 # Close the cluster
 #stopImplicitCluster()
+
+# Close the pdf file
+dev.off()
 
 # Time scripts end
 print(paste("Completed ", format(Sys.time(), "%Y-%m-%d"), sep = ""))
