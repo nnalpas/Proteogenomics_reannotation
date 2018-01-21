@@ -1257,7 +1257,19 @@ pl_circos <- ggplot() +
     layout_circle(
         subset(x = orf_grange_expr, strand == "-" & Expressed),
         geom = "rect", color = colou[4],
-        radius = 14, trackWidth = 4)
+        radius = 14, trackWidth = 4) +
+    annotate(
+        geom = "text", x = -12, y = 6, hjust = 0,
+        label = "1. Annotated ORF (+ strand)", colour = colou[1]) +
+    annotate(
+        geom = "text", x = -12, y = 2, hjust = 0,
+        label = "2. Annotated ORF (- strand)", colour = colou[2]) +
+    annotate(
+        geom = "text", x = -12, y = -2, hjust = 0,
+        label = "3. Putative novel ORF (+ strand)", colour = colou[3]) +
+    annotate(
+        geom = "text", x = -12, y = -6, hjust = 0,
+        label = "4. Putative novel ORF (- strand)", colour = colou[4])
 pl_circos
 
 
