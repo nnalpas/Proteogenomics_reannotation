@@ -310,7 +310,7 @@ blast_read <- function(
 best_blast <- function(
     data = NULL,
     key = NULL,
-    filter = NULL,
+    bb_filter = NULL,
     multi_match = c("remove", "keep", "uniquify")) {
     
     # Check whether the data, key and filter have been submitted by users
@@ -329,7 +329,7 @@ best_blast <- function(
     col.symb <- as.symbol(key)
     
     # Filter the data with specific fields in sequence
-    if (is.null(filter)) {
+    if (is.null(bb_filter)) {
         
         # Filter based on default
         data.filt <- data %>%
@@ -345,15 +345,15 @@ best_blast <- function(
         
         # Evaluate the filter parameter, this is required when parameters
         # contains space and was submitted from command line
-        filter <- eval(filter)
+        bb_filter <- eval(bb_filter)
         
         # Filter based on user provided criteria
         data.filt <- data %>%
             unique(.) %>%
             dplyr::group_by_(., .dots = col.symb)
-        for (x in filter) {
+        for (x in bb_filter) {
             data.filt %<>%
-                dplyr::filter_(., filter)
+                dplyr::filter_(., bb_filter)
         }
         data.filt %<>%
             dplyr::mutate(., best_count = n()) %>%
@@ -362,28 +362,32 @@ best_blast <- function(
     }
     
     # Check what should be done with entries matching multiple times
-    if (length(unique(data[[key]])) == length(unique(data.filt[[key]]))) {
+    if (length(unique(data[[key]])) == length(data.filt[[key]])) {
         warning("All blast hits matched uniquely!")
     } else if (multiple == "remove") {
-        data.filt %<>%
+        data.final <- data.filt %>%
             dplyr::filter(., best_count == 1)
         warning("All multiple blast hits were removed!")
     } else if (multiple == "uniquify") {
         orig <- data.filt$qseqid %>%
             unique(.) %>%
             length(.)
-        data.filt %<>%
+        data.final <- data.filt %>%
+            tidyr::unite(
+                data = ., col = Unique_sseqid,
+                sseqid, sstart, send,
+                sep = "_", remove = FALSE) %>%
             dplyr::group_by(., qseqid) %>%
-            dplyr::arrange(., sseqid) %>%
+            dplyr::arrange(., Unique_sseqid) %>%
             dplyr::mutate(., rank_s = c(1:n())) %>%
             dplyr::ungroup() %>%
-            dplyr::group_by(., sseqid) %>%
+            dplyr::group_by(., Unique_sseqid) %>%
             dplyr::arrange(., qseqid) %>%
             dplyr::mutate(., rank_q = c(1:n())) %>%
             dplyr::ungroup() %>%
             dplyr::filter(., rank_q == rank_s) %>%
-            dplyr::select(., -rank_q, -rank_s)
-        retained <- data.filt$qseqid %>%
+            dplyr::select(., -Unique_sseqid, -rank_q, -rank_s)
+        retained <- data.final$qseqid %>%
             unique(.) %>%
             length(.)
         warning(paste(
@@ -393,7 +397,7 @@ best_blast <- function(
     }
     
     # Return the best blast data
-    return(base::as.data.frame(data.filt))
+    return(base::as.data.frame(data.final))
     
 }
 
