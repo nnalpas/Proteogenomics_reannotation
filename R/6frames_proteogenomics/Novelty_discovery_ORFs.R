@@ -1272,6 +1272,75 @@ pl_circos <- ggplot() +
         label = "4. Putative novel ORF (- strand)", colour = colou[4])
 pl_circos
 
+# Get all peptide associated nucleotide position
+coverage_pep <- gr_nucleotide_pos(
+    grange = pep_grange, filter = 'grepl("Known", Database)')
+
+# Convert to dataframe
+coverage_nucl <- coverage_pep %>%
+    ldply(., "data.frame") %>%
+    set_colnames(c("Sequence", "Nucl_pos")) %>%
+    dplyr::filter(., !is.na(Nucl_pos))
+
+# Compute msms count for each peptide sequence
+coverage_nucl_count <- evid_reason %>%
+    dplyr::select(., Sequence, `MS/MS Count`) %>%
+    dplyr::group_by(., Sequence) %>%
+    dplyr::summarise(., Count = sum(`MS/MS Count`)) %>%
+    dplyr::left_join(coverage_nucl, ., by = "Sequence")
+
+# Format dataframe count column to factor
+coverage_nucl_count$Count <- factor(
+    x = coverage_nucl_count$Count,
+    levels = seq(1, max(coverage_nucl_count$Count)),
+    labels = seq(1, max(coverage_nucl_count$Count)),
+    ordered = TRUE)
+
+# Calculate overall nucleotide coverage frequencies
+toplot <- coverage_nucl_count %>%
+    plyr::ddply(
+        .data = ., .variables = c("Count"),
+        .fun = summarise, Freq = n(),
+        .drop = FALSE)
+
+# Calculate the quantiles of count frequencies
+quantiles_toplot <- quantile(
+    x = as.integer(as.character(coverage_nucl_count$Count)),
+    probs = c(0, 0.25, 0.5, 0.75, 1)) %>%
+    as.data.frame(.) %>%
+    set_colnames("Values") %>%
+    dplyr::mutate(., Quartiles = row.names(.))
+quantiles_toplot <- data.frame(
+    Quartiles = "Mean",
+    Values = mean(as.integer(as.character(coverage_nucl_count$Count)))) %>%
+    dplyr::bind_rows(quantiles_toplot, .) %>%
+    dplyr::select(., Quartiles, Values) %>%
+    dplyr::mutate(., Values = round(x = Values, digits = 1))
+
+# Generate the histogram frequency of MS/MS count per nucleotide
+pl_coverage <- plots_hist(
+    data = toplot %>%
+        dplyr::filter(., Count %in% c(1:160)),
+    key = "Count",
+    value = "Freq",
+    group = "Count",
+    fill = "grey",
+    main = "Coverage per nucleotide",
+    xlabel = "MS/MS counts",
+    ylabel = "Nucleotide counts",
+    textsize = 25)
+
+# Add quantiles table to the graph
+pl_coverage <- pl_coverage[[1]] +
+    annotation_custom(
+        grob = tableGrob(
+            d = quantiles_toplot, theme = ttheme_minimal(), rows = NULL),
+        xmin = 130, xmax = 150, ymin = 2E5, ymax = 4E5) +
+    scale_x_discrete(
+        breaks = c(1, seq(20, 160, by = 20)),
+        labels = c(1, seq(20, 160, by = 20)))
+pl_coverage
+
 
 
 ### END ------------------------------------------------------------------
