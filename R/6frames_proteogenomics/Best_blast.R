@@ -140,7 +140,7 @@ blast_data <- blast_read(file = opt$input, blast_format = "6")
 # Get the best blast match for each query
 best_blast_data <- best_blast(
     data = blast_data, key = "qseqid",
-    filter = opt$filter, multi_match = opt$multi_match)
+    bb_filter = opt$filter, multi_match = opt$multi_match)
 
 
 
