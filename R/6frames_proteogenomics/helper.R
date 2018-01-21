@@ -837,6 +837,163 @@ mq_rev_con_filt <- function (
 
 ### Plotting wrapper function --------------------------------------------
 
+# Function that plots reference ORF, novel ORF, associated peptide and sanger
+# sequence in a genomic range context around a target
+plots_orf_genomic <- function(
+    x = NULL,
+    ref_gr = NULL,
+    orf_gr = NULL,
+    pep_gr = NULL,
+    sanger_gr = NULL,
+    region_range = 1000,
+    track_colour = NULL,
+    ref_label = NULL) {
+    
+    # Check whether the correct variables have been submitted by users
+    if (is.null(x)) {
+        stop("Error: No target novel ORF ID was provided!")
+    }
+    if (is.null(ref_gr)) {
+        stop("Error: No reference GRange object was provided!")
+    }
+    if (is.null(orf_gr)) {
+        stop("Error: No novel ORF GRange object was provided!")
+    }
+    if (is.null(pep_gr)) {
+        stop("Error: No peptide GRange object was provided!")
+    }
+    if (is.null(sanger_gr)) {
+        warning("No Sanger sequence GRange object was provided!")
+    }
+    if (!is.numeric(region_range)) {
+        stop("Error: The genomic region range should be numeric!")
+    }
+    if (is.null(track_colour)) {
+        warning("No track colours were provided!")
+        track_colour <- c(
+            "#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
+    }
+    if (is.null(ref_label)) {
+        stop("Error: No reference column name to use for labelling provided!")
+    }
+    
+    # Define genomic region of interest
+    start_region <- start(orf_gr[x]) - region_range
+    end_region <- end(orf_gr[x]) + region_range
+    
+    # The list containing all plots
+    pl_list <- list()
+    
+    # The plot of known genes for that genomic region
+    tmp <- ref_gr[
+        start(ref_gr) %in% c(start_region:end_region) |
+            end(ref_gr) %in% c(start_region:end_region)] %>%
+        as.data.frame(.)
+    tmp$value <- rep(x = 1, times = nrow(tmp))
+    colnames(tmp)[colnames(tmp) == ref_label] <- "label_name"
+    pl <- autoplot(
+        ref_gr[
+            start(ref_gr) %in% c(start_region:end_region) |
+                end(ref_gr) %in% c(start_region:end_region)],
+        mapping = aes(fill = strand, alpha = Expressed),
+        geom = "arrowrect", layout = "linear", colour = "black") +
+        geom_text(
+            data = tmp,
+            mapping = aes(
+                x = start + ((end - start) / 2),
+                y = value,
+                label = label_name),
+            nudge_y = 0.45,
+            check_overlap = TRUE) +
+        scale_fill_manual(
+            values = c(`+` = track_colour[1], `-` = track_colour[2])) +
+        scale_alpha_manual(
+            values = c("TRUE" = 1, "FALSE" = 0.5))
+    pl_list["Known ORFs"] <- list(pl)
+    
+    # Loop through all frames from the ORF GRange
+    for (y in unique(orf_gr$frame)) {
+        
+        # The plot of novel ORFs for that genomic region
+        pl <- autoplot(
+            orf_gr[
+                (start(orf_gr) %in% c(start_region:end_region) |
+                     end(orf_gr) %in% c(start_region:end_region)) &
+                    orf_gr$frame == y],
+            mapping = aes(fill = strand, alpha = Expressed),
+            geom = "arrowrect", layout = "linear", colour = "black") +
+            scale_fill_manual(
+                values = c(`+` = track_colour[3], `-` = track_colour[4])) +
+            scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.5))
+        pl_list[paste("Frame", y)] <- list(pl)
+        
+    }
+    
+    # Define zoomed in genomic region of interest
+    start_region_zoom <- start(orf_gr[x])
+    end_region_zoom <- end(orf_gr[x])
+    
+    # The plot of peptides sequences for that genomic region
+    tmp <- pep_gr[
+        start(pep_gr) %in% c(start_region_zoom:end_region_zoom) |
+            end(pep_gr) %in% c(start_region_zoom:end_region_zoom)] %>%
+        as.data.frame(.)
+    tmp$value <- rep(x = 1, times = nrow(tmp))
+    tmp %<>%
+        dplyr::arrange(., frame)
+    tmp$id <- factor(
+        x = tmp$id,
+        levels = as.character(tmp$id),
+        labels = as.character(tmp$id),
+        ordered = TRUE)
+    pl <- ggplot(
+        data = tmp,
+        mapping = aes(
+            xmin = start,
+            xmax = end,
+            ymin = as.integer(id),
+            ymax = (as.integer(id) + 0.5),
+            fill = factor(frame),
+            label = id)) +
+        geom_rect(colour = "black") +
+        geom_text(mapping = aes(
+            x = (start + ((end - start) / 2)),
+            y = (as.integer(id) + 0.275)),
+            colour = "white",
+            size = 3,
+            check_overlap = TRUE)
+    pl_list["Peptide"] <- list(pl)
+    
+    # The plot of Sanger sequences for that genomic region
+    tmp <- sanger_gr[
+        start(sanger_gr) %in% c(start_region_zoom:end_region_zoom) |
+            end(sanger_gr) %in% c(start_region_zoom:end_region_zoom)] %>%
+        as.data.frame(.)
+    pl <- ggplot(
+        data = tmp,
+        mapping = aes(
+            xmin = start,
+            xmax = end,
+            ymin = as.integer(factor(id)),
+            ymax = (as.integer(factor(id)) + 0.5),
+            colour = strand)) +
+        geom_rect(fill = "grey")
+    pl_list["Sequenced PCR"] <- list(pl)
+    
+    # The plot of genome sequence for that genomic region
+    wh <- orf_gr[x] %>%
+        range(.)
+    pl <- autoplot(bsu, which = wh, geom = "rect")
+    pl_list["Genome"] <- list(pl)
+    
+    # Return all plots and the coordinate of the genomic region
+    return(list(
+        plots = pl_list,
+        region_coordinates = c(start = start_region, end = end_region),
+        region_zoom = c(start = start_region_zoom, end = end_region_zoom)))
+    
+}
+
 # Create function to draw boxplot (with-without zoom) acccording to
 # certain key-values parameters
 plots_box <- function(
