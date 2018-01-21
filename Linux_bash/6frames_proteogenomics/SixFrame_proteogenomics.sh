@@ -260,19 +260,6 @@ fi
 
 
 
-##############################
-# Novelty reason explanation #
-##############################
-
-# Check whether to perform the novelty reason explanation
-if [ $NoveltyReason == 1 ]; then
-	
-	${PBS_O_HOME}/bin/Novelty_discovery_peptides.R -e ${ProjDir}/Novel_res/Sequence_group_mapping.RDS -f ${UNIREFPROT} -r ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_Refprot_vs_ORFprot -u ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_Uniprot_vs_ORFprot -n ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_NCBIprot_vs_ORFprot -p ${ProjDir}/Novel_res/Peptides_location.RDS -t ${THREADS} -o ${ProjDir}/NoveltyExplain > ${LogDir}/NoveltyReason.log 2>&1
-	
-fi
-
-
-
 ################################
 # Sanger validation coordinate #
 ################################
@@ -284,6 +271,19 @@ if [ $SangerCoordinate == 1 ]; then
     ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Sanger_validation -y "nucl" -l "all" -a "blastn" -s ${SANGER} -q ${GENOME} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Sanger_vs_Genome" >> ${LogDir}/SangerCoordinate.log 2>&1
 	${PBS_O_HOME}/bin/Genomic_position_from_blast.R -f ${SANGER} -b ${ProjDir}/Sanger_validation/Sanger_vs_Genome -g ${GENOME} -o ${ProjDir}/Sanger_validation/Sanger_seq_coordinates.txt >> ${LogDir}/SangerCoordinate.log 2>&1
 	${PBS_O_HOME}/bin/GRanges_generation.R -c ${ProjDir}/Sanger_validation/Sanger_seq_coordinates.txt -g ${GENOME} -n ${GenomeName} -t ${Circular} -o ${ProjDir}/GRanges/Sanger_seq_grange.RDS >> ${LogDir}/SangerCoordinate.log 2>&1
+	
+fi
+
+
+
+##############################
+# Novelty reason explanation #
+##############################
+
+# Check whether to perform the novelty reason explanation
+if [ $NoveltyReason == 1 ]; then
+	
+	${PBS_O_HOME}/bin/Novelty_discovery_peptides.R -e ${ProjDir}/Novel_res/Sequence_group_mapping.RDS -f ${UNIREFPROT} -r ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_Refprot_vs_ORFprot -u ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_Uniprot_vs_ORFprot -n ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_NCBIprot_vs_ORFprot -p ${ProjDir}/Novel_res/Peptides_location.RDS -t ${THREADS} -o ${ProjDir}/NoveltyExplain > ${LogDir}/NoveltyReason.log 2>&1
 	
 fi
 
