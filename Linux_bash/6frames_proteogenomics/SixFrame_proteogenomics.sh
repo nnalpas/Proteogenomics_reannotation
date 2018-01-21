@@ -267,7 +267,7 @@ fi
 # Check whether to compute coordinate of Sanger sequence
 if [ $SangerCoordinate == 1 ]; then
     
-    ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "nucl" -t ${TaxId} ${SANGER} ${GENOME} > ${LogDir}/SangerCoordinate.log 2>&1
+    ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "nucl" -t ${TaxId} ${SANGER} > ${LogDir}/SangerCoordinate.log 2>&1
     ${PBS_O_HOME}/bin/BlastDbBlasting.sh -o ${ProjDir}/Sanger_validation -y "nucl" -l "all" -a "blastn" -s ${SANGER} -q ${GENOME} -e ${Eval} -n ${NumAlign} -t ${THREADS} -b "Sanger_vs_Genome" >> ${LogDir}/SangerCoordinate.log 2>&1
 	${PBS_O_HOME}/bin/Genomic_position_from_blast.R -f ${SANGER} -b ${ProjDir}/Sanger_validation/Sanger_vs_Genome -g ${GENOME} -o ${ProjDir}/Sanger_validation/Sanger_seq_coordinates.txt >> ${LogDir}/SangerCoordinate.log 2>&1
 	${PBS_O_HOME}/bin/GRanges_generation.R -c ${ProjDir}/Sanger_validation/Sanger_seq_coordinates.txt -g ${GENOME} -n ${GenomeName} -t ${Circular} -o ${ProjDir}/GRanges/Sanger_seq_grange.RDS >> ${LogDir}/SangerCoordinate.log 2>&1
