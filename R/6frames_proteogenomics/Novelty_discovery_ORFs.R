@@ -55,8 +55,8 @@ load_package("gtable")
 load_package("grid")
 load_package("gridExtra")
 load_package("purrr")
-#load_package("foreach")
-#load_package("doParallel")
+load_package("foreach")
+load_package("doParallel")
 load_package("motifRG")
 load_package("ggseqlogo")
 load_package("BSgenome.Bsubtilis.EMBL.AL0091263")
@@ -1341,12 +1341,85 @@ pl_coverage <- pl_coverage[[1]] +
         labels = c(1, seq(20, 160, by = 20)))
 pl_coverage
 
+# Define a high quality target list
+high_qual_targets <- orf_reason_highqual %>%
+    dplyr::filter(., novel_peptide_count >= 2) %>%
+    .[["Proteins"]]
+
+# Filter the peptide GRange for duplicate ID
+pep_grange_unique <- subset(
+    pep_grange,
+    !(id %in% unique(names(pep_grange)[duplicated(names(pep_grange))])))
+
+# Loop through all high quality candidate ORFs
+warning("Generating genomic visualisation only for high quality ORFs!")
+for (i in high_qual_targets) {
+    
+    # Generate all genomic representation for reference and novel entries
+    # as well as peptide and sanger sequences
+    genomic_vis_data <- plots_orf_genomic(
+        x = i,
+        ref_gr = ref_grange_expr,
+        orf_gr = orf_grange_expr,
+        pep_gr = pep_grange_unique,
+        sanger_gr = sanger_grange,
+        ref_label = "GENE.NAME")
+    
+    # Plot the known entries and 6-frames ORFs tracks
+    my_plots <- genomic_vis_data[["plots"]]
+    pl_genome <- tracks(
+        `Known ORFs` = my_plots$`Known ORFs`,
+        `Frame 1` = my_plots$`Frame 1`,
+        `Frame 2` = my_plots$`Frame 2`,
+        `Frame 3` = my_plots$`Frame 3`,
+        `Frame -1` = my_plots$`Frame -1`,
+        `Frame -2` = my_plots$`Frame -2`,
+        `Frame -3` = my_plots$`Frame -3`,
+        heights = c(0.5, rep(0.1, times = 6)),
+        xlab = "Genomic position",
+        label.bg.fill = "white") +
+        theme_bw() +
+        theme(
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            axis.text.y =  element_blank(),
+            axis.ticks.y = element_blank(),
+            legend.position = "none")
+    xlim(pl_genome) <- c(
+        genomic_vis_data$region_coordinates[["start"]],
+        genomic_vis_data$region_coordinates[["end"]])
+    
+    # Plot the peptides and Sanger sequence tracks
+    pl_genome_zoom <- tracks(
+        `Peptide` = my_plots$Peptide,
+        `Sequenced PCR` = my_plots$`Sequenced PCR`,
+        `Genome` = my_plots$Genome,
+        heights = c(2, 0.5, 0.2),
+        xlab = "Genomic position",
+        label.bg.fill = "white") +
+        theme_bw() +
+        theme(
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            axis.text.y =  element_blank(),
+            axis.title.y =  element_blank(),
+            axis.ticks.y = element_blank(),
+            legend.position = "right")
+    xlim(pl_genome_zoom) <- c(
+        genomic_vis_data$region_zoom[["start"]],
+        genomic_vis_data$region_zoom[["end"]])
+    
+}
+
+
+
+
 
 
 ### END ------------------------------------------------------------------
 
 # Close the cluster
-#stopImplicitCluster()
+stopImplicitCluster()
 
 # Close the pdf file
 dev.off()
