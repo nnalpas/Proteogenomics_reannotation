@@ -362,17 +362,18 @@ best_blast <- function(
     }
     
     # Check what should be done with entries matching multiple times
-    if (length(unique(data[[key]])) == length(data.filt[[key]])) {
+    data.final <- data.filt
+    if (length(unique(data[[key]])) == length(data.final[[key]])) {
         warning("All blast hits matched uniquely!")
     } else if (multiple == "remove") {
-        data.final <- data.filt %>%
+        data.final %<>%
             dplyr::filter(., best_count == 1)
         warning("All multiple blast hits were removed!")
     } else if (multiple == "uniquify") {
-        orig <- data.filt$qseqid %>%
+        orig <- data.final$qseqid %>%
             unique(.) %>%
             length(.)
-        data.final <- data.filt %>%
+        data.final %<>%
             tidyr::unite(
                 data = ., col = Unique_sseqid,
                 sseqid, sstart, send,
