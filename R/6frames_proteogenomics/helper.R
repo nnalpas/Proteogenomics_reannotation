@@ -41,7 +41,7 @@ plots_rectvenn <- function(
     
     # Get all peptide associated nucleotide position
     cover_nuc <- gr_nucleotide_pos(
-        grange = pep, filter = 'Database == "Known"')
+        grange = pep, filter = 'grepl("Known", Database)')
     
     # Plot a square venn diagram of chromosome coverage
     plot.new()
