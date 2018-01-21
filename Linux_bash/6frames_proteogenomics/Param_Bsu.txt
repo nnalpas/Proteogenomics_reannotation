@@ -13,12 +13,12 @@ ReciprocalBlast=0
 ReciprocalBestBlast=0
 ProteinCoordinate=0
 ProteinAnnotation=0
-BSgenomeForge=1
+BSgenomeForge=0
 GRangeCreate=0
 PeptideCoordinate=0
 OperonCoordinate=0
+SangerCoordinate=1
 NoveltyReason=0
-SangerCoordinate=0
 ClustalAlign=0
 
 # EmbossParam
@@ -37,7 +37,7 @@ ALLUNIPROT="${PBS_O_HOME}/BlastDB/uniprot_sprot_trembl.fasta"
 ALLNCBIPROT="${PBS_O_HOME}/BlastDB/refseq_protein"
 ALLNCBIRNA="${PBS_O_HOME}/BlastDB/refseq_rna"
 OPERON="${PBS_O_HOME}/Genome/Bacillus_subtilis/Bsu_operon_01062017.opr"
-#SANGER="${PBS_O_HOME}/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
+SANGER="${PBS_O_HOME}/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
 
 # BlastDatab
 InputType="fasta"
