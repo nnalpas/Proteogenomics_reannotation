@@ -135,6 +135,31 @@ plots_rectvenn <- function(
 
 ### Genomic ranges related functions -------------------------------------
 
+# Function to get the nucleotide position for supplied GRange object
+gr_nucleotide_pos <- function(grange = NULL, filter = NULL) {
+    
+    # Check whether the correct variables have been submitted by users
+    if (is.null(grange)) {
+        stop("Error: No GRange object was provided!")
+    }
+    
+    # Apply the filter if it exist
+    if (!is.null(filter)) {
+        grange %<>%
+            subset(x = ., subset = eval(parse(text = filter)))
+    }
+    
+    # Get all nucleotide position for the GRange object
+    data <- lapply(X = ranges(grange), FUN = function(x) {
+        x
+    })
+    names(data) <- names(grange)
+    
+    # Return the nucleotide position for each feature
+    return(data)
+    
+}
+
 # Function to find preceding, following or nearest neighbour between
 # genomic ranges and then compute their distance
 gr_near_dist <- function(
