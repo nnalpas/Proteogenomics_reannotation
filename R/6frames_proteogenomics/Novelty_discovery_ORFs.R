@@ -1047,7 +1047,7 @@ toplot <- orf_reason_final %>%
     dplyr::summarise(., count = n_distinct(Proteins)) %>%
     dplyr::mutate(., Type = "Quality filtered") %>%
     dplyr::bind_rows(toplot, .)
-plots_hist(
+pl_orf_reason <- plots_hist(
     data = toplot,
     key = "ORFNoveltyReason",
     value = "count",
@@ -1061,6 +1061,7 @@ plots_hist(
     bw = TRUE,
     legend = "right",
     xdir = "vertical")
+pl_orf_reason[[1]]
 
 # Frequency of ORF per number of novel peptide per novelty type
 toplot <- orf_reason_final %>%
@@ -1083,7 +1084,7 @@ toplot <- orf_reason_final %>%
         .drop = FALSE) %>%
     dplyr::mutate(., Type = "Quality filtered") %>%
     dplyr::bind_rows(toplot, .)
-plots_hist(
+pl_all_orf_freq <- plots_hist(
     data = toplot %>%
         dplyr::filter(., Type == "All novel"),
     key = "novel_peptide_count",
@@ -1097,7 +1098,8 @@ plots_hist(
     label = "count",
     legend = "bottom",
     xdir = "horizontal")
-plots_hist(
+pl_all_orf_freq[[1]]
+pl_qc_orf_freq <- plots_hist(
     data = toplot %>%
         dplyr::filter(., Type == "Quality filtered"),
     key = "novel_peptide_count",
@@ -1111,6 +1113,7 @@ plots_hist(
     label = "count",
     legend = "bottom",
     xdir = "horizontal")
+pl_qc_orf_freq[[1]]
 
 # Export neighbour results (as txt and RDS files)
 saveRDS(
@@ -1353,6 +1356,7 @@ pep_grange_unique <- subset(
 
 # Loop through all high quality candidate ORFs
 warning("Generating genomic visualisation only for high quality ORFs!")
+pl_genome_list <- list()
 for (i in high_qual_targets) {
     
     # Generate all genomic representation for reference and novel entries
@@ -1376,6 +1380,11 @@ for (i in high_qual_targets) {
         `Frame -2` = my_plots$`Frame -2`,
         `Frame -3` = my_plots$`Frame -3`,
         heights = c(0.5, rep(0.1, times = 6)),
+        title = paste0(
+            i,
+            ": ",
+            as.character(orf_reason_highqual[
+                orf_reason_highqual$Proteins == i, "ORFNoveltyReason"])),
         xlab = "Genomic position",
         label.bg.fill = "white") +
         theme_bw() +
@@ -1388,6 +1397,7 @@ for (i in high_qual_targets) {
     xlim(pl_genome) <- c(
         genomic_vis_data$region_coordinates[["start"]],
         genomic_vis_data$region_coordinates[["end"]])
+    pl_genome
     
     # Plot the peptides and Sanger sequence tracks
     pl_genome_zoom <- tracks(
@@ -1395,6 +1405,11 @@ for (i in high_qual_targets) {
         `Sequenced PCR` = my_plots$`Sequenced PCR`,
         `Genome` = my_plots$Genome,
         heights = c(2, 0.5, 0.2),
+        title = paste0(
+            i,
+            ": ",
+            as.character(orf_reason_highqual[
+                orf_reason_highqual$Proteins == i, "ORFNoveltyReason"])),
         xlab = "Genomic position",
         label.bg.fill = "white") +
         theme_bw() +
@@ -1408,11 +1423,27 @@ for (i in high_qual_targets) {
     xlim(pl_genome_zoom) <- c(
         genomic_vis_data$region_zoom[["start"]],
         genomic_vis_data$region_zoom[["end"]])
+    pl_genome_zoom
+    
+    # Include the plots for current candidate into list
+    pl_genome_list[i] <- list(list(
+        "pl_genome" = pl_genome, "pl_genome_zoom" = pl_genome_zoom))
     
 }
 
-
-
+# Export all plots as RDS file
+all_figures <- list(
+    reason = pl_orf_reason[[1]],
+    orf_freq = pl_all_orf_freq[[1]],
+    orf_qc_freq = pl_qc_orf_freq[[1]],
+    venn = pl_rectvenn,
+    circos = pl_circos,
+    coverage = pl_coverage,
+    genome_vis = pl_genome_list)
+saveRDS(
+    object = all_figures,
+    file = paste(
+        opt$output, "/", "Novelty_ORF_figures.RDS", sep = ""))
 
 
 
