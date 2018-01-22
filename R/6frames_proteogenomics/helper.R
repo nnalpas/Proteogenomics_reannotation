@@ -933,7 +933,7 @@ plots_orf_genomic <- function(
     start_region_zoom <- start(orf_gr[x])
     end_region_zoom <- end(orf_gr[x])
     
-    # The plot of peptides sequences for that genomic region
+    # Format peptides sequences for genomic region visualisation
     tmp <- pep_gr[
         start(pep_gr) %in% c(start_region_zoom:end_region_zoom) |
             end(pep_gr) %in% c(start_region_zoom:end_region_zoom)] %>%
@@ -946,19 +946,74 @@ plots_orf_genomic <- function(
         levels = as.character(tmp$id),
         labels = as.character(tmp$id),
         ordered = TRUE)
+    
+    # Loop through all frames for the peptide GRange
+    tmp <- cbind(tmp, y = NA)
+    y_value <- 0
+    for (aes_group in unique(tmp$frame)) {
+        
+        # Define the subset of peptides for the current frame
+        sub_tmp <- tmp %>%
+            dplyr::filter(., frame == aes_group)
+        
+        # Define the y axis value to start with
+        y_value <- (y_value + 1)
+        
+        # Loop through the subset of peptide as long as all y values
+        # are not all defined
+        while (any(is.na(sub_tmp$y))) {
+            
+            # Define the minimum x value threshold to add peptide
+            # on current y axis value
+            if (is.na(max(
+                sub_tmp[!is.na(sub_tmp$y) & sub_tmp$y == y_value, "end"]))) {
+                min_thresh <- 0
+            } else {
+                min_thresh <- max(
+                    sub_tmp[!is.na(sub_tmp$y) & sub_tmp$y == y_value, "end"])
+            }
+            
+            # Check for entry closest to the defined threshold
+            min_start <- min(sub_tmp[
+                is.na(sub_tmp$y) & sub_tmp$start > min_thresh, "start"])
+            min_end <- min(sub_tmp[
+                is.na(sub_tmp$y) & sub_tmp$start == min_start, "end"])
+            
+            # Get the closest entry ID
+            pep_id <- as.character(sub_tmp[
+                is.na(sub_tmp$y) &
+                    sub_tmp$start == min_start &
+                    sub_tmp$end == min_end, "id"])
+            
+            # If there are no closest entry, increase y axis value by 1
+            # if there is give that entry the current y axis value
+            if (length(pep_id) == 0) {
+                y_value <- (y_value + 1)
+            } else if (length(pep_id) == 1) {
+                sub_tmp[sub_tmp$id == pep_id, "y"] <- y_value
+                tmp[tmp$id == pep_id, "y"] <- y_value
+            } else {
+                stop("Number of matching peptide ID not allowed!")
+            }
+            
+        }
+        
+    }
+    
+    # The plot of peptides sequences for that genomic region
     pl <- ggplot(
         data = tmp,
         mapping = aes(
             xmin = start,
             xmax = end,
-            ymin = as.integer(id),
-            ymax = (as.integer(id) + 0.5),
+            ymin = as.integer(y),
+            ymax = (as.integer(y) + 0.5),
             fill = factor(frame),
             label = id)) +
         geom_rect(colour = "black") +
         geom_text(mapping = aes(
             x = (start + ((end - start) / 2)),
-            y = (as.integer(id) + 0.275)),
+            y = (as.integer(y) + 0.275)),
             colour = "white",
             size = 3,
             check_overlap = TRUE)
