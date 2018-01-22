@@ -232,6 +232,19 @@ fi
 
 
 
+######################################
+# Peptide novelty reason explanation #
+######################################
+
+# Check whether to perform the peptide novelty reason explanation
+if [ $PepNoveltyReason == 1 ]; then
+	
+	${PBS_O_HOME}/bin/Novelty_discovery_peptides.R -e ${ProjDir}/Novel_res/Sequence_group_mapping.RDS -f ${UNIREFPROT} -r ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_Refprot_vs_ORFprot -u ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_Uniprot_vs_ORFprot -n ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_NCBIprot_vs_ORFprot -p ${ProjDir}/Novel_res/Peptides_location.RDS -t ${THREADS} -o ${ProjDir}/NoveltyExplain > ${LogDir}/PepNoveltyReason.log 2>&1
+
+fi
+
+
+
 ##################################
 # Peptide coordinate computation #
 ##################################
@@ -239,7 +252,7 @@ fi
 # Check whether to perform peptide coordinate identification
 if [ $PeptideCoordinate == 1 ]; then
 
-    ${PBS_O_HOME}/bin/Genomic_position_for_peptides.R -p ${ProjDir}/Novel_res/Peptides_location.RDS -k ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt -n ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt -o ${ProjDir}/PeptPosition/Pept_seq_coordinates.txt > ${LogDir}/PeptideCoordinate.log 2>&1
+    ${PBS_O_HOME}/bin/Genomic_position_for_peptides.R -p ${ProjDir}/Novel_res/Peptides_location.RDS -r ${ProjDir}/NoveltyExplain/Sequence_novelty_reason.RDS -k ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt -n ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt -o ${ProjDir}/PeptPosition/Pept_seq_coordinates.txt > ${LogDir}/PeptideCoordinate.log 2>&1
 	${PBS_O_HOME}/bin/GRanges_generation.R -c ${ProjDir}/PeptPosition/Pept_seq_coordinates.txt -g ${GENOME} -n ${GenomeName} -t ${Circular} -o ${ProjDir}/GRanges/Pept_seq_grange.RDS >> ${LogDir}/PeptideCoordinate.log 2>&1
 	
 fi
@@ -276,15 +289,14 @@ fi
 
 
 
-##############################
-# Novelty reason explanation #
-##############################
+##################################
+# ORF novelty reason explanation #
+##################################
 
-# Check whether to perform the novelty reason explanation
-if [ $NoveltyReason == 1 ]; then
+# Check whether to perform the ORF novelty reason explanation
+if [ $OrfNoveltyReason == 1 ]; then
 	
-	${PBS_O_HOME}/bin/Novelty_discovery_peptides.R -e ${ProjDir}/Novel_res/Sequence_group_mapping.RDS -f ${UNIREFPROT} -r ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_Refprot_vs_ORFprot -u ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_Uniprot_vs_ORFprot -n ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_NCBIprot_vs_ORFprot -p ${ProjDir}/Novel_res/Peptides_location.RDS -t ${THREADS} -o ${ProjDir}/NoveltyExplain > ${LogDir}/NoveltyReason.log 2>&1
-	${PBS_O_HOME}/bin/Novelty_discovery_ORFs.R -i ${ProjDir}/NoveltyExplain/Sequence_novelty_reason.RDS -r ${ProjDir}/GRanges/Ref_prot_grange.RDS -n ${ProjDir}/GRanges/Orf_prot_grange.RDS -p ${ProjDir}/GRanges/Operon_grange.RDS -e ${ProjDir}/Novel_res/Peptides_location.RDS -d ${ProjDir}/GRanges/Pept_seq_grange.RDS -s ${ProjDir}/GRanges/Sanger_seq_grange.RDS -g ${ProjDir}/GRanges/Genome_grange.RDS -a "${AddRBS}" -t ${THREADS} -o ${ProjDir}/NoveltyExplain >> ${LogDir}/NoveltyReason.log 2>&1
+	${PBS_O_HOME}/bin/Novelty_discovery_ORFs.R -i ${ProjDir}/NoveltyExplain/Sequence_novelty_reason.RDS -r ${ProjDir}/GRanges/Ref_prot_grange.RDS -n ${ProjDir}/GRanges/Orf_prot_grange.RDS -p ${ProjDir}/GRanges/Operon_grange.RDS -e ${ProjDir}/Novel_res/Peptides_location.RDS -d ${ProjDir}/GRanges/Pept_seq_grange.RDS -s ${ProjDir}/GRanges/Sanger_seq_grange.RDS -g ${ProjDir}/GRanges/Genome_grange.RDS -a "${AddRBS}" -t ${THREADS} -o ${ProjDir}/NoveltyExplain > ${LogDir}/OrfNoveltyReason.log 2>&1
 
 fi
 
