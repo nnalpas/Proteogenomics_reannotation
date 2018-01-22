@@ -59,7 +59,7 @@ Circular=TRUE
 # RBSanalysis
 
 # User provided additional RBS motifs sequence
-AddRBS <- 'aaaggaggtgt agaggtggtgt atattaagaggaggag agagaacaaggagggg'
+AddRBS='aaaggaggtgt agaggtggtgt atattaagaggaggag agagaacaaggagggg'
 
 # ClustalParam
 #RBSLOW="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
