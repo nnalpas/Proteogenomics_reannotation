@@ -125,6 +125,7 @@ plots_rectvenn <- function(
     
     # Recored the plot
     pl <- recordPlot()
+    plot.new()
     
     # Return the plot result
     return(pl)
