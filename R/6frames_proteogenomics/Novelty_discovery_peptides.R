@@ -327,6 +327,21 @@ novelty_reasons <- purrr::map(
 evid_reason <- evid %>%
     dplyr::left_join(x = ., y = novelty_reasons, by = "Sequence")
 
+# Update the evidence table based on novelty explanation, any "Not novel"
+# entry must have its database field set back to "Known"
+warning(paste(
+    "Exactly", length(which(evid_reason$NoveltyReason == "Not novel")),
+    "evidence entries were reclassified as 'Not novel'!"))
+evid_reason %<>%
+    dplyr::mutate(
+        .,
+        group = ifelse(
+            !is.na(NoveltyReason) & NoveltyReason == "Not novel",
+            "Known", group),
+        Database = ifelse(
+            !is.na(NoveltyReason) & NoveltyReason == "Not novel",
+            "Target", Database))
+
 
 
 ### Focus on high quality novel peptide ----------------------------------
