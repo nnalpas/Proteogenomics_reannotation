@@ -1212,6 +1212,7 @@ values(ref_grange_expr) <- cbind(
 pl_rectvenn <- plots_rectvenn(
     ideo = genome_grange, ref = ref_grange_expr, pep = pep_grange)
 pl_rectvenn
+plot.new()
 
 # Define novel entries that are expressed
 expr_novel <- evid_reason %>%
