@@ -15,10 +15,11 @@ ProteinCoordinate=0
 ProteinAnnotation=0
 BSgenomeForge=0
 GRangeCreate=0
-PeptideCoordinate=0
+PepNoveltyReason=1
+PeptideCoordinate=1
 OperonCoordinate=0
 SangerCoordinate=0
-NoveltyReason=1
+OrfNoveltyReason=0
 ClustalAlign=0
 
 # EmbossParam
