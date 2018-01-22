@@ -284,7 +284,8 @@ fi
 if [ $NoveltyReason == 1 ]; then
 	
 	${PBS_O_HOME}/bin/Novelty_discovery_peptides.R -e ${ProjDir}/Novel_res/Sequence_group_mapping.RDS -f ${UNIREFPROT} -r ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_Refprot_vs_ORFprot -u ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_Uniprot_vs_ORFprot -n ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_NCBIprot_vs_ORFprot -p ${ProjDir}/Novel_res/Peptides_location.RDS -t ${THREADS} -o ${ProjDir}/NoveltyExplain > ${LogDir}/NoveltyReason.log 2>&1
-	
+	${PBS_O_HOME}/bin/Novelty_discovery_ORFs.R -i ${ProjDir}/NoveltyExplain/Sequence_novelty_reason.RDS -r ${ProjDir}/GRanges/Ref_prot_grange.RDS -n ${ProjDir}/GRanges/Orf_prot_grange.RDS -p ${ProjDir}/GRanges/Operon_grange.RDS -e ${ProjDir}/Novel_res/Peptides_location.RDS -d ${ProjDir}/GRanges/Pept_seq_grange.RDS -s ${ProjDir}/GRanges/Sanger_seq_grange.RDS -g ${ProjDir}/GRanges/Genome_grange.RDS -a "${AddRBS}" -t ${THREADS} -o ${ProjDir}/NoveltyExplain >> ${LogDir}/NoveltyReason.log 2>&1
+
 fi
 
 
