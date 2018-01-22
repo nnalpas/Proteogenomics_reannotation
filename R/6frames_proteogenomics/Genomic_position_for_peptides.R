@@ -60,6 +60,9 @@ if (interactive()) {
         peptide = choose.files(
             caption = "Choose the peptide location file!",
             multi = FALSE),
+        novel_reason = choose.files(
+            caption = "Choose peptide novelty (.RDS) file!",
+            multi = FALSE),
         known_prot = choose.files(
             caption = "Choose the known protein genomic coordinates file!",
             multi = FALSE),
@@ -76,6 +79,11 @@ if (interactive()) {
             opt_str = c("-p", "--peptide"),
             type = "character", default = NULL,
             help = "Peptide location file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-r", "--novel_reason"),
+            type = "character", default = NULL,
+            help = "Peptide novelty info",
             metavar = "character"),
         make_option(
             opt_str = c("-k", "--known_prot"),
@@ -100,21 +108,39 @@ if (interactive()) {
 }
 
 # Check whether inputs parameter were provided
-if (is.null(opt$peptide)) {
+if (
+    identical(opt$peptide, NULL) |
+    identical(opt$peptide, "") |
+    identical(opt$peptide, character(0))) {
     
     print_help(opt_parser)
     stop(paste(
         "Peptide location within proteins required!"))
     
 }
-if (is.null(opt$known_prot)) {
+if (
+    identical(opt$novel_reason, NULL) |
+    identical(opt$novel_reason, "") |
+    identical(opt$novel_reason, character(0))) {
+    
+    print_help(opt_parser)
+    stop("The input peptide novelty must be supplied!")
+    
+}
+if (
+    identical(opt$known_prot, NULL) |
+    identical(opt$known_prot, "") |
+    identical(opt$known_prot, character(0))) {
     
     print_help(opt_parser)
     stop(paste(
         "Known protein genomic coordinates file is required!"))
     
 }
-if (is.null(opt$orf_prot)) {
+if (
+    identical(opt$orf_prot, NULL) |
+    identical(opt$orf_prot, "") |
+    identical(opt$orf_prot, character(0))) {
     
     print_help(opt_parser)
     stop(paste(
@@ -143,6 +169,9 @@ dir.create(dirname(opt$output))
 # Import the peptide location
 pep_loc <- readRDS(file = opt$peptide) %>%
     plyr::ldply(.data = ., .fun = "data.frame", .id = "Database")
+
+# Import the peptide novelty explanation
+evid_reason <- readRDS(file = opt$novel_reason)
 
 # Import the known protein genomic coordinates
 known_prot <- data.table::fread(
@@ -216,6 +245,23 @@ pep_coord %<>%
 
 # Rename the pep column to id (id is a mandatory column for GRange script)
 colnames(pep_coord)[colnames(pep_coord) == "pep"] <- "id"
+
+# Include for each peptide its novelty reason 
+pep_coord %<>%
+    dplyr::ungroup(.) %>%
+    dplyr::left_join(
+        x = .,
+        y = evid_reason %>%
+            dplyr::select(., Sequence, NoveltyReason) %>%
+            unique(.),
+        by = c("id" = "Sequence")) %>%
+    dplyr::mutate(
+        .,
+        Database = ifelse(
+            !is.na(NoveltyReason) & NoveltyReason == "Not novel",
+            "Known", Database) %>%
+            sub("^(Known).*", "\\1", .))
+
 
 
 ### Results export -------------------------------------------------------
