@@ -924,7 +924,8 @@ plots_orf_genomic <- function(
             geom = "arrowrect", layout = "linear", colour = "black") +
             scale_fill_manual(
                 values = c(`+` = track_colour[3], `-` = track_colour[4])) +
-            scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.5))
+            scale_alpha_manual(
+                values = c("TRUE" = 1, "FALSE" = 0.5))
         pl_list[paste("Frame", y)] <- list(pl)
         
     }
@@ -940,7 +941,8 @@ plots_orf_genomic <- function(
         as.data.frame(.)
     tmp$value <- rep(x = 1, times = nrow(tmp))
     tmp %<>%
-        dplyr::arrange(., frame)
+        dplyr::arrange(., frame) %>%
+        dplyr::mutate(., Database = sub("(Known).*", "\\1", Database))
     tmp$id <- factor(
         x = tmp$id,
         levels = as.character(tmp$id),
@@ -950,11 +952,11 @@ plots_orf_genomic <- function(
     # Loop through all frames for the peptide GRange
     tmp <- cbind(tmp, y = NA)
     y_value <- 0
-    for (aes_group in unique(tmp$frame)) {
+    for (aes_group in unique(tmp$Database)) {
         
-        # Define the subset of peptides for the current frame
+        # Define the subset of peptides for the current database
         sub_tmp <- tmp %>%
-            dplyr::filter(., frame == aes_group)
+            dplyr::filter(., Database == aes_group)
         
         # Define the y axis value to start with
         y_value <- (y_value + 1)
@@ -965,8 +967,10 @@ plots_orf_genomic <- function(
             
             # Define the minimum x value threshold to add peptide
             # on current y axis value
-            if (is.na(max(
-                sub_tmp[!is.na(sub_tmp$y) & sub_tmp$y == y_value, "end"]))) {
+            if (length(
+                sub_tmp[
+                    !is.na(sub_tmp$y) & sub_tmp$y == y_value,
+                    "end"]) == 0) {
                 min_thresh <- 0
             } else {
                 min_thresh <- max(
@@ -1008,7 +1012,7 @@ plots_orf_genomic <- function(
             xmax = end,
             ymin = as.integer(y),
             ymax = (as.integer(y) + 0.5),
-            fill = factor(frame),
+            fill = factor(Database),
             label = id)) +
         geom_rect(colour = "black") +
         geom_text(mapping = aes(
@@ -1016,7 +1020,10 @@ plots_orf_genomic <- function(
             y = (as.integer(y) + 0.275)),
             colour = "white",
             size = 3,
-            check_overlap = TRUE)
+            check_overlap = TRUE) +
+        scale_fill_manual(
+            name = "Database",
+            values = c(`Known` = track_colour[5], `Novel` = track_colour[6]))
     pl_list["Peptide"] <- list(pl)
     
     # The plot of Sanger sequences for that genomic region
@@ -1031,8 +1038,12 @@ plots_orf_genomic <- function(
             xmax = end,
             ymin = as.integer(factor(id)),
             ymax = (as.integer(factor(id)) + 0.5),
-            colour = strand)) +
-        geom_rect(fill = "grey")
+            fill = strand)) +
+        geom_rect() +
+        scale_fill_manual(
+            name = "Strand",
+            values = c(`+` = "#CDCDC1", `-` = "#8B8B83"))
+        labs(fill = "Strand")
     pl_list["Sequenced PCR"] <- list(pl)
     
     # The plot of genome sequence for that genomic region
