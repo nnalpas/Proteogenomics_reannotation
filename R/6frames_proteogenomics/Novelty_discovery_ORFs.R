@@ -868,6 +868,40 @@ pdf(
     file = paste0(opt$output, "/", "ORF_novelty_reason.pdf"),
     width = 10, height = 10)
 
+# Histogram of evidence counts
+toplot <- evid_reason %>%
+    dplyr::group_by(., Database) %>%
+    dplyr::summarise(., evid_count = n())
+pl_datab_count <- plots_hist(
+    data = toplot,
+    key = "Database",
+    value = "evid_count",
+    group = "Database",
+    fill = "Database",
+    main = "PSM count (post novelty re-annotation)",
+    xlabel = "Databases",
+    ylabel = "Count (log scale)",
+    textsize = 25,
+    label = "evid_count",
+    transf = "log10",
+    bw = TRUE)
+pl_datab_count[[1]]
+
+# Boxplot of evidence PEP
+toplot <- evid_reason %>%
+    dplyr::select(., Database, PEP)
+pl_datab_pep <- plots_box(
+    data = toplot,
+    key = "Database",
+    value = "PEP",
+    main = "PSM PEP",
+    textsize = 25,
+    fill = "grey",
+    xlabel = "Databases",
+    ylabel = "PEP",
+    outlier_simplify = TRUE)
+pl_datab_pep[[1]]
+
 # Loop through each neighbour type
 for (x in names(neighbours_list)) {
     
@@ -1212,7 +1246,14 @@ values(ref_grange_expr) <- cbind(
 pl_rectvenn <- plots_rectvenn(
     ideo = genome_grange, ref = ref_grange_expr, pep = pep_grange)
 pl_rectvenn
-plot.new()
+
+# Close the device
+dev.off()
+
+# Open a file for plot visualisation
+pdf(
+    file = paste0(opt$output, "/", "ORF_genomic_visualisation.pdf"),
+    width = 10, height = 10)
 
 # Define novel entries that are expressed
 expr_novel <- evid_reason %>%
@@ -1434,6 +1475,8 @@ for (i in high_qual_targets) {
 
 # Export all plots as RDS file
 all_figures <- list(
+    datab_count = pl_datab_count[[1]],
+    datab_pep = pl_datab_pep[[1]],
     reason = pl_orf_reason[[1]],
     orf_freq = pl_all_orf_freq[[1]],
     orf_qc_freq = pl_qc_orf_freq[[1]],
