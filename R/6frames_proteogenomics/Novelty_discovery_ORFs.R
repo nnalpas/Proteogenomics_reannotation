@@ -937,7 +937,7 @@ for (x in names(neighbours_list)) {
         bw = TRUE,
         xdir = "vertical",
         auto_scale = 10)
-    plot(pl[[1]])
+    print(pl[[1]])
     pl <- plots_hist(
         data = toplot %>% dplyr::filter(., as.numeric(dist) < 101),
         key = "dist",
@@ -951,7 +951,7 @@ for (x in names(neighbours_list)) {
         legend = "bottom",
         bw = TRUE,
         xdir = "vertical")
-    plot(pl[[1]])
+    print(pl[[1]])
     
 }
 
