@@ -878,14 +878,14 @@ pl_datab_count <- plots_hist(
     value = "evid_count",
     group = "Database",
     fill = "Database",
-    main = "PSM count (post novelty re-annotation)",
+    main = "PSM count (re-annotated)",
     xlabel = "Databases",
     ylabel = "Count (log scale)",
     textsize = 25,
     label = "evid_count",
     transf = "log10",
     bw = TRUE)
-pl_datab_count[[1]]
+plot(pl_datab_count[[1]])
 
 # Boxplot of evidence PEP
 toplot <- evid_reason %>%
@@ -894,13 +894,13 @@ pl_datab_pep <- plots_box(
     data = toplot,
     key = "Database",
     value = "PEP",
-    main = "PSM PEP",
+    main = "PSM PEP (re-annotated)",
     textsize = 25,
     fill = "grey",
     xlabel = "Databases",
     ylabel = "PEP",
     outlier_simplify = TRUE)
-pl_datab_pep[[1]]
+plot(pl_datab_pep[[1]])
 
 # Loop through each neighbour type
 for (x in names(neighbours_list)) {
@@ -937,7 +937,7 @@ for (x in names(neighbours_list)) {
         bw = TRUE,
         xdir = "vertical",
         auto_scale = 10)
-    print(pl[[1]])
+    plot(pl[[1]])
     pl <- plots_hist(
         data = toplot %>% dplyr::filter(., as.numeric(dist) < 101),
         key = "dist",
@@ -951,7 +951,7 @@ for (x in names(neighbours_list)) {
         legend = "bottom",
         bw = TRUE,
         xdir = "vertical")
-    print(pl[[1]])
+    plot(pl[[1]])
     
 }
 
@@ -1095,7 +1095,7 @@ pl_orf_reason <- plots_hist(
     bw = TRUE,
     legend = "right",
     xdir = "vertical")
-pl_orf_reason[[1]]
+plot(pl_orf_reason[[1]])
 
 # Frequency of ORF per number of novel peptide per novelty type
 toplot <- orf_reason_final %>%
@@ -1132,7 +1132,7 @@ pl_all_orf_freq <- plots_hist(
     label = "count",
     legend = "bottom",
     xdir = "horizontal")
-pl_all_orf_freq[[1]]
+plot(pl_all_orf_freq[[1]])
 pl_qc_orf_freq <- plots_hist(
     data = toplot %>%
         dplyr::filter(., Type == "Quality filtered"),
@@ -1147,7 +1147,7 @@ pl_qc_orf_freq <- plots_hist(
     label = "count",
     legend = "bottom",
     xdir = "horizontal")
-pl_qc_orf_freq[[1]]
+plot(pl_qc_orf_freq[[1]])
 
 # Export neighbour results (as txt and RDS files)
 saveRDS(
@@ -1315,7 +1315,7 @@ pl_circos <- ggplot() +
     annotate(
         geom = "text", x = -12, y = -6, hjust = 0,
         label = "4. Putative novel ORF (- strand)", colour = colou[4])
-pl_circos
+plot(pl_circos)
 
 # Get all peptide associated nucleotide position
 coverage_pep <- gr_nucleotide_pos(
@@ -1384,7 +1384,7 @@ pl_coverage <- pl_coverage[[1]] +
     scale_x_discrete(
         breaks = c(1, seq(20, 160, by = 20)),
         labels = c(1, seq(20, 160, by = 20)))
-pl_coverage
+plot(pl_coverage)
 
 # Define a high quality target list
 high_qual_targets <- orf_reason_highqual %>%
@@ -1439,7 +1439,7 @@ for (i in high_qual_targets) {
     xlim(pl_genome) <- c(
         genomic_vis_data$region_coordinates[["start"]],
         genomic_vis_data$region_coordinates[["end"]])
-    pl_genome
+    print(pl_genome)
     
     # Plot the peptides and Sanger sequence tracks
     pl_genome_zoom <- tracks(
@@ -1465,7 +1465,7 @@ for (i in high_qual_targets) {
     xlim(pl_genome_zoom) <- c(
         genomic_vis_data$region_zoom[["start"]],
         genomic_vis_data$region_zoom[["end"]])
-    pl_genome_zoom
+    print(pl_genome_zoom)
     
     # Include the plots for current candidate into list
     pl_genome_list[i] <- list(list(
