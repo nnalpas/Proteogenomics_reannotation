@@ -27,6 +27,9 @@ plots_rectvenn <- function(
         stop("Error: No peptide GRange object was provided!")
     }
     
+    # Select venn set colours
+    venn_colours <- c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c")
+    
     # Get all chromosome nucleotide position
     chrom_nuc <- gr_nucleotide_pos(
         grange = ideo)
@@ -50,7 +53,7 @@ plots_rectvenn <- function(
         ybottom = 0,
         xright = 1,
         ytop = 1,
-        border = "red",
+        border = venn_colours[1],
         lwd = 2)
     text(
         x = 0.015,
@@ -58,7 +61,7 @@ plots_rectvenn <- function(
         labels = paste(
             "Chromosome", round(length(unique(unlist(chrom_nuc))) / 1000000, 1),
             "Mb", sep = " "),
-        col = "red", cex = 1.0, adj = 0)
+        col = venn_colours[1], cex = 1.0, adj = 0)
     rect(
         xleft = 0.01,
         ybottom = 0.01,
@@ -68,7 +71,7 @@ plots_rectvenn <- function(
         ytop = sqrt(
             length(unique(unlist(coding_nuc))) /
                 length(unique(unlist(chrom_nuc)))) + 0.01,
-        border = "green",
+        border = venn_colours[2],
         lwd = 2)
     text(
         x = 0.025,
@@ -79,7 +82,7 @@ plots_rectvenn <- function(
             "Protein-coding",
             round(length(unique(unlist(coding_nuc))) / 1000000, 1),
             "Mb", sep = " "),
-        col = "green", cex = 1.0, adj = 0)
+        col = venn_colours[2], cex = 1.0, adj = 0)
     rect(
         xleft = 0.02,
         ybottom = 0.02,
@@ -89,7 +92,7 @@ plots_rectvenn <- function(
         ytop = sqrt(
             length(unique(unlist(exprs_nuc))) /
                 length(unique(unlist(chrom_nuc)))) + 0.02,
-        border = "blue",
+        border = venn_colours[3],
         lwd = 2)
     text(
         x = 0.035,
@@ -100,7 +103,7 @@ plots_rectvenn <- function(
             "Expressed protein",
             round(length(unique(unlist(exprs_nuc))) / 1000000, 1),
             "Mb", sep = " "),
-        col = "blue", cex = 1.0, adj = 0)
+        col = venn_colours[3], cex = 1.0, adj = 0)
     rect(
         xleft = 0.03,
         ybottom = 0.03,
@@ -110,7 +113,7 @@ plots_rectvenn <- function(
         ytop = sqrt(
             length(unique(unlist(cover_nuc))) /
                 length(unique(unlist(chrom_nuc)))) + 0.03,
-        border = "orange",
+        border = venn_colours[4],
         lwd = 2)
     text(
         x = 0.045,
@@ -121,7 +124,7 @@ plots_rectvenn <- function(
             "Detected peptide",
             round(length(unique(unlist(cover_nuc))) / 1000000, 1),
             "Mb", sep = " "),
-        col = "orange", cex = 1.0, adj = 0)
+        col = venn_colours[4], cex = 1.0, adj = 0)
     
     # Recored the plot
     pl <- recordPlot()
