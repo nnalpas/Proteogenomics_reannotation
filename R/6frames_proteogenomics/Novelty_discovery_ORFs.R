@@ -1097,6 +1097,106 @@ pl_orf_reason <- plots_hist(
     xdir = "vertical")
 plot(pl_orf_reason[[1]])
 
+# Visualise ORF per novelty type and per operon status
+toplot <- orf_reason_final %>%
+    dplyr::select(., Proteins, ORFNoveltyReason, OperonID) %>%
+    dplyr::mutate(., within_operon = !is.na(OperonID)) %>%
+    plyr::ddply(
+        .data = ., .variables = .(ORFNoveltyReason, within_operon),
+        .fun = summarise, count = n_distinct(Proteins), .drop = FALSE) %>%
+    dplyr::mutate(., Type = "All novel")
+toplot <- orf_reason_final %>%
+    dplyr::filter(., Proteins %in% unique(orf_reason_highqual$Proteins)) %>%
+    dplyr::select(., Proteins, ORFNoveltyReason, OperonID) %>%
+    dplyr::mutate(., within_operon = !is.na(OperonID)) %>%
+    plyr::ddply(
+        .data = ., .variables = .(ORFNoveltyReason, within_operon),
+        .fun = summarise, count = n_distinct(Proteins), .drop = FALSE) %>%
+    dplyr::mutate(., Type = "Quality filtered") %>%
+    dplyr::bind_rows(toplot, .)
+pl_all_orf_reason_operon <- plots_hist(
+    data = toplot %>% dplyr::filter(., Type == "All novel"),
+    key = "ORFNoveltyReason",
+    value = "count",
+    group = "ORFNoveltyReason",
+    fill = "within_operon",
+    posit = "stack",
+    main = "All ORF novelty with operon",
+    xlabel = "Novelty reason type",
+    ylabel = "Count of ORF",
+    textsize = 15,
+    bw = TRUE,
+    legend = "right",
+    xdir = "vertical")
+plot(pl_all_orf_reason_operon[[1]])
+pl_hq_orf_reason_operon <- plots_hist(
+    data = toplot %>% dplyr::filter(., Type == "Quality filtered"),
+    key = "ORFNoveltyReason",
+    value = "count",
+    group = "ORFNoveltyReason",
+    fill = "within_operon",
+    posit = "stack",
+    main = "High quality ORF novelty with operon",
+    xlabel = "Novelty reason type",
+    ylabel = "Count of ORF",
+    textsize = 15,
+    bw = TRUE,
+    legend = "right",
+    xdir = "vertical")
+plot(pl_hq_orf_reason_operon[[1]])
+
+# Visualise ORF per novelty type and RBS motif results
+toplot <- orf_reason_final %>%
+    dplyr::mutate(., rbs_type = dplyr::case_when(
+        is.na(rbs_position) ~ "No RBS",
+        RBS_fits_PeptideId ~ "Good fit RBS",
+        TRUE ~ "Putative RBS")) %>%
+    plyr::ddply(
+        .data = ., .variables = .(ORFNoveltyReason, rbs_type),
+        .fun = summarise, count = n_distinct(Proteins), .drop = FALSE) %>%
+    dplyr::mutate(., Type = "All novel")
+toplot <- orf_reason_final %>%
+    dplyr::filter(., Proteins %in% unique(orf_reason_highqual$Proteins)) %>%
+    dplyr::mutate(., rbs_type = dplyr::case_when(
+        is.na(rbs_position) ~ "No RBS",
+        RBS_fits_PeptideId ~ "Good fit RBS",
+        TRUE ~ "Putative RBS")) %>%
+    plyr::ddply(
+        .data = ., .variables = .(ORFNoveltyReason, rbs_type),
+        .fun = summarise, count = n_distinct(Proteins), .drop = FALSE) %>%
+    dplyr::mutate(., Type = "Quality filtered") %>%
+    dplyr::bind_rows(toplot, .)
+pl_all_orf_reason_rbs <- plots_hist(
+    data = toplot %>% dplyr::filter(., Type == "All novel"),
+    key = "ORFNoveltyReason",
+    value = "count",
+    group = "ORFNoveltyReason",
+    fill = "rbs_type",
+    posit = "stack",
+    main = "All ORF novelty with RBS",
+    xlabel = "Novelty reason type",
+    ylabel = "Count of ORF",
+    textsize = 15,
+    bw = TRUE,
+    legend = "right",
+    xdir = "vertical")
+plot(pl_all_orf_reason_rbs[[1]])
+pl_hq_orf_reason_rbs <- plots_hist(
+    data = toplot %>% dplyr::filter(., Type == "Quality filtered"),
+    key = "ORFNoveltyReason",
+    value = "count",
+    group = "ORFNoveltyReason",
+    fill = "rbs_type",
+    posit = "stack",
+    main = "High quality ORF novelty with operon",
+    xlabel = "Novelty reason type",
+    ylabel = "Count of ORF",
+    textsize = 15,
+    bw = TRUE,
+    legend = "right",
+    xdir = "vertical")
+plot(pl_hq_orf_reason_rbs[[1]])
+
 # Frequency of ORF per number of novel peptide per novelty type
 toplot <- orf_reason_final %>%
     dplyr::select(., Proteins, ORFNoveltyReason, novel_peptide_count) %>%
