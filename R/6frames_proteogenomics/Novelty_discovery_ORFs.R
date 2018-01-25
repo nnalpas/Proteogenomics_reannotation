@@ -794,6 +794,13 @@ orf_reason_neighb <- neighbours_analysis %>%
     dplyr::left_join(
         x = orf_reason_clean, y = ., by = c("Proteins" = "queryID"))
 
+# Include the reference protein ID which match novel ORF if any
+orf_reason_neighb <- as.data.frame(orf_grange, stringsAsFactors = FALSE) %>%
+    dplyr::filter(., !is.na(UNIPROTKB)) %>%
+    dplyr::select(., id, UNIPROTKB) %>%
+    dplyr::left_join(
+        x = orf_reason_neighb, y = ., by = c("Proteins" = "id"))
+
 # Include the operon overlap analysis
 orf_reason_opr <- overlap_operon %>%
     dplyr::select(., queryID, subjectID) %>%
