@@ -845,6 +845,13 @@ orf_reason_final <- data.frame(
     aa_length = sub_orf_grange@elementMetadata@listData$aa_length) %>%
     dplyr::left_join(x = orf_reason_final, y = .)
 
+# Include the ORF genomic coordinates and strand
+orf_reason_final <- orf_grange %>%
+    as.data.frame(., stringsAsFactors = FALSE) %>%
+    dplyr::select(., seqnames, start, end, strand, id) %>%
+    set_colnames(c("Chromosome", "start", "end", "strand", "Proteins")) %>%
+    dplyr::left_join(x = orf_reason_final, y = ., by = "Proteins")
+
 
 
 ### Focus on high quality novel ORF --------------------------------------
