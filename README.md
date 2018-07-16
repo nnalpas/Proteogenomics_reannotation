@@ -20,4 +20,7 @@ or
 Macek, B.
 boris.macek@uni-tuebingen.de
 
-DOI badge: 
+
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.1312851.svg)](https://doi.org/10.5281/zenodo.1312851)
+
