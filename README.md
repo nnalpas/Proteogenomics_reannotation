@@ -3,7 +3,7 @@
 Repository containing all custom pipeline (bash and R scripts) used for bacterial proteogenomics data analyses.
 
 These will be published as part of a submitted publication:
-Ravikumar, V. et al. 2018 (under review)
+Ravikumar, V. et al. 2018 Sci. Rep. (accepted)
 
 
 In order to use the provided pipeline and scripts, user should refer first to the masterscript 'SixFrame_proteogenomics.sh'.
