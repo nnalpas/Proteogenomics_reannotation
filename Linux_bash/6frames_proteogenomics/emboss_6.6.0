@@ -29,7 +29,7 @@
 # make install
 # make clean
 # mkdir ~/modulefiles/emboss
-# ln -s ~/GitHub/Miscellaneous/Linux_bash/6frames_proteogenomics/emboss_6.6.0 ~/modulefiles/emboss/6.6.0
+# ln -s ~/GitHub/Proteogenomics_reannotation/Linux_bash/6frames_proteogenomics/emboss_6.6.0 ~/modulefiles/emboss/6.6.0
 #
 ##### (E) How compile and install additional packages
 #
@@ -49,7 +49,7 @@
 ### Set version, base_dir and whatis entry:
 
 set                version             "6.6.0"
-set                base_dir            "/home-link/kxmna01/Software/emboss/6.6.0"
+set                base_dir            "$HOME/Software/emboss/6.6.0"
 module-whatis      "EMBOSS Version $version  http://emboss.sourceforge.net/what/"
 
 ### Set basic environment variables:
