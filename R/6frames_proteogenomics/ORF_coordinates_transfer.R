@@ -30,21 +30,20 @@ user <- Sys.info()[["user"]]
 #        sep = "/"))
 source(
     file = paste(
-        "/home-link",
-        user,
+        Sys.getenv("HOME"),
         "bin/General_function.R",
         sep = "/"))
 
 # Load the required packages (or install if not already in library)
-load_package(plyr)
-load_package(dplyr)
-load_package(tidyr)
-load_package(magrittr)
-load_package(data.table)
-load_package(splitstackshape)
-load_package(stringr)
-load_package(optparse)
-load_package(seqinr)
+load_package("plyr")
+load_package("dplyr")
+load_package("tidyr")
+load_package("magrittr")
+load_package("data.table")
+load_package("splitstackshape")
+load_package("stringr")
+load_package("optparse")
+load_package("seqinr")
 
 
 

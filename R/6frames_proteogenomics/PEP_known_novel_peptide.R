@@ -30,40 +30,39 @@ filter <- FALSE
 # Source the custom user functions
 source(
     file = paste(
-        "C:/Users/",
-        user,
+        Sys.getenv("HOME"),
         "/Documents/GitHub/Miscellaneous/R/General/General_function.R",
         sep = ""))
 
 # Load the required packages (or install if not already in library)
 # Note: the select function from dplyr and UniProt.ws is overlapping,
 # therefore order of package loading is important
-load_package(plyr)
-load_package(dplyr)
-load_package(tidyr)
-load_package(seqinr)
-load_package(UniProt.ws)
-load_package(magrittr)
-load_package(WriteXLS)
-load_package(data.table)
-load_package(splitstackshape)
-load_package(VennDiagram)
-load_package(ggplot2)
-load_package(grid)
-load_package(gridExtra)
-load_package(RColorBrewer)
-load_package(stringr)
-load_package(Biostrings)
-load_package(RecordLinkage)
-load_package(VariantAnnotation)
-load_package(cgdsr)
-load_package(bit64)
-load_package(cleaver)
-load_package(plotly)
-load_package(GenomicRanges)
-load_package(biovizBase)
-load_package(ggbio)
-load_package(ggradar)
+load_package("plyr")
+load_package("dplyr")
+load_package("tidyr")
+load_package("seqinr")
+load_package("UniProt.ws")
+load_package("magrittr")
+load_package("WriteXLS")
+load_package("data.table")
+load_package("splitstackshape")
+load_package("VennDiagram")
+load_package("ggplot2")
+load_package("grid")
+load_package("gridExtra")
+load_package("RColorBrewer")
+load_package("stringr")
+load_package("Biostrings")
+load_package("RecordLinkage")
+load_package("VariantAnnotation")
+load_package("cgdsr")
+load_package("bit64")
+load_package("cleaver")
+load_package("plotly")
+load_package("GenomicRanges")
+load_package("biovizBase")
+load_package("ggbio")
+load_package("ggradar")
 
 
 

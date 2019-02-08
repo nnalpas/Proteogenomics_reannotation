@@ -30,8 +30,7 @@ user <- Sys.info()[["user"]]
 #        sep = "/"))
 source(
     file = paste(
-        "/home-link",
-        user,
+        Sys.getenv("HOME"),
         "bin/General_function.R",
         sep = "/"))
 
