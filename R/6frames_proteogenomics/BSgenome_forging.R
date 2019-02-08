@@ -32,8 +32,7 @@ if (interactive()) {
 } else {
     source(
         file = paste(
-            "/home-link",
-            user,
+            Sys.getenv("HOME"),
             "bin/helper.R",
             sep = "/"))
 }
