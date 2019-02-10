@@ -214,7 +214,8 @@ chromos <- base::data.frame(
     end = geno_size,
     type = opt$circular,
     genome = opt$geno_name,
-    stringsAsFactors = FALSE)
+    stringsAsFactors = FALSE) %>%
+    dplyr::arrange(., chromosome)
 
 # Check whether coordinates are present
 if (!exists("coordinates")) {
@@ -291,6 +292,7 @@ grange_data %<>%
             sub(".*\\|(.+)\\|.*", "\\1", .),
         start = as.integer(start),
         end = as.integer(end)) %>%
+    dplyr::arrange(., chromosome) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Create a GRanges object for all entries with coordinates
