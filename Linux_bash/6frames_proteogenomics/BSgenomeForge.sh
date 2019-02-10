@@ -82,7 +82,7 @@ for file in `ls ${FASTAS}`; do
 	else
 		echo "More than one fasta header at: ${file}! Attempting to split!"
 		fasta_dir=`dirname $file`
-		awk -v awk_dir=$fasta_dir 'BEGIN {n_seq=0;} /^>/ {if(n_seq%1==0){file=sprintf("awk_dir/tmp_seq%d.fa",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < $file
+		awk -v awk_dir=$fasta_dir 'BEGIN {n_seq=0;} /^>/ {if(n_seq%1==0){file=sprintf(awk_dir"/tmp_seq%d.fa",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < $file
 		for split_file in `ls $fasta_dir/tmp_seq*.fa`; do
 			name=`grep "^>" $split_file | sed -E "s/^>([^ ]*).*/\1/"`
 			ext=`basename ${split_file} | sed -E "s/.*(\.fa(sta)?(\.gz)?)$/\1/" | sed -E "s/sta//"`
