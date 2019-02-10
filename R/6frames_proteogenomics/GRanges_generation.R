@@ -287,7 +287,8 @@ grange_data %<>%
         .,
         id = as.character(id),
         strand = as.character(strand),
-        chromosome = as.character(chromosome),
+        chromosome = as.character(chromosome) %>%
+            sub(".*\\|(.+)\\|.*", "\\1", .),
         start = as.integer(start),
         end = as.integer(end)) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
