@@ -94,7 +94,7 @@ fi
 echo "seqs_srcdir: ${WKDIR}" >> ${WKDIR}/${NEWSEED}
 
 # Use R script to generate all configuration for BSgenome package
-${PBS_O_HOME}/bin/BSgenome_forging.R -s ${WKDIR}/${NEWSEED} -f ${WKDIR} -o ${WKDIR}
+BSgenome_forging.R -s ${WKDIR}/${NEWSEED} -f ${WKDIR} -o ${WKDIR}
 
 # Build the source package
 #pkg=`grep "^Package: " ${WKDIR}/${NEWSEED} | sed -E "s/^Package: (.+)$/\1/"`
