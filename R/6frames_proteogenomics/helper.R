@@ -241,8 +241,8 @@ load_package <- function(package) {
         print(paste0(
             "Trying to install ",
             package))
-        source(file = "http://bioconductor.org/biocLite.R", verbose = FALSE)
-        biocLite(pkgs = eval(package), suppressUpdates = TRUE)
+        requireNamespace("BiocManager", quietly = TRUE)
+        BiocManager::install(pkgs = eval(package), update = FALSE)
         if(
             require(
                 package = eval(package),
