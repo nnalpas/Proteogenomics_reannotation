@@ -175,7 +175,9 @@ if (any(colnames(annotations) %in% opt$rename)) {
 }
 
 # Merge the cross-map data with the annotation based on main key
-data <- dplyr::left_join(x = crossmap, y = annotations, by = opt$key)
+data <- dplyr::left_join(x = crossmap, y = annotations, by = opt$key) %>%
+    dplyr::group_by(., qseqid) %>%
+    dplyr::summarise_all(funs(paste(unique(.), collapse = ";")))
 
 
 
