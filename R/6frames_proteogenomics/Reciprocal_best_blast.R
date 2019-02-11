@@ -62,6 +62,7 @@ if (interactive()) {
         reciprocal_blast = choose.files(
             caption = "Choose input reciprocal Blast results",
             multi = FALSE),
+        multi_match = NULL,
         output = NULL)
     
 } else {
@@ -76,6 +77,10 @@ if (interactive()) {
             opt_str = c("-r", "--reciprocal_blast"),
             type = "character", default = NULL, 
             help = "Reciprocal blast data file name", metavar = "character"),
+        make_option(
+            opt_str = c("-m", "--multi_match"), type = "character",
+            default = NULL, help = "Filter for multi hits entry",
+            metavar = "character"),
         make_option(
             opt_str = c("-o", "--output"),
             type = "character", default = NULL, 
@@ -95,6 +100,13 @@ if (is.null(opt$blast) | is.null(opt$reciprocal_blast)){
         "The two input arguments must be supplied",
         "(blast and reciprocal blast files)!"))
     
+}
+
+# If multi_match parameter is undefined, define as null
+if (is.null(opt$multi_match)) {
+    opt["multi_match"] <- list(NULL)
+} else if (opt$multi_match == "") {
+    opt["multi_match"] <- list(NULL)
 }
 
 # Check whether output parameter was provided
@@ -132,10 +144,12 @@ reciproc_data <- blast_read(
 ### Reciprocal best blast hits identification ----------------------------
 
 # Get the best blast match for each query
-best_blast_data <- best_blast(data = blast_data, key = "qseqid")
+best_blast_data <- best_blast(
+    data = blast_data, key = "qseqid", multi_match = opt$multi_match)
 
 # Get the best reciprocal blast match for each query
-best_reciproc_data <- best_blast(data = reciproc_data, key = "qseqid")
+best_reciproc_data <- best_blast(
+    data = reciproc_data, key = "qseqid", multi_match = opt$multi_match)
 
 # Merge the best blast and best reciprocal data
 blast_merge <- best_blast_data %>%
