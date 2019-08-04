@@ -21,40 +21,40 @@ user <- Sys.info()[["user"]]
 ### List of required packages -----------------------------------------------
 
 # Source the custom user functions
-if (interactive()) {
-    source(
-        file = paste(
-            "C:/Users",
-            user,
-            "Documents/GitHub/Proteogenomics_reannotation/",
-            "R/6frames_proteogenomics/helper.R",
-            sep = "/"))
-} else {
-    source(
-        file = paste(
-            Sys.getenv("HOME"),
-            "bin/helper.R",
-            sep = "/"))
-}
+#if (interactive()) {
+#    source(
+#        file = paste(
+#            "C:/Users",
+#            user,
+#            "Documents/GitHub/Proteogenomics_reannotation/",
+#            "R/6frames_proteogenomics/helper.R",
+#            sep = "/"))
+#} else {
+#    source(
+#        file = paste(
+#            Sys.getenv("HOME"),
+#            "bin/helper.R",
+#            sep = "/"))
+#}
 
 # Load the required packages (or install if not already in library)
-load_package("plyr")
-load_package("dplyr")
-load_package("magrittr")
-load_package("data.table")
-load_package("splitstackshape")
-load_package("stringr")
-load_package("optparse")
-load_package("seqinr")
-load_package("BiocGenerics")
-load_package("S4Vectors")
-load_package("IRanges")
-load_package("GenomeInfoDb")
-load_package("GenomicRanges")
-load_package("Biostrings")
-load_package("rtracklayer")
-load_package("BSgenome")
-#load_package("devtools")
+library("plyr")
+library("dplyr")
+library("magrittr")
+library("data.table")
+library("splitstackshape")
+library("stringr")
+library("optparse")
+library("seqinr")
+library("BiocGenerics")
+library("S4Vectors")
+library("IRanges")
+library("GenomeInfoDb")
+library("GenomicRanges")
+library("Biostrings")
+library("rtracklayer")
+library("BSgenome")
+#library("devtools")
 
 
 
