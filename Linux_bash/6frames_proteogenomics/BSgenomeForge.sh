@@ -72,29 +72,38 @@ if [ ! -d ${WKDIR} ] ; then
 fi
 
 # Copy seed file and all fasta files into the output directory
+CURDIR=`pwd`
 cp ${SEED} ${WKDIR}
 for file in `ls ${FASTAS}`; do
-	nmb_entries=`grep -c "^>" $file`
+	nmb_entries=`grep -Ec "^>" $file`
 	if [[ "$nmb_entries" -eq 1 ]]; then
-		name=`grep "^>" $FASTAS | sed -E "s/^>([^ ]*).*/\1/"`
+		name=`grep "^>" ${file} | sed -E "s/^>([^ ]*).*/\1/"`
 		ext=`basename ${file} | sed -E "s/.*(\.fa(sta)?(\.gz)?)$/\1/" | sed -E "s/sta//"`
 		cp ${file} ${WKDIR}/${name}${ext}
 	else
 		echo "More than one fasta header at: ${file}! Attempting to split!"
-		fasta_dir=`dirname $file`
-		awk -v awk_dir=$fasta_dir 'BEGIN {n_seq=0;} /^>/ {if(n_seq%1==0){file=sprintf(awk_dir"/tmp_seq%d.fa",n_seq);} print >> file; n_seq++; next;} { print >> file; }' < $file
-		for split_file in `ls $fasta_dir/tmp_seq*.fa`; do
-			name=`grep "^>" $split_file | sed -E "s/^>([^ ]*).*/\1/"`
-			ext=`basename ${split_file} | sed -E "s/.*(\.fa(sta)?(\.gz)?)$/\1/" | sed -E "s/sta//"`
-			mv ${split_file} ${WKDIR}/${name}${ext}
-		done
+		cd $WKDIR
+		faidx -x $file
+		cd $CURDIR
 	fi
 done
 
-# Append the genome sequence directory to the seed file
+# Append the fasta sequence name to the seed file
 NEWSEED=`basename ${SEED}`
+if [[ `grep "seqnames" ${WKDIR}/${NEWSEED}` ]]; then
+	echo "Value already present for seqnames at ${WKDIR}/${NEWSEED}!"
+	exit 1
+fi
+seqnames=""
+for file in `ls ${WKDIR}/*.fa`; do
+	seqs=`basename ${file} | sed -E "s/(.*)\.fa(sta)?(\.gz)?$/\1/"`
+	seqnames="$seqnames '${seqs}'"
+done
+echo "seqnames: c(${seqnames})" >> ${WKDIR}/${NEWSEED}
+
+# Append the genome sequence directory to the seed file
 if [[ `grep "seqs_srcdir" ${WKDIR}/${NEWSEED}` ]]; then
-	echo "Value already present for seqs_srcdir at ${WKDIR}/`basename ${SEED}`!"
+	echo "Value already present for seqs_srcdir at ${WKDIR}/${NEWSEED}!"
 	exit 1
 fi
 echo "seqs_srcdir: ${WKDIR}" >> ${WKDIR}/${NEWSEED}
@@ -108,7 +117,7 @@ BSgenome_forging.R -s ${WKDIR}/${NEWSEED} -f ${WKDIR} -o ${WKDIR}
 #R CMD build ${WKDIR}/${pkg}
 #cd ${PBS_O_WORKDIR}
 
-exit 1
+#exit 1
 
 # Check for presence of a package tar.gz file
 for tarball in `ls *.tar.gz`; do
