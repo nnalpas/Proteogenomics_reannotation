@@ -83,14 +83,14 @@ fi
 # Copy seed file and all fasta files into the output directory
 CURDIR=`pwd`
 cp ${SEED} ${WKDIR}
-if $SPLIT; then
-	echo "More than one fasta header at: ${file}! Attempting to split!"
-	cd $WKDIR
-	faidx -x $file
-	cd $CURDIR
-else
-	cp -t ${WKDIR} `ls ${FASTAS}`
-fi
+#if $SPLIT; then
+#	echo "More than one fasta header at: ${file}! Attempting to split!"
+#	cd $WKDIR
+#	faidx -x $file
+#	cd $CURDIR
+#else
+#	cp -t ${WKDIR} `ls ${FASTAS}`
+#fi
 
 # Append the fasta sequence name to the seed file
 NEWSEED=`basename ${SEED}`
@@ -101,8 +101,9 @@ fi
 seqnames=""
 for file in `ls ${WKDIR}/*.fa`; do
 	seqs=`basename ${file} | sed -E "s/(.*)\.fa(sta)?(\.gz)?$/\1/"`
-	seqnames="$seqnames '${seqs}'"
+	seqnames="$seqnames '${seqs}',"
 done
+seqnames=`echo $seqnames | sed -E "s/,$//"`
 echo "seqnames: c(${seqnames})" >> ${WKDIR}/${NEWSEED}
 
 # Append the genome sequence directory to the seed file
