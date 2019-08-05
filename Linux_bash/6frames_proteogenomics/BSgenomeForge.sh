@@ -128,10 +128,10 @@ BSgenome_forging.R -s ${WKDIR}/${NEWSEED} -f ${WKDIR} -o ${WKDIR}
 for tarball in `ls ${WKDIR}/*.tar.gz`; do
 	
 	# Check the package
-	R CMD check ${WKDIR}/${tarball}
+	R CMD check ${tarball}
 	
 	# Install the package
-	R CMD INSTALL ${WKDIR}/${tarball}
+	R CMD INSTALL ${tarball}
 	
 done
 
