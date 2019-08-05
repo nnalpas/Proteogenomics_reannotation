@@ -125,7 +125,7 @@ BSgenome_forging.R -s ${WKDIR}/${NEWSEED} -f ${WKDIR} -o ${WKDIR}
 #exit 1
 
 # Check for presence of a package tar.gz file
-for tarball in `ls *.tar.gz`; do
+for tarball in `ls ${WKDIR}/*.tar.gz`; do
 	
 	# Check the package
 	R CMD check ${WKDIR}/${tarball}
