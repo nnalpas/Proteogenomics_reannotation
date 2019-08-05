@@ -83,14 +83,14 @@ fi
 # Copy seed file and all fasta files into the output directory
 CURDIR=`pwd`
 cp ${SEED} ${WKDIR}
-#if $SPLIT; then
-#	echo "More than one fasta header at: ${file}! Attempting to split!"
-#	cd $WKDIR
-#	faidx -x $file
-#	cd $CURDIR
-#else
-#	cp -t ${WKDIR} `ls ${FASTAS}`
-#fi
+if $SPLIT; then
+	echo "More than one fasta header at: ${file}! Attempting to split!"
+	cd $WKDIR
+	faidx -x $file
+	cd $CURDIR
+else
+	cp -t ${WKDIR} `ls ${FASTAS}`
+fi
 
 # Append the fasta sequence name to the seed file
 NEWSEED=`basename ${SEED}`
@@ -115,14 +115,6 @@ echo "seqs_srcdir: ${WKDIR}" >> ${WKDIR}/${NEWSEED}
 
 # Use R script to generate all configuration for BSgenome package
 BSgenome_forging.R -s ${WKDIR}/${NEWSEED} -f ${WKDIR} -o ${WKDIR}
-
-# Build the source package
-#pkg=`grep "^Package: " ${WKDIR}/${NEWSEED} | sed -E "s/^Package: (.+)$/\1/"`
-#cd ${WKDIR}
-#R CMD build ${WKDIR}/${pkg}
-#cd ${PBS_O_WORKDIR}
-
-#exit 1
 
 # Check for presence of a package tar.gz file
 for tarball in `ls ${WKDIR}/*.tar.gz`; do
