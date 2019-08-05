@@ -14,12 +14,17 @@ display_usage() {
 		Options:
         	-o	[str]	The output directory.
 			-s	[str]	The BSgenome seed file.
+			-x	[]	To split a fasta file containing multiple sequences.
         	-h	[]	To display the help.
 	"
 }
 
+# Define default values
+o_default="`pwd`/BSgenome"
+x_default=false
+
 # Parse user parameters
-while getopts "o:s:h" opt; do
+while getopts "o:s:xh" opt; do
 	case $opt in
 		o)
 			WKDIR=$OPTARG
@@ -29,6 +34,9 @@ while getopts "o:s:h" opt; do
 		s)
             SEED=$OPTARG
             shift $((OPTIND-1)); OPTIND=1
+			;;
+		x)
+            SPLIT=true
 			;;
 		h)
 			display_usage
@@ -49,12 +57,13 @@ done
 # Also get target genome sequence files from parameter
 FASTAS=${@:1}
 
+# Setting default values ${VARIABLE=DEFAULT_VALUE}
+# This command will set VARIABLE to DEFAULT_VALUE if it is currently 
+# undefined, then return VARIABLE
+: ${WKDIR=$o_default}
+: ${SPLIT=$x_default}
+
 # Check for mandatory parameters
-if [ -z "${WKDIR}" ]; then
-	echo "The output directory must be specified." >&2
-	display_usage
-	exit 1
-fi
 if [ -z "${FASTAS}" ]; then
 	echo "At least one genome fasta file must be specified." >&2
 	display_usage
@@ -74,19 +83,14 @@ fi
 # Copy seed file and all fasta files into the output directory
 CURDIR=`pwd`
 cp ${SEED} ${WKDIR}
-for file in `ls ${FASTAS}`; do
-	nmb_entries=`grep -Ec "^>" $file`
-	if [[ "$nmb_entries" -eq 1 ]]; then
-		name=`grep "^>" ${file} | sed -E "s/^>([^ ]*).*/\1/"`
-		ext=`basename ${file} | sed -E "s/.*(\.fa(sta)?(\.gz)?)$/\1/" | sed -E "s/sta//"`
-		cp ${file} ${WKDIR}/${name}${ext}
-	else
-		echo "More than one fasta header at: ${file}! Attempting to split!"
-		cd $WKDIR
-		faidx -x $file
-		cd $CURDIR
-	fi
-done
+if $SPLIT; then
+	echo "More than one fasta header at: ${file}! Attempting to split!"
+	cd $WKDIR
+	faidx -x $file
+	cd $CURDIR
+else
+	cp -t ${WKDIR} `ls ${FASTAS}`
+fi
 
 # Append the fasta sequence name to the seed file
 NEWSEED=`basename ${SEED}`
