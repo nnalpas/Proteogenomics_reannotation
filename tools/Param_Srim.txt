@@ -30,16 +30,16 @@ MINSIZE=1
 CIRCULAR="No"
 
 # ReferenceDatabase
-GENOME="${PBS_O_HOME}/Genome/Streptomyces_rimosus/Srim_G7_assembly.fasta"
-#SIXFRAMEPROT="${PBS_O_HOME}/Genome/Streptomyces_rimosus/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta"
-#COORDSIXFRAMEPROT="${PBS_O_HOME}/Genome/Streptomyces_rimosus/Find0_GCA_000009045.1_FIXED.fasta"
-#UNIREFPROT="${PBS_O_HOME}/Genome/Streptomyces_rimosus/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta"
+GENOME="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Srim_G7_assembly.fasta"
+#SIXFRAMEPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta"
+#COORDSIXFRAMEPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Find0_GCA_000009045.1_FIXED.fasta"
+#UNIREFPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta"
 #UNIREFGENE=""
-#ALLUNIPROT="${PBS_O_HOME}/BlastDB/uniprot_sprot_trembl.fasta"
-#ALLNCBIPROT="${PBS_O_HOME}/BlastDB/refseq_protein"
-#ALLNCBIRNA="${PBS_O_HOME}/BlastDB/refseq_rna"
-#OPERON="${PBS_O_HOME}/Genome/Streptomyces_rimosus/Bsu_operon_01062017.opr"
-#SANGER="${PBS_O_HOME}/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
+#ALLUNIPROT="${PBS_O_HOME}/work/BlastDB/uniprot_sprot_trembl.fasta"
+#ALLNCBIPROT="${PBS_O_HOME}/work/BlastDB/refseq_protein"
+#ALLNCBIRNA="${PBS_O_HOME}/work/BlastDB/refseq_rna"
+#OPERON="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Bsu_operon_01062017.opr"
+#SANGER="${PBS_O_HOME}/work/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
 
 # BlastDatab
 InputType="fasta"
