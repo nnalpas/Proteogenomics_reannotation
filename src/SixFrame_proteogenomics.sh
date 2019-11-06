@@ -16,14 +16,23 @@ if [ -n "${SCRIPT_FLAGS}" ] ; then
 	if [ -z "${*}" ] ; then
 		set -- ${SCRIPT_FLAGS}
 	fi
+	
+	# Get the number of threads to use
+	THREADS=`wc -l ${PBS_NODEFILE} | grep -o "^[0-9]*"`
+
+elif [ $# -eq 3 ]; then
+	
+	SCRIPT_FLAGS=$1
+	PBS_O_WORKDIR=$2
+	THREADS=$3
+	PBS_O_HOME=$HOME
+
+else
+	
+	echo "Usage: $0 <ParametersPath> <WorkDir> <Threads>"
+	exit 1
 
 fi
-
-# Check whether a parameter file was provided
-#if [ $# -ne 1 ]; then
-#	echo "Usage: $0 <ParametersPath>"
-#	exit 1
-#fi
 
 # Load all parameters
 source ${SCRIPT_FLAGS}
@@ -43,15 +52,12 @@ module load emboss/6.6.0
 ProjDir=${PBS_O_INITDIR}/${ProjectName}
 
 # Create the log folder
-DateStart=$(date -I)
+DateStart=$(date +%F_%H-%M)
 LogDir=${ProjDir}/Log/${DateStart}
 mkdir -p $LogDir
 
 # Copy the parameter file to log
 cp ${SCRIPT_FLAGS} ${LogDir}/Parameters_${DateStart}.txt
-
-# Get the number of threads to use
-THREADS=`wc -l ${PBS_NODEFILE} | grep -o "^[0-9]*"`
 
 
 
@@ -64,11 +70,23 @@ if [ $GetOrf == 1 ]; then
 
     ${PBS_O_HOME}/bin/GetOrf.sh ${ProjDir}/Nuc_translation 0 ${TABLE} ${MINSIZE} ${CIRCULAR} ${GENOME} > ${LogDir}/GetOrf.log 2>&1
     ${PBS_O_HOME}/bin/GetOrf.sh ${ProjDir}/Nuc_translation 2 ${TABLE} ${MINSIZE} ${CIRCULAR} ${GENOME} >> ${LogDir}/GetOrf.log 2>&1
-	#SIXFRAMEPROT=`echo $GENOME | perl -p -e 's/^(.*\\/)(.*)\\.fasta/$1Find0_$2_FIXED.fasta/'`
-	#SIXFRAMEGENE=`echo $GENOME | perl -p -e 's/^(.*\\/)(.*)\\.fasta/$1Find2_$2_FIXED.fasta/'`
 
 fi
+SIXFRAMEPROT=`echo $GENOME | perl -p -e 's/^(.*\\/)(.*)\\.fasta/$1Find0_$2_FIXED.fasta/'`
+SIXFRAMEGENE=`echo $GENOME | perl -p -e 's/^(.*\\/)(.*)\\.fasta/$1Find2_$2_FIXED.fasta/'`
 
+
+
+#######################
+# MaxQuant processing #
+#######################
+
+# Check whether to perform the maxquant processing
+if [ $MaxquantProc == 1 ]; then
+	
+	
+	
+fi
 
 
 ##################
