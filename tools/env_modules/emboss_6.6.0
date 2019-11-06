@@ -29,7 +29,7 @@
 # make install
 # make clean
 # mkdir ~/modulefiles/emboss
-# ln -s ~/GitHub/Proteogenomics_reannotation/Linux_bash/6frames_proteogenomics/emboss_6.6.0 ~/modulefiles/emboss/6.6.0
+# ln -s ~/GitHub/Proteogenomics_reannotation/tools/env_modules/emboss_6.6.0 ~/modulefiles/emboss/6.6.0
 #
 ##### (E) How compile and install additional packages
 #
@@ -44,7 +44,7 @@
 # make install
 # make clean
 # mkdir ~/modulefiles/emboss
-# ln -s ~/GitHub/Proteogenomics_reannotation/Linux_bash/6frames_proteogenomics/emboss_6.6.0 ~/modulefiles/emboss/6.6.0
+# ln -s ~/GitHub/Proteogenomics_reannotation/tools/env_modules/emboss_6.6.0 ~/modulefiles/emboss/6.6.0
 #
 ### Set version, base_dir and whatis entry:
 

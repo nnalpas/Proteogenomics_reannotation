@@ -33,7 +33,7 @@
 # the make test failed for test 2023...
 #
 # mkdir ~/modulefiles/curl
-# ln -s ~/GitHub/Proteogenomics_reannotation/Linux_bash/6frames_proteogenomics/curl_7.57.0 ~/modulefiles/curl/7.57.0
+# ln -s ~/GitHub/Proteogenomics_reannotation/tools/env_modules/curl_7.57.0 ~/modulefiles/curl/7.57.0
 #
 ### Set version, base_dir and whatis entry:
 

@@ -30,7 +30,7 @@
 # make test
 # make install
 # mkdir ~/modulefiles/zlib
-# ln -s ~/GitHub/Proteogenomics_reannotation/Linux_bash/6frames_proteogenomics/zlib_1.2.11 ~/modulefiles/zlib/1.2.11
+# ln -s ~/GitHub/Proteogenomics_reannotation/tools/env_modules/zlib_1.2.11 ~/modulefiles/zlib/1.2.11
 #
 ### Set version, base_dir and whatis entry:
 
