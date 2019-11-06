@@ -57,7 +57,7 @@
 ### Set version, base_dir and whatis entry:
 
 set                version             "2.6.0"
-set                base_dir            "/home-link/kxmna01/Software/blast+/$version/c++/ReleaseMT"
+set                base_dir            "$::env(HOME)/Software/blast+/$version/c++/ReleaseMT"
 module-whatis      "BLAST+, is a software for comparing primary biological\
 sequence information, such as the amino-acid sequences of different proteins\
 or the nucleotides of DNA/RNA sequences."

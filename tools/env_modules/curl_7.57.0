@@ -38,7 +38,7 @@
 ### Set version, base_dir and whatis entry:
 
 set                version             "7.57.0"
-set                base_dir            "/home-link/kxmna01/Software/curl/7.57.0"
+set                base_dir            "$::env(HOME)/Software/curl/7.57.0"
 module-whatis      "curl Version $version  https://curl.haxx.se/docs/"
 
 ### Set basic environment variables:
