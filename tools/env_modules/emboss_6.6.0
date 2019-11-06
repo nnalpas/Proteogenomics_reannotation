@@ -1,0 +1,110 @@
+#%Module1.0
+#
+# Module:          modulefiles/emboss/6.6.0
+# Revision:        kxmna01
+# TargetSystem:   el7
+# Priority:        normal
+#
+##### (A) Revision history:
+#
+# 06 November 2017
+#
+##### (B) Dependencies:
+#
+# No dependencies
+#
+##### (C) How to obtain software?
+# 
+# see http://emboss.sourceforge.net/download/
+#
+##### (D) How compile and install
+#
+# cd ~/Software/
+# mkdir -p ./emboss/6.6.0
+# wget "ftp://emboss.open-bio.org/pub/EMBOSS/emboss-latest.tar.gz"
+# tar -xvzf emboss-latest.tar.gz
+# cd ./EMBOSS-6.6.0
+# ./configure --prefix=/home-link/kxmna01/Software/emboss/6.6.0/ --without-x
+# make
+# make install
+# make clean
+# mkdir ~/modulefiles/emboss
+# ln -s ~/GitHub/Proteogenomics_reannotation/Linux_bash/6frames_proteogenomics/emboss_6.6.0 ~/modulefiles/emboss/6.6.0
+#
+##### (E) How compile and install additional packages
+#
+# cd ~/Software/emboss/6.6.0
+# mkdir ~/Software/emboss/6.6.0/embassy
+# cd ~/Software/emboss/6.6.0/embassy
+# wget "www.g-language.org/kbws/source/KBWS-1.0.9.tar.gz"
+# tar -xvzf KBWS-1.0.9.tar.gz
+# cd ./KBWS-1.0.9
+# ./configure --prefix=/home-link/kxmna01/Software/emboss/6.6.0/ --without-x
+# make
+# make install
+# make clean
+# mkdir ~/modulefiles/emboss
+# ln -s ~/GitHub/Proteogenomics_reannotation/Linux_bash/6frames_proteogenomics/emboss_6.6.0 ~/modulefiles/emboss/6.6.0
+#
+### Set version, base_dir and whatis entry:
+
+set                version             "6.6.0"
+set                base_dir            "$HOME/Software/emboss/6.6.0"
+module-whatis      "EMBOSS Version $version  http://emboss.sourceforge.net/what/"
+
+### Set basic environment variables:
+
+setenv       EMBOSS_VERSION           "$version"
+setenv       EMBOSS_HOME              "$base_dir"
+setenv       EMBOSS_BIN              "$base_dir/bin"
+
+### Append bin variables:
+prepend-path  PATH                     "$base_dir/bin"
+
+
+### Define help text:
+
+proc ModulesHelp { } {
+  global env
+
+  puts stderr "
+
+EMBOSS is "The European Molecular Biology Open Software Suite".
+EMBOSS is a free Open Source software analysis package specially developed for the needs of the molecular biology (e.g. EMBnet) user community.
+The software automatically copes with data in a variety of formats and even allows transparent retrieval of sequence data from the web.
+Also, as extensive libraries are provided with the package, it is a platform to allow other scientists to develop and release software in true open source spirit.
+EMBOSS also integrates a range of currently available packages and tools for sequence analysis into a seamless whole.
+EMBOSS breaks the historical trend towards commercial software packages.
+
+For documentation, check:
+$EMBOSS_HOME/share/EMBOSS/doc/
+
+----------
+
+In case of problems, please contact 'hpcmaster (at) uni-tuebingen.de'.
+
+"
+}
+
+# Conflicts and prerequirements should be after 'proc ModulesHelp'.
+# Otherwise, the 'module help' command will not work, if any of the
+# dependencies fails (which is odd, since 'module help'
+# should help the user to solve problems like this one).
+#
+
+
+
+### Display module load message:
+if { [module-info mode] == "load" } {
+   global env
+
+   puts stderr "
+----------
+Loading EMBOSS Version 6.6.0.
+Invoke using:
+    emboss --help
+    
+INFO: Please read module help and references therein for additional infos.
+"
+}
+
