@@ -31,7 +31,6 @@ CIRCULAR="No"
 
 # ReferenceDatabase
 GENOME="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Srim_G7_assembly.fasta"
-#SIXFRAMEPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Bsu_genome_assembly_GCA_000009045.1.out_FIXED_HEADER.fasta"
 #COORDSIXFRAMEPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Find0_GCA_000009045.1_FIXED.fasta"
 #UNIREFPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta"
 #UNIREFGENE=""
