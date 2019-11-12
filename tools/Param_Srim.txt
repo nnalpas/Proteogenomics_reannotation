@@ -3,8 +3,8 @@ ProjectName="Srim_6frame"
 TaxId="1927"
 
 # ProcessSteps
-GetOrf=1
-MaxquantProc=0
+GetOrf=0
+MaxquantProc=1
 GetNovelEntries=0
 MakeBlastDbProt=0
 MakeBlastDbNuc=0
@@ -32,13 +32,17 @@ CIRCULAR="No"
 # ReferenceDatabase
 GENOME="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Srim_G7_assembly.fasta"
 #COORDSIXFRAMEPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Find0_GCA_000009045.1_FIXED.fasta"
-#UNIREFPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/uniprot-proteome_Bacillus_subtilis_168_UP000001570_20150318.fasta"
+UNIREFPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Streptomyces_rimosus_allStrains_2019-02-13.fasta"
 #UNIREFGENE=""
 #ALLUNIPROT="${PBS_O_HOME}/work/BlastDB/uniprot_sprot_trembl.fasta"
 #ALLNCBIPROT="${PBS_O_HOME}/work/BlastDB/refseq_protein"
 #ALLNCBIRNA="${PBS_O_HOME}/work/BlastDB/refseq_rna"
 #OPERON="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Bsu_operon_01062017.opr"
 #SANGER="${PBS_O_HOME}/work/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
+
+# MaxQuantParam
+mq_version="${PBS_O_HOME}/Software/MaxQuant/MaxQuant_1.6.8.0.sif"
+mqpar="${PBS_O_HOME}/ws/kxmna01-MQ_1680-0/Processing_MaxQuant/mqpar.xml"
 
 # BlastDatab
 InputType="fasta"
