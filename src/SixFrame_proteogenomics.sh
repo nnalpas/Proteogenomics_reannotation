@@ -47,6 +47,7 @@ module load blast+/2.6.0
 module load math/R/3.2.3-mkl-11.3
 module load clustal_omega/1.2.4
 module load emboss/6.6.0
+module load devel/singularity/3.2.1
 
 # Create project directory
 ProjDir=${PBS_O_INITDIR}/${ProjectName}
@@ -84,7 +85,7 @@ SIXFRAMEGENE=`basename $GENOME | perl -p -e 's/^(.*)\\.fasta/${ProjDir}\\/Nuc_tr
 # Check whether to perform the maxquant processing
 if [ $MaxquantProc == 1 ]; then
 	
-	
+	singularity run $mq_version $mqpar > ${LogDir}/MaxquantProc.log 2>&1
 	
 fi
 
@@ -96,7 +97,7 @@ fi
 # Check whether to get the novel ORFs from MaxQuant seach results
 if [ $GetNovelEntries == 1 ]; then
 
-    ${PBS_O_HOME}/bin/GetNovelEntries.R -o ${ProjDir}/Novel_res -m ${ProjDir}/MaxQuant_txt -r ${UNIREFPROT} -n ${SIXFRAMEPROT} > ${LogDir}/GetNovelEntries.log 2>&1
+    ${PBS_O_HOME}/bin/GetNovelEntries.R -o ${ProjDir}/Novel_res -m ${ProjDir}/MaxQuant/combined/txt -r ${UNIREFPROT} -n ${SIXFRAMEPROT} > ${LogDir}/GetNovelEntries.log 2>&1
 
 fi
 
