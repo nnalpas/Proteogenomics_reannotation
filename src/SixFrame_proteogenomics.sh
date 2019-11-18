@@ -94,7 +94,7 @@ fi
 # Get novel ORFs #
 ##################
 
-# Check whether to get the novel ORFs from MaxQuant seach results
+# Check whether to get the novel ORFs from MaxQuant search results
 if [ $GetNovelEntries == 1 ]; then
 
     ${PBS_O_HOME}/bin/GetNovelEntries.R -o ${ProjDir}/Novel_res -m ${ProjDir}/MaxQuant/combined/txt -r ${UNIREFPROT} -n ${SIXFRAMEPROT} > ${LogDir}/GetNovelEntries.log 2>&1
@@ -110,7 +110,7 @@ fi
 # Check whether to create a blast database for proteome data
 if [ $MakeBlastDbProt == 1 ]; then
     
-    ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "prot" -t ${TaxId} ${UNIREFPROT} ${SIXFRAMEPROT} ${COORDSIXFRAMEPROT} > ${LogDir}/MakeBlastDb.log 2>&1
+    ${PBS_O_HOME}/bin/MakeBlastDb.sh -i ${InputType} -y "prot" -t ${TaxId} ${UNIREFPROT} ${SIXFRAMEPROT} > ${LogDir}/MakeBlastDb.log 2>&1
     
 fi
 

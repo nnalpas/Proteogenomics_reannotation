@@ -4,8 +4,8 @@ TaxId="1927"
 
 # ProcessSteps
 GetOrf=0
-MaxquantProc=1
-GetNovelEntries=0
+MaxquantProc=0
+GetNovelEntries=1
 MakeBlastDbProt=0
 MakeBlastDbNuc=0
 BlastDbBlasting=0
@@ -31,7 +31,6 @@ CIRCULAR="No"
 
 # ReferenceDatabase
 GENOME="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Srim_G7_assembly.fasta"
-#COORDSIXFRAMEPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Find0_GCA_000009045.1_FIXED.fasta"
 UNIREFPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Streptomyces_rimosus_allStrains_2019-02-13.fasta"
 #UNIREFGENE=""
 #ALLUNIPROT="${PBS_O_HOME}/work/BlastDB/uniprot_sprot_trembl.fasta"
