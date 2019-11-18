@@ -1,0 +1,117 @@
+#%Module1.0
+#
+# Module:          modulefiles/blast+/2.9.0
+# Revision:        kxmna01
+# TargetSystem:    el7
+# Priority:        local
+#
+#
+##### (A) Revision history:
+#
+# Based on tubw01 120902 Initial version of Seqtrimnext 2.2.26 module
+#
+##### (B) Dependencies: 
+#
+##### (C) How to obtain software?
+# 
+# VERSION="2.9.0"
+# mkdir -p ~/Software/blast+
+# cd ~/Software/blast+
+#
+# # Download the software 
+# wget ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-${VERSION}+-src.zip
+#
+##### (D) How compile and install Blast+
+#
+# # Unzip installation file
+# unzip ncbi-blast-${VERSION}+-src
+#
+# # Make all files executable in the installation directory
+# chmod 770 -R ncbi-blast-${VERSION}+-src
+#
+# # Move to installation directory
+# cd ncbi-blast-${VERSION}+-src/c++
+#
+# # Configure the installation
+# ./configure
+#
+# # Move to build directory
+# cd ReleaseMT/build/
+#
+# # Install software
+# make all_r
+#
+# # Rename software directory
+# mv ~/Software/blast+/ncbi-blast-${VERSION}+-src ~/Software/blast+/${VERSION}
+#
+# # Create module link
+# mkdir ~/modulefiles/blast+
+# ln -s ~/GitHub/Proteogenomics_reannotation/tools/env_modules/blast_${VERSION} ~/modulefiles/blast+/${VERSION}
+#
+##### (E) How to integrate pre-compiled software on local bwGRiD site?
+#
+### Set version, base_dir and whatis entry:
+
+set                version             "2.9.0"
+set                base_dir            "$::env(HOME)/Software/blast+/$version/c++/ReleaseMT"
+module-whatis      "BLAST+, is a software for comparing primary biological\
+sequence information, such as the amino-acid sequences of different proteins\
+or the nucleotides of DNA/RNA sequences."
+
+### Set basic environment variables:
+
+setenv       BLASTPLUS_VERSION           "$version"
+setenv       BLASTPLUS_HOME              "$base_dir"
+setenv       BLASTPLUS_BIN_DIR           "$base_dir/bin"
+
+### Append bin variables:
+
+prepend-path  PATH                     "$base_dir/bin"
+
+proc ModulesHelp { } {
+  global env
+
+  puts stderr "
+
+Short usage messages are displayed when the programs are launched without
+any parameters.
+
+For interactive usage on the bwHPC request an interactive node.  Adjust 
+walltime, number of nodes, procs etc. to your job.
+
+msub -I -lnodes=1:ppn=8 -lwalltime=01:00:00
+
+The executables of this module can be found in the folder 
+$env(BLASTPLUS_BIN_DIR)
+
+
+
+----------
+
+In case of problems, please contact hpcmaster (at) uni-tuebingen.de.
+
+"
+}
+
+### Display module load message:
+
+if { [module-info mode] == "load" } {
+   global env
+
+   puts stderr "
+----------
+A program for comparing primary biological sequence information, such as the 
+amino-acid sequences of different proteins or the nucleotides of DNA sequences.
+
+This software can be used in combination with database modules like 
+\"bio/sequence_db_blastdb\" by using environment variables. Please 
+check if the database module contains the database that you want to use. 
+Contact your local site admin if you have questions regarding this topic.
+
+INFO: Please read module help and references therein for additional infos.
+----------
+"
+}
+
+
+
