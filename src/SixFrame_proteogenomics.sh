@@ -44,7 +44,8 @@ cd ${PBS_O_WORKDIR}
 module load curl/7.57.0
 module load zlib/1.2.11
 module load blast+/2.6.0
-module load math/R/3.2.3-mkl-11.3
+#module load math/R/3.2.3-mkl-11.3
+module load math/R/3.5.2-mkl-2018
 module load clustal_omega/1.2.4
 module load emboss/6.6.0
 module load devel/singularity/3.2.1
