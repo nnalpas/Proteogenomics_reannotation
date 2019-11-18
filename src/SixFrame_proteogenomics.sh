@@ -74,8 +74,8 @@ if [ $GetOrf == 1 ]; then
     ${PBS_O_HOME}/bin/GetOrf.sh ${ProjDir}/Nuc_translation 2 ${TABLE} ${MINSIZE} ${CIRCULAR} ${GENOME} >> ${LogDir}/GetOrf.log 2>&1
 
 fi
-SIXFRAMEPROT=`basename $GENOME | perl -p -e "s/^(.*)\\.fasta/${ProjDir}\\/Nuc_translation\\/Find0_$1_FIXED.fasta/"`
-SIXFRAMEGENE=`basename $GENOME | perl -p -e "s/^(.*)\\.fasta/${ProjDir}\\/Nuc_translation\\/Find2_$1_FIXED.fasta/"`
+SIXFRAMEPROT=`basename $GENOME | perl -p -e "s%^%${ProjDir}\\/Nuc_translation\\/Find0_%" | perl -p -e "s/\\.fasta/_FIXED.fasta/"`
+SIXFRAMEGENE=`basename $GENOME | perl -p -e "s%^%${ProjDir}\\/Nuc_translation\\/Find2_%" | perl -p -e "s/\\.fasta/_FIXED.fasta/"`
 
 
 
