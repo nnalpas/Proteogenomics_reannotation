@@ -28,7 +28,7 @@ if (interactive()) {
             "C:/Users",
             user,
             "Documents/GitHub/Proteogenomics_reannotation/",
-            "R/6frames_proteogenomics/helper.R",
+            "tools/Rscripts/helper.R",
             sep = "/"))
 } else {
     source(
