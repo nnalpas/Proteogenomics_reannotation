@@ -55,6 +55,10 @@ load_package("gtable")
 load_package("grid")
 load_package("gridExtra")
 load_package("purrr")
+load_package("foreach")
+load_package("doParallel")
+registerDoParallel(cores = 1)
+print(paste("Number of threads registered:", getDoParWorkers()))
 
 
 
@@ -126,6 +130,14 @@ evid <- mq_read(
     name = "evidence.txt",
     integer64 = "double")
 
+# Keep only evidences with at least 1 MS/MS
+warning(paste(
+    "There are ",
+    table(evid$`MS/MS count` == 0)[["TRUE"]],
+    "PSM with no MS/MS (matching), these will be ignored!"))
+evid %<>%
+    dplyr::filter(., `MS/MS count` >= 1)
+
 # Import the maxquant proteingroups table
 pg <- mq_read(
     path = opt$maxquant,
@@ -153,6 +165,9 @@ names(fasta$Known) %<>%
 
 ### Novel peptide identification -----------------------------------------
 
+start_time <- Sys.time()
+
+
 # Format association of peptide to protein
 data <- evid %>%
     dplyr::select(., Sequence, Proteins) %>%
@@ -175,7 +190,7 @@ pep_loc[["Contaminant"]] <- data %>%
     set_colnames(c("pep", "prot")) %>%
     dplyr::mutate(., start = NA_integer_, end = NA_integer_)
 pep_loc[["Reverse"]] <- evid %>%
-    dplyr::filter(., Reverse == "+") %>%
+    dplyr::filter(., grepl("^REV__", `Leading proteins`) | Reverse == "+") %>%
     dplyr::select(., Sequence, Proteins) %>%
     set_colnames(c("pep", "prot")) %>%
     dplyr::mutate(., start = NA_integer_, end = NA_integer_)
@@ -210,8 +225,8 @@ evid_match <- plyr::ldply(
                     yes = "Novel",
                     no = NA_character_)))) %>%
     dplyr::left_join(x = evid, y = ., by = c("Sequence" = "pep")) %>%
-	dplyr::mutate(
-		., OnlyIdBySite = ifelse(id %in% pg_not_sites, TRUE, FALSE))
+    dplyr::mutate(
+    ., OnlyIdBySite = ifelse(id %in% pg_not_sites, TRUE, FALSE))
 
 # Print warning for unidentified sequence origin
 print(paste(
@@ -220,6 +235,9 @@ print(paste(
 
 # Print the repartition of peptide per group
 print(table(evid_match$group, useNA = "always"))
+
+
+start_time - Sys.time()
 
 
 
@@ -241,7 +259,7 @@ pl <- plots_hist(
     group = "group",
     fill = "group",
     main = "PSM count",
-    xlabel = "Databases",
+    xlabel = "Groups",
     ylabel = "Count (log scale)",
     textsize = 25,
     label = "evid_count",
@@ -271,6 +289,7 @@ pl[[1]]
 # Boxplot of evidence resolution
 toplot <- evid_match %>%
     dplyr::select(., group, Resolution)
+toplot <- filter_na(my_data = toplot, my_col = "Resolution")
 pl <- plots_box(
     data = toplot,
     key = "group",
@@ -286,6 +305,7 @@ plot(pl[[1]])
 # Boxplot of evidence resolution
 toplot <- evid_match %>%
     dplyr::select(., Database, Resolution)
+toplot <- filter_na(my_data = toplot, my_col = "Resolution")
 pl <- plots_box(
     data = toplot,
     key = "Database",
@@ -300,8 +320,9 @@ plot(pl[[1]])
 
 # Boxplot of evidence mass error (ppm)
 toplot <- evid_match %>%
-    dplyr::select(., group, `Mass Error [ppm]`) %>%
+    dplyr::select(., group, `Mass error [ppm]`) %>%
     set_colnames(c("group", "Masserror"))
+toplot <- filter_na(my_data = toplot, my_col = "Masserror")
 pl <- plots_box(
     data = toplot,
     key = "group",
@@ -316,8 +337,9 @@ plot(pl[[1]])
 
 # Bowplot of evidence mass error (ppm)
 toplot <- evid_match %>%
-    dplyr::select(., Database, `Mass Error [ppm]`) %>%
+    dplyr::select(., Database, `Mass error [ppm]`) %>%
     set_colnames(c("Database", "Masserror"))
+toplot <- filter_na(my_data = toplot, my_col = "Masserror")
 pl <- plots_box(
     data = toplot,
     key = "Database",
@@ -333,6 +355,7 @@ plot(pl[[1]])
 # Boxplot of evidence PEP
 toplot <- evid_match %>%
     dplyr::select(., group, PEP)
+toplot <- filter_na(my_data = toplot, my_col = "PEP")
 pl <- plots_box(
     data = toplot,
     key = "group",
@@ -347,9 +370,10 @@ pl <- plots_box(
 plot(pl[[1]])
 plot(pl[[2]])
 
-# Bowplot of evidence PEP
+# Boxplot of evidence PEP
 toplot <- evid_match %>%
     dplyr::select(., Database, PEP)
+toplot <- filter_na(my_data = toplot, my_col = "PEP")
 pl <- plots_box(
     data = toplot,
     key = "Database",
@@ -367,6 +391,7 @@ plot(pl[[2]])
 # Boxplot of evidence score
 toplot <- evid_match %>%
     dplyr::select(., group, Score)
+toplot <- filter_na(my_data = toplot, my_col = "Score")
 pl <- plots_box(
     data = toplot,
     key = "group",
@@ -382,6 +407,7 @@ plot(pl[[1]])
 # Bowplot of evidence score
 toplot <- evid_match %>%
     dplyr::select(., Database, Score)
+toplot <- filter_na(my_data = toplot, my_col = "Score")
 pl <- plots_box(
     data = toplot,
     key = "Database",
