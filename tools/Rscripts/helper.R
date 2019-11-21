@@ -455,6 +455,17 @@ filter_na <- function(my_data, my_col) {
 
 ### Computation functions ------------------------------------------------
 
+# Function to identify the digestion rule,
+# e.g. after which amino acid digestion occured
+digestion_rule <- function(x) {
+    aa_freq <- table(x)
+    aa_freq[
+        aa_freq > (sum(aa_freq) * 0.05)] %>%
+        names(.) %>%
+        paste(., collapse = "|") %>%
+        paste0("(", ., ")")
+}
+
 # Function that digest all protein sequences in fasta file and provide
 # peptide position and sequence
 prot_digest <- function(
