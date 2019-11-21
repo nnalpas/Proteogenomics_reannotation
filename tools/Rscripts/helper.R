@@ -437,9 +437,142 @@ uni_id_clean <- function(x) {
     
 }
 
+# Function to warn user of NA values in specific columns and
+# then filter them out
+filter_na <- function(my_data, my_col) {
+    if (any(is.na(my_data[[my_col]]))) {
+        warning(paste(
+            "There are ",
+            sum(is.na(my_data[[my_col]])),
+            "NA values in", my_col))
+        my_data %<>%
+            dplyr::filter(., !is.na(!!as.name(my_col)))
+    }
+    return(my_data)
+}
+
 
 
 ### Computation functions ------------------------------------------------
+
+# Function that digest all protein sequences in fasta file and provide
+# peptide position and sequence
+prot_digest <- function(
+    fasta = NULL,
+    custom = "K|R",
+    miss_cleav = c(0:2)) {
+    
+    # Check whether the fasta has been submitted by users
+    if (is.null(fasta)) {
+        stop("Error: No fasta was provided!")
+    }
+    
+    # Check the class of entries in provided fasta
+    if (lapply(fasta, class) %>% unlist(.) %>% unique(.) != "SeqFastaAA") {
+        warning("Provided fasta entries are not of class 'SeqFastaAA'!")
+    }
+    
+    # Digest all protein and store peptide position into list
+    pep.pos <- cleavageRanges(
+        x = fasta %>%
+            as.character(.),
+        custom = custom,
+        missedCleavages = miss_cleav) %>% 
+        set_names(names(fasta))
+    
+    # Replicate the proteins names per number of associated peptides
+    tmp <- lapply(pep.pos, nrow) %>%
+        rep(x = names(.), times = .)
+    
+    # Transform the list of peptide position to dataframe
+    pep.pos %<>%
+        do.call(rbind, .) %>%
+        base::data.frame(Proteins = tmp, ., stringsAsFactors = FALSE)
+    
+    # Digest all protein and store peptide sequence into list
+    pep.seq <- cleave(
+        x = fasta %>%
+            as.character(.),
+        custom = custom,
+        missedCleavages = miss_cleav,
+        unique = FALSE) %>% 
+        set_names(names(fasta))
+    
+    # Replicate the proteins names per number of associated peptides
+    tmp <- lapply(pep.seq, length) %>%
+        rep(x = names(.), times = .)
+    
+    # If the list of proteins names for pep.seq is identical to the one
+    # for pep.pos then add peptide sequence to dataframe of peptide positions
+    if (identical(x = tmp, y = pep.pos$Proteins)) {
+        pep.list <- pep.seq %>%
+            unlist(.) %>%
+            base::cbind(pep.pos, Sequence = ., stringsAsFactors = FALSE)
+    } else {
+        stop("'pep.seq' and 'pep.pos' protein names list are not identical!")
+    }
+    
+    # Check that the binding of peptide position and sequence was successfull
+    if (any(nchar(pep.list$Sequence) != (pep.list$end - pep.list$start + 1))) {
+        stop("Peptide seq length do not match peptide width (end - start)!")
+    }
+    
+    # Return result
+    return(pep.list)
+    
+}
+
+# Function to parralelise the digestion of protein across different fasta files
+prot_digest_foreach <- function(databases, custom, mc) {
+    
+    # In silico digest the fasta files
+    all_pep <- foreach(
+        x = databases, .inorder = T, .export = "prot_digest",
+        .packages = c("magrittr", "cleaver")) %dopar%
+        prot_digest(fasta = x, custom = custom, miss_cleav = mc)
+    
+    # Replicate the database names per entry
+    tmp <- lapply(all_pep, nrow) %>%
+        rep(x = names(databases), times = .)
+    
+    # Transform the list of peptide position to dataframe
+    all_pep %<>%
+        do.call(rbind, .) %>%
+        base::data.frame(id = tmp, ., stringsAsFactors = FALSE)
+    
+    # Return the list of digested priteins
+    return(all_pep)
+    
+}
+
+# Function to identify which peptide are unique/common between databases
+unique_to_database <- function(
+    digest = NULL,
+    pep = NULL) {
+    
+    # Check whether the data variables have been submitted by users
+    if (is.null(digest)) {
+        stop("Error: No digest was provided!")
+    }
+    if (length(unique(digest$id)) < 2) {
+        stop("Error: Multiple named databases must be provided!")
+    }
+    if (is.null(pep)) {
+        stop("Error: No peptide sequence vector was provided!")
+    }
+    
+    # Filter out all peptides that were not identified
+    digest %<>%
+        dplyr::filter(., Sequence %in% pep)
+    
+    # Concatenate the database of origins for all identified peptides
+    digest %>%
+        dplyr::group_by(., Sequence) %>%
+        dplyr::mutate(
+            ., Dbuniqueness = paste(unique(id), collapse = ";")) %>%
+        base::as.data.frame(., stringsAsFactors = FALSE)
+    
+}
 
 # Function to determine the translation frame based on start coordinates
 get_frame <- function(
