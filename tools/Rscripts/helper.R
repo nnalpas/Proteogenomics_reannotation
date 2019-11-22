@@ -2120,22 +2120,20 @@ report_markdown <- function(
         params <- "ask"
     }
     
-    # Locate the markdown report file
-    rmd_file_locate <- list.files(
-        path = paste("C:/Users", user, "Documents/GitHub/", sep = "/"),
-        pattern = rmd_file,
-        full.names = TRUE,
-        recursive = TRUE)
+    # Check existence of markdown report file
+    if (!file.exists(rmd_file)) {
+        stop("Markdown not existing!")
+    }
     
     # Scan the master markdown file for childs markdown and
     # if any find their absolute path
     rmd_childs <- scan(
-        file = rmd_file_locate, what = "character",
+        file = rmd_file, what = "character",
         sep = "", comment.char = "") %>%
         grep(".+\\.rmd", ., value = TRUE) %>%
         lapply(X = ., FUN = function(x) {
             list.files(
-                path = paste("C:/Users", user, "Documents/GitHub/", sep = "/"),
+                path = dirname(rmd_file),
                 pattern = x,
                 full.names = TRUE,
                 recursive = TRUE)
@@ -2147,7 +2145,7 @@ report_markdown <- function(
     
     # Copy markdown files to temporary location
     file.copy(
-        from = c(rmd_file_locate, rmd_childs),
+        from = c(rmd_file, rmd_childs),
         to = tmp_report,
         overwrite = TRUE)
     
@@ -2155,16 +2153,16 @@ report_markdown <- function(
     out_file <- paste(
         getwd(),
         "/",
-        tools::file_path_sans_ext(rmd_file),
-        "_",
         format(Sys.time(), '%Y%m%d_%H-%M'),
+        "_",
+        tools::file_path_sans_ext(basename(rmd_file)),
         ".",
         ext,
         sep = "")
     
     # Render the markdown report
     rmarkdown::render(
-        input = file.path(tmp_report, rmd_file),
+        input = file.path(tmp_report, basename(rmd_file)),
         output_format = format,
         output_file = out_file,
         params = params,
