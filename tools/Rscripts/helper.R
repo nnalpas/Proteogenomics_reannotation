@@ -2104,3 +2104,72 @@ grids_display <- function(
 }
 
 
+
+### Markdown report functions --------------------------------------------
+
+# Function to create ioslides report given any 
+report_markdown <- function(
+    rmd_file = NULL,
+    params = "ask",
+    format = "ioslides_presentation",
+    ext = "html") {
+    
+    # Check formatting of the params parameter
+    if (!is.list(params)) {
+        warning("'params' not a named list will try to help you with GUI!")
+        params <- "ask"
+    }
+    
+    # Locate the markdown report file
+    rmd_file_locate <- list.files(
+        path = paste("C:/Users", user, "Documents/GitHub/", sep = "/"),
+        pattern = rmd_file,
+        full.names = TRUE,
+        recursive = TRUE)
+    
+    # Scan the master markdown file for childs markdown and
+    # if any find their absolute path
+    rmd_childs <- scan(
+        file = rmd_file_locate, what = "character",
+        sep = "", comment.char = "") %>%
+        grep(".+\\.rmd", ., value = TRUE) %>%
+        lapply(X = ., FUN = function(x) {
+            list.files(
+                path = paste("C:/Users", user, "Documents/GitHub/", sep = "/"),
+                pattern = x,
+                full.names = TRUE,
+                recursive = TRUE)
+        }) %>%
+        unlist(.)
+    
+    # Create the temporary directory
+    tmp_report <- file.path(tempdir())
+    
+    # Copy markdown files to temporary location
+    file.copy(
+        from = c(rmd_file_locate, rmd_childs),
+        to = tmp_report,
+        overwrite = TRUE)
+    
+    # Define output file name
+    out_file <- paste(
+        getwd(),
+        "/",
+        tools::file_path_sans_ext(rmd_file),
+        "_",
+        format(Sys.time(), '%Y%m%d_%H-%M'),
+        ".",
+        ext,
+        sep = "")
+    
+    # Render the markdown report
+    rmarkdown::render(
+        input = file.path(tmp_report, rmd_file),
+        output_format = format,
+        output_file = out_file,
+        params = params,
+        envir = new.env(parent = globalenv()))
+    
+}
+
+
