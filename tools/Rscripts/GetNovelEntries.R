@@ -304,9 +304,24 @@ print(table(evid_match$group, useNA = "always"))
 
 ### Results visualisation ------------------------------------------------
 
+# Define path to markdown file
+if (interactive()) {
+    rmd_file <- paste(
+        "C:/Users",
+        user,
+        "Documents/GitHub/Proteogenomics_reannotation",
+        "tools/Rscripts/GetNovelEntries.rmd",
+        sep = "/")
+} else {
+    rmd_file <- paste(
+        Sys.getenv("HOME"),
+        "bin/GetNovelEntries.rmd",
+        sep = "/")
+}
+
 # Generate the markdown report
 report_markdown(
-    rmd_file = "GetNovelEntries.rmd",
+    rmd_file = rmd_file,
     params = list(
         fastas = fasta,
         evid_match = evid_match),
