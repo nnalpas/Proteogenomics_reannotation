@@ -1,0 +1,115 @@
+---
+title: "Novel entries `r format(Sys.time(), '%Y-%m-%d_%H-%M')`"
+author: "`r Sys.info()[['user']]`"
+date: "`r format(x = Sys.time(), '%d %B %Y %T')`"
+output: 
+    html_document:
+        number_sections: true
+        toc: true
+        toc_float:
+            collapsed: false
+            smooth_scroll: false
+keep_tex: TRUE
+fontsize: 12pt
+geometry: margin=1in
+params:
+    fastas: NA
+    evid_match: NA
+---
+
+
+
+```{r init, include = FALSE}
+
+# Here cannot use fig.align = 'center' together with rendering via temporary
+# folder as the path to figure will be changed to absolute and rendering
+# will fail
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+#options(width = 1200)
+
+start_time <- Sys.time()
+
+```
+
+
+
+```{r setup, include=FALSE}
+
+# Here cannot use fig.align = 'center' together with rendering via temporary
+# folder as the path to figure will be changed to absolute and rendering
+# will fail
+knitr::opts_chunk$set(
+    echo = FALSE, warning = FALSE,
+    fig.width = 9, fig.height = 8)
+
+# Define colour coding for consistency across plots
+group_colours <- c(
+    `Known` = "#2180FC", `Contaminant` = "#fc9a21",
+    `Reverse` = "#ABA9A9", `Novel` = "#F23D3D")
+database_colours <- c(
+    `Target` = "#2180FC", `Decoy` = "#ABA9A9", `Novel` = "#F23D3D")
+
+# Define text size and legend position
+input <- list(
+    txt_size = 13,
+    log_scale = FALSE)
+
+```
+
+
+
+<br />
+<br />
+
+# Results
+
+```{r childs}
+
+# Define the vector containing child markdown documents
+childs_md <- c()
+
+# Include the evidence match process if data available
+if (!identical(params[["evid_match"]], "NA")) {
+    childs_md <- c(childs_md, "evid_novelty.rmd")
+}
+
+```
+
+
+
+```{r child = childs_md}
+```
+
+
+
+<br />
+<br />
+
+# Annexes
+
+```{r annex}
+
+compute_time <- (Sys.time() - start_time)
+
+```
+
+Analysis perfomed in `r paste(compute_time, attr(compute_time, "units"))`
+
+System information:
+    
+    ```{r sysinfo, eval = TRUE, render = TRUE}
+
+sessionInfo()
+
+```
+
+
+
+The end.
+
+\begin{figure}
+\centering
+\includegraphics[width=60mm]{C:/Users/kxmna01/Documents/GitHub/Miscellaneous/R/Presentation/University_logo.png}
+\end{figure}
+
+

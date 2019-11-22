@@ -1,0 +1,127 @@
+---
+title: "proteingroups"
+output: 
+    html_document:
+        number_sections: true
+        toc: true
+        toc_float:
+            collapsed: false
+            smooth_scroll: false
+keep_tex: TRUE
+fontsize: 12pt
+geometry: margin=1in
+params:
+    evid_match: NA
+---
+
+
+
+```{r psm_setup, include=FALSE}
+
+# Here cannot use fig.align = 'center' together with rendering via temporary
+# folder as the path to figure will be changed to absolute and rendering
+# will fail
+#knitr::opts_chunk$set(
+#    echo = FALSE, warning = FALSE,
+#    fig.width = 9, fig.height = 8)
+
+```
+
+
+
+<br />
+<br />
+
+## Evidences
+
+### PSM count {.tabset}
+
+::: {#Evidences-groupcount .section .level4}
+#### Per group
+
+```{r psm_group_count}
+
+# Histogram of evidence counts
+toplot_group_c <- plyr::ddply(
+    .data = params[["evid_match"]],
+    .variables = .(group),
+    .fun = summarise,
+    evid_count = length(Sequence),
+    .drop = FALSE)
+toplot_group_c$group <- factor(
+    x = toplot_group_c$group, levels = names(group_colours), ordered = TRUE)
+#renderPlotly({
+    pl <- ggplot(
+        toplot_group_c,
+        aes(
+            x = group, y = evid_count, fill = group,
+            colour = group, label = evid_count)) +
+            geom_bar(stat = "identity", position = "dodge", alpha = 0.7) +
+            geom_text(vjust = -0.9) +
+            xlab("Group") +
+            ylab("Count") +
+            labs(fill = NULL) +
+            theme_pubr() +
+            theme(text = element_text(size = input$txt_size)) +
+            #theme(text = element_text(size = txt_size)) +
+            scale_fill_manual(values = group_colours) +
+            scale_colour_manual(guide = FALSE, values = group_colours)
+    if (input$log_scale) {
+    #if (log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+ggplotly(pl)
+
+```
+:::
+
+
+
+::: {#Evidences-dbcount .section .level4}
+#### Per database
+
+```{r psm_db_count}
+
+# Histogram of evidence counts
+toplot_db_c <- plyr::ddply(
+    .data = params[["evid_match"]],
+    .variables = .(Database),
+    .fun = summarise,
+    evid_count = length(Sequence),
+    .drop = FALSE)
+toplot_db_c$Database <- factor(
+    x = toplot_db_c$Database, levels = names(database_colours), ordered = TRUE)
+#renderPlotly({
+    pl <- ggplot(
+        toplot_db_c,
+        aes(
+            x = Database, y = evid_count, fill = Database,
+            colour = Database, label = evid_count)) +
+            geom_bar(stat = "identity", position = "dodge", alpha = 0.7) +
+            geom_text(vjust = -0.9) +
+            xlab("Database") +
+            ylab("Count") +
+            labs(fill = NULL) +
+            theme_pubr() +
+            theme(text = element_text(size = input$txt_size)) +
+            #theme(text = element_text(size = txt_size)) +
+            scale_fill_manual(values = database_colours) +
+            scale_colour_manual(guide = FALSE, values = database_colours)
+    if (input$log_scale) {
+    #if (log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+ggplotly(pl)
+
+```
+:::
+
+
