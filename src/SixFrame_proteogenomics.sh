@@ -98,7 +98,7 @@ fi
 # Check whether to get the novel ORFs from MaxQuant search results
 if [ $GetNovelEntries == 1 ]; then
 
-    ${PBS_O_HOME}/bin/GetNovelEntries.R -o ${ProjDir}/Novel_res -m ${ProjDir}/MaxQuant/combined/txt -r ${UNIREFPROT} -n ${SIXFRAMEPROT} > ${LogDir}/GetNovelEntries.log 2>&1
+    ${PBS_O_HOME}/bin/GetNovelEntries.R -o ${ProjDir}/Novel_res -m ${ProjDir}/MaxQuant/combined/txt -r ${UNIREFPROT} -n ${SIXFRAMEPROT} -t ${THREADS} > ${LogDir}/GetNovelEntries.log 2>&1
 
 fi
 
@@ -259,7 +259,7 @@ fi
 # Check whether to perform the peptide novelty reason explanation
 if [ $PepNoveltyReason == 1 ]; then
 	
-	${PBS_O_HOME}/bin/Novelty_discovery_peptides.R -e ${ProjDir}/Novel_res/Sequence_group_mapping.RDS -f ${UNIREFPROT} -r ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_Refprot_vs_ORFprot -u ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_Uniprot_vs_ORFprot -n ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_NCBIprot_vs_ORFprot -p ${ProjDir}/Novel_res/Peptides_location.RDS -t ${THREADS} -o ${ProjDir}/NoveltyExplain > ${LogDir}/PepNoveltyReason.log 2>&1
+	${PBS_O_HOME}/bin/Novelty_discovery_peptides.R -e ${ProjDir}/Novel_res/Group_evidence.RDS -f ${UNIREFPROT} -r ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_Refprot_vs_ORFprot -u ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_Uniprot_vs_ORFprot -n ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_NCBIprot_vs_ORFprot -p ${ProjDir}/Novel_res/Peptides_location.RDS -t ${THREADS} -o ${ProjDir}/NoveltyExplain > ${LogDir}/PepNoveltyReason.log 2>&1
 
 fi
 
