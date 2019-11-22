@@ -59,7 +59,7 @@ library(gridExtra)
 library(purrr)
 library(foreach)
 library(doParallel)
-library(shiny)
+library(rmarkdown)
 
 
 
