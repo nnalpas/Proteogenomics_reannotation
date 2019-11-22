@@ -1,9 +1,10 @@
 ---
-title: "proteingroups"
+title: "evidences"
 output: 
     html_document:
-        number_sections: true
+        number_sections: false
         toc: true
+        toc_depth: 4
         toc_float:
             collapsed: false
             smooth_scroll: false
@@ -34,10 +35,11 @@ params:
 
 ## Evidences
 
-### PSM count {.tabset}
+### Evidences
 
-::: {#Evidences-groupcount .section .level4}
-#### Per group
+#### PSM count {.tabset}
+
+##### Per group
 
 ```{r psm_group_count}
 
@@ -77,12 +79,10 @@ toplot_group_c$group <- factor(
 ggplotly(pl)
 
 ```
-:::
 
 
 
-::: {#Evidences-dbcount .section .level4}
-#### Per database
+##### Per database
 
 ```{r psm_db_count}
 
@@ -122,6 +122,5 @@ toplot_db_c$Database <- factor(
 ggplotly(pl)
 
 ```
-:::
 
 

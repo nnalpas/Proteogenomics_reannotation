@@ -4,8 +4,9 @@ author: "`r Sys.info()[['user']]`"
 date: "`r format(x = Sys.time(), '%d %B %Y %T')`"
 output: 
     html_document:
-        number_sections: true
+        number_sections: false
         toc: true
+        toc_depth: 4
         toc_float:
             collapsed: false
             smooth_scroll: false
@@ -50,9 +51,29 @@ database_colours <- c(
     `Target` = "#2180FC", `Decoy` = "#ABA9A9", `Novel` = "#F23D3D")
 
 # Define text size and legend position
+# if using shiny runtime it is possible to use the inputPanel for reactivity
 input <- list(
     txt_size = 13,
     log_scale = FALSE)
+#inputPanel(
+#    
+#    # Select the font size
+#    sliderInput(
+#        inputId = "txt_size",
+#        label = "Font size:",
+#        min = 1,
+#        max = 40,
+#        value = 20,
+#        step = 1),
+#    
+#    # Select whether plot should be in log space
+#    checkboxInput(
+#        inputId = "log_scale",
+#        label = "Log10 scale",
+#        value = FALSE,
+#        width = NULL)
+#    
+#)
 
 ```
 
@@ -61,7 +82,7 @@ input <- list(
 <br />
 <br />
 
-# Results
+# Results {.tabset .tabset-pills}
 
 ```{r childs}
 
@@ -71,6 +92,11 @@ childs_md <- c()
 # Include the evidence match process if data available
 if (!identical(params[["evid_match"]], "NA")) {
     childs_md <- c(childs_md, "evid_novelty.rmd")
+}
+
+# Include the fasta process if data available
+if (!identical(params[["fastas"]], "NA")) {
+    childs_md <- c(childs_md, "fasta_compare.rmd")
 }
 
 ```

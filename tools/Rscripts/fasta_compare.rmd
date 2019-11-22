@@ -1,0 +1,42 @@
+---
+title: "fastas"
+output: 
+    html_document:
+        number_sections: false
+        toc: true
+        toc_depth: 4
+        toc_float:
+            collapsed: false
+            smooth_scroll: false
+keep_tex: TRUE
+fontsize: 12pt
+geometry: margin=1in
+params:
+    fastas: NA
+---
+
+
+
+```{r fasta_setup, include=FALSE}
+
+# Here cannot use fig.align = 'center' together with rendering via temporary
+# folder as the path to figure will be changed to absolute and rendering
+# will fail
+#knitr::opts_chunk$set(
+#    echo = FALSE, warning = FALSE,
+#    fig.width = 9, fig.height = 8)
+
+```
+
+
+
+<br />
+<br />
+
+## Fasta files
+
+### Fasta files
+
+To be implemented.
+
+
