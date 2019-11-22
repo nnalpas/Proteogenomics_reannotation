@@ -41,7 +41,7 @@ start_time <- Sys.time()
 # will fail
 knitr::opts_chunk$set(
     echo = FALSE, warning = FALSE,
-    fig.width = 9, fig.height = 8)
+    fig.width = 9, fig.height = 7)
 
 # Define colour coding for consistency across plots
 group_colours <- c(
