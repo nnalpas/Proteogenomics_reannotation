@@ -984,6 +984,94 @@ mq_rev_con_filt <- function (
 
 ### Plotting wrapper function --------------------------------------------
 
+# Function that computes the required values for boxplot and samples
+# maximum 1000 outliers, the difference with the plots_box function
+# comes from the value returned which is a ggplot (instead of ggtable)
+# and is compatible with plotly
+plots_box_plotly <- function(my_data, x, y, col_manual, txt_size) {
+    
+    # Format the data, keep required columns and remove NA
+    toplot <- my_data %>%
+        dplyr::select(., !!as.name(x), !!as.name(y))
+    toplot %<>%
+        filter_na(my_data = ., my_col = y)
+    toplot[[x]] <- factor(
+        x = toplot[[x]], levels = names(col_manual), ordered = TRUE)
+    
+    # Calculate the boxplot values (q25, median, q75...)
+    toplot %<>%
+        dplyr::group_by(., !!as.name(x)) %>%
+        dplyr::mutate(
+            .,
+            y25 = quantile(!!as.name(y), 0.25),
+            y50 = median(!!as.name(y)),
+            y75 = quantile(!!as.name(y), 0.75),
+            iqr = y75 - y25,
+            ymin = ifelse(
+                min(!!as.name(y)) < (y25 - (1.5 * iqr)),
+                (y25 - (1.5 * iqr)),
+                min(!!as.name(y))),
+            ymax = ifelse(
+                max(!!as.name(y)) > (y75 + (1.5 * iqr)),
+                (y75 + (1.5 * iqr)),
+                max(!!as.name(y)))
+        )
+    toplot_box <- toplot %>%
+        dplyr::select(., !!as.name(x), ymin, y25, y50, y75, ymax) %>%
+        unique(.)
+    
+    # Identify the outliers (outside 1.5 iqr) and select only a 1000 per group
+    toplot_sort <- toplot %>%
+        dplyr::group_by(., !!as.name(x)) %>%
+        dplyr::filter(
+            ., !!as.name(y) < unique(ymin) | !!as.name(y) > unique(ymax)) %>%
+        dplyr::group_by(., !!as.name(x)) %>%
+        dplyr::arrange(., !!as.name(y))
+    toplot_outliers <- toplot_sort %>%
+        dplyr::slice(., 1, n())
+    toplot_outliers <- toplot_sort %>%
+        dplyr::slice(., -1, -n()) %>%
+        dplyr::sample_n(
+            .,
+            size = ifelse(
+                length(!!as.name(y)) < 1000, length(!!as.name(y)), 1000),
+            replace = FALSE) %>%
+        dplyr::bind_rows(., toplot_outliers) %>%
+        dplyr::select(., !!as.name(x), !!as.name(y))
+    
+    # Generate the boxplot together with jittered outliers
+    ggplot() +
+        geom_boxplot(
+            data = toplot_box, mapping = aes(
+                x = !!as.name(x),
+                ymin = ymin,
+                lower = y25,
+                middle = y50,
+                upper = y75,
+                ymax = ymax,
+                fill = !!as.name(x),
+                colour = !!as.name(x)),
+            stat = "identity",
+            alpha = 0.6,
+            size = 1) +
+        geom_jitter(
+            data = toplot_outliers, mapping = aes(
+                x = !!as.name(x),
+                y = !!as.name(y),
+                fill = !!as.name(x),
+                colour = !!as.name(x)),
+            position = position_jitter(height = 0, width = 0.1),
+            stroke = 0.5) +
+        xlab(x) +
+        ylab(y) +
+        labs(fill = NULL) +
+        theme_pubr() +
+        theme(text = element_text(size = txt_size)) +
+        scale_fill_manual(values = col_manual) +
+        scale_colour_manual(guide = FALSE, values = col_manual)
+    
+}
+
 # Function that plots reference ORF, novel ORF, associated peptide and sanger
 # sequence in a genomic range context around a target
 plots_orf_genomic <- function(
