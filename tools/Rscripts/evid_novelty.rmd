@@ -37,7 +37,7 @@ params:
 
 ### Evidences
 
-#### PSM count {.tabset}
+#### Count {.tabset}
 
 ##### Per group
 
@@ -76,7 +76,8 @@ toplot_group_c$group <- factor(
     #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
     #pl
 #})
-ggplotly(pl)
+pl
+#ggplotly(pl)
 
 ```
 
@@ -119,7 +120,228 @@ toplot_db_c$Database <- factor(
     #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
     #pl
 #})
-ggplotly(pl)
+pl
+#ggplotly(pl)
+
+```
+
+
+
+<br />
+<br />
+
+#### Resolution {.tabset}
+
+##### Per group
+
+```{r psm_group_resolution}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = evid_match, x = "group", y = "Resolution",
+        col_manual = group_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+pl
+#ggplotly(pl)
+
+```
+
+
+
+##### Per database
+
+```{r psm_db_resolution}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = evid_match, x = "Database", y = "Resolution",
+        col_manual = database_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+pl
+#ggplotly(pl)
+
+```
+
+
+
+<br />
+<br />
+
+#### Mass error {.tabset}
+
+##### Per group
+
+```{r psm_group_mass}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = evid_match, x = "group", y = "Mass error [ppm]",
+        col_manual = group_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+pl
+#ggplotly(pl)
+
+```
+
+
+
+##### Per database
+
+```{r psm_db_mass}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = evid_match, x = "Database", y = "Mass error [ppm]",
+        col_manual = database_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+pl
+#ggplotly(pl)
+
+```
+
+
+
+<br />
+<br />
+
+#### Posterior error probability {.tabset}
+
+##### Per group
+
+```{r psm_group_pep}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = evid_match, x = "group", y = "PEP",
+        col_manual = group_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+pl
+#ggplotly(pl)
+
+```
+
+
+
+##### Per database
+
+```{r psm_db_pep}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = evid_match, x = "Database", y = "PEP",
+        col_manual = database_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+pl
+#ggplotly(pl)
+
+```
+
+
+
+<br />
+<br />
+
+#### Score {.tabset}
+
+##### Per group
+
+```{r psm_group_score}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = evid_match, x = "group", y = "Score",
+        col_manual = group_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+pl
+#ggplotly(pl)
+
+```
+
+
+
+##### Per database
+
+```{r psm_db_score}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = evid_match, x = "Database", y = "Score",
+        col_manual = database_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+pl
+#ggplotly(pl)
 
 ```
 
