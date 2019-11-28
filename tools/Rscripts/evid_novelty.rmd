@@ -76,8 +76,13 @@ toplot_group_c$group <- factor(
     #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
     #pl
 #})
-pl
-#ggplotly(pl)
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
 
 ```
 
@@ -120,8 +125,13 @@ toplot_db_c$Database <- factor(
     #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
     #pl
 #})
-pl
-#ggplotly(pl)
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
 
 ```
 
@@ -139,7 +149,7 @@ pl
 #renderPlotly({
 
     pl <- plots_box_plotly(
-        my_data = evid_match, x = "group", y = "Resolution",
+        my_data = params[["evid_match"]], x = "group", y = "Resolution",
         col_manual = group_colours, txt_size = input$txt_size)
 
     if (input$log_scale) {
@@ -150,8 +160,13 @@ pl
     #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
     #pl
 #})
-pl
-#ggplotly(pl)
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
 
 ```
 
@@ -164,7 +179,7 @@ pl
 #renderPlotly({
 
     pl <- plots_box_plotly(
-        my_data = evid_match, x = "Database", y = "Resolution",
+        my_data = params[["evid_match"]], x = "Database", y = "Resolution",
         col_manual = database_colours, txt_size = input$txt_size)
 
     if (input$log_scale) {
@@ -175,8 +190,13 @@ pl
     #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
     #pl
 #})
-pl
-#ggplotly(pl)
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
 
 ```
 
@@ -194,7 +214,7 @@ pl
 #renderPlotly({
 
     pl <- plots_box_plotly(
-        my_data = evid_match, x = "group", y = "Mass error [ppm]",
+        my_data = params[["evid_match"]], x = "group", y = "Mass error [ppm]",
         col_manual = group_colours, txt_size = input$txt_size)
 
     if (input$log_scale) {
@@ -205,8 +225,13 @@ pl
     #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
     #pl
 #})
-pl
-#ggplotly(pl)
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
 
 ```
 
@@ -219,7 +244,7 @@ pl
 #renderPlotly({
 
     pl <- plots_box_plotly(
-        my_data = evid_match, x = "Database", y = "Mass error [ppm]",
+        my_data = params[["evid_match"]], x = "Database", y = "Mass error [ppm]",
         col_manual = database_colours, txt_size = input$txt_size)
 
     if (input$log_scale) {
@@ -230,8 +255,13 @@ pl
     #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
     #pl
 #})
-pl
-#ggplotly(pl)
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
 
 ```
 
@@ -246,10 +276,16 @@ pl
 
 ```{r psm_group_pep}
 
+warning(paste0(
+    "There are ",
+    sum(params[["evid_match"]][["PEP"]] > 1),
+    "PEP values superior to 1 (will be removed)!"))
+
 #renderPlotly({
 
     pl <- plots_box_plotly(
-        my_data = evid_match, x = "group", y = "PEP",
+        my_data = params[["evid_match"]] %>% dplyr::filter(., PEP <= 1),
+        x = "group", y = "PEP",
         col_manual = group_colours, txt_size = input$txt_size)
 
     if (input$log_scale) {
@@ -260,8 +296,13 @@ pl
     #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
     #pl
 #})
-pl
-#ggplotly(pl)
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
 
 ```
 
@@ -274,7 +315,8 @@ pl
 #renderPlotly({
 
     pl <- plots_box_plotly(
-        my_data = evid_match, x = "Database", y = "PEP",
+        my_data = params[["evid_match"]] %>% dplyr::filter(., PEP <= 1),
+        x = "Database", y = "PEP",
         col_manual = database_colours, txt_size = input$txt_size)
 
     if (input$log_scale) {
@@ -285,8 +327,13 @@ pl
     #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
     #pl
 #})
-pl
-#ggplotly(pl)
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
 
 ```
 
@@ -304,7 +351,7 @@ pl
 #renderPlotly({
 
     pl <- plots_box_plotly(
-        my_data = evid_match, x = "group", y = "Score",
+        my_data = params[["evid_match"]], x = "group", y = "Score",
         col_manual = group_colours, txt_size = input$txt_size)
 
     if (input$log_scale) {
@@ -315,8 +362,13 @@ pl
     #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
     #pl
 #})
-pl
-#ggplotly(pl)
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
 
 ```
 
@@ -329,7 +381,7 @@ pl
 #renderPlotly({
 
     pl <- plots_box_plotly(
-        my_data = evid_match, x = "Database", y = "Score",
+        my_data = params[["evid_match"]], x = "Database", y = "Score",
         col_manual = database_colours, txt_size = input$txt_size)
 
     if (input$log_scale) {
@@ -340,8 +392,13 @@ pl
     #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
     #pl
 #})
-pl
-#ggplotly(pl)
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
 
 ```
 
