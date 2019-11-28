@@ -30,6 +30,9 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 
 start_time <- Sys.time()
 
+#use_plotly <- grepl("Windows", Sys.getenv(x = "OS"), ignore.case = TRUE)
+use_plotly <- FALSE
+
 ```
 
 
@@ -44,6 +47,8 @@ knitr::opts_chunk$set(
     fig.width = 9, fig.height = 7)
 
 # Define colour coding for consistency across plots
+fasta_colours <- c(
+    `Known` = "#2180FC", `Novel` = "#F23D3D")
 group_colours <- c(
     `Known` = "#2180FC", `Contaminant` = "#fc9a21",
     `Reverse` = "#ABA9A9", `Novel` = "#F23D3D")
