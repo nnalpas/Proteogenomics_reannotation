@@ -984,6 +984,28 @@ mq_rev_con_filt <- function (
 
 ### Plotting wrapper function --------------------------------------------
 
+# Function to generate custom histogram for upset attribute plots
+# the key change is the deletion of duplicated entries so that stack bars
+# actually represent the data
+custom_hist <- function(mydata, x, y) {
+    
+    # Remove duplicated entries (typically gray65) in case queries were used
+    mydata_filt <- mydata %>%
+        as.data.table(., key = x)
+    mydata_format <- mydata_filt[
+        , .(color = paste0(sort(color), collapse = ";")), by = c(x, y)]
+    mydata_format$color %<>%
+        sub("(;gray65|gray65;)", "", .)
+    
+    # Generate the histogram (stat bin)
+    plot <- ggplot(
+        data = mydata_format, aes(x = !!as.name(y), fill = color)) + 
+        geom_histogram(stat = "bin", position = "stack", bins = 50) +
+        scale_fill_identity() +
+        theme_pubr()
+    
+}
+
 # Function that computes the required values for boxplot and samples
 # maximum 1000 outliers, the difference with the plots_box function
 # comes from the value returned which is a ggplot (instead of ggtable)
