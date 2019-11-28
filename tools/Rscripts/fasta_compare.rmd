@@ -45,13 +45,13 @@ params:
 fastas_df <- params[["fastas"]] %>%
     unlist(.) %>%
     data.frame(ID = names(.), Sequence = ., stringsAsFactors = FALSE) %>%
-    tidyr::separate(
-        data = ., col = "ID", into = c("Database", "Protein"), sep = "\\.",
-        remove = TRUE, convert = FALSE) %>%
     dplyr::mutate(., Length = nchar(Sequence), Value = 1)
 
 # Count the number of total and unique sequences per database
 fastas_df_count <- fastas_df %>%
+    tidyr::separate(
+        data = ., col = "ID", into = c("Database", "Protein"), sep = "\\.",
+        remove = TRUE, convert = FALSE) %>%
     dplyr::group_by(., Database) %>%
     dplyr::summarise(., All = n(), Unique = n_distinct(Sequence)) %>%
     tidyr::gather(
@@ -116,7 +116,7 @@ fastas_unlist <- unlist(params[["fastas"]], recursive = FALSE) %>%
 
 # Calculate count of aa properties per sequence
 fastas_prop <- lapply(fastas_unlist, function(x) {
-    unlist(lapply(AAP, function(j) {sum(x %in% j)}))
+    unlist(lapply(SEQINR.UTIL$AA.PROPERTY, function(j) {sum(x %in% j)}))
 }) %>%
     plyr::ldply(., .id = "ID")
 
