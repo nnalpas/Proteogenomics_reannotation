@@ -37,6 +37,280 @@ params:
 
 ### Fasta files
 
-To be implemented.
+#### Sequence count
+
+```{r db_count}
+
+# Define sequence length and upset identification value
+fastas_df <- params[["fastas"]] %>%
+    unlist(.) %>%
+    data.frame(ID = names(.), Sequence = ., stringsAsFactors = FALSE) %>%
+    tidyr::separate(
+        data = ., col = "ID", into = c("Database", "Protein"), sep = "\\.",
+        remove = TRUE, convert = FALSE) %>%
+    dplyr::mutate(., Length = nchar(Sequence), Value = 1)
+
+# Count the number of total and unique sequences per database
+fastas_df_count <- fastas_df %>%
+    dplyr::group_by(., Database) %>%
+    dplyr::summarise(., All = n(), Unique = n_distinct(Sequence)) %>%
+    tidyr::gather(
+        data = ., key = "Type", value = "Count", All, Unique,
+        na.rm = FALSE, convert = FALSE)
+
+#renderPlotly({
+    
+    pl <- ggplot(
+        fastas_df_count, 
+        aes(
+            x = Type, y = Count, fill = Database,
+            colour = Database, label = Count)) +
+        geom_bar(stat = "identity", position = "dodge", alpha = 0.7) +
+        geom_text(position = position_dodge(width = 0.9), vjust = -0.9) +
+        xlab("Type") +
+        ylab("Count") +
+        labs(fill = NULL) +
+        theme_pubr() +
+        theme(text = element_text(size = input$txt_size)) +
+        scale_fill_manual(values = fasta_colours) +
+        scale_colour_manual(guide = FALSE, values = fasta_colours)
+    
+    if (input$log_scale) {
+    #if (log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
+
+```
+
+
+
+< br/>
+< br/>
+
+#### Sequence properties
+
+```{r db_properties}
+
+# Give unique ID to sequences (which can then be discarded)
+fastas_df_id <- params[["fastas"]] %>%
+    unlist(.) %>%
+    unique(.) %>%
+    data.frame(SeqID = 1:length(.), Sequence = ., stringsAsFactors = FALSE)
+
+# Compute AA sequence properties (pI, AA%...)
+fastas_unlist <- unlist(params[["fastas"]], recursive = FALSE) %>%
+    lapply(., function(x) {
+        unlist(strsplit(x, split = ""))
+    })
+
+# Calculate count of aa properties per sequence
+fastas_prop <- lapply(fastas_unlist, function(x) {
+    unlist(lapply(AAP, function(j) {sum(x %in% j)}))
+}) %>%
+    plyr::ldply(., .id = "ID")
+
+# Calculate count of aa per sequence
+fastas_compo <- lapply(fastas_unlist, function(x) {
+    table(factor(x, levels = levels(SEQINR.UTIL$CODON.AA$L)))
+}) %>%
+    plyr::ldply(., .id = "ID")
+
+# Calculate proportion of aa properties per sequence
+fastas_stats_df <- fastas_df %>%
+    dplyr::left_join(x = ., y = fastas_prop, by = "ID") %>%
+    dplyr::mutate(
+        ., Tiny = Tiny/Length,
+        Tiny = Tiny/Length,
+        Small = Small/Length,
+        Aliphatic = Aliphatic/Length,
+        Aromatic = Aromatic/Length,
+        Non.polar = Non.polar/Length,
+        Polar = Polar/Length,
+        Charged = Charged/Length,
+        Basic = Basic/Length,
+        Acidic = Acidic/Length) %>%
+    dplyr::left_join(x = ., y = fastas_compo, by = "ID")
+
+# Calculate the pI per sequence
+fastas_pi <- foreach(
+    a = fastas_stats_df$Sequence, .combine = "c", .inorder = T,
+    .packages = c("Peptides")) %dopar%
+    pI(a)
+fastas_stats_df$Pi <- fastas_pi
+
+# Merge sequences with their ID and keep only non-redundant entries
+fastas_df_spread <- fastas_stats_df %>%
+    dplyr::left_join(x = ., y = fastas_df_id, by = "Sequence") %>%
+    tidyr::separate(
+        data = ., col = "ID", into = c("Database", "Protein"),
+        sep = "\\.", remove = TRUE, convert = FALSE) %>%
+    dplyr::select(., -Sequence, -Protein) %>%
+    dplyr::rename(., Stop = `*`) %>%
+    unique(.) %>%
+    tidyr::spread(
+        data = ., key = "Database", value = "Value", fill = 0,
+        convert = TRUE, drop = TRUE)
+
+# Generate upset plot focusing on aa properties
+pl <- upset(
+    data = fastas_df_spread,
+    sets = c("Novel", "Known"),
+    empty.intersections = "on",
+    queries = list(
+        list(
+            query = intersects, params = list("Novel"),
+            color = fasta_colours[["Novel"]], active = TRUE),
+        list(
+            query = intersects, params = list("Known"),
+            color = fasta_colours[["Known"]], active = TRUE)),
+    attribute.plots = list(
+        gridrows = 100, ncols = 3,
+        plots = list(
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "Pi", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "Length", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "Acidic", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "Basic", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "Charged", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "Polar", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "Non.polar", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "Aliphatic", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "Aromatic", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "Small", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "Tiny", queries = TRUE)
+        )
+    )
+)
+
+pl
+
+```
+
+
+
+<br />
+<br />
+
+#### Sequence AA composition
+
+```{r db_composition}
+
+#
+pl <- upset(
+    data = fastas_df_spread,
+    sets = c("Novel", "Known"),
+    empty.intersections = "on",
+    queries = list(
+        list(
+            query = intersects, params = list("Novel"),
+            color = fasta_colours[["Novel"]], active = TRUE),
+        list(
+            query = intersects, params = list("Known"),
+            color = fasta_colours[["Known"]], active = TRUE)),
+    attribute.plots = list(
+        gridrows = 100, ncols = 3,
+        plots = list(
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "A", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "C", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "D", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "E", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "F", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "G", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "H", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "I", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "K", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "L", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "M", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "N", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "P", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "Q", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "R", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "S", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "T", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "V", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "W", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "Y", queries = TRUE),
+            list(
+                plot = custom_hist, x = "SeqID",
+                y = "Stop", queries = TRUE)
+        )
+    )
+)
+
+pl
+
+```
 
 
