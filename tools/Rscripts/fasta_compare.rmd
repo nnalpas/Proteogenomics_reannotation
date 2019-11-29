@@ -95,12 +95,17 @@ if (use_plotly) {
 
 
 
-< br/>
-< br/>
+<br />
+<br />
 
 #### Sequence properties
 
 ```{r db_properties}
+
+# Height for upset plot should be increased
+knitr::opts_chunk$set(
+    echo = FALSE, warning = FALSE,
+    fig.width = 9, fig.height = 9)
 
 # Give unique ID to sequences (which can then be discarded)
 fastas_df_id <- params[["fastas"]] %>%
@@ -175,7 +180,7 @@ pl <- upset(
             query = intersects, params = list("Known"),
             color = fasta_colours[["Known"]], active = TRUE)),
     attribute.plots = list(
-        gridrows = 100, ncols = 3,
+        gridrows = 300, ncols = 3,
         plots = list(
             list(
                 plot = custom_hist, x = "SeqID",
@@ -227,6 +232,11 @@ pl
 
 ```{r db_composition}
 
+# Height for upset plot should be increased
+knitr::opts_chunk$set(
+    echo = FALSE, warning = FALSE,
+    fig.width = 9, fig.height = 12)
+
 #
 pl <- upset(
     data = fastas_df_spread,
@@ -240,7 +250,7 @@ pl <- upset(
             query = intersects, params = list("Known"),
             color = fasta_colours[["Known"]], active = TRUE)),
     attribute.plots = list(
-        gridrows = 100, ncols = 3,
+        gridrows = 300, ncols = 3,
         plots = list(
             list(
                 plot = custom_hist, x = "SeqID",
