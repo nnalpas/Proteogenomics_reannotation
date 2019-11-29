@@ -205,7 +205,8 @@ fi
 if [ $ProteinCoordinate == 1 ]; then
 
     ${PBS_O_HOME}/bin/Genomic_position_from_blast.R -f ${UNIREFPROT} -b ${ProjDir}/Blast/Refprot_vs_Genome -g ${GENOME} -o ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt > ${LogDir}/ProteinCoordinate.log 2>&1
-	${PBS_O_HOME}/bin/Genomic_position_from_blast.R -f ${SIXFRAMEPROT} -b ${ProjDir}/Blast/ORFprot_vs_Genome -g ${GENOME} -o ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
+	#${PBS_O_HOME}/bin/Genomic_position_from_blast.R -f ${SIXFRAMEPROT} -b ${ProjDir}/Blast/ORFprot_vs_Genome -g ${GENOME} -o ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
+	${PBS_O_HOME}/bin/ORF_coordinates.R -f ${SIXFRAMEPROT} -o ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
 	
 fi
 
