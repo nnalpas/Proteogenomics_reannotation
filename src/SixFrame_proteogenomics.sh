@@ -233,7 +233,7 @@ fi
 # Check whether to perform BSgenome package installation
 if [ $BSgenomeForge == 1 ]; then
 
-    ${PBS_O_HOME}/bin/BSgenomeForge.sh -o ${ProjDir}/BSgenome -s ${SEED} ${GENOME} > ${LogDir}/BSgenomeForge.log 2>&1
+    ${PBS_O_HOME}/bin/BSgenomeForge.sh -o ${ProjDir}/BSgenome -s ${SEED} -x ${GENOME} > ${LogDir}/BSgenomeForge.log 2>&1
 	
 fi
 
