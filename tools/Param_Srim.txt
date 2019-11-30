@@ -53,7 +53,7 @@ NumAlign=100
 TblastnParam=''
 
 # BSgenomeParam
-SEED="${PBS_O_HOME}/Genome/Streptomyces_rimosus/seed"
+SEED="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/seed"
 
 # GRangesParam
 GenomeName="AL0091263"
