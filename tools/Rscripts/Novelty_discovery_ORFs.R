@@ -28,7 +28,7 @@ if (interactive()) {
             "C:/Users",
             user,
             "Documents/GitHub/Proteogenomics_reannotation/",
-            "R/6frames_proteogenomics/helper.R",
+            "tools/Rscripts/helper.R",
             sep = "/"))
 } else {
     source(
@@ -39,26 +39,26 @@ if (interactive()) {
 }
 
 # Load the required packages (or install if not already in library)
-load_package("plyr")
-load_package("dplyr")
-load_package("magrittr")
-load_package("data.table")
-load_package("splitstackshape")
-load_package("stringr")
-load_package("optparse")
-load_package("seqinr")
-load_package("bit64")
-load_package("ggplot2")
-load_package("ggbio")
-load_package("gtable")
-load_package("grid")
-load_package("gridExtra")
-load_package("purrr")
-load_package("foreach")
-load_package("doParallel")
-load_package("motifRG")
-load_package("ggseqlogo")
-load_package("BSgenome.Bsubtilis.EMBL.AL0091263")
+library(plyr)
+library(dplyr)
+library(magrittr)
+library(data.table)
+library(splitstackshape)
+library(stringr)
+library(optparse)
+library(seqinr)
+library(bit64)
+library(ggplot2)
+library(ggbio)
+library(gtable)
+library(grid)
+library(gridExtra)
+library(purrr)
+library(foreach)
+library(doParallel)
+library(motifRG)
+library(ggseqlogo)
+library(BSgenome.Srimosus.Strathclyde.062019)
 
 
 

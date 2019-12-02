@@ -28,7 +28,7 @@ if (interactive()) {
             "C:/Users",
             user,
             "Documents/GitHub/Proteogenomics_reannotation/",
-            "R/6frames_proteogenomics/helper.R",
+            "tools/Rscripts/helper.R",
             sep = "/"))
 } else {
     source(
@@ -39,15 +39,15 @@ if (interactive()) {
 }
 
 # Load the required packages (or install if not already in library)
-load_package("plyr")
-load_package("dplyr")
-load_package("magrittr")
-load_package("data.table")
-load_package("splitstackshape")
-load_package("stringr")
-load_package("optparse")
-load_package("seqinr")
-load_package("Biostrings")
+library(plyr)
+library(dplyr)
+library(magrittr)
+library(data.table)
+library(splitstackshape)
+library(stringr)
+library(optparse)
+library(seqinr)
+library(Biostrings)
 
 
 
