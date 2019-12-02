@@ -314,7 +314,7 @@ reciprocal_blast_all <- dplyr::bind_rows(
 novelty_reasons <- purrr::map(
     .x = novel_pep,
     .f = novel_pep_classify,
-    coordinate = pep_loc$Novel,
+    coordinate = pep_loc,
     levenshtein = leven_dist_format,
     blast_ref = reciprocal_blast_ref,
     blast_all = reciprocal_blast_all) %>%
@@ -381,10 +381,16 @@ pdf(
 textsize <- 20
 
 # Visualise the PEP for evidences between databases as density
+evid_reason$Database <- factor(
+    x = evid_reason$Database,
+    levels = c("Target", "Decoy", "Novel"),
+    ordered = TRUE)
+toplot <- evid_reason %>%
+    dplyr::filter(., PEP < 1)
 pl <- ggplot(
-    data = evid_reason,
+    data = toplot,
     mapping = aes(x = PEP, fill = Database)) +
-    geom_density(aes(y = ..scaled..), alpha = 0.5) +
+    geom_density(aes(y = ..scaled..), alpha = 0.7) +
     geom_vline(
         xintercept = pep_threshold,
         colour = "red", size = 1, linetype = "dashed") +
