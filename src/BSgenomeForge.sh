@@ -86,7 +86,8 @@ cp ${SEED} ${WKDIR}
 if $SPLIT; then
 	echo "More than one fasta header at: ${file}! Attempting to split!"
 	cd $WKDIR
-	faidx -x $file
+	#faidx -x $file
+	awk -F "|" '/^>/ {F = $2".fasta"} {print > F}' yourfile.fa
 	cd $CURDIR
 else
 	cp -t ${WKDIR} `ls ${FASTAS}`
