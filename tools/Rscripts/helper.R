@@ -732,7 +732,7 @@ novel_pep_classify <- function(
     
     # Get the peptide position within protein
     coordinate_tmp <- coordinate %>%
-        dplyr::filter(., pep == x)
+        dplyr::filter(., Sequence == x)
     
     # Check if a unique peptide location is available
     if (nrow(coordinate_tmp) != 1) {
@@ -743,9 +743,9 @@ novel_pep_classify <- function(
         
         # Get the blast and levenshtein data
         blast_ref_tmp <- blast_ref[
-            blast_ref$qseqid == coordinate_tmp$prot, ]
+            blast_ref$qseqid == coordinate_tmp$Proteins, ]
         blast_all_tmp <- blast_all[
-            blast_all$qseqid == coordinate_tmp$prot, ]
+            blast_all$qseqid == coordinate_tmp$Proteins, ]
         levenshtein_tmp <- levenshtein[
             levenshtein$Sequence == x &
                 levenshtein$id %in% blast_ref_tmp$sseqid, ]
@@ -1678,13 +1678,11 @@ plots_hist <- function(
     
     # Reformat the key as factor
     if (!is.factor(data[[key]])) {
-        
         data[[key]] <- factor(
             x = data[[key]],
             levels = as.character(unique(data[[key]])),
             labels = as.character(unique(data[[key]])),
             ordered = TRUE)
-        
     }
     
     # Reformat the group as factor
@@ -1740,10 +1738,10 @@ plots_hist <- function(
         plot <- ggplot(
             data = data,
             mapping = aes_string(
-                x = key,
-                y = value,
-                group = group,
-                fill = fill)) +
+                x = as.name(key),
+                y = as.name(value),
+                group = as.name(group),
+                fill = as.name(fill))) +
             geom_bar(
                 stat = "identity",
                 position = posit,
@@ -1755,9 +1753,9 @@ plots_hist <- function(
         plot <- ggplot(
             data = data,
             mapping = aes_string(
-                x = key,
-                y = value,
-                group = group)) +
+                x = as.name(key),
+                y = as.name(value),
+                group = as.name(group))) +
             geom_bar(
                 stat = "identity",
                 position = posit,
@@ -1953,18 +1951,20 @@ gg_labels <- function(
         stop("This type of position was never tested with geom_text!")
     }
     
+    # Format numeric with thousand separator
+    #labels <- formatC(x = data[[label]], format = 'd', big.mark = ',')
+    
     # Add labels to the plot
     plot <- plot +
         geom_text(
-            mapping = aes_string(
-                label = deparse(
-                    formatC(x = data[[label]], format = 'd', big.mark = ','))),
+            aes_(label = as.name(label)),
             position = posit,
             vjust = vjust,
             hjust = hjust,
             size = (textsize * 0.3),
             check_overlap = TRUE,
-            angle = angle)
+            angle = angle,
+            parse = TRUE)
     
     # Return the updated plot
     return(plot)
