@@ -151,7 +151,7 @@ system(
     command = paste(
         "R CMD check --no-manual --no-build-vignettes ",
         shQuote(list.files(
-            path = opt$output, pattern = pkg_name, full.names = TRUE))),
+            path = opt$output, pattern = paste0(pkg_name, ".+tar.gz"), full.names = TRUE))),
     wait = TRUE)
 
 # Install the package
@@ -160,7 +160,7 @@ system(
     command = paste(
         "R CMD INSTALL ",
         shQuote(list.files(
-            path = opt$output, pattern = pkg_name, full.names = TRUE))),
+            path = opt$output, pattern = paste0(pkg_name, ".+tar.gz"), full.names = TRUE))),
     wait = TRUE)
 
 # Define end time
