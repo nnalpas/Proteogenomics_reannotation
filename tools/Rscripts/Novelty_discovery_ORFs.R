@@ -402,8 +402,8 @@ if (exists("operon_grange")) {
 
 ### RBS motif analysis ---------------------------------------------------
 
-# Get the Bsu genome object
-bsu <- BSgenome.Bsubtilis.EMBL.AL0091263
+# Get the BSgenome object
+bsgeno <- BSgenome.Srimosus.Strathclyde.062019
 
 # Define number of nucleotide after first nucleotide (to define start codon)
 nucleotide_after <- 2
@@ -426,7 +426,7 @@ start(minus_grange) <- (end(minus_grange) - nucleotide_after)
 start_codon <- c(plus_grange, minus_grange)
 
 # Get the nucleotide sequence associated with the start codon
-start_codon_seq <- getSeq(x = bsu, names = start_codon)
+start_codon_seq <- getSeq(x = bsgeno, names = start_codon)
 
 # Check frequency of start codon
 start_codon_freq <- trinucleotideFrequency(
@@ -505,7 +505,7 @@ for (i in 1:length(ref_expr_list)) {
     names(fg_grange) <- sub("^", "fg_", fg_grange$id)
     
     # Get the nucleotide sequence associated with the grange object
-    fg_seq <- getSeq(x = bsu, names = fg_grange)
+    fg_seq <- getSeq(x = bsgeno, names = fg_grange)
     fg_seq_list <- as.vector(fg_seq)
     
     # Create background GRange object (+/- X bp of end)
@@ -526,7 +526,7 @@ for (i in 1:length(ref_expr_list)) {
     names(bg_grange) <- sub("^", "bg_", bg_grange$id)
     
     # Get the nucleotide sequence associated with the grange object
-    bg_seq <- getSeq(x = bsu, names = bg_grange)
+    bg_seq <- getSeq(x = bsgeno, names = bg_grange)
     bg_seq_list <- as.vector(bg_seq)
     
     # Loop through nucleotide length (for RBS motif)
@@ -629,7 +629,7 @@ for (x in names(sub_orf_grange)) {
         names(tmp_grange) <- x
         
         # Get sequence for updated grange
-        tmp_seq <- getSeq(x = bsu, names = tmp_grange)
+        tmp_seq <- getSeq(x = bsgeno, names = tmp_grange)
         
         # Attempt to locate pattern within the sequence
         tmp <- tmp_seq %>%
@@ -1378,7 +1378,7 @@ values(orf_grange_expr) <- cbind(
 # Use ggbio extension to plot ORF location on genome as a circos graph
 colou <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
 pl_circos <- ggplot() +
-    ggtitle(label = organism(bsu)) +
+    ggtitle(label = organism(bsgeno)) +
     layout_circle(
         genome_grange, geom = "ideo", fill = "gray70",
         radius = 30, trackWidth = 2) +
