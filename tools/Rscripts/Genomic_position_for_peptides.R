@@ -68,7 +68,8 @@ if (interactive()) {
         orf_prot = choose.files(
             caption = "Choose the ORF protein genomic coordinates file!",
             multi = FALSE),
-        output = "peptide_location.txt")
+        output = readline(
+            prompt = "Define the output directory!"))
     
 } else {
     
@@ -166,8 +167,8 @@ dir.create(dirname(opt$output))
 ### Data import ----------------------------------------------------------
 
 # Import the peptide location
-pep_loc <- readRDS(file = opt$peptide) %>%
-    plyr::ldply(.data = ., .fun = "data.frame", .id = "Database")
+pep_loc <- readRDS(file = opt$peptide)# %>%
+    #plyr::ldply(.data = ., .fun = "data.frame", .id = "Database")
 
 # Import the peptide novelty explanation
 evid_reason <- readRDS(file = opt$novel_reason)
@@ -215,7 +216,7 @@ pep_loc %<>%
 pep_coord <- pep_loc %>%
     dplyr::left_join(
         x = ., y = coordinates,
-        by = c("prot" = "id"), suffix = c("_pep", "_prot")) %>%
+        by = c("Proteins" = "id"), suffix = c("_pep", "_prot")) %>%
     dplyr::mutate(
         .,
         start = ifelse(
@@ -226,24 +227,24 @@ pep_coord <- pep_loc %>%
             strand == "+",
             start_prot + end_nucl - 1,
             start_prot - end_nucl + 1),
-        nucl_length = nchar(pep) * 3,
-        aa_length = nchar(pep))
+        nucl_length = nchar(Sequence) * 3,
+        aa_length = nchar(Sequence))
 
 # Keep only required columns and remove peptides without coordinates
 pep_coord %<>%
     dplyr::select(
-        ., pep, chromosome, strand, frame, start, end, nucl_length,
-        aa_length, prot, startAA, endAA, ExactCoord, Comment, Database) %>%
+        ., Sequence, chromosome, strand, frame, start, end, nucl_length,
+        aa_length, Proteins, startAA, endAA, ExactCoord, Comment, Dbuniqueness) %>%#Database) %>%
     dplyr::filter(., !is.na(start)) %>%
     unique(.)
 
 # Concatenate peptide with same sequence and coordinates (duplicate)
 pep_coord %<>%
-    dplyr::group_by(., pep, start, end) %>%
+    dplyr::group_by(., Sequence, start, end) %>%
     dplyr::summarise_all(funs(toString(x = unique(.), width = NULL)))
 
 # Rename the pep column to id (id is a mandatory column for GRange script)
-colnames(pep_coord)[colnames(pep_coord) == "pep"] <- "id"
+colnames(pep_coord)[colnames(pep_coord) == "Sequence"] <- "id"
 
 # Include for each peptide its novelty reason 
 pep_coord %<>%
@@ -258,7 +259,7 @@ pep_coord %<>%
         .,
         Database = ifelse(
             !is.na(NoveltyReason) & NoveltyReason == "Not novel",
-            "Known", Database) %>%
+            "Known", Dbuniqueness) %>%#Database) %>%
             sub("^(Known).*", "\\1", .))
 
 
