@@ -264,20 +264,20 @@ missing_pep <- evid %>%
 pep_pos <- dplyr::bind_rows(digest_datab, missing_pep) %>%
     dplyr::select(., -id) %>%
     dplyr::filter(
-        ., Sequence %in% evid[["Sequence"]])
+        ., Sequence %in% unique(c(evid[["Sequence"]], pep[["Sequence"]])))
 
 # Compile peptide type info for each peptide sequence
 pep_comp <- pep_pos %>%
     dplyr::group_by(., Sequence) %>%
     dplyr::summarise(
-        ., DatabID = paste(sort(unique(Dbuniqueness)), collapse = "-"))
+        ., DatabID = paste(sort(unique(Dbuniqueness)), collapse = "-")) %>%
+    dplyr::ungroup(.)
 
 # New dataframe to hold info about fasta of origin for each sequence
 evid_match <- evid %>%
     dplyr::left_join(x = ., y = pep_comp, by = "Sequence") %>%
-    dplyr::ungroup(.) %>%
     dplyr::mutate(
-        ., 
+        ., OnlyIdBySite = ifelse(id %in% pg_not_sites, TRUE, FALSE),
         group = dplyr::case_when(
             grepl("Known", DatabID) ~ "Known",
             grepl("CON__", Proteins) ~ "Contaminant",
@@ -293,6 +293,18 @@ evid_match <- evid %>%
             TRUE ~ NA_character_
         ))
 
+# Add the group and database info back into the peptide position
+pep_pos <- evid_match %>%
+    dplyr::select(., Sequence, OnlyIdBySite, group, Database) %>%
+    unique(.) %>%
+    dplyr::left_join(x = pep_pos, y = .)
+
+# Add the group and database info back into the main peptide table
+pep_match <- evid_match %>%
+    dplyr::select(., Sequence, OnlyIdBySite, group, Database) %>%
+    unique(.) %>%
+    dplyr::left_join(x = pep, y = .)
+
 # Print warning for unidentified sequence origin
 print(paste(
     "There are", length(which(is.na(evid_match$group))),
@@ -300,6 +312,16 @@ print(paste(
 
 # Print the repartition of peptide per group
 print(table(evid_match$group, useNA = "always"))
+
+# Print warning for unidentified sequence origin
+print(paste(
+    "There are", length(which(is.na(pep_match$group))),
+    "NA values, these need to be checked!", sep = " "))
+
+# Print the repartition of peptide per group
+print(table(pep_match$group, useNA = "always"))
+pep_match %<>%
+    dplyr::filter(., !is.na(group))
 
 
 
@@ -325,6 +347,7 @@ report_markdown(
     rmd_file = rmd_file,
     params = list(
         fastas = fasta,
+        pep_match = pep_match,
         evid_match = evid_match),
     format = "html_document",
     ext = "html")
