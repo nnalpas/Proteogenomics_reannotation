@@ -403,3 +403,68 @@ if (use_plotly) {
 ```
 
 
+
+<br />
+<br />
+
+#### Intensity {.tabset}
+
+##### Per group
+
+```{r psm_group_intensity}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = params[["evid_match"]], x = "group", y = "Intensity",
+        col_manual = group_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
+
+```
+
+
+
+##### Per database
+
+```{r psm_db_intensity}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = params[["evid_match"]], x = "Database", y = "Intensity",
+        col_manual = database_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
+
+```
+
+
