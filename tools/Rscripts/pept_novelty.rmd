@@ -1,0 +1,470 @@
+---
+title: "peptides"
+output: 
+    html_document:
+        number_sections: false
+        toc: true
+        toc_depth: 4
+        toc_float:
+            collapsed: false
+            smooth_scroll: false
+keep_tex: TRUE
+fontsize: 12pt
+geometry: margin=1in
+params:
+    pep_match: NA
+---
+
+
+
+```{r pept_setup, include=FALSE}
+
+# Here cannot use fig.align = 'center' together with rendering via temporary
+# folder as the path to figure will be changed to absolute and rendering
+# will fail
+#knitr::opts_chunk$set(
+#    echo = FALSE, warning = FALSE,
+#    fig.width = 9, fig.height = 8)
+
+```
+
+
+
+<br />
+<br />
+
+## Peptides
+
+### Peptides
+
+#### Count {.tabset}
+
+##### Per group
+
+```{r pept_group_count}
+
+# Histogram of Peptide counts
+toplot_group_c <- plyr::ddply(
+    .data = params[["pep_match"]],
+    .variables = .(group),
+    .fun = summarise,
+    count = length(Sequence),
+    .drop = FALSE)
+toplot_group_c$group <- factor(
+    x = toplot_group_c$group, levels = names(group_colours), ordered = TRUE)
+#renderPlotly({
+    pl <- ggplot(
+        toplot_group_c,
+        aes(
+            x = group, y = count, fill = group,
+            colour = group, label = count)) +
+            geom_bar(stat = "identity", position = "dodge", alpha = 0.7) +
+            geom_text(vjust = -0.9) +
+            xlab("Group") +
+            ylab("Count") +
+            labs(fill = NULL) +
+            theme_pubr() +
+            theme(text = element_text(size = input$txt_size)) +
+            #theme(text = element_text(size = txt_size)) +
+            scale_fill_manual(values = group_colours) +
+            scale_colour_manual(guide = FALSE, values = group_colours)
+    if (input$log_scale) {
+    #if (log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
+
+```
+
+
+
+##### Per database
+
+```{r pept_db_count}
+
+# Histogram of Peptide counts
+toplot_db_c <- plyr::ddply(
+    .data = params[["pep_match"]],
+    .variables = .(Database),
+    .fun = summarise,
+    count = length(Sequence),
+    .drop = FALSE)
+toplot_db_c$Database <- factor(
+    x = toplot_db_c$Database, levels = names(database_colours), ordered = TRUE)
+#renderPlotly({
+    pl <- ggplot(
+        toplot_db_c,
+        aes(
+            x = Database, y = count, fill = Database,
+            colour = Database, label = count)) +
+            geom_bar(stat = "identity", position = "dodge", alpha = 0.7) +
+            geom_text(vjust = -0.9) +
+            xlab("Database") +
+            ylab("Count") +
+            labs(fill = NULL) +
+            theme_pubr() +
+            theme(text = element_text(size = input$txt_size)) +
+            #theme(text = element_text(size = txt_size)) +
+            scale_fill_manual(values = database_colours) +
+            scale_colour_manual(guide = FALSE, values = database_colours)
+    if (input$log_scale) {
+    #if (log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
+
+```
+
+
+
+<br />
+<br />
+
+#### Length {.tabset}
+
+##### Per group
+
+```{r pept_group_length}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = params[["pep_match"]], x = "group", y = "Length",
+        col_manual = group_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
+
+```
+
+
+
+##### Per database
+
+```{r pept_db_length}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = params[["pep_match"]], x = "Database", y = "Length",
+        col_manual = database_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
+
+```
+
+
+
+<br />
+<br />
+
+#### Mass {.tabset}
+
+##### Per group
+
+```{r pept_group_mass}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = params[["pep_match"]], x = "group", y = "Mass",
+        col_manual = group_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
+
+```
+
+
+
+##### Per database
+
+```{r pept_db_mass}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = params[["pep_match"]], x = "Database", y = "Mass",
+        col_manual = database_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
+
+```
+
+
+
+<br />
+<br />
+
+#### Posterior error probability {.tabset}
+
+##### Per group
+
+```{r pept_group_pep}
+
+warning(paste0(
+    "There are ",
+    sum(params[["pep_match"]][["PEP"]] > 1),
+    "PEP values superior to 1 (will be removed)!"))
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = params[["pep_match"]] %>% dplyr::filter(., PEP <= 1),
+        x = "group", y = "PEP",
+        col_manual = group_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
+
+```
+
+
+
+##### Per database
+
+```{r pept_db_pep}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = params[["pep_match"]] %>% dplyr::filter(., PEP <= 1),
+        x = "Database", y = "PEP",
+        col_manual = database_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
+
+```
+
+
+
+<br />
+<br />
+
+#### Score {.tabset}
+
+##### Per group
+
+```{r pept_group_score}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = params[["pep_match"]], x = "group", y = "Score",
+        col_manual = group_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
+
+```
+
+
+
+##### Per database
+
+```{r pept_db_score}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = params[["pep_match"]], x = "Database", y = "Score",
+        col_manual = database_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
+
+```
+
+
+
+<br />
+<br />
+
+#### Intensity {.tabset}
+
+##### Per group
+
+```{r pept_group_intensity}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = params[["pep_match"]], x = "group", y = "Intensity",
+        col_manual = group_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
+
+```
+
+
+
+##### Per database
+
+```{r pept_db_intensity}
+
+#renderPlotly({
+
+    pl <- plots_box_plotly(
+        my_data = params[["pep_match"]], x = "Database", y = "Intensity",
+        col_manual = database_colours, txt_size = input$txt_size)
+
+    if (input$log_scale) {
+        pl <- pl +
+            scale_y_log10()
+    }
+
+    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+    #pl
+#})
+
+# If OS is windows allow usage of plotly (plotly not installed on Linux)
+if (use_plotly) {
+    ggplotly(pl)
+} else {
+    pl
+}
+
+```
+
+
