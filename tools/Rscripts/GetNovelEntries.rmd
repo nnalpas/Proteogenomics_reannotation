@@ -15,6 +15,7 @@ fontsize: 12pt
 geometry: margin=1in
 params:
     fastas: NA
+    pep_match: NA
     evid_match: NA
 ---
 
@@ -97,6 +98,11 @@ childs_md <- c()
 # Include the evidence match process if data available
 if (!identical(params[["evid_match"]], "NA")) {
     childs_md <- c(childs_md, "evid_novelty.rmd")
+}
+
+# Include the peptide match process if data available
+if (!identical(params[["pep_match"]], "NA")) {
+    childs_md <- c(childs_md, "pept_novelty.rmd")
 }
 
 # Include the fasta process if data available
