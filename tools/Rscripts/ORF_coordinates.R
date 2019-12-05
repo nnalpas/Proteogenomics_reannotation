@@ -21,47 +21,66 @@ user <- Sys.info()[["user"]]
 ### List of required packages -----------------------------------------------
 
 # Source the custom user functions
-#source(
-#    file = paste(
-#        "C:/Users",
-#        user,
-#        "Documents/GitHub/Miscellaneous/R/General/General_function.R",
-#        sep = "/"))
-source(
-    file = paste(
-        Sys.getenv("HOME"),
-        "bin/General_function.R",
-        sep = "/"))
+if (interactive()) {
+    source(
+        file = paste(
+            "C:/Users",
+            user,
+            "Documents/GitHub/Proteogenomics_reannotation/",
+            "tools/Rscripts/helper.R",
+            sep = "/"))
+} else {
+    source(
+        file = paste(
+            Sys.getenv("HOME"),
+            "bin/helper.R",
+            sep = "/"))
+}
 
 # Load the required packages (or install if not already in library)
-load_package("plyr")
-load_package("dplyr")
-load_package("tidyr")
-load_package("magrittr")
-load_package("data.table")
-load_package("splitstackshape")
-load_package("stringr")
-load_package("optparse")
-load_package("seqinr")
+library(plyr)
+library(dplyr)
+library(tidyr)
+library(magrittr)
+library(data.table)
+library(splitstackshape)
+library(stringr)
+library(optparse)
+library(seqinr)
 
 
 
 ### Parameters setting up ------------------------------------------------
 
-# Define the list of command line parameters
-option_list <- list(
-    make_option(
-        opt_str = c("-f", "--fasta"),
-        type = "character", default = NULL,
-        help = "Fasta file", metavar = "character"),
-    make_option(
-        opt_str = c("-o", "--output"),
-        type = "character", default = "orf_coordinates.txt", 
-        help = "Output file name [default= %default]", metavar = "character"))
-
-# Parse the parameters provided on command line by user
-opt_parser <- OptionParser(option_list = option_list)
-opt <- parse_args(opt_parser)
+# Define input parameters (interactively or from command line)
+if (interactive()) {
+    
+    # Define the list of input parameters
+    opt <- list(
+        fasta = choose.files(
+            caption = "Choose fasta file containing ORF proteins!",
+            multi = FALSE),
+        output = readline(
+            prompt = "Define the output directory!"))
+    
+} else {
+    
+    # Define the list of command line parameters
+    option_list <- list(
+        make_option(
+            opt_str = c("-f", "--fasta"),
+            type = "character", default = NULL,
+            help = "Fasta file", metavar = "character"),
+        make_option(
+            opt_str = c("-o", "--output"),
+            type = "character", default = "orf_coordinates.txt", 
+            help = "Output file name [default= %default]", metavar = "character"))
+    
+    # Parse the parameters provided on command line by user
+    opt_parser <- OptionParser(option_list = option_list)
+    opt <- parse_args(opt_parser)
+    
+}
 
 # Check whether inputs parameter was provided
 if (is.null(opt$fasta)) {
@@ -78,10 +97,8 @@ if (opt$output == "orf_coordinates.txt") {
     
 }
 
-# For manual parameters set-up
-#opt <- list(
-#    fasta = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/Find0_GCA_000009045.1_FIXED.fasta",
-#    output = "C:/Users/kxmna01/Dropbox/Home_work_sync/Work/Colleagues shared work/Vaishnavi Ravikumar/Bacillus_subtilis_6frame/Databases/Find0_GCA_000009045.1_FIXED_orf_coordinates.txt")
+# Create output directory if not already existing
+dir.create(dirname(opt$output))
 
 
 
@@ -124,15 +141,18 @@ orf_pos %<>%
 
 # Determine strand and frame of ORF
 orf_pos$strand <- ifelse(
-    test = orf_pos$start < orf_pos$end, yes = 1, no = -1)
-orf_pos[orf_pos$strand == 1, "frame"] <- ((as.numeric(
-    orf_pos[orf_pos$strand == 1, "start"]) + 2) / 3) %>%
+    test = orf_pos$start < orf_pos$end, yes = "+", no = "-")
+orf_pos[orf_pos$strand == "+", "frame"] <- ((as.numeric(
+    orf_pos[orf_pos$strand == "+", "start"]) + 2) / 3) %>%
     keep_decimals(.) %>%
     round(x = ((. + 0.33) * 3))
-orf_pos[orf_pos$strand == -1, "frame"] <- ((as.numeric(
-    orf_pos[orf_pos$strand == -1, "end"]) + 2) / 3) %>%
+orf_pos[orf_pos$strand == "-", "frame"] <- ((as.numeric(
+    orf_pos[orf_pos$strand == "-", "end"]) + 2) / 3) %>%
     keep_decimals(.) %>%
     round(x = ((. + 0.33) * -3))
+
+# Define the chromosome of origin
+orf_pos$chromosome <- sub("_.+", "", orf_pos$id)
 
 # Export the ORF coordinates data
 write.table(
