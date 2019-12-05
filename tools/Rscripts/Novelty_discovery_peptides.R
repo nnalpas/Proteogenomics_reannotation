@@ -347,6 +347,7 @@ evid_reason %<>%
 
 # Define value for PEP filterig of the novel evidences
 pep_threshold <- median(evid[evid$Database == "Target", "PEP"])
+pep_novel_threshold <- median(evid[evid$Database == "Novel", "PEP"])
 
 # Add a column for the soft PEP filtering (based on median known evidence PEP)
 evid_reason %<>%
@@ -385,16 +386,40 @@ evid_reason$Database <- factor(
     x = evid_reason$Database,
     levels = c("Target", "Decoy", "Novel"),
     ordered = TRUE)
+
+# Define colour code for database
+database_colours <- c(
+    `Target` = "#2180FC", `Decoy` = "#ABA9A9", `Novel` = "#F23D3D")
+
+# 
 toplot <- evid_reason %>%
     dplyr::filter(., PEP < 1)
+toplot$Database <- factor(
+    x = toplot$Database,
+    levels = c("Decoy", "Novel", "Target"),
+    ordered = TRUE)
+
 pl <- ggplot(
     data = toplot,
-    mapping = aes(x = PEP, fill = Database)) +
-    geom_density(aes(y = ..scaled..), alpha = 0.7) +
+    mapping = aes(x = PEP, fill = Database, colour = Database)) +
+    geom_density(aes(y = ..scaled..), alpha = 0.8, size = 1) +
     geom_vline(
         xintercept = pep_threshold,
-        colour = "red", size = 1, linetype = "dashed") +
-    coord_cartesian(xlim = c(0, quantile(evid$PEP, probs = 0.95))) +
+        colour = "#4f6990", size = 1, linetype = "dashed") +
+    annotation_custom(grob = grobTree(
+        textGrob(
+            pep_threshold, x = pep_threshold, y = 0.97,
+            hjust = -0.6, gp = gpar(col = "#4f6990")))) +
+    geom_vline(
+        xintercept = pep_novel_threshold,
+        colour = "#903333", size = 1, linetype = "dashed") +
+    annotation_custom(grob = grobTree(
+        textGrob(
+            pep_novel_threshold, x = pep_novel_threshold, y = 0.94,
+            hjust = -0.9, gp = gpar(col = "#903333")))) +
+    coord_cartesian(
+        xlim = c(0, quantile(evid$PEP, probs = 0.95)),
+        ylim = c(0, 1.1)) +
     ylab(label = "Scaled density") +
     ggtitle(label = "PEP density (with PEP soft threshold)") +
     theme_bw() +
@@ -406,7 +431,9 @@ pl <- ggplot(
         text = element_text(size = textsize),
         plot.title = element_text(
             face = "bold",
-            size = (textsize * 1.5)))
+            size = (textsize * 1.5))) +
+    scale_fill_manual(values = database_colours) +
+    scale_colour_manual(guide = FALSE, values = database_colours)
 pl
 
 
