@@ -389,7 +389,7 @@ write.table(
 # Open a file for plot visualisation
 pdf(
     file = paste0(opt$output, "/", "Peptide_novelty_reason.pdf"),
-    width = 10, height = 10)
+    width = 12, height = 9)
 
 # Define size of text for all plots
 textsize <- 20
@@ -421,15 +421,15 @@ pl <- ggplot(
         colour = "#4f6990", size = 1, linetype = "dashed") +
     annotation_custom(grob = grobTree(
         textGrob(
-            pep_class1, x = pep_class1, y = 0.97,
-            hjust = -0.6, gp = gpar(col = "#4f6990")))) +
+            paste("Class 1 <", pep_class1), x = pep_class1, y = 0.97,
+            hjust = -0.3, gp = gpar(col = "#4f6990")))) +
     geom_vline(
         xintercept = pep_class2,
         colour = "#903333", size = 1, linetype = "dashed") +
     annotation_custom(grob = grobTree(
         textGrob(
-            pep_class2, x = pep_class2, y = 0.94,
-            hjust = -0.9, gp = gpar(col = "#903333")))) +
+            paste("Class 2 <", pep_class2), x = pep_class2, y = 0.92,
+            hjust = -0.4, gp = gpar(col = "#903333")))) +
     coord_cartesian(
         xlim = c(0, quantile(evid$PEP, probs = 0.95)),
         ylim = c(0, 1.1)) +
@@ -437,7 +437,7 @@ pl <- ggplot(
     ggtitle(label = "PEP density (with PEP soft threshold)") +
     theme_bw() +
     theme(
-        legend.position = "right",
+        legend.position = "bottom",
         title = element_text(
             face = "bold",
             size = (textsize * 1.25)),
@@ -455,32 +455,34 @@ data <- evid_reason %>%
     cSplit(
         indt = ., splitCols = "Proteins", sep = ";",
         direction = "long", fixed = TRUE) %>%
-    dplyr::select(., Sequence, Proteins) %>%
+    dplyr::select(., id, Sequence, Proteins) %>%
     unique(.) %>%
     dplyr::summarise(
         .,
-        type = "All novel",
+        PEPfilter = "All novel",
+        Number_evidence = n_distinct(id),
         Number_peptide = n_distinct(Sequence),
         Number_ORF = n_distinct(Proteins)) %>%
     tidyr::gather(
-        data = ., key = "feature", value = "Count", -type) %>%
+        data = ., key = "feature", value = "Count", -PEPfilter) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Compute novel feature count (peptide and ORF) that pass PEP filter
 data <- evid_reason %>%
-    dplyr::filter(., Database == "Novel" & OnlyIdBySite & PEPfilter) %>%
+    dplyr::filter(., Database == "Novel" & OnlyIdBySite) %>%
     cSplit(
         indt = ., splitCols = "Proteins", sep = ";",
         direction = "long", fixed = TRUE) %>%
-    dplyr::select(., Sequence, Proteins) %>%
+    dplyr::select(., id, Sequence, Proteins, PEPfilter) %>%
     unique(.) %>%
+    dplyr::group_by(., PEPfilter) %>%
     dplyr::summarise(
         .,
-        type = "Quality filtered",
+        Number_evidence = n_distinct(id),
         Number_peptide = n_distinct(Sequence),
         Number_ORF = n_distinct(Proteins)) %>%
     tidyr::gather(
-        data = ., key = "feature", value = "Count", -type) %>%
+        data = ., key = "feature", value = "Count", -PEPfilter) %>%
     base::as.data.frame(., stringsAsFactors = FALSE) %>%
     dplyr::bind_rows(data, .)
 
@@ -489,15 +491,15 @@ pl <- plots_hist(
     data = data,
     key = "feature",
     value = "Count",
-    group = "type",
-    fill = "type",
+    group = "PEPfilter",
+    fill = "PEPfilter",
     main = "Novel peptide/ORF count",
     xlabel = "Feature",
     label = "Count",
     posit = "dodge",
     textsize = textsize,
     legend = "bottom",
-    bw = TRUE)
+    bw = FALSE)
 pl[[1]]
 
 # Compute the peptide count per novelty reasons
@@ -507,26 +509,26 @@ data <- evid_reason %>%
     dplyr::group_by(., NoveltyReason) %>%
     dplyr::summarise(
         .,
-        type = "All novel",
+        PEPfilter = "All novel",
         Number_peptide = n_distinct(Sequence),
         Number_ORF = n_distinct(Proteins)) %>%
     tidyr::gather(
-        data = ., key = "feature", value = "Count", -NoveltyReason, -type) %>%
+        data = ., key = "feature", value = "Count",
+        -NoveltyReason, -PEPfilter) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Compute the peptide count per novelty reasons that pass PEP filter and
 # pass only ID by sites
 data <- evid_reason %>%
-    dplyr::filter(., Database == "Novel" & OnlyIdBySite & PEPfilter) %>%
-    dplyr::select(., Sequence, Proteins, NoveltyReason) %>%
-    dplyr::group_by(., NoveltyReason) %>%
+    dplyr::filter(., Database == "Novel" & OnlyIdBySite) %>%
+    dplyr::select(., Sequence, Proteins, NoveltyReason, PEPfilter) %>%
+    dplyr::group_by(., NoveltyReason, PEPfilter) %>%
     dplyr::summarise(
         .,
-        type = "Quality filtered",
         Number_peptide = n_distinct(Sequence),
         Number_ORF = n_distinct(Proteins)) %>%
     tidyr::gather(
-        data = ., key = "feature", value = "Count", -NoveltyReason, -type) %>%
+        data = ., key = "feature", value = "Count", -NoveltyReason, -PEPfilter) %>%
     base::as.data.frame(., stringsAsFactors = FALSE) %>%
     dplyr::bind_rows(data, .)
 
@@ -535,34 +537,34 @@ pl <- plots_hist(
     data = data %>% dplyr::filter(., feature == "Number_peptide"),
     key = "NoveltyReason",
     value = "Count",
-    group = "type",
-    fill = "type",
+    group = "PEPfilter",
+    fill = "PEPfilter",
     main = "Peptide novelty reasons",
     xlabel = "Novelty reason",
     label = "Count",
     posit = "dodge",
     textsize = textsize,
-    legend = "right",
-    bw = TRUE,
-    xdir = "vertical")
-pl[[1]]
+    legend = "bottom",
+    bw = FALSE,
+    xdir = "horizontal")
+pl[[1]] + coord_flip() + facet_grid(~PEPfilter)
 
 # Plot the ORF count per novelty reasons
 pl <- plots_hist(
     data = data %>% dplyr::filter(., feature == "Number_ORF"),
     key = "NoveltyReason",
     value = "Count",
-    group = "type",
-    fill = "type",
+    group = "PEPfilter",
+    fill = "PEPfilter",
     main = "ORF novelty reasons",
     xlabel = "Novelty reason",
     label = "Count",
     posit = "dodge",
     textsize = textsize,
-    legend = "right",
-    bw = TRUE,
-    xdir = "vertical")
-pl[[1]]
+    legend = "bottom",
+    bw = FALSE,
+    xdir = "horizontal")
+pl[[1]] + coord_flip() + facet_grid(~PEPfilter)
 
 # Close the picture file
 dev.off()
