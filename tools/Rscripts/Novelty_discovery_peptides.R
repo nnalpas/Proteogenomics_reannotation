@@ -245,7 +245,10 @@ reciprocal_blast_ref <- opt$reciprocal_blast_ref %>%
     as.character(.) %>%
     read.table(
         file = ., header = TRUE, sep = "\t", quote = "",
-        as.is = TRUE, comment.char = "")
+        as.is = TRUE, comment.char = "") %>%
+    dplyr::mutate(
+        ., staxid_blast = as.integer(staxid_blast),
+        staxid_reciproc = as.integer(staxid_reciproc))
 
 # Import the reciprocal blast best hits between novel ORFs and
 # all uniprot proteins
@@ -253,7 +256,10 @@ reciprocal_blast_uniprot <- opt$reciprocal_blast_uniprot %>%
     as.character(.) %>%
     read.table(
         file = ., header = TRUE, sep = "\t", quote = "",
-        as.is = TRUE, comment.char = "")
+        as.is = TRUE, comment.char = "") %>%
+    dplyr::mutate(
+        ., staxid_blast = as.integer(staxid_blast),
+        staxid_reciproc = as.integer(staxid_reciproc))
 
 # Import the reciprocal blast best hits between novel ORFs and
 # all uniprot proteins
@@ -261,7 +267,10 @@ reciprocal_blast_ncbi <- opt$reciprocal_blast_ncbi %>%
     as.character(.) %>%
     read.table(
         file = ., header = TRUE, sep = "\t", quote = "",
-        as.is = TRUE, comment.char = "")
+        as.is = TRUE, comment.char = "") %>%
+    dplyr::mutate(
+        ., staxid_blast = as.integer(staxid_blast),
+        staxid_reciproc = as.integer(staxid_reciproc))
 
 # Import the peptide location within proteins
 pep_loc <- opt$peptide_location %>%
@@ -346,12 +355,16 @@ evid_reason %<>%
 ### Focus on high quality novel peptide ----------------------------------
 
 # Define value for PEP filterig of the novel evidences
-pep_threshold <- median(evid[evid$Database == "Target", "PEP"])
-pep_novel_threshold <- median(evid[evid$Database == "Novel", "PEP"])
+pep_class1 <- median(evid[evid$Database == "Target", "PEP"])
+pep_class2 <- median(evid[evid$Database == "Novel", "PEP"])
 
 # Add a column for the soft PEP filtering (based on median known evidence PEP)
 evid_reason %<>%
-    dplyr::mutate(., PEPfilter = ifelse(PEP <= pep_threshold, TRUE, FALSE))
+    dplyr::mutate(
+        ., PEPfilter = dplyr::case_when(
+            PEP <= pep_class1 ~ "class 1",
+            PEP > pep_class1 & PEP <= pep_class2 ~ "class 2",
+            TRUE ~ "class 3"))
 
 
 
@@ -404,18 +417,18 @@ pl <- ggplot(
     mapping = aes(x = PEP, fill = Database, colour = Database)) +
     geom_density(aes(y = ..scaled..), alpha = 0.8, size = 1) +
     geom_vline(
-        xintercept = pep_threshold,
+        xintercept = pep_class1,
         colour = "#4f6990", size = 1, linetype = "dashed") +
     annotation_custom(grob = grobTree(
         textGrob(
-            pep_threshold, x = pep_threshold, y = 0.97,
+            pep_class1, x = pep_class1, y = 0.97,
             hjust = -0.6, gp = gpar(col = "#4f6990")))) +
     geom_vline(
-        xintercept = pep_novel_threshold,
+        xintercept = pep_class2,
         colour = "#903333", size = 1, linetype = "dashed") +
     annotation_custom(grob = grobTree(
         textGrob(
-            pep_novel_threshold, x = pep_novel_threshold, y = 0.94,
+            pep_class2, x = pep_class2, y = 0.94,
             hjust = -0.9, gp = gpar(col = "#903333")))) +
     coord_cartesian(
         xlim = c(0, quantile(evid$PEP, probs = 0.95)),
@@ -435,7 +448,6 @@ pl <- ggplot(
     scale_fill_manual(values = database_colours) +
     scale_colour_manual(guide = FALSE, values = database_colours)
 pl
-
 
 # Compute novel feature count (peptide and ORF) in total
 data <- evid_reason %>%
