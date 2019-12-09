@@ -439,11 +439,11 @@ pl <- ggplot(
     theme(
         legend.position = "bottom",
         title = element_text(
-            face = "bold",
-            size = (textsize * 1.25)),
+            #face = "bold",
+            size = (textsize * 1.2)),
         text = element_text(size = textsize),
         plot.title = element_text(
-            face = "bold",
+            #face = "bold",
             size = (textsize * 1.5))) +
     scale_fill_manual(values = database_colours) +
     scale_colour_manual(guide = FALSE, values = database_colours)
@@ -486,21 +486,53 @@ data <- evid_reason %>%
     base::as.data.frame(., stringsAsFactors = FALSE) %>%
     dplyr::bind_rows(data, .)
 
+# Compute novel feature count (peptide and ORF) for only identified by site
+data <- evid_reason %>%
+    dplyr::filter(., Database == "Novel"  & !OnlyIdBySite) %>%
+    cSplit(
+        indt = ., splitCols = "Proteins", sep = ";",
+        direction = "long", fixed = TRUE) %>%
+    dplyr::select(., id, Sequence, Proteins) %>%
+    unique(.) %>%
+    dplyr::summarise(
+        .,
+        PEPfilter = "class4 (OnlyIdBySite)",
+        Number_evidence = n_distinct(id),
+        Number_peptide = n_distinct(Sequence),
+        Number_ORF = n_distinct(Proteins)) %>%
+    tidyr::gather(
+        data = ., key = "feature", value = "Count", -PEPfilter) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE) %>%
+    dplyr::bind_rows(data, .)
+
+# Feature as factor to keep order in plot
+data$feature <- factor(
+    x = data$feature,
+    levels = c("Number_evidence", "Number_peptide", "Number_ORF"),
+    labels = c("Evidence", "Peptide", "ORF"),
+    ordered = TRUE)
+
 # Plot the novel feature count
-pl <- plots_hist(
-    data = data,
-    key = "feature",
-    value = "Count",
-    group = "PEPfilter",
-    fill = "PEPfilter",
-    main = "Novel peptide/ORF count",
-    xlabel = "Feature",
-    label = "Count",
-    posit = "dodge",
-    textsize = textsize,
-    legend = "bottom",
-    bw = FALSE)
-pl[[1]]
+pl <- ggplot(
+    data, aes(
+        x = feature, y = Count, fill = PEPfilter,
+        colour = PEPfilter, label = Count)) +
+    geom_bar(stat = "identity", position = "dodge", alpha = 0.7, size = 1) +
+    geom_text(
+        position = position_dodge(width = 0.9), vjust = -0.3, hjust = 0.5) +
+    ggtitle("Novel peptide/ORF count") +
+    xlab(NULL) +
+    theme_pubr() +
+    theme(
+        legend.position = "bottom",
+        title = element_text(
+            #face = "bold",
+            size = (textsize * 1.2)),
+        text = element_text(size = textsize),
+        plot.title = element_text(
+            #face = "bold",
+            size = (textsize * 1.5)))
+pl
 
 # Compute the peptide count per novelty reasons
 data <- evid_reason %>%
@@ -532,39 +564,71 @@ data <- evid_reason %>%
     base::as.data.frame(., stringsAsFactors = FALSE) %>%
     dplyr::bind_rows(data, .)
 
+# Compute the peptide count per novelty reasons for only ID by sites
+data <- evid_reason %>%
+    dplyr::filter(., Database == "Novel" & !OnlyIdBySite) %>%
+    dplyr::select(., Sequence, Proteins, NoveltyReason) %>%
+    dplyr::group_by(., NoveltyReason) %>%
+    dplyr::summarise(
+        .,
+        PEPfilter = "class4 (OnlyIdBySite)",
+        Number_peptide = n_distinct(Sequence),
+        Number_ORF = n_distinct(Proteins)) %>%
+    tidyr::gather(
+        data = ., key = "feature", value = "Count",
+        -NoveltyReason, -PEPfilter) %>%
+    base::as.data.frame(., stringsAsFactors = FALSE) %>%
+    dplyr::bind_rows(data, .)
+
 # Plot the peptide count per novelty reasons
-pl <- plots_hist(
-    data = data %>% dplyr::filter(., feature == "Number_peptide"),
-    key = "NoveltyReason",
-    value = "Count",
-    group = "PEPfilter",
-    fill = "PEPfilter",
-    main = "Peptide novelty reasons",
-    xlabel = "Novelty reason",
-    label = "Count",
-    posit = "dodge",
-    textsize = textsize,
-    legend = "bottom",
-    bw = FALSE,
-    xdir = "horizontal")
-pl[[1]] + coord_flip() + facet_grid(~PEPfilter)
+pl <- ggplot(
+    data %>% dplyr::filter(., feature == "Number_peptide"),
+    aes(
+        x = NoveltyReason, y = Count, fill = PEPfilter,
+        colour = PEPfilter, label = Count)) +
+    geom_bar(stat = "identity", position = "dodge", alpha = 0.7, size = 1) +
+    geom_text(
+        position = position_dodge(width = 0.9), vjust = 0.5, hjust = -0.5) +
+    ggtitle("Peptide novelty reasons") +
+    xlab("Novelty reason") +
+    theme_pubr() +
+    theme(
+        legend.position = "bottom",
+        title = element_text(
+            #face = "bold",
+            size = (textsize * 1.2)),
+        text = element_text(size = textsize),
+        plot.title = element_text(
+            #face = "bold",
+            size = (textsize * 1.5))) +
+    coord_flip() +
+    facet_grid(~PEPfilter)
+pl
 
 # Plot the ORF count per novelty reasons
-pl <- plots_hist(
-    data = data %>% dplyr::filter(., feature == "Number_ORF"),
-    key = "NoveltyReason",
-    value = "Count",
-    group = "PEPfilter",
-    fill = "PEPfilter",
-    main = "ORF novelty reasons",
-    xlabel = "Novelty reason",
-    label = "Count",
-    posit = "dodge",
-    textsize = textsize,
-    legend = "bottom",
-    bw = FALSE,
-    xdir = "horizontal")
-pl[[1]] + coord_flip() + facet_grid(~PEPfilter)
+pl <- ggplot(
+    data %>% dplyr::filter(., feature == "Number_ORF"),
+    aes(
+        x = NoveltyReason, y = Count, fill = PEPfilter,
+        colour = PEPfilter, label = Count)) +
+    geom_bar(stat = "identity", position = "dodge", alpha = 0.7, size = 1) +
+    geom_text(
+        position = position_dodge(width = 0.9), vjust = 0.5, hjust = -0.5) +
+    ggtitle("ORF novelty reasons") +
+    xlab("Novelty reason") +
+    theme_pubr() +
+    theme(
+        legend.position = "bottom",
+        title = element_text(
+            #face = "bold",
+            size = (textsize * 1.2)),
+        text = element_text(size = textsize),
+        plot.title = element_text(
+            #face = "bold",
+            size = (textsize * 1.5))) +
+    coord_flip() +
+    facet_grid(~PEPfilter)
+pl
 
 # Close the picture file
 dev.off()
