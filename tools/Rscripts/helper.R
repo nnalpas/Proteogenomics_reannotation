@@ -153,8 +153,12 @@ gr_nucleotide_pos <- function(grange = NULL, filter = NULL) {
     }
     
     # Get all nucleotide position for the GRange object
-    data <- lapply(X = ranges(grange), FUN = function(x) {
-        x
+    #data <- lapply(X = ranges(grange), FUN = function(x) {
+    #    x
+    #})
+    data <- data.frame(start = start(grange), end = end(grange))
+    data <- apply(X = data, MARGIN = 1, FUN = function(x) {
+        x[["start"]]:x[["end"]]
     })
     names(data) <- names(grange)
     
@@ -1098,6 +1102,7 @@ plots_box_plotly <- function(my_data, x, y, col_manual, txt_size) {
 # sequence in a genomic range context around a target
 plots_orf_genomic <- function(
     x = NULL,
+    bsgeno,
     ref_gr = NULL,
     orf_gr = NULL,
     pep_gr = NULL,
@@ -1137,21 +1142,24 @@ plots_orf_genomic <- function(
     # Define genomic region of interest
     start_region <- start(orf_gr[x]) - region_range
     end_region <- end(orf_gr[x]) + region_range
+    seqname_region <- orf_gr[x]@seqnames@values
     
     # The list containing all plots
     pl_list <- list()
     
     # The plot of known genes for that genomic region
     tmp <- ref_gr[
-        start(ref_gr) %in% c(start_region:end_region) |
-            end(ref_gr) %in% c(start_region:end_region)] %>%
+        (start(ref_gr) %in% c(start_region:end_region) |
+             end(ref_gr) %in% c(start_region:end_region)) &
+            seqnames(ref_gr) == seqname_region] %>%
         as.data.frame(.)
     tmp$value <- rep(x = 1, times = nrow(tmp))
     colnames(tmp)[colnames(tmp) == ref_label] <- "label_name"
     pl <- autoplot(
         ref_gr[
-            start(ref_gr) %in% c(start_region:end_region) |
-                end(ref_gr) %in% c(start_region:end_region)],
+            (start(ref_gr) %in% c(start_region:end_region) |
+                 end(ref_gr) %in% c(start_region:end_region)) &
+                seqnames(ref_gr) == seqname_region],
         mapping = aes(fill = strand, alpha = Expressed),
         geom = "arrowrect", layout = "linear", colour = "black") +
         geom_text(
@@ -1171,18 +1179,25 @@ plots_orf_genomic <- function(
     # Loop through all frames from the ORF GRange
     for (y in unique(orf_gr$frame)) {
         
-        # The plot of novel ORFs for that genomic region
-        pl <- autoplot(
-            orf_gr[
-                (start(orf_gr) %in% c(start_region:end_region) |
-                     end(orf_gr) %in% c(start_region:end_region)) &
-                    orf_gr$frame == y],
-            mapping = aes(fill = strand, alpha = Expressed),
-            geom = "arrowrect", layout = "linear", colour = "black") +
-            scale_fill_manual(
-                values = c(`+` = track_colour[3], `-` = track_colour[4])) +
-            scale_alpha_manual(
-                values = c("TRUE" = 1, "FALSE" = 0.5))
+        # Store the current orf grange
+        tmp_orf <- orf_gr[
+            (start(orf_gr) %in% c(start_region:end_region) |
+                 end(orf_gr) %in% c(start_region:end_region)) &
+                orf_gr$frame == y & seqnames(orf_gr) == seqname_region]
+        
+        # The plot of novel ORFs for that genomic region if possible
+        if (length(tmp_orf) > 0) {
+            pl <- autoplot(
+                tmp_orf,
+                mapping = aes(fill = strand, alpha = Expressed),
+                geom = "arrowrect", layout = "linear", colour = "black") +
+                scale_fill_manual(
+                    values = c(`+` = track_colour[3], `-` = track_colour[4])) +
+                scale_alpha_manual(
+                    values = c("TRUE" = 1, "FALSE" = 0.5))
+        } else {
+            pl <- ggplot()
+        }
         pl_list[paste("Frame", y)] <- list(pl)
         
     }
@@ -1193,8 +1208,9 @@ plots_orf_genomic <- function(
     
     # Format peptides sequences for genomic region visualisation
     tmp <- pep_gr[
-        start(pep_gr) %in% c(start_region_zoom:end_region_zoom) |
-            end(pep_gr) %in% c(start_region_zoom:end_region_zoom)] %>%
+        (start(pep_gr) %in% c(start_region_zoom:end_region_zoom) |
+             end(pep_gr) %in% c(start_region_zoom:end_region_zoom)) &
+            seqnames(pep_gr) == seqname_region] %>%
         as.data.frame(.)
     tmp$value <- rep(x = 1, times = nrow(tmp))
     tmp %<>%
@@ -1285,28 +1301,33 @@ plots_orf_genomic <- function(
     
     # The plot of Sanger sequences for that genomic region
     tmp <- sanger_gr[
-        start(sanger_gr) %in% c(start_region_zoom:end_region_zoom) |
-            end(sanger_gr) %in% c(start_region_zoom:end_region_zoom)] %>%
+        (start(sanger_gr) %in% c(start_region_zoom:end_region_zoom) |
+             end(sanger_gr) %in% c(start_region_zoom:end_region_zoom)) &
+            seqnames(sanger_gr) == seqname_region] %>%
         as.data.frame(.)
-    pl <- ggplot(
-        data = tmp,
-        mapping = aes(
-            xmin = start,
-            xmax = end,
-            ymin = as.integer(factor(id)),
-            ymax = (as.integer(factor(id)) + 0.5),
-            fill = strand)) +
-        geom_rect() +
-        scale_fill_manual(
-            name = "Strand",
-            values = c(`+` = "#CDCDC1", `-` = "#8B8B83"))
-        labs(fill = "Strand")
+    if (nrow(tmp) > 0) {
+        pl <- ggplot(
+            data = tmp,
+            mapping = aes(
+                xmin = start,
+                xmax = end,
+                ymin = as.integer(factor(id)),
+                ymax = (as.integer(factor(id)) + 0.5),
+                fill = strand)) +
+            geom_rect() +
+            scale_fill_manual(
+                name = "Strand",
+                values = c(`+` = "#CDCDC1", `-` = "#8B8B83")) +
+            labs(fill = "Strand")
+    } else {
+        pl <- ggplot()
+    }
     pl_list["Sequenced PCR"] <- list(pl)
     
     # The plot of genome sequence for that genomic region
     wh <- orf_gr[x] %>%
         range(.)
-    pl <- autoplot(bsu, which = wh, geom = "rect")
+    pl <- autoplot(bsgeno, which = wh, geom = "rect")
     pl_list["Genome"] <- list(pl)
     
     # Return all plots and the coordinate of the genomic region
