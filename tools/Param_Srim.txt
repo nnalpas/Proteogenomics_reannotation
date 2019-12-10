@@ -29,7 +29,7 @@ TABLE=11
 MINSIZE=1
 CIRCULAR="No"
 
-# ReferenceDatabase
+# ReferenceDatabase (for the genome make sure the chromosome name is all in lowercase for Ensembl compatibility)
 GENOME="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Srim_G7_assembly.fasta"
 UNIREFPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Streptomyces_rimosus_allStrains_2019-02-13.fasta"
 UNIREFGENE=""
