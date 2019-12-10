@@ -50,6 +50,7 @@ library(seqinr)
 library(bit64)
 library(ggplot2)
 library(ggbio)
+library(cowplot)
 library(gtable)
 library(grid)
 library(gridExtra)
@@ -96,6 +97,10 @@ if (interactive()) {
         add_rbs = readline(prompt = paste0(
             "Provide additional RBS sequence",
             " (separated by space)?")) %>%
+            as.character(),
+        pep_class = readline(prompt = paste0(
+            "Which PEP class to keep",
+            " (separated by space; e.g. 'class 1')")) %>%
             as.character(),
         threads = readline(prompt = "How many cores to use?") %>% as.integer(),
         output = readline(
@@ -149,6 +154,11 @@ if (interactive()) {
             opt_str = c("-a", "--add_rbs"),
             type = "character", default = NULL,
             help = "Additional RBS sequence (separated by space)",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-c", "--pep_class"),
+            type = "character", default = NULL,
+            help = "Which PEP class to keep (separated by space; e.g. 'class 1')",
             metavar = "character"),
         make_option(
             opt_str = c("-t", "--threads"),
@@ -227,7 +237,7 @@ if (
     identical(opt$sanger_grange, character(0))) {
     
     print_help(opt_parser)
-    stop("The input Sanger seq entries grange must be supplied!")
+    warning("No Sanger seq entries grange provided by user!")
     
 }
 if (
@@ -246,6 +256,15 @@ if (
     
     opt["add_rbs"] <- list(NULL)
     warning("No RBS sequence provided by user!")
+    
+}
+if (
+    identical(opt$pep_class, NULL) |
+    identical(opt$pep_class, "") |
+    identical(opt$pep_class, character(0))) {
+    
+    opt["pep_class"] <- list("class 1")
+    warning("No PEP class provided by user, default to 'class1'!")
     
 }
 if (
@@ -282,6 +301,11 @@ evid_reason <- opt$novel_reason %>%
     as.character(.) %>%
     readRDS(file = .)
 
+# Import the genome genomic ranges file
+genome_grange <- opt$genome_grange %>%
+    as.character(.) %>%
+    readRDS(file = .)
+
 # Import the reference genomic ranges file
 ref_grange <- opt$ref_grange %>%
     as.character(.) %>%
@@ -303,14 +327,17 @@ pep_grange <- opt$pep_grange %>%
     readRDS(file = .)
 
 # Import the Sanger seq genomic ranges file
-sanger_grange <- opt$sanger_grange %>%
-    as.character(.) %>%
-    readRDS(file = .)
-
-# Import the genome genomic ranges file
-genome_grange <- opt$genome_grange %>%
-    as.character(.) %>%
-    readRDS(file = .)
+if (
+    identical(opt$sanger_grange, NULL) |
+    identical(opt$sanger_grange, "") |
+    identical(opt$sanger_grange, character(0))) {
+    sanger_grange <- GRanges()
+    seqinfo(sanger_grange) <- seqinfo(genome_grange)
+} else {
+    sanger_grange <- opt$sanger_grange %>%
+        as.character(.) %>%
+        readRDS(file = .)
+}
 
 # Import the operon genomic ranges file if defined
 if (!is.null(opt$operon)) {
@@ -452,8 +479,8 @@ used_start <- start_codon_freq %>%
 # the target and for each raw file
 msms_count <- evid_reason %>%
     dplyr::filter(., group == "Known") %>%
-    dplyr::group_by(., `Leading Proteins`, `Raw file`) %>%
-    dplyr::summarise(., Count = sum(`MS/MS Count`)) %>%
+    dplyr::group_by(., `Leading proteins`, `Raw file`) %>%
+    dplyr::summarise(., Count = sum(`MS/MS count`)) %>%
     set_colnames(c("Proteins", "Raw", "Count")) %>%
     dplyr::ungroup(.) %>%
     dplyr::group_by(., Proteins) %>%
@@ -551,40 +578,45 @@ for (i in 1:length(ref_expr_list)) {
         
     }
     
-    # Create dataframe from the motif list
-    tmp_rbs_motifs_score %<>%
-        ldply(., "data.frame") %>%
-        set_colnames(c("Motifs", "Score"))
-    
-    # Draw consensus logo sequence of RBS for expressed protein
-    rbs_plot[[names(ref_expr_list)[i]]] <- ggplot() +
-        geom_logo(
-            data = fg_seq_list,
-            method = "bits",
-            seq_type = "dna") +
-        theme_logo() +
-        ggtitle(paste(names(ref_expr_list)[i], "proteins")) +
-        scale_x_continuous(
-            name = "Nucleotide position prior CDS",
-            breaks = c(seq(
-                from = 1,
-                to = (1 + nucleotide_after + nucleotide_before),
-                by = 1)),
-            labels = c(seq(
-                from = -nucleotide_before,
-                to = nucleotide_after,
-                by = 1))) +
-        annotation_custom(
-            grob = tableGrob(
-                d = tmp_rbs_motifs_score %>%
-                    dplyr::arrange(., desc(Score)) %>%
-                    dplyr::slice(., 1:10),
-                theme = ttheme_minimal(base_size = 8), rows = NULL),
-            xmin = 1, xmax = 10, ymin = 0.5, ymax = 2)
-    
-    # Compile all RBS data into list
-    rbs_motifs[names(ref_expr_list)[i]] <- list(tmp_rbs_motifs)
-    rbs_motifs_score[names(ref_expr_list)[i]] <- list(tmp_rbs_motifs_score)
+    #
+    if (!is.null(tmp_rbs_motifs_score)) {
+        
+        # Create dataframe from the motif list
+        tmp_rbs_motifs_score %<>%
+            ldply(., "data.frame") %>%
+            set_colnames(c("Motifs", "Score"))
+        
+        # Draw consensus logo sequence of RBS for expressed protein
+        rbs_plot[[names(ref_expr_list)[i]]] <- ggplot() +
+            geom_logo(
+                data = fg_seq_list,
+                method = "bits",
+                seq_type = "dna") +
+            theme_logo() +
+            ggtitle(paste(names(ref_expr_list)[i], "proteins")) +
+            scale_x_continuous(
+                name = "Nucleotide position prior CDS",
+                breaks = c(seq(
+                    from = 1,
+                    to = (1 + nucleotide_after + nucleotide_before),
+                    by = 1)),
+                labels = c(seq(
+                    from = -nucleotide_before,
+                    to = nucleotide_after,
+                    by = 1))) +
+            annotation_custom(
+                grob = tableGrob(
+                    d = tmp_rbs_motifs_score %>%
+                        dplyr::arrange(., desc(Score)) %>%
+                        dplyr::slice(., 1:10),
+                    theme = ttheme_minimal(base_size = 8), rows = NULL),
+                xmin = 1, xmax = 10, ymin = 0.5, ymax = 2)
+        
+        # Compile all RBS data into list
+        rbs_motifs[names(ref_expr_list)[i]] <- list(tmp_rbs_motifs)
+        rbs_motifs_score[names(ref_expr_list)[i]] <- list(tmp_rbs_motifs_score)
+        
+    }
     
 }
 
@@ -595,120 +627,125 @@ all_rbs_motifs <- c(
     user_rbs) %>%
     unique(.)
 
-# Order RBS motifs by decreasing length
-all_rbs_motifs <- all_rbs_motifs[
-    order(nchar(all_rbs_motifs), all_rbs_motifs, decreasing = T)]
-
-# Create the RBS motifs regular expression
-pattern_rbs_motifs <- paste(all_rbs_motifs, collapse = "|") %>%
-    paste0("(", ., ")") %>%
-    paste0(., ".{1,14}(", paste(used_start, collapse = "|"), ")")
-
-# Loop through all target ORFs
-rbs_results <- list() 
-for (x in names(sub_orf_grange)) {
+# Step to perform only if RBS were found
+if (length(all_rbs_motifs) > 0) {
     
-    # Get only current ORF genomic position
-    tmp_grange <- subset(sub_orf_grange, id == x)
+    # Order RBS motifs by decreasing length
+    all_rbs_motifs <- all_rbs_motifs[
+        order(nchar(all_rbs_motifs), all_rbs_motifs, decreasing = T)]
     
-    # Check if multiple entry with same name
-    if (length(tmp_grange) == 1) {
+    # Create the RBS motifs regular expression
+    pattern_rbs_motifs <- paste(all_rbs_motifs, collapse = "|") %>%
+        paste0("(", ., ")") %>%
+        paste0(., ".{1,14}(", paste(used_start, collapse = "|"), ")")
+    
+    # Loop through all target ORFs
+    rbs_results <- list()
+    for (x in names(sub_orf_grange)) {
         
-        # Include X nucleotides prior to start codon in grange
-        if (as.character(strand(tmp_grange)) == "+") {
-            ranges(tmp_grange) <- IRanges(
-                start = (start(tmp_grange) - nucleotide_before),
-                end = (end(tmp_grange)))
-        } else if (as.character(strand(tmp_grange)) == "-") {
-            ranges(tmp_grange) <- IRanges(
-                start = (start(tmp_grange)),
-                end = (end(tmp_grange) + nucleotide_before))
+        # Get only current ORF genomic position
+        tmp_grange <- subset(sub_orf_grange, id == x)
+        
+        # Check if multiple entry with same name
+        if (length(tmp_grange) == 1) {
+            
+            # Include X nucleotides prior to start codon in grange
+            if (as.character(strand(tmp_grange)) == "+") {
+                ranges(tmp_grange) <- IRanges(
+                    start = (start(tmp_grange) - nucleotide_before),
+                    end = (end(tmp_grange)))
+            } else if (as.character(strand(tmp_grange)) == "-") {
+                ranges(tmp_grange) <- IRanges(
+                    start = (start(tmp_grange)),
+                    end = (end(tmp_grange) + nucleotide_before))
+            } else {
+                stop("Strand unknown!")
+            }
+            names(tmp_grange) <- x
+            
+            # Get sequence for updated grange
+            tmp_seq <- getSeq(x = bsgeno, names = tmp_grange)
+            
+            # Attempt to locate pattern within the sequence
+            tmp <- tmp_seq %>%
+                str_locate_all(
+                    string = .,
+                    pattern = pattern_rbs_motifs)
+            
+            # Check whether locations were obtained
+            if (
+                length(tmp[[1]][, "start"]) == 0 |
+                length(tmp[[1]][, "end"]) == 0) {
+                
+                # Add explicitely NA if there is no match
+                tmp <- base::data.frame(
+                    id = names(tmp_seq),
+                    start = NA_integer_,
+                    end = NA_integer_,
+                    seq = NA_character_,
+                    stringsAsFactors = FALSE)
+                
+            } else {
+                
+                # Format as dataframe the current peptide positions
+                tmp %<>%
+                    set_names(x) %>%
+                    ldply(., "data.frame", .id = "id") %>%
+                    dplyr::rowwise(.) %>%
+                    dplyr::mutate(
+                        .,
+                        seq = substring(
+                            text = tmp_seq,
+                            first = start,
+                            last = end))
+                
+            }
+            
+            # Compile all RBS search result in list
+            rbs_results[x] <- list(tmp)
+            
         } else {
-            stop("Strand unknown!")
-        }
-        names(tmp_grange) <- x
-        
-        # Get sequence for updated grange
-        tmp_seq <- getSeq(x = bsgeno, names = tmp_grange)
-        
-        # Attempt to locate pattern within the sequence
-        tmp <- tmp_seq %>%
-            str_locate_all(
-                string = .,
-                pattern = pattern_rbs_motifs)
-        
-        # Check whether locations were obtained
-        if (
-            length(tmp[[1]][, "start"]) == 0 |
-            length(tmp[[1]][, "end"]) == 0) {
             
-            # Add explicitely NA if there is no match
-            tmp <- base::data.frame(
-                id = names(tmp_seq),
-                start = NA_integer_,
-                end = NA_integer_,
-                seq = NA_character_,
-                stringsAsFactors = FALSE)
-            
-        } else {
-            
-            # Format as dataframe the current peptide positions
-            tmp %<>%
-                set_names(x) %>%
-                ldply(., "data.frame", .id = "id") %>%
-                dplyr::rowwise(.) %>%
-                dplyr::mutate(
-                    .,
-                    seq = substring(
-                        text = tmp_seq,
-                        first = start,
-                        last = end))
+            warning("Multiple entry with same name, these will be ignored!")
             
         }
-        
-        # Compile all RBS search result in list
-        rbs_results[x] <- list(tmp)
-        
-    } else {
-        
-        warning("Multiple entry with same name, these will be ignored!")
         
     }
     
+    # Transform list into dataframe
+    rbs_results %<>%
+        plyr::ldply(., "data.frame", .id = "id")
+    
+    # For each novel ORF get the minimum peptide start position and
+    # maximum peptide end position
+    pep_loc_data_cat <- pep_loc_data[["Novel"]] %>%
+        dplyr::group_by(., prot) %>%
+        dplyr::summarise(
+            .,
+            minStartPep = min(start, na.rm = T),
+            maxEndPep = max(end, na.rm = T))
+    
+    # For each novel ORF get the minimum start and minimum end RBS position
+    rbs_results_cat <- rbs_results %>%
+        dplyr::filter(., !is.na(start)) %>%
+        dplyr::mutate(
+            .,
+            start = (start - nucleotide_before - 1),
+            end = (end - nucleotide_before - 3)) %>%
+        dplyr::group_by(., id) %>%
+        dplyr::summarise(
+            .,
+            minStartRBS = min(start, na.rm = T),
+            minEndRBS = min(end, na.rm = T))
+    
+    # Combine the peptide and RBS data for each novel ORF and
+    # determine whether putative RBS fits the identified peptides position
+    rbs_explain <- dplyr::left_join(
+        x = rbs_results_cat, y = pep_loc_data_cat, by = c("id" = "prot")) %>%
+        dplyr::mutate(
+            ., RBS_fits_PeptideId = ifelse(minEndRBS <= minStartPep, TRUE, FALSE))
+    
 }
-
-# Transform list into dataframe
-rbs_results %<>%
-    plyr::ldply(., "data.frame", .id = "id")
-
-# For each novel ORF get the minimum peptide start position and
-# maximum peptide end position
-pep_loc_data_cat <- pep_loc_data[["Novel"]] %>%
-    dplyr::group_by(., prot) %>%
-    dplyr::summarise(
-        .,
-        minStartPep = min(start, na.rm = T),
-        maxEndPep = max(end, na.rm = T))
-
-# For each novel ORF get the minimum start and minimum end RBS position
-rbs_results_cat <- rbs_results %>%
-    dplyr::filter(., !is.na(start)) %>%
-    dplyr::mutate(
-        .,
-        start = (start - nucleotide_before - 1),
-        end = (end - nucleotide_before - 3)) %>%
-    dplyr::group_by(., id) %>%
-    dplyr::summarise(
-        .,
-        minStartRBS = min(start, na.rm = T),
-        minEndRBS = min(end, na.rm = T))
-
-# Combine the peptide and RBS data for each novel ORF and
-# determine whether putative RBS fits the identified peptides position
-rbs_explain <- dplyr::left_join(
-    x = rbs_results_cat, y = pep_loc_data_cat, by = c("id" = "prot")) %>%
-    dplyr::mutate(
-        ., RBS_fits_PeptideId = ifelse(minEndRBS <= minStartPep, TRUE, FALSE))
 
 
 
@@ -717,7 +754,7 @@ rbs_explain <- dplyr::left_join(
 # Get all ORF to explain
 orf_reason <- evid_reason %>%
     dplyr::select(
-        ., Sequence, Proteins, PEP, `MS/MS Count`, Score, Intensity,
+        ., Sequence, Proteins, PEP, `MS/MS count`, Score, Intensity,
         group, Database, OnlyIdBySite, NoveltyReason, PEPfilter) %>%
     cSplit(
         indt = ., splitCols = "Proteins", sep = ";",
@@ -732,7 +769,7 @@ orf_reason_cat <- orf_reason %>%
         all_peptide_count = n_distinct(Sequence),
         all_Sequence = paste(unique(Sequence), collapse = ";"),
         all_min_PEP = min(PEP, na.rm = TRUE),
-        all_sum_MSMS_Count = sum(`MS/MS Count`, na.rm = TRUE),
+        all_sum_MSMS_Count = sum(`MS/MS count`, na.rm = TRUE),
         all_max_Score = max(Score, na.rm = TRUE),
         all_sum_Intensity = sum(Intensity, na.rm = TRUE))
 
@@ -745,7 +782,7 @@ orf_reason_cat %<>%
         novel_peptide_count = n_distinct(Sequence),
         novel_Sequence = paste(unique(Sequence), collapse = ";"),
         novel_min_PEP = min(PEP, na.rm = TRUE),
-        novel_sum_MSMS_Count = sum(`MS/MS Count`, na.rm = TRUE),
+        novel_sum_MSMS_Count = sum(`MS/MS count`, na.rm = TRUE),
         novel_max_Score = max(Score, na.rm = TRUE),
         novel_sum_Intensity = sum(Intensity, na.rm = TRUE),
         all_peptide_count = unique(all_peptide_count),
@@ -759,7 +796,11 @@ orf_reason_cat %<>%
         PepNoveltyReason = paste(
             sort(as.character(unique(NoveltyReason))), collapse = ";"),
         OnlyIdBySite = ifelse(all(OnlyIdBySite == FALSE), FALSE, TRUE),
-        PEPfilter = ifelse(all(PEPfilter == FALSE), FALSE, TRUE)) %>%
+        PEPfilter = dplyr::case_when(
+            any(PEPfilter == "class 1") ~ "class 1",
+            any(PEPfilter == "class 2") ~ "class 2",
+            any(PEPfilter == "class 3") ~ "class 3",
+            TRUE ~ NA_character_)) %>%
     dplyr::arrange(., desc(novel_peptide_count))
 
 # Clean-up the ORF novelty reason by removing 'Not novel' if another reason
@@ -787,6 +828,8 @@ orf_reason_clean %<>%
 orf_reason_neighb <- neighbours_analysis %>%
     dplyr::filter(., interpr %in% c("Five neighbour", "Three neighbour")) %>%
     dplyr::select(., queryID, subjectID, interpr) %>%
+    dplyr::group_by(., queryID, interpr) %>%
+    dplyr::summarise(., subjectID = paste(subjectID, collapse = ";")) %>%
     tidyr::spread(
         data = ., key = interpr, value = subjectID, convert = FALSE) %>%
     set_colnames(sub("neighbour", "neighbour (+/-3bp)", colnames(.))) %>%
@@ -800,32 +843,51 @@ orf_reason_neighb <- as.data.frame(orf_grange, stringsAsFactors = FALSE) %>%
     dplyr::left_join(
         x = orf_reason_neighb, y = ., by = c("Proteins" = "id"))
 
-# Include the operon overlap analysis
-orf_reason_opr <- overlap_operon %>%
-    dplyr::select(., queryID, subjectID) %>%
-    set_colnames(c("id", "OperonID")) %>%
-    dplyr::group_by(., id) %>%
-    dplyr::summarise(., OperonID = paste(unique(OperonID), collapse = ";")) %>%
-    dplyr::left_join(
-        x = orf_reason_neighb, y = ., by = c("Proteins" = "id"))
+# Include the operon overlap analysis if possible
+if (exists("overlap_operon")) {
+    
+    orf_reason_opr <- overlap_operon %>%
+        dplyr::select(., queryID, subjectID) %>%
+        set_colnames(c("id", "OperonID")) %>%
+        dplyr::group_by(., id) %>%
+        dplyr::summarise(
+            ., OperonID = paste(unique(OperonID), collapse = ";")) %>%
+        dplyr::left_join(
+            x = orf_reason_neighb, y = ., by = c("Proteins" = "id"))
+    
+} else {
+    
+    orf_reason_opr <- orf_reason_neighb %>%
+        dplyr::mutate(., OperonID = NA)
+    
+}
 
-# Include the RBS motif presence analysis
-orf_reason_rbs <- rbs_results %>%
-    dplyr::filter(., !is.na(start)) %>%
-    dplyr::mutate(
-        .,
-        start = (start - nucleotide_before - 1),
-        end = (end - nucleotide_before - 1)) %>%
-    tidyr::unite(data = ., col = rbs_position, start, end, sep = "/") %>%
-    dplyr::group_by(., id) %>%
-    dplyr::summarise(
-        ., rbs_position = paste(unique(rbs_position), collapse = ";")) %>%
-    dplyr::select(., id, rbs_position) %>%
-    dplyr::left_join(
-        x = orf_reason_opr, y = ., by = c("Proteins" = "id")) %>%
-    dplyr::left_join(
-        x = ., y = rbs_explain %>% dplyr::select(., id, RBS_fits_PeptideId),
-        by = c("Proteins" = "id"))
+# Include the RBS motif presence analysis if possible
+if (exists("rbs_results")) {
+    
+    orf_reason_rbs <- rbs_results %>%
+        dplyr::filter(., !is.na(start)) %>%
+        dplyr::mutate(
+            .,
+            start = (start - nucleotide_before - 1),
+            end = (end - nucleotide_before - 1)) %>%
+        tidyr::unite(data = ., col = rbs_position, start, end, sep = "/") %>%
+        dplyr::group_by(., id) %>%
+        dplyr::summarise(
+            ., rbs_position = paste(unique(rbs_position), collapse = ";")) %>%
+        dplyr::select(., id, rbs_position) %>%
+        dplyr::left_join(
+            x = orf_reason_opr, y = ., by = c("Proteins" = "id")) %>%
+        dplyr::left_join(
+            x = ., y = rbs_explain %>% dplyr::select(., id, RBS_fits_PeptideId),
+            by = c("Proteins" = "id"))
+    
+} else {
+    
+    orf_reason_rbs <- orf_reason_opr %>%
+        dplyr::mutate(., rbs_position = NA, RBS_fits_PeptideId = NA)
+    
+}
 
 # Compute final ORF novelty reason based on five prime neighbour and RBS motif
 orf_reason_final <- orf_reason_rbs %>% 
@@ -858,7 +920,7 @@ orf_reason_final <- orf_grange %>%
 # Keep high quality novel ORF by filtering out the entries only identified
 # by sites and entries above PEP threshold
 orf_reason_highqual <- orf_reason_final %>%
-    dplyr::filter(., OnlyIdBySite & PEPfilter)
+    dplyr::filter(., OnlyIdBySite & PEPfilter %in% opt[["pep_class"]])
 
 
 
@@ -983,15 +1045,27 @@ plots_hist(
 
 # Plot the operon overlap results
 toplot <- orf_reason_final %>%
-    dplyr::mutate(., within_operon = !is.na(OperonID)) %>%
-    dplyr::group_by(., within_operon) %>%
-    dplyr::summarise(., count = n_distinct(Proteins)) %>%
+    dplyr::mutate(., within_operon = !is.na(OperonID))
+toplot$within_operon <- factor(
+    x = toplot$within_operon, levels = c(TRUE, FALSE), ordered = TRUE)
+toplot %<>%
+    plyr::ddply(
+        .data = ., .variables = .(within_operon), .fun = summarise,
+        count = n_distinct(Proteins), .drop = FALSE) %>%
+    #dplyr::group_by(., within_operon) %>%
+    #dplyr::summarise(., count = n_distinct(Proteins)) %>%
     dplyr::mutate(., Type = "All novel")
-toplot <- orf_reason_final %>%
+toplot_tmp <- orf_reason_final %>%
     dplyr::filter(., Proteins %in% unique(orf_reason_highqual$Proteins)) %>%
-    dplyr::mutate(., within_operon = !is.na(OperonID)) %>%
-    dplyr::group_by(., within_operon) %>%
-    dplyr::summarise(., count = n_distinct(Proteins)) %>%
+    dplyr::mutate(., within_operon = !is.na(OperonID))
+toplot_tmp$within_operon <- factor(
+    x = toplot_tmp$within_operon, levels = c(TRUE, FALSE), ordered = TRUE)
+toplot <- toplot_tmp %>%
+    plyr::ddply(
+        .data = ., .variables = .(within_operon), .fun = summarise,
+        count = n_distinct(Proteins), .drop = FALSE) %>%
+    #dplyr::group_by(., within_operon) %>%
+    #dplyr::summarise(., count = n_distinct(Proteins)) %>%
     dplyr::mutate(., Type = "Quality filtered") %>%
     dplyr::bind_rows(toplot, .)
 plots_hist(
@@ -1016,18 +1090,34 @@ toplot <- orf_reason_final %>%
     dplyr::mutate(., rbs_type = dplyr::case_when(
         is.na(rbs_position) ~ "No RBS",
         RBS_fits_PeptideId ~ "Good fit RBS",
-        TRUE ~ "Putative RBS")) %>%
-    dplyr::group_by(., rbs_type) %>%
-    dplyr::summarise(., count = n_distinct(Proteins)) %>%
+        TRUE ~ "Putative RBS"))
+toplot$rbs_type <- factor(
+    x = toplot$rbs_type,
+    levels = c("No RBS", "Good fit RBS", "Putative RBS"),
+    ordered = TRUE)
+toplot %<>%
+    plyr::ddply(
+        .data = ., .variables = .(rbs_type), .fun = summarise,
+        count = n_distinct(Proteins), .drop = FALSE) %>%
+    #dplyr::group_by(., rbs_type) %>%
+    #dplyr::summarise(., count = n_distinct(Proteins)) %>%
     dplyr::mutate(., Type = "All novel")
-toplot <- orf_reason_final %>%
+toplot_tmp <- orf_reason_final %>%
     dplyr::filter(., Proteins %in% unique(orf_reason_highqual$Proteins)) %>%
     dplyr::mutate(., rbs_type = dplyr::case_when(
         is.na(rbs_position) ~ "No RBS",
         RBS_fits_PeptideId ~ "Good fit RBS",
-        TRUE ~ "Putative RBS")) %>%
-    dplyr::group_by(., rbs_type) %>%
-    dplyr::summarise(., count = n_distinct(Proteins)) %>%
+        TRUE ~ "Putative RBS"))
+toplot_tmp$rbs_type <- factor(
+    x = toplot_tmp$rbs_type,
+    levels = c("No RBS", "Good fit RBS", "Putative RBS"),
+    ordered = TRUE)
+toplot <- toplot_tmp %>%
+    plyr::ddply(
+        .data = ., .variables = .(rbs_type), .fun = summarise,
+        count = n_distinct(Proteins), .drop = FALSE) %>%
+    #dplyr::group_by(., rbs_type) %>%
+    #dplyr::summarise(., count = n_distinct(Proteins)) %>%
     dplyr::mutate(., Type = "Quality filtered") %>%
     dplyr::bind_rows(toplot, .)
 plots_hist(
@@ -1096,7 +1186,7 @@ pl_orf_reason <- plots_hist(
     bw = TRUE,
     legend = "right",
     xdir = "vertical")
-plot(pl_orf_reason[[1]])
+plot(pl_orf_reason[[1]] + coord_flip())
 
 # Visualise ORF per novelty type and per operon status
 toplot <- orf_reason_final %>%
@@ -1233,7 +1323,7 @@ pl_all_orf_freq <- plots_hist(
     label = "count",
     legend = "bottom",
     xdir = "horizontal")
-plot(pl_all_orf_freq[[1]])
+plot(pl_all_orf_freq[[1]] + facet_wrap(facets = "ORFNoveltyReason"))
 pl_qc_orf_freq <- plots_hist(
     data = toplot %>%
         dplyr::filter(., Type == "Quality filtered"),
@@ -1248,7 +1338,7 @@ pl_qc_orf_freq <- plots_hist(
     label = "count",
     legend = "bottom",
     xdir = "horizontal")
-plot(pl_qc_orf_freq[[1]])
+plot(pl_qc_orf_freq[[1]] + facet_wrap(facets = "ORFNoveltyReason"))
 
 # Export neighbour results (as txt and RDS files)
 saveRDS(
@@ -1430,9 +1520,9 @@ coverage_nucl <- coverage_pep %>%
 
 # Compute msms count for each peptide sequence
 coverage_nucl_count <- evid_reason %>%
-    dplyr::select(., Sequence, `MS/MS Count`) %>%
+    dplyr::select(., Sequence, `MS/MS count`) %>%
     dplyr::group_by(., Sequence) %>%
-    dplyr::summarise(., Count = sum(`MS/MS Count`)) %>%
+    dplyr::summarise(., Count = sum(`MS/MS count`)) %>%
     dplyr::left_join(coverage_nucl, ., by = "Sequence")
 
 # Format dataframe count column to factor
@@ -1506,6 +1596,7 @@ for (i in high_qual_targets) {
     # as well as peptide and sanger sequences
     genomic_vis_data <- plots_orf_genomic(
         x = i,
+        bsgeno = bsgeno,
         ref_gr = ref_grange_expr,
         orf_gr = orf_grange_expr,
         pep_gr = pep_grange_unique,
@@ -1528,8 +1619,9 @@ for (i in high_qual_targets) {
             ": ",
             as.character(orf_reason_highqual[
                 orf_reason_highqual$Proteins == i, "ORFNoveltyReason"])),
-        xlab = "Genomic position",
-        label.bg.fill = "white") +
+        #xlab = "Genomic position",
+        label.bg.fill = "white",
+        label.text.angle = 45) +
         theme_bw() +
         theme(
             panel.grid.major = element_blank(),
@@ -1540,21 +1632,21 @@ for (i in high_qual_targets) {
     xlim(pl_genome) <- c(
         genomic_vis_data$region_coordinates[["start"]],
         genomic_vis_data$region_coordinates[["end"]])
-    print(pl_genome)
+    #print(pl_genome)
     
     # Plot the peptides and Sanger sequence tracks
     pl_genome_zoom <- tracks(
         `Peptide` = my_plots$Peptide,
-        `Sequenced PCR` = my_plots$`Sequenced PCR`,
+        `Sanger` = my_plots$`Sequenced PCR`,
         `Genome` = my_plots$Genome,
         heights = c(2, 0.5, 0.2),
         title = paste0(
             i,
-            ": ",
-            as.character(orf_reason_highqual[
-                orf_reason_highqual$Proteins == i, "ORFNoveltyReason"])),
+            ": zoomed in"),
         xlab = "Genomic position",
-        label.bg.fill = "white") +
+        label.bg.fill = "grey",
+        label.text.angle = 45,
+        track.bg.color = "grey") +
         theme_bw() +
         theme(
             panel.grid.major = element_blank(),
@@ -1566,11 +1658,17 @@ for (i in high_qual_targets) {
     xlim(pl_genome_zoom) <- c(
         genomic_vis_data$region_zoom[["start"]],
         genomic_vis_data$region_zoom[["end"]])
-    print(pl_genome_zoom)
+    #print(pl_genome_zoom)
+    
+    # Use cowplot to combine the two genome tracks
+    g <- as(pl_genome, "grob")
+    gz <- as(pl_genome_zoom, "grob")
+    pl_genome_merge <- cowplot::plot_grid(
+        g, gz, align = "h", axis = "lr", nrow = 2)
+    print(pl_genome_merge)
     
     # Include the plots for current candidate into list
-    pl_genome_list[i] <- list(list(
-        "pl_genome" = pl_genome, "pl_genome_zoom" = pl_genome_zoom))
+    pl_genome_list[i] <- list(pl_genome_merge)
     
 }
 
