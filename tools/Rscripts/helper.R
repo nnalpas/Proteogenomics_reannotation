@@ -709,188 +709,282 @@ pept_locate <- function(
     
 }
 
-# Function to classify novel peptide into potential reasons for their novelty
+# Function which compile the different novelty reason for any sequence that
+# maps to multiple novel ORFs
 novel_pep_classify <- function(
-    x = NULL,
-    coordinate = NULL,
-    levenshtein = NULL,
-    blast_ref = NULL,
-    blast_all = NULL) {
-    
-    # Check whether the correct variables have been submitted by users
-    if (is.null(x)) {
-        stop("Error: No novel peptide was provided!")
-    }
-    if (is.null(coordinate)) {
-        stop("Error: No peptide coordinates were provided!")
-    }
-    if (is.null(levenshtein)) {
-        stop("Error: No levenshtein data were provided!")
-    }
-    if (is.null(blast_ref)) {
-        stop("Error: No blast against reference data were provided!")
-    }
-    if (is.null(blast_all)) {
-        stop("Error: No blast against all protein data were provided!")
-    }
+    x,
+    coordinate,
+    blast_ref,
+    blast_all) {
     
     # Get the peptide position within protein
     coordinate_tmp <- coordinate %>%
         dplyr::filter(., Sequence == x)
     
+    # Assess the sequence novelty for each combination of sequence to ORF
+    my_rows <- c(min(1, nrow(coordinate_tmp)):nrow(coordinate_tmp))
+    novel_final <- lapply(X = my_rows, FUN = function(i) {
+        .novel_pep_classify(
+            x = x, coord = coordinate_tmp[i, ],
+            blast_ref = blast_ref, blast_all = blast_all)
+    }) %>%
+        set_names(coordinate_tmp$Proteins) %>%
+        plyr::ldply(
+            ., "data.frame", .id = "Proteins", stringsAsFactors = FALSE)
+    
+    # Define empty comment
+    warn <- ""
+    
     # Check if a unique peptide location is available
-    if (nrow(coordinate_tmp) != 1) {
+    if (nrow(coordinate_tmp) == 0) {
         
-        reason <- "Undetermined peptide location"
+        warn <- "Peptide not located"
+        
+    } else if (
+        nrow(coordinate_tmp) > 1 &
+        length(unique(novel_final$NoveltyReason)) > 1) {
+        
+        warn <- "Mapping to several novel ORFs (different novelty reasons)"
+        
+    } else if (
+        nrow(coordinate_tmp) > 1 &
+        length(unique(novel_final$NoveltyReason)) == 1) {
+        
+        warn <- "Mapping to several novel ORFs (same novelty reasons)"
+        
+    }
+    
+    # Return the reason for novelty
+    novel_final %<>%
+        dplyr::bind_cols(., warning = rep(warn, times = nrow(coordinate_tmp)))
+    novel_final
+    
+}
+
+# Function which compile the different novelty reason obtained for a sequence
+# and then defines the final reason (using reference and best blast)
+.novel_pep_classify <- function(
+    x,
+    coord,
+    blast_ref,
+    blast_all) {
+    
+    # Get the blast and levenshtein data for current ORF to novel peptide map
+    blast_ref_tmp <- blast_ref[
+        blast_ref$qseqid == coord$Proteins, ]
+    blast_all_tmp <- blast_all[
+        blast_all$qseqid == coord$Proteins, ]
+    
+    # Get the best blast(s) for current ORF to novel peptide map
+    best_blast_all_tmp <- blast_all_tmp %>%
+        unique(.) %>%
+        dplyr::group_by(., qseqid) %>%
+        dplyr::filter(., evalue_reciproc == min(evalue_reciproc)) %>%
+        dplyr::filter(., score_reciproc == max(score_reciproc)) %>%
+        dplyr::filter(., pident_reciproc == max(pident_reciproc))
+    
+    # Perform novelty analysis on reference blast
+    my_rows <- c(min(1, nrow(blast_ref_tmp)):nrow(blast_ref_tmp))
+    ref_novel <- lapply(
+        X = my_rows, FUN = function(i) {
+            .novelty(x = x, coord = coord, blast = blast_ref_tmp[i, ])
+        }) %>%
+        plyr::ldply(., "data.frame", .id = NULL, stringsAsFactors = FALSE) %>%
+        dplyr::bind_cols(Sequence = rep(x, times = nrow(.)), .)
+    
+    # Perform novelty analysis on best blast (only if best different from ref)
+    if (identical(blast_ref_tmp$sseqid, best_blast_all_tmp$sseqid)) {
+        best_novel <- ref_novel
+    } else {
+        my_rows <- c(min(1, nrow(best_blast_all_tmp)):nrow(best_blast_all_tmp))
+        best_novel <- lapply(
+            X = my_rows, FUN = function(i) {
+                .novelty(x = x, coord = coord, blast = best_blast_all_tmp[i, ])
+            }) %>%
+            plyr::ldply(
+                ., "data.frame", .id = NULL, stringsAsFactors = FALSE) %>%
+            dplyr::bind_cols(Sequence = rep(x, times = nrow(.)), .)
+    }
+    
+    # Combine reference and best novelty results
+    novel_res <- dplyr::full_join(
+        x = ref_novel, y = best_novel, by = "Sequence",
+        suffix = c("_ref", "_best"))
+    
+    # Keep record of entries with multi blast results
+    my_comment <- c()
+    if (length(unique(novel_res$blast_best)) > 1) {
+        my_comment <- c(my_comment, "Multiple best blast hits")
+    }
+    if (length(unique(novel_res$blast_ref)) > 1) {
+        my_comment <- c(my_comment, "Multiple ref blast hits")
+    }
+    novel_res$comment <- paste(my_comment, collapse = ";")
+    
+    # Check sequence having multiple different reasons
+    if (
+        length(unique(novel_res$reason_best)) > 1 |
+        length(unique(novel_res$reason_ref)) > 1) {
+        novel_res$NoveltyReason <- "Multi incompatible reasons"
+    } else {
+        novel_res$NoveltyReason <- ""
+    }
+    
+    # Summarise the sequence novelty info into a single row
+    novel_res %<>%
+        dplyr::group_by(., Sequence) %>%
+        dplyr::summarise_all(
+            .tbl = ., .funs = funs(paste(unique(.), collapse = ";")))
+    
+    # Finalise the novelty explanation by merging the explanation
+    if (novel_res$NoveltyReason == "") {
+        
+        if (novel_res$reason_ref == novel_res$reason_best) {
+            novel_res$NoveltyReason <- novel_res$reason_ref
+        } else if (novel_res$reason_best == "Not novel") {
+            novel_res$NoveltyReason <- paste(
+                novel_res$reason_ref, "(exact match elsewhere)")
+        } else if (novel_res$reason_best %in% c("SAVs/InDels", "SAV")) {
+            novel_res$NoveltyReason <- paste(
+                novel_res$reason_ref, "(SAV match elsewhere)")
+        } else if (novel_res$reason_best %in% c("Potential alternate end", "Potential alternate start")) {
+            novel_res$NoveltyReason <- paste(
+                novel_res$reason_ref, "(partial match elsewhere)")
+        } else if (novel_res$reason_best %in% c("Incompatible end site", "Incompatible start site")) {
+            novel_res$NoveltyReason <- novel_res$reason_ref
+        }
+        
+    }
+    
+    # Return the novelty reason
+    novel_res
+    
+}
+
+# Function to interprete peptide novelty based on blast and levenshtein data
+.novelty <- function(
+    x,
+    coord,
+    blast) {
+    
+    # Default reason is undetermined
+    reason <- "Undetermined reason"
+    
+    # Dataframe compiling novelty reason for current entry
+    my_res <- data.frame(
+        reason = reason,
+        blast = NA_character_,
+        leven = NA_character_,
+        stringsAsFactors = FALSE)
+    
+    # Check if blast results are available
+    if (nrow(blast) == 0) {
+        
+        # Without blast data mark as potentially novel peptide
+        reason <- "Potentially novel"
+        
+        # Return the results
+        my_res$reason <- reason
+        return(my_res)
         
     } else {
         
-        # Get the blast and levenshtein data
-        blast_ref_tmp <- blast_ref[
-            blast_ref$qseqid == coordinate_tmp$Proteins, ]
-        blast_all_tmp <- blast_all[
-            blast_all$qseqid == coordinate_tmp$Proteins, ]
-        levenshtein_tmp <- levenshtein[
-            levenshtein$Sequence == x &
-                levenshtein$id %in% blast_ref_tmp$sseqid, ]
+        # Concatenate the blast data
+        my_res$blast <- paste(
+            blast$sseqid, blast$evalue_reciproc,
+            blast$score_reciproc, blast$pident_reciproc,
+            sep = "/")
         
-        # Check for blast data against reference protein
-        if (nrow(blast_ref_tmp) == 0) {
+        # Check whether the peptide is within the matching blast positions
+        if (
+            coord$start >= blast$qstart_blast &
+            coord$end <= blast$qend_blast) {
             
-            # Check for blast data against all uniprot or ncbi
-            if (nrow(blast_all_tmp) == 0) {
-                
-                # Without blast data mark as potentially novel peptide
-                reason <- "Potentially novel"
-                
-            } else {
-                
-                # With blast data against all organism mark as known
-                # in other species
-                reason <- "Known other species"
-                
-            }
+            # If yes then mark as potential SAV
+            reason <- "Potential SAV"
             
-        # Check for multiple reciprocal best hits
-        } else if (nrow(blast_ref_tmp) > 1) {
+            # Compute the levenshtein distance
+            leven <- adist(
+                x = x, y = blast$sseq_blast,
+                partial = TRUE, ignore.case = TRUE) %>%
+                as.data.frame(.) %>%
+                cbind(blast$sseqid, .) %>%
+                set_colnames(c("id", "leven"))
             
-            # With multiple best hits mark as so
-            reason <- "Multiple blast hits"
+            # Concatenate the levenshtein data
+            my_res$leven <- paste(leven$id, leven$leven, sep = "/")
             
-        # Check for single reciprocal best hit
-        } else {
-            
-            # Check whether the peptide is within the matching blast positions
+            # Check if the levenshtein data exist and
+            # what is the distance score
             if (
-                coordinate_tmp$start >= blast_ref_tmp$qstart_blast &
-                coordinate_tmp$end <= blast_ref_tmp$qend_blast) {
+                nrow(leven) > 0 &
+                unique(leven$leven) == 1) {
                 
-                # If yes then mark as potential SAV
-                reason <- "Potential SAV"
+                # If yes mark as confirmed SAV
+                reason <- "SAV"
                 
-                # Check if the levenshtein data exist and
-                # what is the distance score
-                if (
-                    nrow(levenshtein_tmp) > 0 &
-                    unique(levenshtein_tmp$leven) == 1) {
-                    
-                    # If yes mark as confirmed SAV
-                    reason <- "SAV"
-                    
-                } else if (
-                    nrow(levenshtein_tmp) > 0 &
-                    unique(levenshtein_tmp$leven) == 0) {
-                    
-                    # If yes not novel peptide
-                    reason <- "Not novel"
-                    
-                } else if (
-                    nrow(levenshtein_tmp) > 0 &
-                    unique(levenshtein_tmp$leven) > 1) {
-                    
-                    # If yes multi SAVs or InDels
-                    reason <- "SAVs/InDels"
-                    
-                }
+            } else if (
+                nrow(leven) > 0 &
+                unique(leven$leven) == 0) {
                 
-            # Check whether the peptide overlap the reference protein start
-            } else if (min(
-                coordinate_tmp$start,
-                blast_ref_tmp$qstart_blast) == coordinate_tmp$start) {
+                # If yes not novel peptide
+                reason <- "Not novel"
                 
-                # Check whether novel ORF and reference protein have
-                # incompatible start site
-                if (blast_ref_tmp$sstart_blast > blast_ref_tmp$qstart_blast) {
-                    
-                    reason <- "Incompatible start site"
-                    
-                } else {
-                    
-                    # Without blast data mark as potential alternate start
-                    reason <- "Potential alternate start"
-                    
-                    # Check for blast data against all uniprot or ncbi
-                    if (nrow(blast_all_tmp) != 0) {
-                        
-                        if (any(and(
-                            coordinate_tmp$start >= blast_all_tmp$qstart_blast,
-                            coordinate_tmp$end <= blast_all_tmp$qend_blast))) {
-                            
-                            # With blast data mark as alternate start
-                            # characterised in other species
-                            reason <- "Alternate start (known other species)"
-                            
-                        }
-                        
-                    }
-                    
-                }
+            } else if (
+                nrow(leven) > 0 &
+                unique(leven$leven) > 1) {
                 
-            # Check whether the peptide overlap the reference protein end
-            } else if (max(
-                coordinate_tmp$end,
-                blast_ref_tmp$qend_blast) == coordinate_tmp$end) {
-                
-                # Check whether novel ORF and reference protein have
-                # incompatible end site
-                if (blast_ref_tmp$send_blast > blast_ref_tmp$qend_blast) {
-                    
-                    reason <- "Incompatible end site"
-                    
-                } else {
-                    
-                    # Without blast data mark as potential alternate end
-                    reason <- "Potential alternate end"
-                    
-                    # Check for blast data against all uniprot or ncbi
-                    if (nrow(blast_all_tmp) != 0) {
-                        
-                        if (any(and(
-                            coordinate_tmp$start >= blast_all_tmp$qstart_blast,
-                            coordinate_tmp$end <= blast_all_tmp$qend_blast))) {
-                            
-                            # With blast data mark as alternate end
-                            # characterised in other species
-                            reason <- "Alternate end (known other species)"
-                            
-                        }
-                        
-                    }
-                    
-                }
-                
-            } else {
-                
-                reason <- "Undetermined reason"
+                # If yes multi SAVs or InDels
+                reason <- "SAVs/InDels"
                 
             }
+            
+            # Return the results
+            my_res$reason <- reason
+            return(my_res)
+            
+            # Check whether the peptide overlap the reference protein start
+        } else if (min(coord$start, blast$qstart_blast) == coord$start) {
+            
+            # Mark peptide as coming from an alternate start
+            reason <- "Potential alternate start"
+            
+            # Check whether novel ORF and reference protein have
+            # incompatible start site
+            if (blast$sstart_blast > blast$qstart_blast) {
+                
+                reason <- "Incompatible start site"
+                
+            }
+            
+            # Return the results
+            my_res$reason <- reason
+            return(my_res)
+            
+            # Check whether the peptide overlap the reference protein end
+        } else if (max(coord$end, blast$qend_blast) == coord$end) {
+            
+            # Mark peptide as coming from an alternate end
+            reason <- "Potential alternate end"
+            
+            # Check whether novel ORF and reference protein have
+            # incompatible end site
+            if (blast$send_blast > blast$qend_blast) {
+                
+                reason <- "Incompatible end site"
+                
+            }
+            
+            # Return the results
+            my_res$reason <- reason
+            return(my_res)
             
         }
         
     }
     
-    # Return the reason for novelty
-    return(reason)
+    # Return the reason result
+    my_res
     
 }
 
