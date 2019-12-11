@@ -92,7 +92,7 @@ if (interactive()) {
         threads = readline(prompt = "How many cores to use?") %>% as.integer(),
         output = readline(
             prompt = "Define the output directory!"))
-        
+    
 } else {
     
     # Define the list of command line parameters
@@ -300,11 +300,24 @@ novelty_reasons <- purrr::map(
     coordinate = pep_loc,
     blast_ref = reciprocal_blast_ref,
     blast_all = reciprocal_blast_all) %>%
-    plyr::ldply(., "data.frame", .id = NULL, stringsAsFactors = FALSE)
+    plyr::ldply(., "data.frame", .id = NULL, stringsAsFactors = FALSE) %>%
+    unique(.)
+
+# Get the leading proteins
+evid_leading <- evid %>%
+    dplyr::filter(., Sequence %in% novel_pep) %>%
+    dplyr::select(., Sequence, `Leading proteins`) %>%
+    unique(.)
+
+# Use the leading protein to decide between multi ORFs mapping
+novelty_reasons_format <- novelty_reasons %>%
+    dplyr::left_join(x = ., y = evid_leading, by = "Sequence") %>%
+    dplyr::filter(., warning == "" | Proteins == `Leading proteins`)
 
 # Include the novelty reason column to the evidence table
-evid_reason <- evid %>%
-    dplyr::left_join(x = ., y = novelty_reasons, by = "Sequence")
+evid_reason <- novelty_reasons_format %>%
+    dplyr::select(., -Proteins, -`Leading proteins`) %>%
+    dplyr::left_join(x = evid, y = ., by = "Sequence")
 
 # Update the evidence table based on novelty explanation, any "Not novel"
 # entry must have its database field set back to "Known"
