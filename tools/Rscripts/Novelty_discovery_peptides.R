@@ -277,59 +277,30 @@ pep_loc <- opt$peptide_location %>%
     as.character(.) %>%
     readRDS(file = .)
 
-
-
-### Levenshtein distance -------------------------------------------------
-
 # Keep only sequence for novel peptide
 novel_pep <- evid %>%
     dplyr::filter(., group == "Novel") %>%
     .[["Sequence"]] %>%
     unique(.)
 
-# Compute the levenshtein distance for all novel peptide, parallelised process
-leven_dist <- foreach(
-    a = novel_pep, .combine = "rbind", .inorder = TRUE) %dopar% adist(
-        x = a,
-        y = fasta$Known,
-        partial = TRUE,
-        ignore.case = TRUE)
-
-# Reformat the data (transpose dataframe and gather)
-leven_dist_format <- leven_dist %>%
-    set_rownames(novel_pep) %>%
-    t(.) %>%
-    base::data.frame(
-        id = rownames(.),
-        .,
-        stringsAsFactors = FALSE) %>%
-    tidyr::gather(data = ., key = "Sequence", value = "leven", -id)
-    
-# Keep the minimum levenshtein score result per peptide
-#leven_dist_format %<>%
-#    dplyr::group_by(., Sequence) %>%
-#    dplyr::filter(., leven == min(leven)) %>%
-#    base::as.data.frame(., stringsAsFActors = FALSE)
-
 
 
 ### Novelty reason determination -----------------------------------------
 
-# Compile all reciprocal best hits against UniProt and NCBI
+# Compile all reciprocal best hits
 reciprocal_blast_all <- dplyr::bind_rows(
-    reciprocal_blast_uniprot, reciprocal_blast_ncbi)
+    data.frame(DB = "Reference", reciprocal_blast_ref, stringsAsFactors = F),
+    data.frame(DB = "UniProt", reciprocal_blast_uniprot, stringsAsFactors = F),
+    data.frame(DB = "NCBI", reciprocal_blast_ncbi, stringsAsFactors = F))
 
 # Determine the novelty reasons for each peptide
 novelty_reasons <- purrr::map(
     .x = novel_pep,
     .f = novel_pep_classify,
     coordinate = pep_loc,
-    levenshtein = leven_dist_format,
     blast_ref = reciprocal_blast_ref,
     blast_all = reciprocal_blast_all) %>%
-    set_names(novel_pep) %>%
-    plyr::ldply(., "data.frame") %>%
-    set_colnames(c("Sequence", "NoveltyReason"))
+    plyr::ldply(., "data.frame", .id = NULL, stringsAsFactors = FALSE)
 
 # Include the novelty reason column to the evidence table
 evid_reason <- evid %>%
