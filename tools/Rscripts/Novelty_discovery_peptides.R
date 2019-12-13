@@ -50,6 +50,7 @@ library(seqinr)
 library(bit64)
 library(ggplot2)
 library(gtable)
+library(ggpubr)
 library(grid)
 library(gridExtra)
 library(purrr)
@@ -324,15 +325,20 @@ evid_reason <- novelty_reasons_format %>%
 warning(paste(
     "Exactly", length(which(evid_reason$NoveltyReason == "Not novel")),
     "evidence entries were reclassified as 'Not novel'!"))
+warning(paste(
+    "Exactly", length(which(is.na(evid_reason$NoveltyReason) & evid_reason$group == "Novel")),
+    "evidence entries were reclassified as 'Reverse'!"))
 evid_reason %<>%
     dplyr::mutate(
         .,
-        group = ifelse(
-            !is.na(NoveltyReason) & NoveltyReason == "Not novel",
-            "Known", group),
-        Database = ifelse(
-            !is.na(NoveltyReason) & NoveltyReason == "Not novel",
-            "Target", Database))
+        group = dplyr::case_when(
+            (!is.na(NoveltyReason) & NoveltyReason == "Not novel") ~ "Known",
+            (is.na(NoveltyReason) & group == "Novel") ~ "Reverse",
+            TRUE ~ group),
+        Database = dplyr::case_when(
+            (!is.na(NoveltyReason) & NoveltyReason == "Not novel") ~ "Target",
+            (is.na(NoveltyReason) & Database == "Novel") ~ "Decoy",
+            TRUE ~ Database))
 
 
 
@@ -433,66 +439,52 @@ pl <- ggplot(
     scale_colour_manual(guide = FALSE, values = database_colours)
 pl
 
-# Compute novel feature count (peptide and ORF) in total
-data <- evid_reason %>%
+# Split and gather the evidence data so that it can be analysed separately
+# per feature (removing redundancy)
+evid_reason_long <- evid_reason %>%
     dplyr::filter(., Database == "Novel") %>%
     cSplit(
         indt = ., splitCols = "Proteins", sep = ";",
         direction = "long", fixed = TRUE) %>%
-    dplyr::select(., id, Sequence, Proteins) %>%
-    unique(.) %>%
+    dplyr::select(
+        ., evid = id, pep = Sequence, orf = Proteins,
+        PEPfilter, OnlyIdBySite, NoveltyReason) %>%
+    tidyr::gather(
+        data = ., key = "feature", value = "id",
+        evid, pep, orf, convert = TRUE) %>%
+    dplyr::mutate(
+        ., PEPfilter = ifelse(!OnlyIdBySite, "class 4", PEPfilter)) %>%
+    unique(.)
+
+# Compute novel feature count (peptide and ORF) in total
+data <- evid_reason_long %>%
+    dplyr::group_by(., feature) %>%
     dplyr::summarise(
         .,
         PEPfilter = "All novel",
-        Number_evidence = n_distinct(id),
-        Number_peptide = n_distinct(Sequence),
-        Number_ORF = n_distinct(Proteins)) %>%
-    tidyr::gather(
-        data = ., key = "feature", value = "Count", -PEPfilter) %>%
+        Count = n_distinct(id)) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
-# Compute novel feature count (peptide and ORF) that pass PEP filter
-data <- evid_reason %>%
-    dplyr::filter(., Database == "Novel" & OnlyIdBySite) %>%
-    cSplit(
-        indt = ., splitCols = "Proteins", sep = ";",
-        direction = "long", fixed = TRUE) %>%
-    dplyr::select(., id, Sequence, Proteins, PEPfilter) %>%
-    unique(.) %>%
-    dplyr::group_by(., PEPfilter) %>%
+# Compute novel feature count (peptide and ORF) accross PEP classes
+data <- evid_reason_long %>%
+    dplyr::group_by(., feature, id) %>%
+    dplyr::summarise(., PEPfilter = dplyr::case_when(
+        any(PEPfilter == "class 1") ~ "class 1",
+        any(PEPfilter == "class 2") ~ "class 2",
+        any(PEPfilter == "class 3") ~ "class 3",
+        any(PEPfilter == "class 4") ~ "class 4",
+        TRUE ~ NA_character_)) %>%
+    dplyr::ungroup(.) %>%
+    dplyr::group_by(., feature, PEPfilter) %>%
     dplyr::summarise(
-        .,
-        Number_evidence = n_distinct(id),
-        Number_peptide = n_distinct(Sequence),
-        Number_ORF = n_distinct(Proteins)) %>%
-    tidyr::gather(
-        data = ., key = "feature", value = "Count", -PEPfilter) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE) %>%
-    dplyr::bind_rows(data, .)
-
-# Compute novel feature count (peptide and ORF) for only identified by site
-data <- evid_reason %>%
-    dplyr::filter(., Database == "Novel"  & !OnlyIdBySite) %>%
-    cSplit(
-        indt = ., splitCols = "Proteins", sep = ";",
-        direction = "long", fixed = TRUE) %>%
-    dplyr::select(., id, Sequence, Proteins) %>%
-    unique(.) %>%
-    dplyr::summarise(
-        .,
-        PEPfilter = "class4 (OnlyIdBySite)",
-        Number_evidence = n_distinct(id),
-        Number_peptide = n_distinct(Sequence),
-        Number_ORF = n_distinct(Proteins)) %>%
-    tidyr::gather(
-        data = ., key = "feature", value = "Count", -PEPfilter) %>%
+        ., Count = n_distinct(id)) %>%
     base::as.data.frame(., stringsAsFactors = FALSE) %>%
     dplyr::bind_rows(data, .)
 
 # Feature as factor to keep order in plot
 data$feature <- factor(
     x = data$feature,
-    levels = c("Number_evidence", "Number_peptide", "Number_ORF"),
+    levels = c("evid", "pep", "orf"),
     labels = c("Evidence", "Peptide", "ORF"),
     ordered = TRUE)
 
@@ -518,62 +510,50 @@ pl <- ggplot(
             size = (textsize * 1.5)))
 pl
 
-# Compute the peptide count per novelty reasons
-data <- evid_reason %>%
-    dplyr::filter(., Database == "Novel") %>%
-    dplyr::select(., Sequence, Proteins, NoveltyReason) %>%
-    dplyr::group_by(., NoveltyReason) %>%
+# Compute novel feature count (peptide and evidence) in total
+data <- evid_reason_long %>%
+    dplyr::filter(., feature != "orf") %>%
+    dplyr::group_by(., feature, NoveltyReason) %>%
     dplyr::summarise(
         .,
         PEPfilter = "All novel",
-        Number_peptide = n_distinct(Sequence),
-        Number_ORF = n_distinct(Proteins)) %>%
-    tidyr::gather(
-        data = ., key = "feature", value = "Count",
-        -NoveltyReason, -PEPfilter) %>%
+        Count = n_distinct(id)) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
-# Compute the peptide count per novelty reasons that pass PEP filter and
-# pass only ID by sites
-data <- evid_reason %>%
-    dplyr::filter(., Database == "Novel" & OnlyIdBySite) %>%
-    dplyr::select(., Sequence, Proteins, NoveltyReason, PEPfilter) %>%
-    dplyr::group_by(., NoveltyReason, PEPfilter) %>%
+# Compute novel feature count (peptide and evidence) accross PEP classes
+data <- evid_reason_long %>%
+    dplyr::filter(., feature != "orf") %>%
+    dplyr::group_by(., feature, id, NoveltyReason) %>%
+    dplyr::summarise(., PEPfilter = dplyr::case_when(
+        any(PEPfilter == "class 1") ~ "class 1",
+        any(PEPfilter == "class 2") ~ "class 2",
+        any(PEPfilter == "class 3") ~ "class 3",
+        any(PEPfilter == "class 4") ~ "class 4",
+        TRUE ~ NA_character_)) %>%
+    dplyr::ungroup(.) %>%
+    dplyr::group_by(., feature, PEPfilter, NoveltyReason) %>%
     dplyr::summarise(
-        .,
-        Number_peptide = n_distinct(Sequence),
-        Number_ORF = n_distinct(Proteins)) %>%
-    tidyr::gather(
-        data = ., key = "feature", value = "Count", -NoveltyReason, -PEPfilter) %>%
+        ., Count = n_distinct(id)) %>%
     base::as.data.frame(., stringsAsFactors = FALSE) %>%
     dplyr::bind_rows(data, .)
 
-# Compute the peptide count per novelty reasons for only ID by sites
-data <- evid_reason %>%
-    dplyr::filter(., Database == "Novel" & !OnlyIdBySite) %>%
-    dplyr::select(., Sequence, Proteins, NoveltyReason) %>%
-    dplyr::group_by(., NoveltyReason) %>%
-    dplyr::summarise(
-        .,
-        PEPfilter = "class4 (OnlyIdBySite)",
-        Number_peptide = n_distinct(Sequence),
-        Number_ORF = n_distinct(Proteins)) %>%
-    tidyr::gather(
-        data = ., key = "feature", value = "Count",
-        -NoveltyReason, -PEPfilter) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE) %>%
-    dplyr::bind_rows(data, .)
+# Feature as factor to keep order in plot
+data$feature <- factor(
+    x = data$feature,
+    levels = c("evid", "pep", "orf"),
+    labels = c("Evidence", "Peptide", "ORF"),
+    ordered = TRUE)
 
-# Plot the peptide count per novelty reasons
+# Plot the evidence count per novelty reasons
 pl <- ggplot(
-    data %>% dplyr::filter(., feature == "Number_peptide"),
+    data %>% dplyr::filter(., feature == "Evidence"),
     aes(
         x = NoveltyReason, y = Count, fill = PEPfilter,
         colour = PEPfilter, label = Count)) +
     geom_bar(stat = "identity", position = "dodge", alpha = 0.7, size = 1) +
     geom_text(
         position = position_dodge(width = 0.9), vjust = 0.5, hjust = -0.5) +
-    ggtitle("Peptide novelty reasons") +
+    ggtitle("Evidence novelty reasons") +
     xlab("Novelty reason") +
     theme_pubr() +
     theme(
@@ -589,16 +569,16 @@ pl <- ggplot(
     facet_grid(~PEPfilter)
 pl
 
-# Plot the ORF count per novelty reasons
+# Plot the peptide count per novelty reasons
 pl <- ggplot(
-    data %>% dplyr::filter(., feature == "Number_ORF"),
+    data %>% dplyr::filter(., feature == "Peptide"),
     aes(
         x = NoveltyReason, y = Count, fill = PEPfilter,
         colour = PEPfilter, label = Count)) +
     geom_bar(stat = "identity", position = "dodge", alpha = 0.7, size = 1) +
     geom_text(
         position = position_dodge(width = 0.9), vjust = 0.5, hjust = -0.5) +
-    ggtitle("ORF novelty reasons") +
+    ggtitle("Peptide novelty reasons") +
     xlab("Novelty reason") +
     theme_pubr() +
     theme(
