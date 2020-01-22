@@ -28,7 +28,7 @@ if (interactive()) {
             "C:/Users",
             user,
             "Documents/GitHub/Proteogenomics_reannotation/",
-            "R/6frames_proteogenomics/helper.R",
+            "tools/Rscripts/helper.R",
             sep = "/"))
 } else {
     source(
@@ -39,15 +39,15 @@ if (interactive()) {
 }
 
 # Load the required packages (or install if not already in library)
-load_package("plyr")
-load_package("dplyr")
-load_package("magrittr")
-load_package("data.table")
-load_package("splitstackshape")
-load_package("stringr")
-load_package("optparse")
-load_package("seqinr")
-load_package("UniProt.ws")
+library(plyr)
+library(dplyr)
+library(magrittr)
+library(data.table)
+library(splitstackshape)
+library(stringr)
+library(optparse)
+library(seqinr)
+library(UniProt.ws)
 
 
 
@@ -152,25 +152,61 @@ fasta <- seqinr::read.fasta(
 # Clean up the UniProtKB
 names(fasta) <- uni_id_clean(names(fasta))
 
-# Create UniProt.ws object for submitted taxon ID
-up <- UniProt.ws(taxId = as.numeric(as.character(opt$taxon)))
+#
+data_final <- lapply(fasta, function(x) {
+    attr(x, "Annot")
+}) %>%
+    set_names(names(fasta)) %>%
+    plyr::ldply(., "data.frame", .id = opt[["key"]]) %>%
+    dplyr::mutate(
+        ., 
+        `ENTRY-NAME` = sub(".+\\|([^ ]+).+", "\\1", `data.frame`),
+        `GENE-NAME` = ifelse(
+            grepl("GN=", `data.frame`, fixed = TRUE),
+            sub(".+ GN=([^ ]+).+", "\\1", `data.frame`),
+            NA),
+        `PROTEIN-NAME` = sub("[^ ]+ (.+) OS=.+", "\\1", `data.frame`),
+        TaxonID = sub(".+ OX=([^ ]+).+", "\\1", `data.frame`),
+        Taxon = sub(".+ OS=(.+) OX=.+", "\\1", `data.frame`)) %>%
+    dplyr::select(., -`data.frame`)
 
-# Get all the columns specified by user
-data <- UniProt.ws::select(
-    x = up, keys = names(fasta), columns = opt$columns, keytype = opt$key)
+# 
+#my_data <- fasta_to_taxon %>%
+#    split(x = ., f = .[["TaxonID"]]) %>%
+#    lapply(X = ., function(x) {
+#    
+#    # Create UniProt.ws object for submitted taxon ID
+#    up <- UniProt.ws(taxId = as.numeric(as.character(unique(x[["TaxonID"]]))))
+#    
+#    # Split the data into small list subset
+#    data <- x[["UNIPROTKB"]] %>%
+#        as.character(.) %>%
+#        split(., ceiling(seq_along(.)/100))
+#    
+#    # Get all the columns specified by user
+#    lapply(data, function(i) {
+#        UniProt.ws::select(
+#            x = up, keys = i,
+#            columns = opt$columns, keytype = opt$key)
+#    }) %>%
+#        unlist(.)
+#    
+#}) %>%
+#    set_names(names(fasta_to_taxon)) %>%
+#    plyr::ldply(., "data.frame", .id = "TaxonID")
 
 # Extract the gene name and locus from the GENES column if existing
-if (any(colnames(data) %in% c("GENES"))) {
-    data_final <- data %>%
-        dplyr::mutate(
-            .,
-            `GENE-NAME` = sub(
-                "^(.*?) .*$", "\\1", GENES, perl = TRUE),
-            `ALT-GENE-NAME` = sub(
-                "^.*? (.*)$", "\\1", GENES, perl = TRUE))
-} else {
-    data_final <- data
-}
+#if (any(colnames(data) %in% c("GENES"))) {
+#    data_final <- data %>%
+#        dplyr::mutate(
+#            .,
+#            `GENE-NAME` = sub(
+#                "^(.*?) .*$", "\\1", GENES, perl = TRUE),
+#            `ALT-GENE-NAME` = sub(
+#                "^.*? (.*)$", "\\1", GENES, perl = TRUE))
+#} else {
+#    data_final <- data
+#}
 
 
 
