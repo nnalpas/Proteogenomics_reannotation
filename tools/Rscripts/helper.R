@@ -893,7 +893,8 @@ novel_pep_classify <- function(
         my_res$blast <- paste(
             blast$sseqid, blast$evalue_reciproc,
             blast$score_reciproc, blast$pident_reciproc,
-            sep = "/")
+            blast$Description, blast$Taxon,
+            sep = "|")
         
         # Check whether the peptide is within the matching blast positions
         if (
