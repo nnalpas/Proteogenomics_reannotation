@@ -753,76 +753,101 @@ if (length(all_rbs_motifs) > 0) {
 
 # Get all ORF to explain
 orf_reason <- evid_reason %>%
+    dplyr::filter(., Database %in% c("Novel", "Target")) %>%
     dplyr::select(
         ., Sequence, Proteins, PEP, `MS/MS count`, Score, Intensity,
-        group, Database, OnlyIdBySite, NoveltyReason, PEPfilter) %>%
+        group, Database, OnlyIdBySite, NoveltyReason, PEPfilter,
+        blast_ref, blast_best) %>%
     cSplit(
         indt = ., splitCols = "Proteins", sep = ";",
         direction = "long", fixed = TRUE) %>%
     dplyr::filter(., Proteins %in% targets)
 
 # Compile info for each novel ORFs based on all sequences (target and novel)
-orf_reason_cat <- orf_reason %>%
-    dplyr::group_by(., Proteins) %>%
-    dplyr::mutate(
-        .,
-        all_peptide_count = n_distinct(Sequence),
-        all_Sequence = paste(unique(Sequence), collapse = ";"),
-        all_min_PEP = min(PEP, na.rm = TRUE),
-        all_sum_MSMS_Count = sum(`MS/MS count`, na.rm = TRUE),
-        all_max_Score = max(Score, na.rm = TRUE),
-        all_sum_Intensity = sum(Intensity, na.rm = TRUE))
+#orf_reason_cat <- orf_reason %>%
+#    dplyr::group_by(., Proteins) %>%
+#    dplyr::mutate(
+#        .,
+#        all_peptide_count = n_distinct(Sequence),
+#        all_Sequence = paste(unique(Sequence), collapse = ";"),
+#        all_min_PEP = min(PEP, na.rm = TRUE),
+#        all_sum_MSMS_Count = sum(`MS/MS count`, na.rm = TRUE),
+#        all_max_Score = max(Score, na.rm = TRUE),
+#        all_sum_Intensity = sum(Intensity, na.rm = TRUE))
 
-# Compile info for each novel ORFs based on novel only sequences
-orf_reason_cat %<>%
-    dplyr::filter(., Database == "Novel") %>%
-    dplyr::group_by(., Proteins) %>%
+# Compile peptide info for each novel ORFs
+orf_reason_cat <- orf_reason %>%
+    dplyr::group_by(., Proteins, Database) %>%
     dplyr::summarise(
         .,
-        novel_peptide_count = n_distinct(Sequence),
-        novel_Sequence = paste(unique(Sequence), collapse = ";"),
-        novel_min_PEP = min(PEP, na.rm = TRUE),
-        novel_sum_MSMS_Count = sum(`MS/MS count`, na.rm = TRUE),
-        novel_max_Score = max(Score, na.rm = TRUE),
-        novel_sum_Intensity = sum(Intensity, na.rm = TRUE),
-        all_peptide_count = unique(all_peptide_count),
-        all_Sequence = unique(all_Sequence),
-        all_min_PEP = unique(all_min_PEP),
-        all_sum_MSMS_Count = unique(all_sum_MSMS_Count),
-        all_max_Score = unique(all_max_Score),
-        all_sum_Intensity = unique(all_sum_Intensity),
+        peptide_count = n_distinct(Sequence),
+        Sequence = paste(unique(Sequence), collapse = ";"),
+        min_PEP = min(PEP, na.rm = TRUE),
+        sum_MSMS_Count = sum(`MS/MS count`, na.rm = TRUE),
+        max_Score = max(Score, na.rm = TRUE),
+        sum_Intensity = sum(Intensity, na.rm = TRUE)) %>%
+    tidyr::gather(data = ., key = "Param", value = "Value", -Proteins, -Database, convert = TRUE) %>%
+    tidyr::unite(data = ., col = "Key", Database, Param, sep = "_", remove = TRUE) %>%
+    tidyr::spread(data = ., key = "Key", value = "Value", convert = TRUE) %>%
+    ungroup()
+
+# Compile ORF database and quality metrics
+orf_reason_cat <- orf_reason %>%
+    dplyr::filter(., Database == "Novel") %>%
+    dplyr::group_by(Proteins) %>%
+    dplyr::summarise(
         group = paste(unique(group), collapse = ";"),
         Database = paste(unique(Database), collapse = ";"),
-        PepNoveltyReason = paste(
-            sort(as.character(unique(NoveltyReason))), collapse = ";"),
         OnlyIdBySite = ifelse(all(OnlyIdBySite == FALSE), FALSE, TRUE),
         PEPfilter = dplyr::case_when(
             any(PEPfilter == "class 1") ~ "class 1",
             any(PEPfilter == "class 2") ~ "class 2",
             any(PEPfilter == "class 3") ~ "class 3",
             TRUE ~ NA_character_)) %>%
-    dplyr::arrange(., desc(novel_peptide_count))
+    dplyr::left_join(x = orf_reason_cat, y = ., by = "Proteins") %>%
+    dplyr::arrange(., desc(Novel_peptide_count))
+
+# Simplify the peptide novelty by prioritising the best reason
+orf_reason_clean <- orf_reason %>%
+    dplyr::filter(., Database == "Novel") %>%
+    dplyr::select(., Proteins, NoveltyReason) %>%
+    tidyr::separate(
+        data = ., col = "NoveltyReason", into = c("ref_reason", "best_reason"),
+        sep = " \\(", remove = TRUE, convert = FALSE) %>%
+    dplyr::group_by(Proteins, ref_reason) %>%
+    dplyr::summarise(
+        ., reason = dplyr::case_when(
+            any(is.na(best_reason)) ~ NA_character_,
+            any(best_reason == "partial match elsewhere)") ~ "partial match elsewhere)",
+            any(best_reason == "SAV match elsewhere)") ~ "SAV match elsewhere)",
+            any(best_reason == "exact match elsewhere)") ~ "exact match elsewhere)")) %>%
+    dplyr::ungroup() %>%
+    tidyr::unite(data = ., col = "NoveltyReason", ref_reason, reason, sep = " (", remove = TRUE, na.rm = TRUE) %>%
+    dplyr::group_by(Proteins) %>%
+    dplyr::summarise(., ORFNoveltyReason = paste(
+        sort(as.character(unique(NoveltyReason))), collapse = ";")) %>%
+    dplyr::left_join(x = orf_reason_cat, y = ., by = "Proteins")
 
 # Clean-up the ORF novelty reason by removing 'Not novel' if another reason
-orf_reason_clean <- orf_reason_cat %>%
-    dplyr::mutate(., ORFNoveltyReason = sub(
-        "(;Not novel|Not novel;)", "", PepNoveltyReason))
+#orf_reason_clean <- orf_reason_cat %>%
+#    dplyr::mutate(., ORFNoveltyReason = sub(
+#        "(;Not novel|Not novel;)", "", PepNoveltyReason))
 
 # Clean-up the ORF novelty reason by removing 'Potential alternate start'
 # if 'Alternate start (known other species)' reason
-orf_reason_clean %<>%
-    dplyr::mutate(., ORFNoveltyReason = sub(
-        "(Alternate start \\(known other species\\));Potential alternate start",
-        "\\1",
-        ORFNoveltyReason))
+#orf_reason_clean %<>%
+#    dplyr::mutate(., ORFNoveltyReason = sub(
+#        "(Alternate start \\(known other species\\));Potential alternate start",
+#        "\\1",
+#        ORFNoveltyReason))
 
 # Clean-up the ORF novelty reason by removing 'SAV'
 # if 'SAVs/InDels' reason
-orf_reason_clean %<>%
-    dplyr::mutate(., ORFNoveltyReason = sub(
-        "SAV;(SAVs/InDels)",
-        "\\1",
-        ORFNoveltyReason))
+#orf_reason_clean %<>%
+#    dplyr::mutate(., ORFNoveltyReason = sub(
+#        "SAV;(SAVs/InDels)",
+#        "\\1",
+#        ORFNoveltyReason))
 
 # Include the neighbour reference entry analysis
 orf_reason_neighb <- neighbours_analysis %>%
@@ -889,14 +914,17 @@ if (exists("rbs_results")) {
     
 }
 
-# Compute final ORF novelty reason based on five prime neighbour and RBS motif
+# Compute final ORF novelty reason based on five/three prime neighbour
 orf_reason_final <- orf_reason_rbs %>% 
     dplyr::mutate(., ORFNoveltyReason = dplyr::case_when(
-        ORFNoveltyReason == "Potential alternate start" &
+        grepl("Potential alternate start|Potentially novel", ORFNoveltyReason) &
             !is.na(`Five neighbour (+/-3bp)`) ~ paste(
                 ORFNoveltyReason, "Erroneous termination", sep = ";"),
-        ORFNoveltyReason == "Potentially novel" &
-            !is.na(`Five neighbour (+/-3bp)`) ~ "Erroneous termination",
+        TRUE ~ ORFNoveltyReason)) %>%
+    dplyr::mutate(., ORFNoveltyReason = dplyr::case_when(
+        grepl("Potential alternate end|Potentially novel", ORFNoveltyReason) &
+            !is.na(`Three neighbour (+/-3bp)`) ~ paste(
+                ORFNoveltyReason, "Erroneous start", sep = ";"),
         TRUE ~ ORFNoveltyReason))
 
 # Include the nucleotide and amino acid length
@@ -911,6 +939,30 @@ orf_reason_final <- orf_grange %>%
     as.data.frame(., stringsAsFactors = FALSE) %>%
     dplyr::select(., seqnames, start, end, strand, id) %>%
     set_colnames(c("Chromosome", "start", "end", "strand", "Proteins")) %>%
+    dplyr::left_join(x = orf_reason_final, y = ., by = "Proteins")
+
+# Include the best blast data
+blast_info <- orf_reason %>%
+    dplyr::filter(., Database == "Novel") %>%
+    dplyr::select(., Proteins, blast_ref, blast_best) %>%
+    tidyr::gather(
+        data = ., key = "key", value = "value", -Proteins,
+        na.rm = FALSE, convert = FALSE) %>%
+    cSplit(
+        indt = ., splitCols = "value", sep = ";", direction = "long",
+        fixed = TRUE, drop = TRUE, type.convert = TRUE) %>%
+    tidyr::separate(
+        data = ., col = "value",
+        into = c("id", "evalue", "score", "pident", "description", "taxon"),
+        sep = "\\|", remove = TRUE, convert = TRUE) %>%
+    dplyr::group_by(Proteins, key) %>%
+    dplyr::summarise_all(~paste(unique(.), collapse = ";")) %>%
+    dplyr::ungroup(.)
+orf_reason_final <- blast_info %>%
+    dplyr::filter(., key == "blast_best") %>%
+    dplyr::select(
+        ., Proteins, best_blast_id = id,
+        best_blast_description = description, best_blast_taxon = taxon) %>%
     dplyr::left_join(x = orf_reason_final, y = ., by = "Proteins")
 
 
