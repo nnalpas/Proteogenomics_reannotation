@@ -1035,7 +1035,7 @@ for (x in names(neighbours_list)) {
             .fun = function(piece) {
                 summarise(piece, freq = length(queryID)) },
             .drop = FALSE,
-            .parallel = TRUE)
+            .parallel = FALSE)
     
     # Visualise frequency as histogram
     pl <- plots_hist(
@@ -1342,20 +1342,20 @@ plot(pl_hq_orf_reason_rbs[[1]])
 
 # Frequency of ORF per number of novel peptide per novelty type
 toplot <- orf_reason_final %>%
-    dplyr::select(., Proteins, ORFNoveltyReason, novel_peptide_count) %>%
+    dplyr::select(., Proteins, ORFNoveltyReason, Novel_peptide_count) %>%
     plyr::ddply(
         .data = .,
-        .variables = .(ORFNoveltyReason, novel_peptide_count),
+        .variables = .(ORFNoveltyReason, Novel_peptide_count),
         .fun = summarise,
         count = dplyr::n_distinct(Proteins),
         .drop = FALSE) %>%
     dplyr::mutate(., Type = "All novel")
 toplot <- orf_reason_final %>%
     dplyr::filter(., Proteins %in% unique(orf_reason_highqual$Proteins)) %>%
-    dplyr::select(., Proteins, ORFNoveltyReason, novel_peptide_count) %>%
+    dplyr::select(., Proteins, ORFNoveltyReason, Novel_peptide_count) %>%
     plyr::ddply(
         .data = .,
-        .variables = .(ORFNoveltyReason, novel_peptide_count),
+        .variables = .(ORFNoveltyReason, Novel_peptide_count),
         .fun = summarise,
         count = dplyr::n_distinct(Proteins),
         .drop = FALSE) %>%
@@ -1364,7 +1364,7 @@ toplot <- orf_reason_final %>%
 pl_all_orf_freq <- plots_hist(
     data = toplot %>%
         dplyr::filter(., Type == "All novel"),
-    key = "novel_peptide_count",
+    key = "Novel_peptide_count",
     value = "count",
     group = "ORFNoveltyReason",
     fill = "ORFNoveltyReason", posit = "dodge",
@@ -1379,7 +1379,7 @@ plot(pl_all_orf_freq[[1]] + facet_wrap(facets = "ORFNoveltyReason"))
 pl_qc_orf_freq <- plots_hist(
     data = toplot %>%
         dplyr::filter(., Type == "Quality filtered"),
-    key = "novel_peptide_count",
+    key = "Novel_peptide_count",
     value = "count",
     group = "ORFNoveltyReason",
     fill = "ORFNoveltyReason", posit = "dodge",
@@ -1631,7 +1631,7 @@ plot(pl_coverage)
 
 # Define a high quality target list
 high_qual_targets <- orf_reason_highqual %>%
-    dplyr::filter(., novel_peptide_count >= 2) %>%
+    dplyr::filter(., Novel_peptide_count >= 2) %>%
     .[["Proteins"]]
 
 # Filter the peptide GRange for duplicate ID
