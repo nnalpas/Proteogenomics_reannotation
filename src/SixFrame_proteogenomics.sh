@@ -247,14 +247,17 @@ fi
 # Check whether to identify the best blast hits from all results of previous step
 if [ $BestBlast == 1 ]; then
 
-    ${PBS_O_HOME}/bin/Best_blast.R \
-		-i ${ProjDir}/Blast/ORFprot_vs_Refprot \
-		-o ${ProjDir}/Blast > ${LogDir}/BestBlast.log 2>&1
-    ${PBS_O_HOME}/bin/Best_blast.R \
-		-i ${ProjDir}/Blast/ORFprot_vs_Uniprot \
-		-o ${ProjDir}/Blast >> ${LogDir}/BestBlast.log 2>&1
-    ${PBS_O_HOME}/bin/Best_blast.R \
-		-i ${ProjDir}/Blast/ORFprot_vs_NCBIprot \
+    #${PBS_O_HOME}/bin/Best_blast.R \
+	#	-i ${ProjDir}/Blast/ORFprot_vs_Refprot \
+	#	-o ${ProjDir}/Blast > ${LogDir}/BestBlast.log 2>&1
+    #${PBS_O_HOME}/bin/Best_blast.R \
+	#	-i ${ProjDir}/Blast/ORFprot_vs_Uniprot \
+	#	-o ${ProjDir}/Blast >> ${LogDir}/BestBlast.log 2>&1
+    #${PBS_O_HOME}/bin/Best_blast.R \
+	#	-i ${ProjDir}/Blast/ORFprot_vs_NCBIprot \
+	#	-o ${ProjDir}/Blast >> ${LogDir}/BestBlast.log 2>&1
+	${PBS_O_HOME}/bin/Best_blast.R \
+		-i ${ProjDir}/Blast/ORFprot_vs_Strathprot \
 		-o ${ProjDir}/Blast >> ${LogDir}/BestBlast.log 2>&1
     
 fi
@@ -268,39 +271,50 @@ fi
 # Check whether to perform the reciprocal best blast against previously used databases
 if [ $ReciprocalBlast == 1 ]; then
     
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+    #${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+	#	-o ${ProjDir}/ReciprocalBlast \
+	#	-y "prot" \
+	#	-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_Refprot \
+	#	-a "blastp" \
+	#	-s ${UNIREFPROT} \
+	#	-q ${SIXFRAMEPROT} \
+	#	-e ${Eval} \
+	#	-n ${NumAlign} \
+	#	-t ${THREADS} \
+	#	-b "Refprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
+    #${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+	#	-o ${ProjDir}/ReciprocalBlast \
+	#	-y "prot" \
+	#	-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_Uniprot \
+	#	-a "blastp" \
+	#	-s ${ALLUNIPROT} \
+	#	-q ${SIXFRAMEPROT} \
+	#	-e ${Eval} \
+	#	-n ${NumAlign} \
+	#	-t ${THREADS} \
+	#	-b "Uniprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
+    #${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+	#	-o ${ProjDir}/ReciprocalBlast \
+	#	-y "prot" \
+	#	-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_NCBIprot \
+	#	-a "blastp" \
+	#	-s ${ALLNCBIPROT} \
+	#	-q ${SIXFRAMEPROT} \
+	#	-e ${Eval} \
+	#	-n ${NumAlign} \
+	#	-t ${THREADS} \
+	#	-b "NCBIprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
+	${PBS_O_HOME}/bin/BlastDbBlasting.sh \
 		-o ${ProjDir}/ReciprocalBlast \
 		-y "prot" \
-		-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_Refprot \
+		-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_Strathprot \
 		-a "blastp" \
-		-s ${UNIREFPROT} \
+		-s ${STRATHPROT} \
 		-q ${SIXFRAMEPROT} \
 		-e ${Eval} \
 		-n ${NumAlign} \
 		-t ${THREADS} \
-		-b "Refprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh \
-		-o ${ProjDir}/ReciprocalBlast \
-		-y "prot" \
-		-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_Uniprot \
-		-a "blastp" \
-		-s ${ALLUNIPROT} \
-		-q ${SIXFRAMEPROT} \
-		-e ${Eval} \
-		-n ${NumAlign} \
-		-t ${THREADS} \
-		-b "Uniprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh \
-		-o ${ProjDir}/ReciprocalBlast \
-		-y "prot" \
-		-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_NCBIprot \
-		-a "blastp" \
-		-s ${ALLNCBIPROT} \
-		-q ${SIXFRAMEPROT} \
-		-e ${Eval} \
-		-n ${NumAlign} \
-		-t ${THREADS} \
-		-b "NCBIprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
+		-b "Strathprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
     
 fi
 
@@ -313,19 +327,23 @@ fi
 # Check whether to perform reciprocal best blast hit data processing
 if [ $ReciprocalBestBlast == 1 ]; then
 
+    #${PBS_O_HOME}/bin/Reciprocal_best_blast.R \
+	#	-b ${ProjDir}/Blast/ORFprot_vs_Refprot \
+	#	-r ${ProjDir}/ReciprocalBlast/Refprot_vs_ORFprot \
+	#	-o ${ProjDir}/ReciprocalBlast > ${LogDir}/ReciprocalBestBlast.log 2>&1
+    #${PBS_O_HOME}/bin/Reciprocal_best_blast.R \
+	#	-b ${ProjDir}/Blast/ORFprot_vs_Uniprot \
+	#	-r ${ProjDir}/ReciprocalBlast/Uniprot_vs_ORFprot \
+	#	-o ${ProjDir}/ReciprocalBlast >> ${LogDir}/ReciprocalBestBlast.log 2>&1
+    #${PBS_O_HOME}/bin/Reciprocal_best_blast.R \
+	#	-b ${ProjDir}/Blast/ORFprot_vs_NCBIprot \
+	#	-r ${ProjDir}/ReciprocalBlast/NCBIprot_vs_ORFprot \
+	#	-o ${ProjDir}/ReciprocalBlast >> ${LogDir}/ReciprocalBestBlast.log 2>&1
     ${PBS_O_HOME}/bin/Reciprocal_best_blast.R \
-		-b ${ProjDir}/Blast/ORFprot_vs_Refprot \
-		-r ${ProjDir}/ReciprocalBlast/Refprot_vs_ORFprot \
-		-o ${ProjDir}/ReciprocalBlast > ${LogDir}/ReciprocalBestBlast.log 2>&1
-    ${PBS_O_HOME}/bin/Reciprocal_best_blast.R \
-		-b ${ProjDir}/Blast/ORFprot_vs_Uniprot \
-		-r ${ProjDir}/ReciprocalBlast/Uniprot_vs_ORFprot \
+		-b ${ProjDir}/Blast/ORFprot_vs_Strathprot \
+		-r ${ProjDir}/ReciprocalBlast/Strathprot_vs_ORFprot \
 		-o ${ProjDir}/ReciprocalBlast >> ${LogDir}/ReciprocalBestBlast.log 2>&1
-    ${PBS_O_HOME}/bin/Reciprocal_best_blast.R \
-		-b ${ProjDir}/Blast/ORFprot_vs_NCBIprot \
-		-r ${ProjDir}/ReciprocalBlast/NCBIprot_vs_ORFprot \
-		-o ${ProjDir}/ReciprocalBlast >> ${LogDir}/ReciprocalBestBlast.log 2>&1
-    
+	
 fi
 
 
