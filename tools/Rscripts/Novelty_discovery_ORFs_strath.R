@@ -1651,7 +1651,7 @@ pep_grange_unique <- subset(
 # Loop through all high quality candidate ORFs
 warning("Generating genomic visualisation only for high quality ORFs!")
 pl_genome_list <- list()
-for (i in high_qual_targets[33:length(high_qual_targets)]) {
+for (i in high_qual_targets) {
     
     # Generate all genomic representation for reference and novel entries
     # as well as peptide and sanger sequences
