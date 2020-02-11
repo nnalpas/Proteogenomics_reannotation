@@ -1640,7 +1640,7 @@ plot(pl_coverage)
 
 # Define a high quality target list
 high_qual_targets <- orf_reason_highqual %>%
-    dplyr::filter(., Novel_peptide_count >= 2) %>%
+    #dplyr::filter(., Novel_peptide_count >= 2) %>%
     .[["Proteins"]]
 
 # Filter the peptide GRange for duplicate ID
@@ -1733,6 +1733,9 @@ for (i in high_qual_targets) {
     
 }
 
+# Close the pdf file
+dev.off()
+
 # Export all plots as RDS file
 all_figures <- list(
     datab_count = pl_datab_count[[1]],
@@ -1755,9 +1758,6 @@ saveRDS(
 
 # Close the cluster
 stopImplicitCluster()
-
-# Close the pdf file
-dev.off()
 
 # Time scripts end
 print(paste("Completed ", format(Sys.time(), "%Y-%m-%d"), sep = ""))

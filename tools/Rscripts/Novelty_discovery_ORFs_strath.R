@@ -1640,7 +1640,7 @@ plot(pl_coverage)
 
 # Define a high quality target list
 high_qual_targets <- orf_reason_highqual %>%
-    dplyr::filter(., Novel_peptide_count >= 2) %>%
+    #dplyr::filter(., Novel_peptide_count >= 2) %>%
     .[["Proteins"]]
 
 # Filter the peptide GRange for duplicate ID
