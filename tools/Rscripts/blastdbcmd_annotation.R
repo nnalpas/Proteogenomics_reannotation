@@ -25,6 +25,11 @@ my_ncbi <- fread(
     sep = "\t", quote = "",
     header = FALSE, stringsAsFactors = FALSE, data.table = FALSE)
 
+my_strath <- fread(
+    input = "C:\\Users\\kxmna01\\Dropbox\\Home_work_sync\\Work\\Srim_6frame\\ReciprocalBlast\\Strathclyde_annot.txt",
+    sep = ";", quote = "",
+    header = FALSE, stringsAsFactors = FALSE, data.table = FALSE)
+
 my_best_reci_uni <- fread(
     input = "C:\\Users\\kxmna01\\Dropbox\\Home_work_sync\\Work\\Srim_6frame\\ReciprocalBlast\\Best_Reciproc_Blast_Uniprot_vs_ORFprot",
     sep = "\t", quote = "",
@@ -36,7 +41,13 @@ my_best_reci_ref <- fread(
     header = TRUE, stringsAsFactors = FALSE, data.table = FALSE)
 
 my_best_reci_ncbi <- fread(
-    input = "C:\\Users\\kxmna01\\Dropbox\\Home_work_sync\\Work\\Srim_6frame\\ReciprocalBlast\\Best_Reciproc_Blast_NCBIprot_vs_ORFprot", sep = "\t", quote = "",
+    input = "C:\\Users\\kxmna01\\Dropbox\\Home_work_sync\\Work\\Srim_6frame\\ReciprocalBlast\\Best_Reciproc_Blast_NCBIprot_vs_ORFprot",
+    sep = "\t", quote = "",
+    header = TRUE, stringsAsFactors = FALSE, data.table = FALSE)
+
+my_best_reci_strath <- fread(
+    input = "C:\\Users\\kxmna01\\Dropbox\\Home_work_sync\\Work\\Srim_6frame\\ReciprocalBlast\\Best_Reciproc_Blast_Strathprot_vs_ORFprot",
+    sep = "\t", quote = "",
     header = TRUE, stringsAsFactors = FALSE, data.table = FALSE)
 
 #
@@ -73,6 +84,18 @@ my_ncbi_format <- my_ncbi %>%
         into = c("Description", "Taxon"),
         sep = ";")
 
+my_strath_format <- my_strath %>%
+    set_colnames(c("ID", "header", "TaxonID")) %>%
+    tidyr::separate(
+        data = ., col = "header",
+        into = c("Nothin", "GeneName", "Type", "DescriptionTMP", "Location"),
+        sep = "\\|") %>%
+    dplyr::mutate(
+        ., Description = gsub(
+            "(^ | $)", "", DescriptionTMP),
+        Taxon = "Streptomyces rimosus subsp. rimosus ATCC 10970") %>%
+    dplyr::select(., ID, Description, Taxon, TaxonID)
+
 #
 my_best_reci_uni %<>%
     dplyr::left_join(x = ., y = my_uni_format, by = c("sseqid" = "ID"))
@@ -82,6 +105,9 @@ my_best_reci_ref %<>%
 
 my_best_reci_ncbi %<>%
     dplyr::left_join(x = ., y = my_ncbi_format, by = c("sseqid" = "ID"))
+
+my_best_reci_strath %<>%
+    dplyr::left_join(x = ., y = my_strath_format, by = c("sseqid" = "ID"))
 
 #
 data.table::fwrite(
@@ -99,6 +125,12 @@ data.table::fwrite(
 data.table::fwrite(
     x = my_best_reci_ncbi,
     file = "C:\\Users\\kxmna01\\Dropbox\\Home_work_sync\\Work\\Srim_6frame\\ReciprocalBlast\\Best_Reciproc_Blast_NCBIprot_vs_ORFprot_annot",
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
+
+data.table::fwrite(
+    x = my_best_reci_strath,
+    file = "C:\\Users\\kxmna01\\Dropbox\\Home_work_sync\\Work\\Srim_6frame\\ReciprocalBlast\\Best_Reciproc_Blast_Strathprot_vs_ORFprot_annot",
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
 
