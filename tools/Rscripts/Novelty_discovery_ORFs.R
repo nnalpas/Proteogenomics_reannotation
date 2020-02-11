@@ -786,8 +786,11 @@ orf_reason_cat <- orf_reason %>%
         sum_MSMS_Count = sum(`MS/MS count`, na.rm = TRUE),
         max_Score = max(Score, na.rm = TRUE),
         sum_Intensity = sum(Intensity, na.rm = TRUE)) %>%
-    tidyr::gather(data = ., key = "Param", value = "Value", -Proteins, -Database, convert = TRUE) %>%
-    tidyr::unite(data = ., col = "Key", Database, Param, sep = "_", remove = TRUE) %>%
+    tidyr::gather(
+        data = ., key = "Param", value = "Value",
+        -Proteins, -Database, convert = TRUE) %>%
+    tidyr::unite(
+        data = ., col = "Key", Database, Param, sep = "_", remove = TRUE) %>%
     tidyr::spread(data = ., key = "Key", value = "Value", convert = TRUE) %>%
     ungroup()
 
@@ -976,7 +979,7 @@ orf_reason_highqual <- orf_reason_final %>%
 
 
 
-### Data visualisation and export ----------------------------------------
+### Data description and coverage ----------------------------------------
 
 # Open a file for plot visualisation
 pdf(
@@ -1223,7 +1226,9 @@ toplot <- orf_reason_final %>%
     dplyr::group_by(., ORFNoveltyReason) %>%
     dplyr::summarise(., count = n_distinct(Proteins)) %>%
     dplyr::mutate(., Type = "Quality filtered") %>%
-    dplyr::bind_rows(toplot, .)
+    dplyr::bind_rows(toplot, .) %>%
+    dplyr::mutate(., ORFNoveltyReason = stringr::str_trunc(
+        string = ORFNoveltyReason, width = 60, side = "right"))
 pl_orf_reason <- plots_hist(
     data = toplot,
     key = "ORFNoveltyReason",
@@ -1236,7 +1241,7 @@ pl_orf_reason <- plots_hist(
     textsize = 15,
     label = "count",
     bw = TRUE,
-    legend = "right",
+    legend = "bottom",
     xdir = "vertical")
 plot(pl_orf_reason[[1]] + coord_flip())
 
@@ -1256,7 +1261,9 @@ toplot <- orf_reason_final %>%
         .data = ., .variables = .(ORFNoveltyReason, within_operon),
         .fun = summarise, count = n_distinct(Proteins), .drop = FALSE) %>%
     dplyr::mutate(., Type = "Quality filtered") %>%
-    dplyr::bind_rows(toplot, .)
+    dplyr::bind_rows(toplot, .) %>%
+    dplyr::mutate(., ORFNoveltyReason = stringr::str_trunc(
+        string = ORFNoveltyReason, width = 60, side = "right"))
 pl_all_orf_reason_operon <- plots_hist(
     data = toplot %>% dplyr::filter(., Type == "All novel"),
     key = "ORFNoveltyReason",
@@ -1269,9 +1276,9 @@ pl_all_orf_reason_operon <- plots_hist(
     ylabel = "Count of ORF",
     textsize = 15,
     bw = TRUE,
-    legend = "right",
+    legend = "bottom",
     xdir = "vertical")
-plot(pl_all_orf_reason_operon[[1]])
+plot(pl_all_orf_reason_operon[[1]] + coord_flip())
 pl_hq_orf_reason_operon <- plots_hist(
     data = toplot %>% dplyr::filter(., Type == "Quality filtered"),
     key = "ORFNoveltyReason",
@@ -1284,9 +1291,9 @@ pl_hq_orf_reason_operon <- plots_hist(
     ylabel = "Count of ORF",
     textsize = 15,
     bw = TRUE,
-    legend = "right",
+    legend = "bottom",
     xdir = "vertical")
-plot(pl_hq_orf_reason_operon[[1]])
+plot(pl_hq_orf_reason_operon[[1]] + coord_flip())
 
 # Visualise ORF per novelty type and RBS motif results
 toplot <- orf_reason_final %>%
@@ -1308,7 +1315,9 @@ toplot <- orf_reason_final %>%
         .data = ., .variables = .(ORFNoveltyReason, rbs_type),
         .fun = summarise, count = n_distinct(Proteins), .drop = FALSE) %>%
     dplyr::mutate(., Type = "Quality filtered") %>%
-    dplyr::bind_rows(toplot, .)
+    dplyr::bind_rows(toplot, .) %>%
+    dplyr::mutate(., ORFNoveltyReason = stringr::str_trunc(
+        string = ORFNoveltyReason, width = 60, side = "right"))
 pl_all_orf_reason_rbs <- plots_hist(
     data = toplot %>% dplyr::filter(., Type == "All novel"),
     key = "ORFNoveltyReason",
@@ -1321,9 +1330,9 @@ pl_all_orf_reason_rbs <- plots_hist(
     ylabel = "Count of ORF",
     textsize = 15,
     bw = TRUE,
-    legend = "right",
+    legend = "bottom",
     xdir = "vertical")
-plot(pl_all_orf_reason_rbs[[1]])
+plot(pl_all_orf_reason_rbs[[1]] + coord_flip())
 pl_hq_orf_reason_rbs <- plots_hist(
     data = toplot %>% dplyr::filter(., Type == "Quality filtered"),
     key = "ORFNoveltyReason",
@@ -1336,9 +1345,9 @@ pl_hq_orf_reason_rbs <- plots_hist(
     ylabel = "Count of ORF",
     textsize = 15,
     bw = TRUE,
-    legend = "right",
+    legend = "bottom",
     xdir = "vertical")
-plot(pl_hq_orf_reason_rbs[[1]])
+plot(pl_hq_orf_reason_rbs[[1]] + coord_flip())
 
 # Frequency of ORF per number of novel peptide per novelty type
 toplot <- orf_reason_final %>%
@@ -1373,7 +1382,7 @@ pl_all_orf_freq <- plots_hist(
     ylabel = "Count of ORF",
     textsize = 15,
     label = "count",
-    legend = "bottom",
+    legend = "none",
     xdir = "horizontal")
 plot(pl_all_orf_freq[[1]] + facet_wrap(facets = "ORFNoveltyReason"))
 pl_qc_orf_freq <- plots_hist(
@@ -1388,9 +1397,12 @@ pl_qc_orf_freq <- plots_hist(
     ylabel = "Count of ORF",
     textsize = 15,
     label = "count",
-    legend = "bottom",
+    legend = "none",
     xdir = "horizontal")
 plot(pl_qc_orf_freq[[1]] + facet_wrap(facets = "ORFNoveltyReason"))
+
+# Close the device
+dev.off()
 
 # Export neighbour results (as txt and RDS files)
 saveRDS(
@@ -1464,7 +1476,12 @@ write.table(
 
 
 
-### Genomic visualisation and plots export -------------------------------
+### Genomic visualisation and ORF coverage -------------------------------
+
+# Open a file for plot visualisation
+pdf(
+    file = paste0(opt$output, "/", "ORF_genomic_visualisation.pdf"),
+    width = 10, height = 10)
 
 # Define reference entries that are expressed
 expr_known <- evid_reason %>%
@@ -1490,14 +1507,6 @@ pl_rectvenn <- plots_rectvenn(
     ideo = genome_grange, ref = ref_grange_expr, pep = pep_grange)
 pl_rectvenn
 
-# Close the device
-dev.off()
-
-# Open a file for plot visualisation
-pdf(
-    file = paste0(opt$output, "/", "ORF_genomic_visualisation.pdf"),
-    width = 10, height = 10)
-
 # Define novel entries that are expressed
 expr_novel <- evid_reason %>%
     dplyr::filter(., group == "Novel") %>%
@@ -1512,7 +1521,7 @@ expr_novel <- evid_reason %>%
     set_rownames(.[["id"]]) %>%
     dplyr::select(., -id)
 
-# Include the entries epression pattern into the GRange metadata
+# Include the entries expression pattern into the GRange metadata
 orf_grange_expr <- orf_grange
 values(orf_grange_expr) <- cbind(
     values(orf_grange_expr), expr_novel)
@@ -1588,7 +1597,7 @@ coverage_nucl_count$Count <- factor(
 toplot <- coverage_nucl_count %>%
     plyr::ddply(
         .data = ., .variables = c("Count"),
-        .fun = summarise, Freq = n(),
+        .fun = summarise, Freq = length(Sequence),
         .drop = FALSE)
 
 # Calculate the quantiles of count frequencies
