@@ -102,6 +102,10 @@ opt <- list(
     genome_grange = "C:\\Users\\kxmna01\\Dropbox\\Home_work_sync\\Work\\Srim_6frame\\GRanges\\Genome_grange.RDS",
     add_rbs = "",
     pep_class = c('class 1', 'class 2'),
+    blast_ref = "C:\\Users\\kxmna01\\Dropbox\\Home_work_sync\\Work\\Srim_6frame\\Blast\\Best_blast_ORFprot_vs_Refprot_annot",
+    blast_uniprot = "C:\\Users\\kxmna01\\Dropbox\\Home_work_sync\\Work\\Srim_6frame\\Blast\\Best_blast_ORFprot_vs_Uniprot_annot",
+    blast_ncbi = "C:\\Users\\kxmna01\\Dropbox\\Home_work_sync\\Work\\Srim_6frame\\Blast\\Best_blast_ORFprot_vs_NCBIprot_annot",
+    blast_strath = "C:\\Users\\kxmna01\\Dropbox\\Home_work_sync\\Work\\Srim_6frame\\Blast\\Best_blast_ORFprot_vs_Strathprot_annot",
     threads = 2,
     output = "NoveltyExplain"
 )
