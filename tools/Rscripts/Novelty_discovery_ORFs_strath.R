@@ -358,6 +358,42 @@ if (!is.null(opt$add_rbs)) {
     user_rbs <- character(0)
 }
 
+# Import the blast best hits between ORFs and
+# reference proteins
+blast_ref <- opt$blast_ref %>%
+    as.character(.) %>%
+    read.table(
+        file = ., header = TRUE, sep = "\t", quote = "",
+        as.is = TRUE, comment.char = "") %>%
+    dplyr::mutate(., staxid = as.integer(staxid))
+
+# Import the blast best hits between novel ORFs and
+# all uniprot proteins
+blast_uniprot <- opt$blast_uniprot %>%
+    as.character(.) %>%
+    read.table(
+        file = ., header = TRUE, sep = "\t", quote = "",
+        as.is = TRUE, comment.char = "") %>%
+    dplyr::mutate(., staxid = as.integer(staxid))
+
+# Import the blast best hits between novel ORFs and
+# all uniprot proteins
+blast_ncbi <- opt$blast_ncbi %>%
+    as.character(.) %>%
+    read.table(
+        file = ., header = TRUE, sep = "\t", quote = "",
+        as.is = TRUE, comment.char = "") %>%
+    dplyr::mutate(., staxid = as.integer(staxid))
+
+# Import the blast best hits between novel ORFs and
+# all uniprot proteins
+blast_strath <- opt$blast_strath %>%
+    as.character(.) %>%
+    read.table(
+        file = ., header = TRUE, sep = "\t", quote = "",
+        as.is = TRUE, comment.char = "") %>%
+    dplyr::mutate(., staxid = as.integer(staxid))
+
 
 
 ### ORF neighbour analysis -----------------------------------------------
@@ -967,6 +1003,47 @@ orf_reason_final <- blast_info %>%
         ., Proteins, best_blast_id = id,
         best_blast_description = description, best_blast_taxon = taxon) %>%
     dplyr::left_join(x = orf_reason_final, y = ., by = "Proteins")
+
+
+
+### Inclusion of best blast annotation -----------------------------------
+
+# Compile all reciprocal best hits
+blast_all <- dplyr::bind_rows(
+    data.frame(DB = "Reference", blast_ref, stringsAsFactors = F),
+    data.frame(DB = "UniProt", blast_uniprot, stringsAsFactors = F),
+    data.frame(DB = "NCBI", blast_ncbi, stringsAsFactors = F),
+    data.frame(DB = "Strathclyde", blast_strath, stringsAsFactors = F))
+
+# Get the best blast(s) for current ORF to novel peptide map
+best_blast_all <- blast_all %>%
+    unique(.) %>%
+    dplyr::group_by(., qseqid) %>%
+    dplyr::filter(., evalue == min(evalue)) %>%
+    dplyr::filter(., score == max(score)) %>%
+    dplyr::filter(., pident == max(pident))
+
+# 
+best_blast_info <- best_blast_all %>%
+    dplyr::select(., qseqid, sseqid, Description, Taxon) %>%
+    dplyr::group_by(., qseqid) %>%
+    dplyr::summarise_all(~paste(unique(.), collapse = ";")) %>%
+    dplyr::ungroup(.) %>%
+    dplyr::rename(
+        ., Proteins = qseqid, best_blast_id = sseqid,
+        best_blast_description = Description, best_blast_taxon = Taxon)
+
+# 
+orf_reason_final_tmp <- orf_reason_final[
+    orf_reason_final$best_blast_id == "NA", ]
+orf_reason_final <- orf_reason_final[
+    orf_reason_final$best_blast_id != "NA", ]
+orf_reason_final <- orf_reason_final_tmp %>%
+    dplyr::select(
+        ., -best_blast_id, -best_blast_description, -best_blast_taxon) %>%
+    dplyr::left_join(x = ., y = best_blast_info, by = "Proteins") %>%
+    dplyr::bind_rows(orf_reason_final, .) %>%
+    dplyr::arrange(., desc(Novel_peptide_count))
 
 
 
