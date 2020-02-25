@@ -8,10 +8,10 @@ MaxquantProc=0
 GetNovelEntries=0
 MakeBlastDbProt=0
 MakeBlastDbNuc=0
-BlastDbBlasting=1
-BestBlast=1
-ReciprocalBlast=1
-ReciprocalBestBlast=1
+BlastDbBlasting=0
+BestBlast=0
+ReciprocalBlast=0
+ReciprocalBestBlast=0
 ProteinCoordinate=0
 ProteinAnnotation=0
 BSgenomeForge=0
@@ -22,6 +22,7 @@ OperonCoordinate=0
 SangerCoordinate=0
 OrfNoveltyReason=0
 ClustalAlign=0
+ConservationBlast=1
 
 # EmbossParam
 FRAME=6
@@ -35,6 +36,7 @@ UNIREFPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Streptomyces_rimosus_
 UNIREFGENE=""
 ALLUNIPROT="${PBS_O_HOME}/work/BlastDB/uniprot_sprot_trembl.fasta"
 ALLNCBIPROT="${PBS_O_HOME}/work/BlastDB/refseq_protein"
+NCBInt="${PBS_O_HOME}/work/BlastDB/nt"
 STRATHPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Strathclyde_protein.fasta"
 #ALLNCBIRNA="${PBS_O_HOME}/work/BlastDB/refseq_rna"
 #OPERON="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Bsu_operon_01062017.opr"
@@ -68,3 +70,6 @@ AddRBS='aaaggaggtgt agaggtggtgt atattaagaggaggag agagaacaaggagggg'
 # ClustalParam
 #RBSLOW="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
 #RBSHIGH="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
+
+# ConservationBlastParam
+BlastnParam=''

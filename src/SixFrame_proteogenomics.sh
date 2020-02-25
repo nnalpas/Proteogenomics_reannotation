@@ -592,3 +592,27 @@ if [ $ClustalAlign == 1 ]; then
 fi
 
 
+
+#########################
+# Conservation analysis #
+#########################
+
+# Check whether to perform the conservation blast
+if [ $ConservationBlast == 1 ] ; then
+	
+	${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+		-o ${ProjDir}/Conservation \
+		-y "nucl" \
+		-l ${ProjDir}/Novel_res/Novel_ORF.txt \
+		-a "blastn" \
+		-s ${SIXFRAMEGENE} \
+		-q ${NCBInt} \
+		-e ${Eval} \
+		-n ${NumAlign} \
+		-m "${BlastnParam}" \
+		-t 1 \
+		-b "ORFnucl_vs_NCBInt" >> ${LogDir}/ConservationBlast.log 2>&1
+	
+fi
+
+
