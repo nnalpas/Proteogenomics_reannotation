@@ -129,17 +129,17 @@ fi
 # Check whether to create a blast database for proteome data
 if [ $MakeBlastDbProt == 1 ]; then
     
-    #${PBS_O_HOME}/bin/MakeBlastDb.sh \
-	#	-i ${InputType} \
-	#	-y "prot" \
-	#	-t ${TaxId} \
-	#	${UNIREFPROT} \
-	#	${SIXFRAMEPROT} > ${LogDir}/MakeBlastDb.log 2>&1
     ${PBS_O_HOME}/bin/MakeBlastDb.sh \
 		-i ${InputType} \
 		-y "prot" \
-		-t "1265868" \
-		${STRATHPROT} > ${LogDir}/MakeBlastDb.log 2>&1
+		-t ${TaxId} \
+		${UNIREFPROT} \
+		${SIXFRAMEPROT} > ${LogDir}/MakeBlastDb.log 2>&1
+    #${PBS_O_HOME}/bin/MakeBlastDb.sh \
+	#	-i ${InputType} \
+	#	-y "prot" \
+	#	-t "1265868" \
+	#	${STRATHPROT} > ${LogDir}/MakeBlastDb.log 2>&1
     
 fi
 
@@ -167,74 +167,74 @@ fi
 # Check whether to blast the ORFs against taxon reference protein and RNA and against all uniprot and ncbi
 if [ $BlastDbBlasting == 1 ]; then
     
-    #${PBS_O_HOME}/bin/BlastDbBlasting.sh \
-	#	-o ${ProjDir}/Blast \
-	#	-y "prot" \
-	#	-l "all" \
-	#	-a "blastp" \
-	#	-s ${SIXFRAMEPROT} \
-	#	-q ${UNIREFPROT} \
-	#	-e ${Eval} \
-	#	-n ${NumAlign} \
-	#	-t ${THREADS} \
-	#	-b "ORFprot_vs_Refprot" > ${LogDir}/BlastDbBlasting.log 2>&1
-    #${PBS_O_HOME}/bin/BlastDbBlasting.sh \
-	#	-o ${ProjDir}/Blast \
-	#	-y "prot" \
-	#	-l ${ProjDir}/Novel_res/Novel_ORF.txt \
-	#	-a "blastp" \
-	#	-s ${SIXFRAMEPROT} \
-	#	-q ${ALLUNIPROT} \
-	#	-e ${Eval} \
-	#	-n ${NumAlign} \
-	#	-t ${THREADS} \
-	#	-b "ORFprot_vs_Uniprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    #${PBS_O_HOME}/bin/BlastDbBlasting.sh \
-	#	-o ${ProjDir}/Blast \
-	#	-y "prot" \
-	#	-l ${ProjDir}/Novel_res/Novel_ORF.txt \
-	#	-a "blastp" \
-	#	-s ${SIXFRAMEPROT} \
-	#	-q ${ALLNCBIPROT} \
-	#	-e ${Eval} \
-	#	-n ${NumAlign} \
-	#	-t ${THREADS} \
-	#	-b "ORFprot_vs_NCBIprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    #${PBS_O_HOME}/bin/BlastDbBlasting.sh \
-	#	-o ${ProjDir}/Blast \
-	#	-y "prot" \
-	#	-l "all" \
-	#	-a "tblastn" \
-	#	-s ${UNIREFPROT} \
-	#	-q ${GENOME} \
-	#	-e ${Eval} \
-	#	-n ${NumAlign} \
-	#	-m "${TblastnParam}" \
-	#	-t 1 \
-	#	-b "Refprot_vs_Genome" >> ${LogDir}/BlastDbBlasting.log 2>&1
-    #${PBS_O_HOME}/bin/BlastDbBlasting.sh \
-	#	-o ${ProjDir}/Blast \
-	#	-y "prot" \
-	#	-l "all" \
-	#	-a "tblastn" \
-	#	-s ${SIXFRAMEPROT} \
-	#	-q ${GENOME} \
-	#	-e ${Eval} \
-	#	-n ${NumAlign} \
-	#	-m "${TblastnParam}" \
-	#	-t 1 \
-	#	-b "ORFprot_vs_Genome" >> ${LogDir}/BlastDbBlasting.log 2>&1
-	${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh \
 		-o ${ProjDir}/Blast \
 		-y "prot" \
 		-l "all" \
 		-a "blastp" \
 		-s ${SIXFRAMEPROT} \
-		-q ${STRATHPROT} \
+		-q ${UNIREFPROT} \
 		-e ${Eval} \
 		-n ${NumAlign} \
 		-t ${THREADS} \
-		-b "ORFprot_vs_Strathprot" > ${LogDir}/BlastDbBlasting.log 2>&1
+		-b "ORFprot_vs_Refprot" > ${LogDir}/BlastDbBlasting.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+		-o ${ProjDir}/Blast \
+		-y "prot" \
+		-l ${ProjDir}/Novel_res/Novel_ORF.txt \
+		-a "blastp" \
+		-s ${SIXFRAMEPROT} \
+		-q ${ALLUNIPROT} \
+		-e ${Eval} \
+		-n ${NumAlign} \
+		-t ${THREADS} \
+		-b "ORFprot_vs_Uniprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+		-o ${ProjDir}/Blast \
+		-y "prot" \
+		-l ${ProjDir}/Novel_res/Novel_ORF.txt \
+		-a "blastp" \
+		-s ${SIXFRAMEPROT} \
+		-q ${ALLNCBIPROT} \
+		-e ${Eval} \
+		-n ${NumAlign} \
+		-t ${THREADS} \
+		-b "ORFprot_vs_NCBIprot" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+		-o ${ProjDir}/Blast \
+		-y "prot" \
+		-l "all" \
+		-a "tblastn" \
+		-s ${UNIREFPROT} \
+		-q ${GENOME} \
+		-e ${Eval} \
+		-n ${NumAlign} \
+		-m "${TblastnParam}" \
+		-t 1 \
+		-b "Refprot_vs_Genome" >> ${LogDir}/BlastDbBlasting.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+		-o ${ProjDir}/Blast \
+		-y "prot" \
+		-l "all" \
+		-a "tblastn" \
+		-s ${SIXFRAMEPROT} \
+		-q ${GENOME} \
+		-e ${Eval} \
+		-n ${NumAlign} \
+		-m "${TblastnParam}" \
+		-t 1 \
+		-b "ORFprot_vs_Genome" >> ${LogDir}/BlastDbBlasting.log 2>&1
+	#${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+	#	-o ${ProjDir}/Blast \
+	#	-y "prot" \
+	#	-l "all" \
+	#	-a "blastp" \
+	#	-s ${SIXFRAMEPROT} \
+	#	-q ${STRATHPROT} \
+	#	-e ${Eval} \
+	#	-n ${NumAlign} \
+	#	-t ${THREADS} \
+	#	-b "ORFprot_vs_Strathprot" > ${LogDir}/BlastDbBlasting.log 2>&1
     
 fi
 
@@ -271,50 +271,50 @@ fi
 # Check whether to perform the reciprocal best blast against previously used databases
 if [ $ReciprocalBlast == 1 ]; then
     
-    #${PBS_O_HOME}/bin/BlastDbBlasting.sh \
-	#	-o ${ProjDir}/ReciprocalBlast \
-	#	-y "prot" \
-	#	-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_Refprot \
-	#	-a "blastp" \
-	#	-s ${UNIREFPROT} \
-	#	-q ${SIXFRAMEPROT} \
-	#	-e ${Eval} \
-	#	-n ${NumAlign} \
-	#	-t ${THREADS} \
-	#	-b "Refprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
-    #${PBS_O_HOME}/bin/BlastDbBlasting.sh \
-	#	-o ${ProjDir}/ReciprocalBlast \
-	#	-y "prot" \
-	#	-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_Uniprot \
-	#	-a "blastp" \
-	#	-s ${ALLUNIPROT} \
-	#	-q ${SIXFRAMEPROT} \
-	#	-e ${Eval} \
-	#	-n ${NumAlign} \
-	#	-t ${THREADS} \
-	#	-b "Uniprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
-    #${PBS_O_HOME}/bin/BlastDbBlasting.sh \
-	#	-o ${ProjDir}/ReciprocalBlast \
-	#	-y "prot" \
-	#	-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_NCBIprot \
-	#	-a "blastp" \
-	#	-s ${ALLNCBIPROT} \
-	#	-q ${SIXFRAMEPROT} \
-	#	-e ${Eval} \
-	#	-n ${NumAlign} \
-	#	-t ${THREADS} \
-	#	-b "NCBIprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
-	${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh \
 		-o ${ProjDir}/ReciprocalBlast \
 		-y "prot" \
-		-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_Strathprot \
+		-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_Refprot \
 		-a "blastp" \
-		-s ${STRATHPROT} \
+		-s ${UNIREFPROT} \
 		-q ${SIXFRAMEPROT} \
 		-e ${Eval} \
 		-n ${NumAlign} \
 		-t ${THREADS} \
-		-b "Strathprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
+		-b "Refprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+		-o ${ProjDir}/ReciprocalBlast \
+		-y "prot" \
+		-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_Uniprot \
+		-a "blastp" \
+		-s ${ALLUNIPROT} \
+		-q ${SIXFRAMEPROT} \
+		-e ${Eval} \
+		-n ${NumAlign} \
+		-t ${THREADS} \
+		-b "Uniprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
+    ${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+		-o ${ProjDir}/ReciprocalBlast \
+		-y "prot" \
+		-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_NCBIprot \
+		-a "blastp" \
+		-s ${ALLNCBIPROT} \
+		-q ${SIXFRAMEPROT} \
+		-e ${Eval} \
+		-n ${NumAlign} \
+		-t ${THREADS} \
+		-b "NCBIprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
+	#${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+	#	-o ${ProjDir}/ReciprocalBlast \
+	#	-y "prot" \
+	#	-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_Strathprot \
+	#	-a "blastp" \
+	#	-s ${STRATHPROT} \
+	#	-q ${SIXFRAMEPROT} \
+	#	-e ${Eval} \
+	#	-n ${NumAlign} \
+	#	-t ${THREADS} \
+	#	-b "Strathprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
     
 fi
 
