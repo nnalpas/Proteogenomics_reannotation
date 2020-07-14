@@ -7,7 +7,7 @@
 #
 ##### (A) Revision history:
 #
-# 06 November 2017
+# 14 July 2020
 #
 ##### (B) Dependencies:
 #
@@ -19,37 +19,38 @@
 #
 ##### (D) How compile and install
 #
+# VERSION="6.6.0"
 # cd ~/Software/
-# mkdir -p ./emboss/6.6.0
+# mkdir -p ./emboss/${VERSION}
 # wget "ftp://emboss.open-bio.org/pub/EMBOSS/emboss-latest.tar.gz"
 # tar -xvzf emboss-latest.tar.gz
-# cd ./EMBOSS-6.6.0
-# ./configure --prefix=/home-link/kxmna01/Software/emboss/6.6.0/ --without-x
+# cd ./EMBOSS-${VERSION}
+# ./configure --prefix=$HOME/Software/emboss/${VERSION}/ --without-x
 # make
 # make install
 # make clean
 # mkdir ~/modulefiles/emboss
-# ln -s ~/GitHub/Proteogenomics_reannotation/tools/env_modules/emboss_6.6.0 ~/modulefiles/emboss/6.6.0
+# ln -s ~/GitHub/Proteogenomics_reannotation/tools/env_modules/emboss_${VERSION} ~/modulefiles/emboss/${VERSION}
 #
 ##### (E) How compile and install additional packages
 #
-# cd ~/Software/emboss/6.6.0
-# mkdir ~/Software/emboss/6.6.0/embassy
-# cd ~/Software/emboss/6.6.0/embassy
+# cd ~/Software/emboss/${VERSION}
+# mkdir ~/Software/emboss/${VERSION}/embassy
+# cd ~/Software/emboss/${VERSION}/embassy
 # wget "www.g-language.org/kbws/source/KBWS-1.0.9.tar.gz"
 # tar -xvzf KBWS-1.0.9.tar.gz
 # cd ./KBWS-1.0.9
-# ./configure --prefix=/home-link/kxmna01/Software/emboss/6.6.0/ --without-x
+# ./configure --prefix=/home-link/kxmna01/Software/emboss/${VERSION}/ --without-x
 # make
 # make install
 # make clean
 # mkdir ~/modulefiles/emboss
-# ln -s ~/GitHub/Proteogenomics_reannotation/tools/env_modules/emboss_6.6.0 ~/modulefiles/emboss/6.6.0
+# ln -s ~/GitHub/Proteogenomics_reannotation/tools/env_modules/emboss_${VERSION} ~/modulefiles/emboss/${VERSION}
 #
 ### Set version, base_dir and whatis entry:
 
 set                version             "6.6.0"
-set                base_dir            "$::env(HOME)/Software/emboss/6.6.0"
+set                base_dir            "$::env(HOME)/Software/emboss/$version"
 module-whatis      "EMBOSS Version $version  http://emboss.sourceforge.net/what/"
 
 ### Set basic environment variables:
@@ -100,7 +101,7 @@ if { [module-info mode] == "load" } {
 
    puts stderr "
 ----------
-Loading EMBOSS Version 6.6.0.
+Loading EMBOSS Version $version.
 Invoke using:
     emboss --help
     
