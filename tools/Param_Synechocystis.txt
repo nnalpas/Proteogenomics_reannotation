@@ -1,0 +1,74 @@
+# GeneralParam
+ProjectName="Synechocystis_6frame"
+TaxId="1148"
+
+# ProcessSteps
+GetOrf=1
+MaxquantProc=0
+GetNovelEntries=0
+MakeBlastDbProt=0
+MakeBlastDbNuc=0
+BlastDbBlasting=0
+BestBlast=0
+ReciprocalBlast=0
+ReciprocalBestBlast=0
+ProteinCoordinate=0
+ProteinAnnotation=0
+BSgenomeForge=0
+GRangeCreate=0
+PepNoveltyReason=0
+PeptideCoordinate=0
+OperonCoordinate=0
+SangerCoordinate=0
+OrfNoveltyReason=0
+ClustalAlign=0
+ConservationBlast=0
+
+# EmbossParam
+FRAME=6
+TABLE=11
+MINSIZE=1
+CIRCULAR="No"
+
+# ReferenceDatabase (for the genome make sure the chromosome name is all in lowercase for Ensembl compatibility)
+GENOME="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_genome.fasta"
+UNIREFPROT="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta"
+UNIREFGENE=""
+ALLUNIPROT="${PBS_O_HOME}/work/BlastDB/uniprot_sprot_trembl.fasta"
+ALLNCBIPROT="${PBS_O_HOME}/work/BlastDB/refseq_protein"
+NCBInt="${PBS_O_HOME}/work/BlastDB/nt"
+#ALLNCBIRNA="${PBS_O_HOME}/work/BlastDB/refseq_rna"
+#OPERON="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/Bsu_operon_01062017.opr"
+#SANGER="${PBS_O_HOME}/work/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
+
+# MaxQuantParam
+mq_version="${PBS_O_HOME}/ws/kxmna01-MQ_16140-0/MaxQuant_1.6.14.0.sif"
+mqpar="${PBS_O_HOME}/ws/kxmna01-MQ_16140-0/Processing_MaxQuant/mqpar.xml"
+
+# BlastDatab
+InputType="fasta"
+
+# BlastParam
+Eval=0.1
+NumAlign=100
+#TblastnParam='-word_size 7'
+TblastnParam=''
+
+# BSgenomeParam
+SEED="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/seed"
+
+# GRangesParam
+GenomeName="AL0091263"
+Circular=FALSE
+
+# RBSanalysis
+
+# User provided additional RBS motifs sequence
+#AddRBS='aaaggaggtgt agaggtggtgt atattaagaggaggag agagaacaaggagggg'
+
+# ClustalParam
+#RBSLOW="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
+#RBSHIGH="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
+
+# ConservationBlastParam
+BlastnParam=''
