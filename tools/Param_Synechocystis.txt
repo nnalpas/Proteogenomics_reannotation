@@ -43,7 +43,7 @@ NCBInt="${PBS_O_HOME}/work/BlastDB/nt"
 
 # MaxQuantParam
 mq_version="${PBS_O_HOME}/ws/tu_kxmna01-MQ_16140-0/MaxQuant_1.6.14.0.sif"
-mqpar="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_6frame/mqpar.xml"
+mqpar="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_6frame/mqpar_posix.xml"
 
 # BlastDatab
 InputType="fasta"
