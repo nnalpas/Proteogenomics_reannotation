@@ -3,8 +3,8 @@ ProjectName="Synechocystis_6frame"
 TaxId="1148"
 
 # ProcessSteps
-GetOrf=1
-MaxquantProc=0
+GetOrf=0
+MaxquantProc=1
 GetNovelEntries=0
 MakeBlastDbProt=0
 MakeBlastDbNuc=0
@@ -42,8 +42,8 @@ NCBInt="${PBS_O_HOME}/work/BlastDB/nt"
 #SANGER="${PBS_O_HOME}/work/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
 
 # MaxQuantParam
-mq_version="${PBS_O_HOME}/ws/kxmna01-MQ_16140-0/MaxQuant_1.6.14.0.sif"
-mqpar="${PBS_O_HOME}/ws/kxmna01-MQ_16140-0/Processing_MaxQuant/mqpar.xml"
+mq_version="${PBS_O_HOME}/ws/tu_kxmna01-MQ_16140-0/MaxQuant_1.6.14.0.sif"
+mqpar="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_6frame/mqpar.xml"
 
 # BlastDatab
 InputType="fasta"
