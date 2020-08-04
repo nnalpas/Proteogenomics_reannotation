@@ -233,6 +233,8 @@ gr_near_dist <- function(
 # Create a function to load or install (then load) the required packages
 load_package <- function(package) {
     
+    stop("This function was discontinued to maintain package versionning!")
+    
     if (
         suppressWarnings(require(
             package = eval(package),
