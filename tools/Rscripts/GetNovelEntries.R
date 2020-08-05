@@ -61,6 +61,7 @@ library(purrr)
 library(foreach)
 library(doParallel)
 library(rmarkdown)
+library(cleaver)
 
 
 
@@ -196,8 +197,8 @@ digest_rule <- digestion_rule(
 
 # Define missed cleavages rule
 mc <- c(min(
-    pep[["Missed cleavages"]]):max(
-        pep[["Missed cleavages"]]))
+    pep[, grep("Missed cleavages", colnames(pep))]):max(
+        pep[, grep("Missed cleavages", colnames(pep))]))
 
 # Digest all proteins into peptide to get their location and
 # their database of origin
@@ -393,6 +394,10 @@ write.table(
     sep = "\t",
     row.names = FALSE,
     col.names = FALSE)
+
+# Save session
+save.image(paste(
+    opt$output, "/", "GetNovelEntries.RData", sep = ""))
 
 
 
