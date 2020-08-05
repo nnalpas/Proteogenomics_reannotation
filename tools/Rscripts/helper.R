@@ -465,9 +465,10 @@ filter_na <- function(my_data, my_col) {
 # e.g. after which amino acid digestion occured
 digestion_rule <- function(x) {
     aa_freq <- table(x)
-    aa_freq[
-        aa_freq > (sum(aa_freq) * 0.05)] %>%
-        names(.) %>%
+    my_res <- aa_freq[
+        aa_freq > (sum(aa_freq) * 0.01)] %>%
+        names(.)
+    my_res[!my_res %in% c("", "-")] %>%
         paste(., collapse = "|") %>%
         paste0("(", ., ")")
 }
