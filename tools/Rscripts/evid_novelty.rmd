@@ -146,27 +146,32 @@ if (use_plotly) {
 
 ```{r psm_group_resolution}
 
-#renderPlotly({
-
-    pl <- plots_box_plotly(
-        my_data = params[["evid_match"]], x = "group", y = "Resolution",
-        col_manual = group_colours, txt_size = input$txt_size)
-
-    if (input$log_scale) {
-        pl <- pl +
-            scale_y_log10()
+if ("Resolution" %in% colnames(params[["evid_match"]])) {
+    
+    #renderPlotly({
+        
+        pl <- plots_box_plotly(
+            my_data = params[["evid_match"]], x = "group", y = "Resolution",
+            col_manual = group_colours, txt_size = input$txt_size)
+    
+        if (input$log_scale) {
+            pl <- pl +
+                scale_y_log10()
+        }
+    
+        #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+        #pl
+    #})
+    
+    # If OS is windows allow usage of plotly (plotly not installed on Linux)
+    if (use_plotly) {
+        ggplotly(pl)
+    } else {
+        pl
     }
-
-    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
-    #pl
-#})
-
-# If OS is windows allow usage of plotly (plotly not installed on Linux)
-if (use_plotly) {
-    ggplotly(pl)
-} else {
-    pl
+    
 }
+
 
 ```
 
@@ -176,26 +181,30 @@ if (use_plotly) {
 
 ```{r psm_db_resolution}
 
-#renderPlotly({
-
-    pl <- plots_box_plotly(
-        my_data = params[["evid_match"]], x = "Database", y = "Resolution",
-        col_manual = database_colours, txt_size = input$txt_size)
-
-    if (input$log_scale) {
-        pl <- pl +
-            scale_y_log10()
+if ("Resolution" %in% colnames(params[["evid_match"]])) {
+    
+    #renderPlotly({
+    
+        pl <- plots_box_plotly(
+            my_data = params[["evid_match"]], x = "Database", y = "Resolution",
+            col_manual = database_colours, txt_size = input$txt_size)
+    
+        if (input$log_scale) {
+            pl <- pl +
+                scale_y_log10()
+        }
+    
+        #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
+        #pl
+    #})
+    
+    # If OS is windows allow usage of plotly (plotly not installed on Linux)
+    if (use_plotly) {
+        ggplotly(pl)
+    } else {
+        pl
     }
-
-    #layout(ggplotly(pl), legend = list(orientation = "h", x = 1.1, y = 0.5))
-    #pl
-#})
-
-# If OS is windows allow usage of plotly (plotly not installed on Linux)
-if (use_plotly) {
-    ggplotly(pl)
-} else {
-    pl
+    
 }
 
 ```
