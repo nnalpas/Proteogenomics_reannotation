@@ -349,7 +349,8 @@ report_markdown(
     params = list(
         fastas = fasta,
         pep_match = pep_match,
-        evid_match = evid_match),
+        evid_match = evid_match %>%
+            dplyr::filter(., !is.na(group) & !is.na(Database))),
     format = "html_document",
     ext = "html")
 
