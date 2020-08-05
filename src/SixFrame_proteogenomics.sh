@@ -43,13 +43,11 @@ cd ${PBS_O_WORKDIR}
 # Load the required modules
 #module load curl/7.57.0
 #module load zlib/1.2.11
-#module load blast+/2.6.0
-#module load blast+/2.9.0
-#module load math/R/3.2.3-mkl-11.3
+module load blast+/2.10.1
 module load math/R/3.5.2-mkl-2018
 #module load clustal_omega/1.2.4
 module load emboss/6.6.0
-#module load devel/singularity/3.2.1
+module load devel/perl/5.26
 
 # Create project directory
 ProjDir=${PBS_O_INITDIR}/${ProjectName}
@@ -118,6 +116,22 @@ if [ $GetNovelEntries == 1 ]; then
 		-n ${SIXFRAMEPROT} \
 		-t ${THREADS} > ${LogDir}/GetNovelEntries.log 2>&1
 
+fi
+
+
+
+################################
+# Download NCBI Blast database #
+################################
+
+# Check whether to get the NCBI blast databases
+if [ $GetNCBIBlastDb == 1 ]; then
+    
+    ${PBS_O_HOME}/bin/BlastUpdate.sh \
+		-o ${PBS_O_INITDIR}/BlastDB \
+		-t ${THREADS} \
+		"${BlastDbs}" > ${LogDir}/GetNCBIBlastDb.log 2>&1
+    
 fi
 
 

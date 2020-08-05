@@ -5,7 +5,8 @@ TaxId="1148"
 # ProcessSteps
 GetOrf=0
 MaxquantProc=0
-GetNovelEntries=1
+GetNovelEntries=0
+GetNCBIBlastDb=1
 MakeBlastDbProt=0
 MakeBlastDbNuc=0
 BlastDbBlasting=0
@@ -34,8 +35,9 @@ CIRCULAR="No"
 GENOME="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_genome.fasta"
 UNIREFPROT="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta"
 UNIREFGENE=""
-ALLUNIPROT="${PBS_O_HOME}/work/BlastDB/uniprot_sprot_trembl.fasta"
-ALLNCBIPROT="${PBS_O_HOME}/work/BlastDB/refseq_protein"
+#ALLUNIPROT="${PBS_O_HOME}/work/BlastDB/uniprot_sprot_trembl.fasta"
+#ALLNCBIPROT="${PBS_O_HOME}/work/BlastDB/refseq_protein"
+NCBInr="${PBS_O_HOME}/work/BlastDB/nr"
 NCBInt="${PBS_O_HOME}/work/BlastDB/nt"
 #ALLNCBIRNA="${PBS_O_HOME}/work/BlastDB/refseq_rna"
 #OPERON="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/Bsu_operon_01062017.opr"
@@ -44,6 +46,9 @@ NCBInt="${PBS_O_HOME}/work/BlastDB/nt"
 # MaxQuantParam
 mq_version="${PBS_O_HOME}/ws/tu_kxmna01-MQ_16140-0/MaxQuant_1.6.14.0.sif"
 mqpar="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_6frame/mqpar_posix.xml"
+
+# NCBIBlastDB
+BlastDbs='env_nr env_nt nr nt'
 
 # BlastDatab
 InputType="fasta"
