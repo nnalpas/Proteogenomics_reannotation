@@ -152,7 +152,7 @@ evid <- mq_read(
 # Keep only evidences with at least 1 MS/MS
 warning(paste(
     "There are ",
-    table(evid$`MS/MS count` == 0)[["TRUE"]],
+    table(c(evid$`MS/MS count` == 0, TRUE))[["TRUE"]]-1,
     "PSM with no MS/MS (matching), these will be ignored!"))
 evid %<>%
     dplyr::filter(., `MS/MS count` >= 1)
