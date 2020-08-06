@@ -74,6 +74,7 @@ cd $WKDIR
 
 # Retrieve all databases
 update_blastdb.pl \
+	--passive \
 	--decompress \
 	--timeout 240 \
 	--num_threads $THREADS \
