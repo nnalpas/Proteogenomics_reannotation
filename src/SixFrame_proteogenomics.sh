@@ -149,11 +149,6 @@ if [ $MakeBlastDbProt == 1 ]; then
 		-t ${TaxId} \
 		${UNIREFPROT} \
 		${SIXFRAMEPROT} > ${LogDir}/MakeBlastDb.log 2>&1
-    #${PBS_O_HOME}/bin/MakeBlastDb.sh \
-	#	-i ${InputType} \
-	#	-y "prot" \
-	#	-t "1265868" \
-	#	${STRATHPROT} > ${LogDir}/MakeBlastDb.log 2>&1
     
 fi
 
