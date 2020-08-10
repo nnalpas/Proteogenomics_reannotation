@@ -9,7 +9,7 @@ echo "Start $(date +"%T %d-%m-%Y")."
 # Function holding the usage
 display_usage() { 
 	echo "
-		Usage: $0 [Options]"
+		Usage: $0 [Options] -y <DB type> -a <Task> -s <Subject> -q <Query> -b <Basename>"
 	echo "
 		Options:
         	-o	[str]	The output directory.
@@ -20,9 +20,9 @@ display_usage() {
 			-q	[str]	The query database
 			-e	[float]	The e-value threshold for blast to be reported
 			-n	[int]	The maximum number of alignment to report
-        	-t	[int]	Number of threads. Only applicable to FastQC.
 			-m	[str]	Additional blast parameters.
 			-b	[str]	The name of the output file
+			-t	[int]	Number of threads.
         	-h	[]	To display the help.
 	"
 }
@@ -141,39 +141,25 @@ if [ ! -d ${WKDIR} ] ; then
 	mkdir ${WKDIR}
 fi
 
+# Check whether subject should be filtered
+entry_retrieval="-entry_batch ${ENTRY}"
 if [ ${ENTRY} == 'all' ]; then
-
-	# All entries retrieval and blasting of retrieved entries against another database
-	blastdbcmd -db ${SUBJECT} \
-        -dbtype ${DBTYPE} \
-        -entry ${ENTRY} | \
-        eval "${TASK} \
-        -query - \
-        -task ${TASK} \
-        -db ${QUERY} \
-        -out ${WKDIR}/${BASENAME} \
-        -evalue ${EVAL} \
-        -num_alignments ${NUMALIGN} \
-        -num_threads ${THREADS} ${ADDITIONAL} \
-        -outfmt '6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qlen qframe qseq sstart send slen sframe sseq staxid ssciname sstrand evalue bitscore score'"
-
-else
-
-	# Specific entries retrieval and blasting of retrieved entries against another database
-	blastdbcmd -db ${SUBJECT} \
-        -dbtype ${DBTYPE} \
-        -entry_batch ${ENTRY} | \
-        eval "${TASK} \
-        -query - \
-        -task ${TASK} \
-        -db ${QUERY} \
-        -out ${WKDIR}/${BASENAME} \
-        -evalue ${EVAL} \
-        -num_alignments ${NUMALIGN} \
-        -num_threads ${THREADS} \
-        -outfmt '6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qlen qframe qseq sstart send slen sframe sseq staxid ssciname sstrand evalue bitscore score'"
-
+	entry_retrieval="-entry ${ENTRY}"
 fi
+
+# All entries retrieval and blasting of retrieved entries against another database
+blastdbcmd -db ${SUBJECT} \
+       -dbtype ${DBTYPE} \
+       ${entry_retrieval} | \
+       eval "${TASK} \
+       -query - \
+       -task ${TASK} \
+       -db ${QUERY} \
+       -out ${WKDIR}/${BASENAME} \
+       -evalue ${EVAL} \
+       -num_alignments ${NUMALIGN} \
+       -num_threads ${THREADS} ${ADDITIONAL} \
+       -outfmt '6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qlen qframe qseq sstart send slen sframe sseq staxid ssciname sstrand evalue bitscore score'"
 
 # Time scripts ends
 echo "Completed $(date +"%T %d-%m-%Y")."
