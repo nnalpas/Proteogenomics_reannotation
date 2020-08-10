@@ -54,11 +54,7 @@ BlastDbs='env_nr env_nt nr nt'
 InputType="fasta"
 
 # BlastParam
-BlastMap="${PBS_O_HOME}/work/"
-Eval=0.1
-NumAlign=100
-#TblastnParam='-word_size 7'
-TblastnParam=''
+SerialBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Blast_iterations.txt"
 
 # BSgenomeParam
 SEED="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/seed"
