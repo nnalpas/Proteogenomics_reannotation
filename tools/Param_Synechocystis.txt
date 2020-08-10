@@ -7,9 +7,9 @@ GetOrf=0
 MaxquantProc=0
 GetNovelEntries=0
 GetNCBIBlastDb=0
-MakeBlastDbProt=1
-MakeBlastDbNuc=1
-BlastDbBlasting=0
+MakeBlastDbProt=0
+MakeBlastDbNuc=0
+BlastDbBlasting=1
 BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
@@ -38,6 +38,8 @@ UNIREFGENE="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_
 #ALLUNIPROT="${PBS_O_HOME}/work/BlastDB/uniprot_sprot_trembl.fasta"
 ALLNCBIPROT="${PBS_O_HOME}/work/BlastDB/nr"
 ALLNCBIRNA="${PBS_O_HOME}/work/BlastDB/nt"
+NCBIENVPROT="${PBS_O_HOME}/work/BlastDB/env_nr"
+NCBIENVRNA="${PBS_O_HOME}/work/BlastDB/env_nt"
 #OPERON="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/Bsu_operon_01062017.opr"
 #SANGER="${PBS_O_HOME}/work/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
 
@@ -52,6 +54,7 @@ BlastDbs='env_nr env_nt nr nt'
 InputType="fasta"
 
 # BlastParam
+BlastMap="${PBS_O_HOME}/work/"
 Eval=0.1
 NumAlign=100
 #TblastnParam='-word_size 7'
