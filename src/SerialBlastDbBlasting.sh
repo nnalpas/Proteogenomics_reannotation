@@ -86,7 +86,7 @@ while IFS= read -r line; do
 	if [[ ! -z "${array[8]}" ]]; then BLASTCMD+="-m ${array[8]} "; fi;
 	
 	# Run the blast for each iteration
-	echo "${PBS_O_HOME}/bin/BlastDbBlasting.sh ${BLASTCMD} -t ${THREADS}" >&2
+	${PBS_O_HOME}/bin/BlastDbBlasting.sh $BLASTCMD -t ${THREADS} 2>&1
 	
 done < ${CROSSMAP}
 
