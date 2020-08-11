@@ -77,15 +77,16 @@ while IFS= read -r line; do
 	BLASTCMD="-o ${WKDIR} "
 	if [[ ! -z "${array[0]}" ]]; then BLASTCMD+="-y ${array[0]} "; fi;
 	if [[ ! -z "${array[1]}" ]]; then BLASTCMD+="-a ${array[1]} "; fi;
-	if [[ ! -z "${array[2]}" ]]; then BLASTCMD+="-s `eval ${array[2]}` "; fi;
-	if [[ ! -z "${array[3]}" ]]; then BLASTCMD+="-q `eval ${array[3]}` "; fi;
+	if [[ ! -z "${array[2]}" ]]; then BLASTCMD+="-s ${array[2]} "; fi;
+	if [[ ! -z "${array[3]}" ]]; then BLASTCMD+="-q ${array[3]} "; fi;
 	if [[ ! -z "${array[4]}" ]]; then BLASTCMD+="-b ${array[4]} "; fi;
-	if [[ ! -z "${array[5]}" ]]; then BLASTCMD+="-l `eval ${array[5]}` "; fi;
+	if [[ ! -z "${array[5]}" ]]; then BLASTCMD+="-l ${array[5]} "; fi;
 	if [[ ! -z "${array[6]}" ]]; then BLASTCMD+="-e ${array[6]} "; fi;
 	if [[ ! -z "${array[7]}" ]]; then BLASTCMD+="-n ${array[7]} "; fi;
 	if [[ ! -z "${array[8]}" ]]; then BLASTCMD+="-m ${array[8]} "; fi;
 	
 	# Run the blast for each iteration
+	eval BLASTCMD=$BLASTCMD
 	echo "${PBS_O_HOME}/bin/BlastDbBlasting.sh $BLASTCMD -t ${THREADS}" 2>&1
 	
 done < ${CROSSMAP}
