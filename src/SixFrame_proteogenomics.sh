@@ -85,8 +85,8 @@ if [ $GetOrf == 1 ]; then
 		${GENOME} >> ${LogDir}/GetOrf.log 2>&1
 
 fi
-SIXFRAMEPROT=`basename $GENOME | perl -p -e "s%^%${ProjDir}\\/Nuc_translation\\/Find0_%" | perl -p -e "s/\\.fasta/_FIXED.fasta/"`
-SIXFRAMEGENE=`basename $GENOME | perl -p -e "s%^%${ProjDir}\\/Nuc_translation\\/Find2_%" | perl -p -e "s/\\.fasta/_FIXED.fasta/"`
+export SIXFRAMEPROT=`basename $GENOME | perl -p -e "s%^%${ProjDir}\\/Nuc_translation\\/Find0_%" | perl -p -e "s/\\.fasta/_FIXED.fasta/"`
+export SIXFRAMEGENE=`basename $GENOME | perl -p -e "s%^%${ProjDir}\\/Nuc_translation\\/Find2_%" | perl -p -e "s/\\.fasta/_FIXED.fasta/"`
 
 
 
