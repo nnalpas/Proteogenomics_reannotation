@@ -96,9 +96,9 @@ while IFS= read -r line; do
 	if [[ ! -z "${array[8]}" ]]; then eval DB_ADD=${array[8]}; BLASTCMD+="-y \"${DB_ADD}\" "; fi;
 	
 	# Run the blast for each iteration
-	if [[   ]]; then
+	if [[ "$SOFTWARE" == "Blast" ]]; then
 		echo "${PBS_O_HOME}/bin/BlastDbBlasting.sh $BLASTCMD -t ${THREADS}" 2>&1
-	elif
+	elif [[ "$SOFTWARE" == "Diamond" ]]; then
 		echo "${PBS_O_HOME}/bin/DiamondDbBlasting.sh $BLASTCMD -t ${THREADS}" 2>&1
 	else
 		echo "The blasting software must be either 'Blast' or 'Diamond'." >&2
