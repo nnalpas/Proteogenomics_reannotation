@@ -48,6 +48,7 @@ module load blast+/2.10.1
 #module load clustal_omega/1.2.4
 module load emboss/6.6.0
 module load devel/perl/5.26
+module load diamond/2.0.2
 
 # Create project directory
 ProjDir=${PBS_O_INITDIR}/${ProjectName}
@@ -174,12 +175,13 @@ fi
 ###################################
 
 # Check whether to blast the ORFs against taxon reference protein and RNA and against all uniprot and ncbi
-if [ $BlastDbBlasting == 1 ]; then
+if [ $DbBlasting == 1 ]; then
 	
-	${PBS_O_HOME}/bin/SerialBlastDbBlasting.sh \
+	${PBS_O_HOME}/bin/SerialDbBlasting.sh \
 		-o ${ProjDir}/Blast \
+		-s ${BlastSoftware} \
 		-x ${SerialBlastMap} \
-		-t ${THREADS} > ${LogDir}/BlastDbBlasting.log 2>&1
+		-t ${THREADS} > ${LogDir}/DbBlasting.log 2>&1
     
 fi
 

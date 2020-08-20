@@ -9,7 +9,7 @@ GetNovelEntries=0
 GetNCBIBlastDb=0
 MakeBlastDbProt=0
 MakeBlastDbNuc=0
-BlastDbBlasting=1
+DbBlasting=1
 BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
@@ -54,6 +54,7 @@ BlastDbs='env_nr env_nt nr nt'
 InputType="fasta"
 
 # BlastParam
+BlastSoftware="Diamond"
 SerialBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Blast_iterations.txt"
 
 # BSgenomeParam
