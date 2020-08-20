@@ -4,6 +4,7 @@
 
 # Time scripts starts
 echo "$0"
+echo "$@"
 echo "Start $(date +"%T %d-%m-%Y")."
 
 # Function holding the usage
@@ -73,12 +74,22 @@ while getopts "o:l:a:q:d:e:n:x:y:b:t:h" opt; do
 			shift $((OPTIND-1)); OPTIND=1
 			;;
 		x)
-			BLAST_ADD=$OPTARG
-			shift $((OPTIND-1)); OPTIND=1
+			while [[ ${!OPTIND} != ';' ]]; do
+				BLAST_ADD+=("${!OPTIND}")
+				let OPTIND++
+			done
+			let OPTIND++
+			#BLAST_ADD=$OPTARG
+			#shift $((OPTIND-1)); OPTIND=1
 			;;
 		y)
-            MAKEDB_ADD=$OPTARG
-            shift $((OPTIND-1)); OPTIND=1
+			while [[ ${!OPTIND} != ';' ]]; do
+				MAKEDB_ADD+=("${!OPTIND}")
+				let OPTIND++
+			done
+			let OPTIND++
+            #MAKEDB_ADD=$OPTARG
+            #shift $((OPTIND-1)); OPTIND=1
 			;;
 		t)
 			THREADS=$OPTARG
@@ -140,7 +151,7 @@ fi
 # Make a database for the query if it does not already exists
 if [ ! -e ${DATABASE}.dmnd ] ; then
 	diamond makedb --in ${DATABASE} \
-		--db ${DATABASE}.dmnd ${MAKEDB_ADD}
+		--db ${DATABASE}.dmnd "${MAKEDB_ADD[@]}"
 fi
 
 # Check whether queries should be filtered
@@ -159,7 +170,7 @@ blastdbcmd -db ${QUERY} \
        --out ${WKDIR}/${BASENAME} \
        --evalue ${EVAL} \
        --max-target-seqs ${NUMALIGN} \
-       --threads ${THREADS} ${BLAST_ADD} \
+       --threads ${THREADS} ${BLAST_ADD[@]} \
        --outfmt '6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qlen qframe qseq qstrand sstart send slen sframe sseq staxids sscinames evalue bitscore score'"
 
 # Time scripts ends
