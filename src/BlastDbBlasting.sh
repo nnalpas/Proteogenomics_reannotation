@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script to blast two blast databases against each other
+# Script to blast two blast databases against each other using Blast
 
 # Time scripts starts
 echo "$0"
@@ -9,18 +9,17 @@ echo "Start $(date +"%T %d-%m-%Y")."
 # Function holding the usage
 display_usage() { 
 	echo "
-		Usage: $0 [Options] -y <DB type> -a <Task> -s <Subject> -q <Query> -b <Basename>"
+		Usage: $0 [Options] -a <Task> -q <Query> -d <Database> -b <Basename>"
 	echo "
 		Options:
         	-o	[str]	The output directory.
-			-y	[str]	The type of the data ('nucl' or 'prot')
 			-l	[str]	Which entry to use, either 'all' or a file containing entries
 			-a	[str]	What blast to perform ('blastn' or 'blastp'...)
-			-s	[str]	The subject database
-			-q	[str]	The query database
+			-q	[str]	The query sequences (as database)
+			-d	[str]	The database (subject)
 			-e	[float]	The e-value threshold for blast to be reported
 			-n	[int]	The maximum number of alignment to report
-			-m	[str]	Additional blast parameters.
+			-x	[str]	Additional blast parameters.
 			-b	[str]	The name of the output file
 			-t	[int]	Number of threads.
         	-h	[]	To display the help.
@@ -33,19 +32,15 @@ l_default="all"
 e_default=0.1
 n_default=100
 t_default=1
-m_default=""
+x_default=""
 
 # Parse user parameters
-while getopts "o:y:l:a:s:q:e:n:m:b:t:h" opt; do
+while getopts "o:l:a:q:d:e:n:x:b:t:h" opt; do
 	case $opt in
 		o)
 			WKDIR=$OPTARG
 			echo "Working directory: $WKDIR"
 			shift $((OPTIND-1)); OPTIND=1
-			;;
-        y)
-            DBTYPE=$OPTARG
-            shift $((OPTIND-1)); OPTIND=1
 			;;
 		l)
             ENTRY=$OPTARG
@@ -55,12 +50,12 @@ while getopts "o:y:l:a:s:q:e:n:m:b:t:h" opt; do
             TASK=$OPTARG
             shift $((OPTIND-1)); OPTIND=1
 			;;
-		s)
-            SUBJECT=$OPTARG
-            shift $((OPTIND-1)); OPTIND=1
-			;;
 		q)
             QUERY=$OPTARG
+            shift $((OPTIND-1)); OPTIND=1
+			;;
+		d)
+            DATABASE=$OPTARG
             shift $((OPTIND-1)); OPTIND=1
 			;;
 		e)
@@ -75,8 +70,8 @@ while getopts "o:y:l:a:s:q:e:n:m:b:t:h" opt; do
 			BASENAME=$OPTARG
 			shift $((OPTIND-1)); OPTIND=1
 			;;
-		m)
-			ADDITIONAL=$OPTARG
+		x)
+			BLAST_ADD=$OPTARG
 			shift $((OPTIND-1)); OPTIND=1
 			;;
 		t)
@@ -107,26 +102,21 @@ done
 : ${EVAL=$e_default}
 : ${NUMALIGN=$n_default}
 : ${THREADS=$t_default}
-: ${ADDITIONAL=$m_default}
+: ${BLAST_ADD=$x_default}
 
 # Check for mandatory parameters
-if [ -z "${DBTYPE}" ]; then
-	echo "The database type must be specified." >&2
-	display_usage
-	exit 1
-fi
 if [ -z "${TASK}" ]; then
 	echo "The blast type to perform must be specified." >&2
 	display_usage
 	exit 1
 fi
-if [ -z "${SUBJECT}" ]; then
-	echo "The subject database must be specified." >&2
+if [ -z "${QUERY}" ]; then
+	echo "The query sequences must be specified." >&2
 	display_usage
 	exit 1
 fi
-if [ -z "${QUERY}" ]; then
-	echo "The query database must be specified." >&2
+if [ -z "${DATABASE}" ]; then
+	echo "The database (subject) must be specified." >&2
 	display_usage
 	exit 1
 fi
@@ -148,17 +138,16 @@ if [ ${ENTRY} == 'all' ]; then
 fi
 
 # All entries retrieval and blasting of retrieved entries against another database
-blastdbcmd -db ${SUBJECT} \
-       -dbtype ${DBTYPE} \
+blastdbcmd -db ${QUERY} \
        ${entry_retrieval} | \
        eval "${TASK} \
        -query - \
        -task ${TASK} \
-       -db ${QUERY} \
+       -db ${DATABASE} \
        -out ${WKDIR}/${BASENAME} \
        -evalue ${EVAL} \
        -num_alignments ${NUMALIGN} \
-       -num_threads ${THREADS} ${ADDITIONAL} \
+       -num_threads ${THREADS} ${BLAST_ADD} \
        -outfmt '6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qlen qframe qseq sstart send slen sframe sseq staxid ssciname sstrand evalue bitscore score'"
 
 # Time scripts ends
