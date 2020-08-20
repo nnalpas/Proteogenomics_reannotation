@@ -92,14 +92,14 @@ while IFS= read -r line; do
 	if [[ ! -z "${array[4]}" ]]; then eval LIST=${array[4]}; BLASTCMD+="-l $LIST "; fi;
 	if [[ ! -z "${array[5]}" ]]; then BLASTCMD+="-e ${array[5]} "; fi;
 	if [[ ! -z "${array[6]}" ]]; then BLASTCMD+="-n ${array[6]} "; fi;
-	if [[ ! -z "${array[7]}" ]]; then eval BLAST_ADD=${array[7]}; BLASTCMD+="-x \"$BLAST_ADD\" "; fi;
-	if [[ ! -z "${array[8]}" ]]; then eval DB_ADD=${array[8]}; BLASTCMD+="-y \"${DB_ADD}\" "; fi;
+	if [[ ! -z "${array[7]}" ]]; then BLASTCMD+="-x ${array[7]} ; "; fi;
+	if [[ ! -z "${array[8]}" ]]; then BLASTCMD+="-y ${array[8]} ; "; fi;
 	
 	# Run the blast for each iteration
 	if [[ "$SOFTWARE" == "Blast" ]]; then
-		echo "${PBS_O_HOME}/bin/BlastDbBlasting.sh $BLASTCMD -t ${THREADS}" 2>&1
+		${PBS_O_HOME}/bin/BlastDbBlasting.sh $BLASTCMD -t ${THREADS} 2>&1
 	elif [[ "$SOFTWARE" == "Diamond" ]]; then
-		echo "${PBS_O_HOME}/bin/DiamondDbBlasting.sh $BLASTCMD -t ${THREADS}" 2>&1
+		${PBS_O_HOME}/bin/DiamondDbBlasting.sh $BLASTCMD -t ${THREADS} 2>&1
 	else
 		echo "The blasting software must be either 'Blast' or 'Diamond'." >&2
 		exit 1
