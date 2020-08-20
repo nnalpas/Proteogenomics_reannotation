@@ -74,7 +74,7 @@ while getopts "o:l:a:q:d:e:n:x:y:b:t:h" opt; do
 			shift $((OPTIND-1)); OPTIND=1
 			;;
 		x)
-			while [[ ${!OPTIND} != ';' ]]; do
+			while [[ -n "${!OPTIND}" ]] && [[ ${!OPTIND} != ';' ]]; do
 				BLAST_ADD+=("${!OPTIND}")
 				let OPTIND++
 			done
@@ -83,13 +83,13 @@ while getopts "o:l:a:q:d:e:n:x:y:b:t:h" opt; do
 			#shift $((OPTIND-1)); OPTIND=1
 			;;
 		y)
-			while [[ ${!OPTIND} != ';' ]]; do
+			while [[ -n "${!OPTIND}" ]] && [[ "${!OPTIND}" != ';' ]]; do
 				MAKEDB_ADD+=("${!OPTIND}")
 				let OPTIND++
 			done
 			let OPTIND++
-            #MAKEDB_ADD=$OPTARG
-            #shift $((OPTIND-1)); OPTIND=1
+			#MAKEDB_ADD=$OPTARG
+			#shift $((OPTIND-1)); OPTIND=1
 			;;
 		t)
 			THREADS=$OPTARG
