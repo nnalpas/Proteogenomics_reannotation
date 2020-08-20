@@ -13,7 +13,7 @@ display_usage() {
 		Usage: $0 [Options] -a <Task> -q <Query> -d <Database>  -b <Basename>"
 	echo "
 		Options:
-        	-o	[str]	The output directory.
+			-o	[str]	The output directory.
 			-l	[str]	Which entry to use, either 'all' or a file containing entries
 			-a	[str]	What blast to perform ('blastx' or 'blastp')
 			-q	[str]	The query sequences
@@ -24,7 +24,7 @@ display_usage() {
 			-y	[str]	Additional makedb parameters.
 			-b	[str]	The name of the output file
 			-t	[int]	Number of threads.
-        	-h	[]		To display the help.
+			-h	[]		To display the help.
 	"
 }
 
@@ -46,28 +46,28 @@ while getopts "o:l:a:q:d:e:n:x:y:b:t:h" opt; do
 			shift $((OPTIND-1)); OPTIND=1
 			;;
 		l)
-            ENTRY=$OPTARG
-            shift $((OPTIND-1)); OPTIND=1
+			ENTRY=$OPTARG
+			shift $((OPTIND-1)); OPTIND=1
 			;;
 		a)
-            TASK=$OPTARG
-            shift $((OPTIND-1)); OPTIND=1
+			TASK=$OPTARG
+			shift $((OPTIND-1)); OPTIND=1
 			;;
 		q)
-            QUERY=$OPTARG
-            shift $((OPTIND-1)); OPTIND=1
+			QUERY=$OPTARG
+			shift $((OPTIND-1)); OPTIND=1
 			;;
 		d)
-            DATABASE=$OPTARG
-            shift $((OPTIND-1)); OPTIND=1
+			DATABASE=$OPTARG
+			shift $((OPTIND-1)); OPTIND=1
 			;;
 		e)
-            EVAL=$OPTARG
-            shift $((OPTIND-1)); OPTIND=1
+			EVAL=$OPTARG
+			shift $((OPTIND-1)); OPTIND=1
 			;;
 		n)
-            NUMALIGN=$OPTARG
-            shift $((OPTIND-1)); OPTIND=1
+			NUMALIGN=$OPTARG
+			shift $((OPTIND-1)); OPTIND=1
 			;;
 		b)
 			BASENAME=$OPTARG
@@ -150,8 +150,8 @@ fi
 
 # Make a database for the query if it does not already exists
 if [ ! -e ${DATABASE}.dmnd ] ; then
-	diamond makedb --in ${DATABASE} \
-		--db ${DATABASE}.dmnd "${MAKEDB_ADD[@]}"
+	echo "diamond makedb --in ${DATABASE} \
+		--db ${DATABASE}.dmnd ${MAKEDB_ADD[@]}"
 fi
 
 # Check whether queries should be filtered
@@ -161,10 +161,10 @@ if [ ${ENTRY} != 'all' ]; then
 fi
 
 # All entries retrieval and blasting of retrieved entries against another database
-blastdbcmd -db ${QUERY} \
+echo "blastdbcmd -db ${QUERY} \
        -dbtype ${DBTYPE} \
        ${entry_retrieval} | \
-       eval "diamond ${TASK} \
+       eval diamond ${TASK} \
        --query - \
        --db ${DATABASE} \
        --out ${WKDIR}/${BASENAME} \
