@@ -76,6 +76,7 @@ while getopts "o:l:a:q:d:e:n:x:y:b:t:h" opt; do
 		x)
 			while [[ -n "${!OPTIND}" ]] && [[ ${!OPTIND} != ';' ]]; do
 				BLAST_ADD+=("${!OPTIND}")
+				echo "opt: $OPTIND and BLAST_ADD: ${BLAST_ADD[@]}"
 				let OPTIND++
 			done
 			let OPTIND++
