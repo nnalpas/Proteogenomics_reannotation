@@ -176,7 +176,7 @@ blastdbcmd -db ${QUERY} \
        --evalue ${EVAL} \
        --max-target-seqs ${NUMALIGN} \
        --threads ${THREADS} ${BLAST_ADD[@]} \
-       --outfmt 6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qlen qframe qseq qstrand sstart send slen sframe sseq staxids sscinames evalue bitscore score"
+       --outfmt 6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qlen qframe qseq qstrand sstart send slen sseq staxids sscinames evalue bitscore score"
 
 # Time scripts ends
 echo "Completed $(date +"%T %d-%m-%Y")."
