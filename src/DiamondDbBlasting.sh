@@ -77,7 +77,6 @@ while getopts "o:l:a:q:d:e:n:x:y:b:t:h" opt; do
 			BLAST_ADD=("$OPTARG")
 			while [[ -n "${!OPTIND}" ]] && [[ ${!OPTIND} != ';' ]]; do
 				BLAST_ADD+=("${!OPTIND}")
-				echo "optind: $OPTIND with !optind: ${!OPTIND} plus optarg: $OPTARG and BLAST_ADD: ${BLAST_ADD[@]}"
 				let OPTIND++
 			done
 			let OPTIND++
@@ -149,6 +148,15 @@ fi
 
 # Make a database for the query if it does not already exists
 if [ ! -e ${DATABASE}.dmnd ] ; then
+	for (( i=0; i<$((${#MAKEDB_ADD[@]}-1)); i++ )); do
+		j=$(($i+1))
+		if [[ "${MAKEDB_ADD[$i]}" == '--taxonmap' ]] && [[ ! "${MAKEDB_ADD[$j]}" =~ "prot.accession2taxid.gz$" ]]; then
+			grep -E "^>" ${DATABASE} | sed 's/^>//' | sed 's/ .*//' | awk -v taxid="${MAKEDB_ADD[$j]}" '{ print $1, "\t", $1, "\t", taxid, "\t", 0 }' > ${DATABASE}.prot.accession2taxid
+			gzip ${DATABASE}.prot.accession2taxid
+			${MAKEDB_ADD[$j]}="${DATABASE}.prot.accession2taxid.gz"
+			zcat ${DATABASE}.prot.accession2taxid.gz | head 
+		fi
+	done
 	echo "diamond makedb --in ${DATABASE} \
 		--db ${DATABASE}.dmnd ${MAKEDB_ADD[@]}"
 fi
