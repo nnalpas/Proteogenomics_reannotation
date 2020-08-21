@@ -4,7 +4,6 @@
 
 # Time scripts starts
 echo "$0"
-echo "$@"
 echo "Start $(date +"%T %d-%m-%Y")."
 
 # Function holding the usage
@@ -153,32 +152,31 @@ if [ ! -e ${DATABASE}.dmnd ] ; then
 		if [[ "${MAKEDB_ADD[$i]}" == '--taxonmap' ]] && [[ ! "${MAKEDB_ADD[$j]}" =~ "prot.accession2taxid.gz$" ]]; then
 			grep -E "^>" ${DATABASE} | sed 's/^>//' | sed 's/ .*//' | awk -v taxid="${MAKEDB_ADD[$j]}" '{ print $1, "\t", $1, "\t", taxid, "\t", 0 }' > ${DATABASE}.prot.accession2taxid
 			gzip ${DATABASE}.prot.accession2taxid
-			${MAKEDB_ADD[$j]}="${DATABASE}.prot.accession2taxid.gz"
-			zcat ${DATABASE}.prot.accession2taxid.gz | head 
+			MAKEDB_ADD[$j]="${DATABASE}.prot.accession2taxid.gz"
+		elif [[ "${MAKEDB_ADD[$i]}" =~ ^--taxon(nodes|names)$ ]]; then
+			eval MAKEDB_ADD[$j]=${MAKEDB_ADD[$j]}
 		fi
 	done
-	echo "diamond makedb --in ${DATABASE} \
-		--db ${DATABASE}.dmnd ${MAKEDB_ADD[@]}"
+	diamond makedb --in ${DATABASE} \
+		--db ${DATABASE}.dmnd ${MAKEDB_ADD[@]}
 fi
 
 # Check whether queries should be filtered
-entry_retrieval="${ENTRY}"
-if [ ${ENTRY} != 'all' ]; then
+entry_retrieval="-entry_batch ${ENTRY}"
+if [ ${ENTRY} == 'all' ]; then
 	entry_retrieval="-entry ${ENTRY}"
 fi
 
 # All entries retrieval and blasting of retrieved entries against another database
-echo "blastdbcmd -db ${QUERY} \
-       -dbtype ${DBTYPE} \
+blastdbcmd -db ${QUERY} \
        ${entry_retrieval} | \
-       eval diamond ${TASK} \
-       --query - \
+       eval "diamond ${TASK} \
        --db ${DATABASE} \
        --out ${WKDIR}/${BASENAME} \
        --evalue ${EVAL} \
        --max-target-seqs ${NUMALIGN} \
        --threads ${THREADS} ${BLAST_ADD[@]} \
-       --outfmt '6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qlen qframe qseq qstrand sstart send slen sframe sseq staxids sscinames evalue bitscore score'"
+       --outfmt 6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qlen qframe qseq qstrand sstart send slen sframe sseq staxids sscinames evalue bitscore score"
 
 # Time scripts ends
 echo "Completed $(date +"%T %d-%m-%Y")."
