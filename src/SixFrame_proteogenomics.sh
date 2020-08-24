@@ -194,18 +194,8 @@ fi
 # Check whether to identify the best blast hits from all results of previous step
 if [ $BestBlast == 1 ]; then
 
-    #${PBS_O_HOME}/bin/Best_blast.R \
-	#	-i ${ProjDir}/Blast/ORFprot_vs_Refprot \
-	#	-o ${ProjDir}/Blast > ${LogDir}/BestBlast.log 2>&1
-    #${PBS_O_HOME}/bin/Best_blast.R \
-	#	-i ${ProjDir}/Blast/ORFprot_vs_Uniprot \
-	#	-o ${ProjDir}/Blast >> ${LogDir}/BestBlast.log 2>&1
-    #${PBS_O_HOME}/bin/Best_blast.R \
-	#	-i ${ProjDir}/Blast/ORFprot_vs_NCBIprot \
-	#	-o ${ProjDir}/Blast >> ${LogDir}/BestBlast.log 2>&1
-	${PBS_O_HOME}/bin/Best_blast.R \
-		-i ${ProjDir}/Blast/ORFprot_vs_Strathprot \
-		-o ${ProjDir}/Blast >> ${LogDir}/BestBlast.log 2>&1
+    ${PBS_O_HOME}/bin/Best_blast.R \
+		-o ${ProjDir}/Blast ${ProjDir}/Blast/ORFprot_vs_* > ${LogDir}/BestBlast.log 2>&1
     
 fi
 
