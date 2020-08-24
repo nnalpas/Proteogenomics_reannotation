@@ -280,6 +280,7 @@ blast_read <- function(
     file = NULL,
     blast_format = c(
         "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"),
+    header = TRUE,
     columns = NULL,
     ...) {
     
@@ -288,23 +289,24 @@ blast_read <- function(
         stop("No defined Blast file name!")
     }
     format <- match.arg(blast_format)
-    if (format == "6") {
-        if (is.null(columns)) {
-            columns <- c(
-                "qseqid", "sseqid", "pident", "nident", "mismatch",
-                "gaps", "length", "gapopen", "qstart", "qend", "qlen",
-                "qframe", "qseq", "sstart", "send", "slen", "sframe",
-                "sseq", "staxid", "ssciname", "sstrand", "evalue",
-                "bitscore", "score")
-            warning("Using default column names!")
-        }
-    } else {
-        stop("The Blast format is not yet implemented, check with developper!")
+    if (format != "6") {
+        warning(paste0(
+            "The format is unsual: ", format,
+            " data will be read as table, check results!"))
+    }
+    if (header == TRUE & is.null(columns)) {
+        columns <- data.table::fread(
+            input = file, sep = "\t", header = header, nrows = 0,
+            stringsAsFactors = FALSE, integer64 = "double",
+            col.names = columns, quote = "", data.table = FALSE) %>%
+            colnames(.)
+    } else if (header == FALSE & is.null(columns)) {
+        stop("The Blast column names must be specified from file header or user specification!")
     }
     
     # Read in the blast file
     blast_data <- fread(
-        input = file, sep = "\t", header = FALSE,
+        input = file, sep = "\t", header = header,
         stringsAsFactors = FALSE, integer64 = "double",
         col.names = columns, quote = "", data.table = FALSE,
         ...)
