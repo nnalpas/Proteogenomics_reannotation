@@ -21,7 +21,7 @@ display_usage() {
 
 # Define default values
 o_default="`pwd`/Blast"
-f_default=""
+f_default="''"
 m_default="keep"
 
 # Parse user parameters
