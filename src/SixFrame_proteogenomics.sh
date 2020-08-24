@@ -194,7 +194,7 @@ fi
 # Check whether to identify the best blast hits from all results of previous step
 if [ $BestBlast == 1 ]; then
 
-    ${PBS_O_HOME}/bin/Best_blast.R \
+    ${PBS_O_HOME}/bin/BestBlasts.sh \
 		-o ${ProjDir}/Blast ${ProjDir}/Blast/ORFprot_vs_* > ${LogDir}/BestBlast.log 2>&1
     
 fi
