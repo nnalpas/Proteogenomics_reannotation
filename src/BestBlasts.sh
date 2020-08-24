@@ -21,7 +21,6 @@ display_usage() {
 
 # Define default values
 o_default="`pwd`/Blast"
-f_default="''"
 m_default="keep"
 
 # Parse user parameters
@@ -63,7 +62,6 @@ TARGETFILES=${@:1}
 # This command will set VARIABLE to DEFAULT_VALUE if it is currently 
 # undefined, then return VARIABLE
 : ${WKDIR=$o_default}
-: ${FILTER=$f_default}
 : ${MULTI=$m_default}
 
 # Check for mandatory parameters
@@ -71,6 +69,10 @@ if [ -z "${TARGETFILES}" ]; then
 	echo "At least one blast file must be specified." >&2
 	display_usage
 	exit 1
+fi
+FILTER_ARG=""
+if [ -n "${FILTER}" ]; then
+	FILTER_ARG="-f ${FILTER}"
 fi
 
 # Create the output folder
@@ -81,8 +83,7 @@ fi
 # Loop through all blast files
 for file in `ls ${TARGETFILES}`; do
 	Best_blast.R \
-		-i ${file} \
-		-f ${FILTER} \
+		-i ${file} ${FILTER_ARG} \
 		-m ${MULTI} \
 		-o ${WKDIR} 2>&1
 done
