@@ -178,5 +178,8 @@ blastdbcmd -db ${QUERY} \
        --threads ${THREADS} ${BLAST_ADD[@]} \
        --outfmt 6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qlen qframe qseq qstrand sstart send slen sseq staxids sscinames evalue bitscore score"
 
+# Include column names at start of file
+sed -i '1s/^/qseqid\tsseqid\tpident\tnident\tmismatch\tgaps\tlength\tgapopen\tqstart\tqend\tqlen\tqframe\tqseq\tqstrand\tsstart\tsend\tslen\tsseq\tstaxids\tsscinames\tevalue\tbitscore\tscore\n/' ${WKDIR}/${BASENAME}
+
 # Time scripts ends
 echo "Completed $(date +"%T %d-%m-%Y")."
