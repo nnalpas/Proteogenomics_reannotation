@@ -298,7 +298,7 @@ blast_read <- function(
         columns <- data.table::fread(
             input = file, sep = "\t", header = header, nrows = 0,
             stringsAsFactors = FALSE, integer64 = "double",
-            col.names = columns, quote = "", data.table = FALSE) %>%
+            quote = "", data.table = FALSE) %>%
             colnames(.)
     } else if (header == FALSE & is.null(columns)) {
         stop("The Blast column names must be specified from file header or user specification!")
