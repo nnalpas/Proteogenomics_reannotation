@@ -225,23 +225,11 @@ fi
 # Check whether to perform reciprocal best blast hit data processing
 if [ $ReciprocalBestBlast == 1 ]; then
 
-    #${PBS_O_HOME}/bin/Reciprocal_best_blast.R \
-	#	-b ${ProjDir}/Blast/ORFprot_vs_Refprot \
-	#	-r ${ProjDir}/ReciprocalBlast/Refprot_vs_ORFprot \
-	#	-o ${ProjDir}/ReciprocalBlast > ${LogDir}/ReciprocalBestBlast.log 2>&1
-    #${PBS_O_HOME}/bin/Reciprocal_best_blast.R \
-	#	-b ${ProjDir}/Blast/ORFprot_vs_Uniprot \
-	#	-r ${ProjDir}/ReciprocalBlast/Uniprot_vs_ORFprot \
-	#	-o ${ProjDir}/ReciprocalBlast >> ${LogDir}/ReciprocalBestBlast.log 2>&1
-    #${PBS_O_HOME}/bin/Reciprocal_best_blast.R \
-	#	-b ${ProjDir}/Blast/ORFprot_vs_NCBIprot \
-	#	-r ${ProjDir}/ReciprocalBlast/NCBIprot_vs_ORFprot \
-	#	-o ${ProjDir}/ReciprocalBlast >> ${LogDir}/ReciprocalBestBlast.log 2>&1
-    ${PBS_O_HOME}/bin/Reciprocal_best_blast.R \
-		-b ${ProjDir}/Blast/ORFprot_vs_Strathprot \
-		-r ${ProjDir}/ReciprocalBlast/Strathprot_vs_ORFprot \
-		-o ${ProjDir}/ReciprocalBlast >> ${LogDir}/ReciprocalBestBlast.log 2>&1
-	
+    ${PBS_O_HOME}/bin/ReciprocalBestBlasts.sh \
+		-b ${ProjDir}/Blast/ORFprot_vs_* \
+		-r ${ProjDir}/ReciprocalBlast \
+		-o ${ProjDir}/ReciprocalBlast > ${LogDir}/ReciprocalBestBlast.log 2>&1
+    
 fi
 
 
