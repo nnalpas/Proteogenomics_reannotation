@@ -44,7 +44,7 @@ cd ${PBS_O_WORKDIR}
 #module load curl/7.57.0
 #module load zlib/1.2.11
 module load blast+/2.10.1
-module load math/R/3.5.2-mkl-2018 # the prerequisite GNU is incompatible with blast+ (must find solution)
+#module load math/R/3.5.2-mkl-2018 # the prerequisite GNU is incompatible with blast+ (must find solution)
 #module load clustal_omega/1.2.4
 module load emboss/6.6.0
 module load devel/perl/5.26
@@ -207,51 +207,12 @@ fi
 
 # Check whether to perform the reciprocal best blast against previously used databases
 if [ $ReciprocalBlast == 1 ]; then
-    
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh \
+	
+	${PBS_O_HOME}/bin/SerialDbBlasting.sh \
 		-o ${ProjDir}/ReciprocalBlast \
-		-y "prot" \
-		-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_Refprot \
-		-a "blastp" \
-		-s ${UNIREFPROT} \
-		-q ${SIXFRAMEPROT} \
-		-e ${Eval} \
-		-n ${NumAlign} \
-		-t ${THREADS} \
-		-b "Refprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh \
-		-o ${ProjDir}/ReciprocalBlast \
-		-y "prot" \
-		-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_Uniprot \
-		-a "blastp" \
-		-s ${ALLUNIPROT} \
-		-q ${SIXFRAMEPROT} \
-		-e ${Eval} \
-		-n ${NumAlign} \
-		-t ${THREADS} \
-		-b "Uniprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
-    ${PBS_O_HOME}/bin/BlastDbBlasting.sh \
-		-o ${ProjDir}/ReciprocalBlast \
-		-y "prot" \
-		-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_NCBIprot \
-		-a "blastp" \
-		-s ${ALLNCBIPROT} \
-		-q ${SIXFRAMEPROT} \
-		-e ${Eval} \
-		-n ${NumAlign} \
-		-t ${THREADS} \
-		-b "NCBIprot_vs_ORFprot" >> ${LogDir}/ReciprocalBlast.log 2>&1
-	#${PBS_O_HOME}/bin/BlastDbBlasting.sh \
-	#	-o ${ProjDir}/ReciprocalBlast \
-	#	-y "prot" \
-	#	-l ${ProjDir}/Blast/Reciprocal_id_ORFprot_vs_Strathprot \
-	#	-a "blastp" \
-	#	-s ${STRATHPROT} \
-	#	-q ${SIXFRAMEPROT} \
-	#	-e ${Eval} \
-	#	-n ${NumAlign} \
-	#	-t ${THREADS} \
-	#	-b "Strathprot_vs_ORFprot" > ${LogDir}/ReciprocalBlast.log 2>&1
+		-s ${BlastSoftware} \
+		-x ${SerialRecipBlastMap} \
+		-t ${THREADS} > ${LogDir}/ReciprocalBlast.log 2>&1
     
 fi
 
