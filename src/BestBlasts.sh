@@ -6,9 +6,6 @@
 echo "$0"
 echo "Start $(date +"%T %d-%m-%Y")."
 
-# Load the module within the script it is required
-module load math/R/3.5.2-mkl-2018
-
 # Function holding the usage
 display_usage() { 
 	echo "
