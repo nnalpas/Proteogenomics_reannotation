@@ -87,7 +87,7 @@ for file in `ls ${TARGETFILES}`; do
 		-i ${file} \
 		-f ${FILTER} \
 		-m ${MULTI} \
-		-o ${WKDIR}
+		-o ${WKDIR} 2>&1
 done
 
 # Time scripts ends
