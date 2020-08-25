@@ -616,14 +616,15 @@ get_frame <- function(
     }
     
     # Determine the frame of translation in a strand specific manner
-    tmp <- as.integer(unlist(data[data[[strand]] == "+", start]))
-    data[data[[strand]] == "+", "frame"] <- ((tmp + 2) / 3) %>%
-        keep_decimals(.) %>%
-        round(x = ((. + 0.33) * 3))
-    tmp <- as.integer(unlist(data[data[[strand]] == "-", start]))
-    data[data[[strand]] == "-", "frame"] <- ((genome_size - tmp + 3) / 3) %>%
-        keep_decimals(.) %>%
-        round(x = ((. + 0.33) * -3))
+    data %<>%
+        dplyr::rowwise(.) %>%
+        dplyr::mutate(., frame = dplyr::case_when(
+            strand == "+" ~ round(x = (
+                (keep_decimals(((!!as.name(start) + 2) / 3)) + 0.33) * 3)),
+            strand == "-" ~ round(x = (
+                (keep_decimals(((genome_size[[sseqid]] - !!as.name(start) + 3) / 3)) + 0.33) * -3))
+        )) %>%
+        dplyr::ungroup(.)
     
     # Return the dataframe with frame information
     return(data)
