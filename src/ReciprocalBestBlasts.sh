@@ -4,17 +4,15 @@
 
 # Time scripts starts
 echo "$0"
-echo "$@"
 echo "Start $(date +"%T %d-%m-%Y")."
 
 # Function holding the usage
 display_usage() { 
 	echo "
-		Usage: $0 [Options] -b <Blast files> -r <Reciprocal blast folder>"
+		Usage: $0 [Options] -r <Reciprocal blast folder> <Blast files>"
 	echo "
 		Options:
 			-o	[str]	The output directory.
-			-b	[str]	One or more blast results files
 			-r	[str]	One folder containing the reciprocal blast results
 			-f	[str]	One or more blast fields filtering in R language (e.g. evalue <= 0.0001 & score >= 100)
 			-m	[str]	What to do for multi-hits entries (i.e. 'keep' (default), 'remove', 'uniquify')
@@ -27,16 +25,12 @@ o_default="`pwd`/ReciprocalBlast"
 m_default="keep"
 
 # Parse user parameters
-while getopts "o:b:r:f:m:h" opt; do
+while getopts "o:r:f:m:h" opt; do
 	case $opt in
 		o)
 			WKDIR=$OPTARG
 			echo "Working directory: $WKDIR"
 			shift $((OPTIND-1)); OPTIND=1
-			;;
-		b)
-            BLASTS=$OPTARG
-            shift $((OPTIND-1)); OPTIND=1
 			;;
 		r)
             RECIPROCALS=$OPTARG
@@ -65,6 +59,9 @@ while getopts "o:b:r:f:m:h" opt; do
 			;;
 	esac
 done
+
+# Get all blast result files
+BLASTS=${@:1}
 
 # Setting default values ${VARIABLE=DEFAULT_VALUE}
 # This command will set VARIABLE to DEFAULT_VALUE if it is currently 
