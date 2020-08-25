@@ -4,6 +4,7 @@
 
 # Time scripts starts
 echo "$0"
+echo "$@"
 echo "Start $(date +"%T %d-%m-%Y")."
 
 # Function holding the usage
@@ -12,7 +13,7 @@ display_usage() {
 		Usage: $0 [Options] -b <Blast files> -r <Reciprocal blast folder>"
 	echo "
 		Options:
-        	-o	[str]	The output directory.
+			-o	[str]	The output directory.
 			-b	[str]	One or more blast results files
 			-r	[str]	One folder containing the reciprocal blast results
 			-f	[str]	One or more blast fields filtering in R language (e.g. evalue <= 0.0001 & score >= 100)
