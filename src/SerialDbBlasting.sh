@@ -95,6 +95,12 @@ while IFS= read -r line; do
 	if [[ ! -z "${array[7]}" ]]; then BLASTCMD+="-x ${array[7]} ; "; fi;
 	if [[ ! -z "${array[8]}" ]]; then BLASTCMD+="-y ${array[8]} ; "; fi;
 	
+	# Check software compatibility with selected task
+	if [[ "${array[0]}" != "blastp" ]] && [[ "${array[0]}" != "blastx" ]]; then
+		echo "The selected task: ${array[0]} is compatible only with Blast software." >&2
+		SOFTWARE="Blast"
+	fi
+	
 	# Run the blast for each iteration
 	if [[ "$SOFTWARE" == "Blast" ]]; then
 		${PBS_O_HOME}/bin/BlastDbBlasting.sh $BLASTCMD -t ${THREADS} 2>&1
