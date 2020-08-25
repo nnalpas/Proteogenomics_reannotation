@@ -98,14 +98,14 @@ if (is.null(opt$fasta)) {
 }
 
 # Possible values:
-# opt[["chr_pattern"]] <- "(.+?)_.+"
+# opt[["chr_pattern"]] <- "^>(.+?)_.+"
 # opt[["chr_pattern"]] <- ".+?\\| (.+?) \\|.+"
 if (is.null(opt$chr_pattern)) {
     warning("The default chromosome pattern argument is '(.+?)_.+'")
-    opt[["chr_pattern"]] <- "(.+?)_.+"
+    opt[["chr_pattern"]] <- "^>(.+?)_.+"
 } else if (opt$chr_pattern == "") {
     warning("The default chromosome pattern argument is '(.+?)_.+'")
-    opt[["chr_pattern"]] <- "(.+?)_.+"
+    opt[["chr_pattern"]] <- "^>(.+?)_.+"
 }
 
 # Check whether output parameter was provided
@@ -221,7 +221,7 @@ orf_pos %<>%
     dplyr::mutate(
         ., lengthCheck = keep_decimals(x = nucl_length / 3)) %>%
     dplyr::filter(., lengthCheck == 0) %>%
-    dplyr::select(., -lengthCheck) %>%
+    dplyr::select(., -lengthCheck, -nchar) %>%
     base::as.data.frame(., stringsAsFactors = FALSE)
 
 # Determine aa length
