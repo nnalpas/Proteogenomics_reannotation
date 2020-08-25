@@ -155,8 +155,9 @@ fasta <- opt$fasta %>%
 geno_size <- opt$genome %>%
     as.character(.) %>%
     seqinr::read.fasta(
-        file = ., seqtype = "DNA", as.string = TRUE) %>%
-    seqinr::getLength(.)
+        file = ., seqtype = "DNA", as.string = TRUE)
+geno_size <- seqinr::getLength(geno_size) %>%
+    set_names(names(geno_size))
 
 # Import the Blast results
 blast_data <- blast_read(file = opt$blast, blast_format = "6") %>%
