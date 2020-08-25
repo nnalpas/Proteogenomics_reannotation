@@ -44,7 +44,7 @@ cd ${PBS_O_WORKDIR}
 #module load curl/7.57.0
 #module load zlib/1.2.11
 module load blast+/2.10.1
-module load math/R/3.5.2-mkl-2018 # the prerequisite GNU is incompatible with blast+ (must find solution)
+#module load math/R/3.5.2-mkl-2018 # the prerequisite GNU is incompatible with blast+ (must find solution)
 #module load clustal_omega/1.2.4
 module load emboss/6.6.0
 module load devel/perl/5.26
@@ -246,11 +246,6 @@ if [ $ProteinCoordinate == 1 ]; then
 		-b ${ProjDir}/Blast/Refprot_vs_Genome \
 		-g ${GENOME} \
 		-o ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt > ${LogDir}/ProteinCoordinate.log 2>&1
-	#${PBS_O_HOME}/bin/Genomic_position_from_blast.R \
-	#	-f ${SIXFRAMEPROT} \
-	#	-b ${ProjDir}/Blast/ORFprot_vs_Genome \
-	#	-g ${GENOME} \
-	#	-o ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
 	${PBS_O_HOME}/bin/ORF_coordinates.R \
 		-f ${SIXFRAMEPROT} \
 		-o ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
