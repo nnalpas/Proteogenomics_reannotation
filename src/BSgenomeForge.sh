@@ -83,15 +83,17 @@ fi
 # Copy seed file and all fasta files into the output directory
 CURDIR=`pwd`
 cp ${SEED} ${WKDIR}
-if $SPLIT; then
-	echo "More than one fasta header at: ${file}! Attempting to split!"
-	cd $WKDIR
-	#faidx -x $file
-	awk -F "|" '/^>/ {F = $2".fasta"} {print > F}' yourfile.fa
-	cd $CURDIR
-else
-	cp -t ${WKDIR} `ls ${FASTAS}`
-fi
+for file in `ls ${FASTAS}`; do
+	if $SPLIT; then
+		echo "More than one fasta header at: ${file}! Attempting to split!"
+		cd $WKDIR
+		#faidx -x $file
+		awk -F "[> ]" '/^>/ {F = $2".fasta"} {print > F}' ${file}
+		cd $CURDIR
+	else
+		cp -t ${WKDIR} `ls ${FASTAS}`
+	fi
+done
 
 # Append the fasta sequence name to the seed file
 NEWSEED=`basename ${SEED}`
@@ -100,7 +102,7 @@ if [[ `grep "seqnames" ${WKDIR}/${NEWSEED}` ]]; then
 	exit 1
 fi
 seqnames=""
-for file in `ls ${WKDIR}/*.fa`; do
+for file in `ls ${WKDIR}/*.fasta`; do
 	seqs=`basename ${file} | sed -E "s/(.*)\.fa(sta)?(\.gz)?$/\1/"`
 	seqnames="$seqnames '${seqs}',"
 done
