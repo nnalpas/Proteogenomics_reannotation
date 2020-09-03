@@ -13,8 +13,8 @@ DbBlasting=0
 BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
-ProteinCoordinate=1
-ProteinAnnotation=0
+ProteinCoordinate=0
+ProteinAnnotation=1
 BSgenomeForge=0
 GRangeCreate=0
 PepNoveltyReason=0
@@ -59,6 +59,11 @@ SerialBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Blast_iteratio
 
 # ReciprocalBlastParam
 SerialRecipBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Recip_Blast_iterations.txt"
+
+# ProteinAnnotationParam
+AnnotColumn="GENE-NAME,CHR-VERSION,PROTEIN-NAME"
+AnnotSeparator=" | "
+AnnotKey="MainID"
 
 # BSgenomeParam
 SEED="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/seed"
