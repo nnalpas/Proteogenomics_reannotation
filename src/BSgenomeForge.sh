@@ -88,7 +88,7 @@ for file in `ls ${FASTAS}`; do
 		echo "More than one fasta header at: ${file}! Attempting to split!"
 		cd $WKDIR
 		#faidx -x $file
-		awk -F "[> ]" '/^>/ {F = $2".fasta"} {print > F}' ${file}
+		awk -F "[> ]" '/^>/ {F = $2".fa"} {print > F}' ${file}
 		cd $CURDIR
 	else
 		cp -t ${WKDIR} `ls ${FASTAS}`
@@ -102,7 +102,7 @@ if [[ `grep "seqnames" ${WKDIR}/${NEWSEED}` ]]; then
 	exit 1
 fi
 seqnames=""
-for file in `ls ${WKDIR}/*.fasta`; do
+for file in `ls ${WKDIR}/*.fa`; do
 	seqs=`basename ${file} | sed -E "s/(.*)\.fa(sta)?(\.gz)?$/\1/"`
 	seqnames="$seqnames '${seqs}',"
 done
