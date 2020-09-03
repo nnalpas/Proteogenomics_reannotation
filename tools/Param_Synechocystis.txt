@@ -15,8 +15,8 @@ ReciprocalBlast=0
 ReciprocalBestBlast=0
 ProteinCoordinate=0
 ProteinAnnotation=0
-BSgenomeForge=1
-GRangeCreate=0
+BSgenomeForge=0
+GRangeCreate=1
 PepNoveltyReason=0
 PeptideCoordinate=0
 OperonCoordinate=0
@@ -69,7 +69,7 @@ AnnotKey="MainID"
 SEED="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/seed"
 
 # GRangesParam
-GenomeName="AL0091263"
+GenomeName="NC_000911"
 Circular=FALSE
 
 # RBSanalysis
