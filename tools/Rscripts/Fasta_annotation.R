@@ -67,6 +67,8 @@ if (interactive()) {
             prompt = "Give comma-separated annotation names to retrieve!"),
         key = readline(
             prompt = "Provide the key name to use for cross-annotation!"),
+        separator = readline(
+            prompt = "Provide the separator character(s) to parse annotation!"),
         output = readline(
             prompt = "Define the output file name!"))
     
@@ -93,6 +95,11 @@ if (interactive()) {
             opt_str = c("-k", "--key"),
             type = "character", default = NULL,
             help = "The key name to use for cross-annotation!",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-s", "--separator"),
+            type = "character", default = NULL,
+            help = "The separator characters to parse annotation!",
             metavar = "character"),
         make_option(
             opt_str = c("-o", "--output"),
@@ -153,60 +160,39 @@ fasta <- seqinr::read.fasta(
 names(fasta) <- uni_id_clean(names(fasta))
 
 #
-data_final <- lapply(fasta, function(x) {
-    attr(x, "Annot")
-}) %>%
-    set_names(names(fasta)) %>%
-    plyr::ldply(., "data.frame", .id = opt[["key"]]) %>%
-    dplyr::mutate(
-        ., 
-        `ENTRY-NAME` = sub(".+\\|([^ ]+).+", "\\1", `data.frame`),
-        `GENE-NAME` = ifelse(
-            grepl("GN=", `data.frame`, fixed = TRUE),
-            sub(".+ GN=([^ ]+).+", "\\1", `data.frame`),
-            NA),
-        `PROTEIN-NAME` = sub("[^ ]+ (.+) OS=.+", "\\1", `data.frame`),
-        TaxonID = sub(".+ OX=([^ ]+).+", "\\1", `data.frame`),
-        Taxon = sub(".+ OS=(.+) OX=.+", "\\1", `data.frame`)) %>%
-    dplyr::select(., -`data.frame`)
-
-# 
-#my_data <- fasta_to_taxon %>%
-#    split(x = ., f = .[["TaxonID"]]) %>%
-#    lapply(X = ., function(x) {
-#    
-#    # Create UniProt.ws object for submitted taxon ID
-#    up <- UniProt.ws(taxId = as.numeric(as.character(unique(x[["TaxonID"]]))))
-#    
-#    # Split the data into small list subset
-#    data <- x[["UNIPROTKB"]] %>%
-#        as.character(.) %>%
-#        split(., ceiling(seq_along(.)/100))
-#    
-#    # Get all the columns specified by user
-#    lapply(data, function(i) {
-#        UniProt.ws::select(
-#            x = up, keys = i,
-#            columns = opt$columns, keytype = opt$key)
-#    }) %>%
-#        unlist(.)
-#    
-#}) %>%
-#    set_names(names(fasta_to_taxon)) %>%
-#    plyr::ldply(., "data.frame", .id = "TaxonID")
-
-# Extract the gene name and locus from the GENES column if existing
-#if (any(colnames(data) %in% c("GENES"))) {
-#    data_final <- data %>%
-#        dplyr::mutate(
-#            .,
-#            `GENE-NAME` = sub(
-#                "^(.*?) .*$", "\\1", GENES, perl = TRUE),
-#            `ALT-GENE-NAME` = sub(
-#                "^.*? (.*)$", "\\1", GENES, perl = TRUE))
-#} else {
-#    data_final <- data
-#}
+if (grepl("GN=", attr(fasta[[1]], "Annot"))) {
+    
+    data_final <- lapply(fasta, function(x) {
+        attr(x, "Annot")
+    }) %>%
+        set_names(names(fasta)) %>%
+        plyr::ldply(., "data.frame", .id = opt[["key"]]) %>%
+        dplyr::mutate(
+            ., 
+            `ENTRY-NAME` = sub(".+\\|([^ ]+).+", "\\1", `data.frame`),
+            `GENE-NAME` = ifelse(
+                grepl("GN=", `data.frame`, fixed = TRUE),
+                sub(".+ GN=([^ ]+).+", "\\1", `data.frame`),
+                NA),
+            `PROTEIN-NAME` = sub("[^ ]+ (.+) OS=.+", "\\1", `data.frame`),
+            TaxonID = sub(".+ OX=([^ ]+).+", "\\1", `data.frame`),
+            Taxon = sub(".+ OS=(.+) OX=.+", "\\1", `data.frame`)) %>%
+        dplyr::select(., -`data.frame`)
+    
+} else {
+    
+    warning("Missing gene name. Not a uniprot fasta?")
+    data_final <- lapply(fasta, function(x) {
+        attr(x, "Annot")
+    }) %>%
+        set_names(names(fasta)) %>%
+        plyr::ldply(., "data.frame", .id = opt[["key"]]) %>%
+        dplyr::mutate(., `data.frame` = sub("^>", "", data.frame)) %>%
+        tidyr::separate(
+            data = ., col = "data.frame",
+            into = opt$columns, sep = opt$separator)
+        
+}
 
 
 
