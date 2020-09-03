@@ -62,7 +62,7 @@ SerialRecipBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Recip_Bla
 
 # ProteinAnnotationParam
 AnnotColumn="GENE-NAME,CHR-VERSION,PROTEIN-NAME"
-AnnotSeparator=" | "
+AnnotSeparator=" \\| "
 AnnotKey="MainID"
 
 # BSgenomeParam
