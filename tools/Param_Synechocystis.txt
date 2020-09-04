@@ -21,7 +21,7 @@ PepNoveltyReason=1
 PeptideCoordinate=1
 OperonCoordinate=0
 SangerCoordinate=0
-OrfNoveltyReason=0
+OrfNoveltyReason=1
 ClustalAlign=0
 ConservationBlast=0
 
