@@ -351,7 +351,8 @@ pep_grange <- opt$pep_grange %>%
 if (
     identical(opt$sanger_grange, NULL) |
     identical(opt$sanger_grange, "") |
-    identical(opt$sanger_grange, character(0))) {
+    identical(opt$sanger_grange, character(0)) |
+    !file.exists(opt$sanger_grange)) {
     sanger_grange <- GRanges()
     seqinfo(sanger_grange) <- seqinfo(genome_grange)
 } else {
@@ -361,7 +362,7 @@ if (
 }
 
 # Import the operon genomic ranges file if defined
-if (!is.null(opt$operon)) {
+if (!is.null(opt$operon) & file.exists(opt$operon)) {
     operon_grange <- opt$operon %>%
         as.character(.) %>%
         readRDS(file = .)
