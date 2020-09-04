@@ -304,6 +304,7 @@ grange <- with(
         strand = strand))
 
 # Add seqinfo to the created GRanges object
+seqlevels(grange) <- chromos$chromosome %>% as.character(.)
 seqinfo(grange) <- Seqinfo(
     seqnames = chromos$chromosome %>% as.character(.),
     seqlengths = chromos$end %>% as.integer(.),
