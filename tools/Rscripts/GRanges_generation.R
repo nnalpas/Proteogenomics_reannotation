@@ -136,6 +136,7 @@ if (
     stop("The input BSgenome package must be supplied!")
     
 }
+warning(paste("Loading package", opt$bsgenome))
 library(
     package = eval(opt$bsgenome),
     character.only = TRUE)
