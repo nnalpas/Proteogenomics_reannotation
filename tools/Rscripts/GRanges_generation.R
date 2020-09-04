@@ -63,11 +63,9 @@ if (interactive()) {
         genome = choose.files(
             caption = "Choose Fasta file of the genome!",
             multi = FALSE),
-        geno_name = readline(
-            prompt = "Provide the genome name!"),
-        circular = readline(
-            prompt = "Is the chromosome circular (logical)?") %>%
-            as.logical(.),
+        bsgenome = readline(
+            prompt = "Provide the BSgenome package name") %>%
+            as.character(.),
         annotations = choose.files(
             caption = "Choose an annotations file!",
             multi = FALSE),
@@ -89,14 +87,9 @@ if (interactive()) {
             help = "Genome fasta file",
             metavar = "character"),
         make_option(
-            opt_str = c("-n", "--geno_name"),
-            type = "character", default = "",
-            help = "Genome name",
-            metavar = "character"),
-        make_option(
-            opt_str = c("-t", "--circular"),
+            opt_str = c("-b", "--bsgenome"),
             type = "logical", default = "",
-            help = "Genome type is circular?",
+            help = "Provide the BSgenome package name",
             metavar = "character"),
         make_option(
             opt_str = c("-a", "--annotations"),
@@ -135,23 +128,18 @@ if (
     
 }
 if (
-    identical(opt$geno_name, "") |
-    identical(opt$geno_name, character(0))) {
+    identical(opt$bsgenome, NULL) |
+    identical(opt$bsgenome, "") |
+    identical(opt$bsgenome, character(0))) {
     
     print_help(opt_parser)
-    stop(paste(
-        "Genome name is required!"))
+    stop("The input BSgenome package must be supplied!")
     
 }
-if (
-    identical(opt$circular, "") |
-    identical(opt$circular, logical(0))) {
-    
-    print_help(opt_parser)
-    stop(paste(
-        "Chromosome circular or linear (logical) required!"))
-    
-}
+library(
+    package = eval(opt$bsgenome),
+    character.only = TRUE)
+
 if (
     identical(opt$annotations, "") |
     identical(opt$annotations, character(0))) {
@@ -180,7 +168,7 @@ dir.create(dirname(opt$output))
 
 ### Data import ----------------------------------------------------------
 
-# Import the fasta files
+# Import the fasta files (the genome is not used anymore, can be removed in future)
 genome <- seqinr::read.fasta(
     file = opt$genome, seqtype = "DNA", as.string = TRUE)
 
@@ -202,19 +190,17 @@ if (!is.null(opt$annotations)) {
 
 ### Ideogram generation --------------------------------------------------
 
-# Get genome length
-geno_size <- seqinr::getLength(genome)
+# Get the BSgenome object
+bsgeno <- eval(parse(text = opt$bsgenome))
 
 # Chromosomes information based on genome fasta sequences
-chromos <- base::data.frame(
-    id = names(genome),
-    chromosome = names(genome),
-    strand = "*",
-    start = 1,
-    end = geno_size,
-    type = opt$circular,
-    genome = opt$geno_name,
-    stringsAsFactors = FALSE) %>%
+chromos <- seqinfo(bsgeno) %>%
+    as.data.frame(.) %>%
+    tibble::rownames_to_column(.data = ., var = "id") %>%
+    dplyr::mutate(., chromosome = id, strand = "*", start = 1) %>%
+    dplyr::select(
+        ., id, chromosome, strand, start,
+        end = seqlengths, isCircular, genome) %>%
     dplyr::arrange(., chromosome)
 
 # Check whether coordinates are present
@@ -222,7 +208,7 @@ if (!exists("coordinates")) {
     
     # Data holding genomic ranges information for the genome only
     grange_data <- chromos %>%
-        dplyr::select(., -type, -genome)
+        dplyr::select(., -isCircular, -genome)
     
 } else {
     
@@ -304,12 +290,8 @@ grange <- with(
         strand = strand))
 
 # Add seqinfo to the created GRanges object
-seqlevels(grange) <- chromos$chromosome %>% as.character(.)
-seqinfo(grange) <- Seqinfo(
-    seqnames = chromos$chromosome %>% as.character(.),
-    seqlengths = chromos$end %>% as.integer(.),
-    isCircular = chromos$type %>% as.logical(.),
-    genome = chromos$genome %>% as.character(.))
+seqlevels(grange) <- seqlevels(bsgeno) %>% as.character(.)
+seqinfo(grange) <- seqinfo(bsgeno)
 
 # Add values to the created GRanges object
 values(grange) <- grange_data %>%
