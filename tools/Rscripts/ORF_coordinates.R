@@ -102,10 +102,10 @@ if (is.null(opt$fasta)) {
 # opt[["chr_pattern"]] <- ".+?\\| (.+?) \\|.+"
 if (is.null(opt$chr_pattern)) {
     warning("The default chromosome pattern argument is '(.+?)_.+'")
-    opt[["chr_pattern"]] <- "^>(.+?)_.+"
+    opt[["chr_pattern"]] <- "^>(.+?)_[0-9]+ .*"
 } else if (opt$chr_pattern == "") {
     warning("The default chromosome pattern argument is '(.+?)_.+'")
-    opt[["chr_pattern"]] <- "^>(.+?)_.+"
+    opt[["chr_pattern"]] <- "^>(.+?)_[0-9]+ .*"
 }
 
 # Check whether output parameter was provided
