@@ -67,7 +67,7 @@ AnnotKey="MainID"
 
 # BSgenomeParam
 SEED="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/seed"
-PKGNAME="BSgenome.Synechocystis.Rostock.092020"
+PKGNAME="BSgenome.Synechocystis.Rostock.NC_000911"
 
 # GRangesParam
 GenomeName="NC_000911"
