@@ -116,7 +116,6 @@ echo "seqnames: c(${seqnames})" >> ${WKDIR}/${NEWSEED}
 
 # If a list of circular chromosome was provided then include in seed file
 if [[ ! -z "${CIRCULAR}" ]]; then
-	echo "in the circular chr section"
 	echo "circ_seqs: ${CIRCULAR}" >> ${WKDIR}/${NEWSEED}
 fi
 
@@ -128,18 +127,18 @@ fi
 echo "seqs_srcdir: ${WKDIR}" >> ${WKDIR}/${NEWSEED}
 
 # Use R script to generate all configuration for BSgenome package
-#BSgenome_forging.R -s ${WKDIR}/${NEWSEED} -f ${WKDIR} -o ${WKDIR}
+BSgenome_forging.R -s ${WKDIR}/${NEWSEED} -f ${WKDIR} -o ${WKDIR}
 
 # Check for presence of a package tar.gz file
-#for tarball in `ls ${WKDIR}/*.tar.gz`; do
-#	
-#	# Check the package
-#	R CMD check ${tarball}
-#	
-#	# Install the package
-#	R CMD INSTALL ${tarball}
-#	
-#done
+for tarball in `ls ${WKDIR}/*.tar.gz`; do
+	
+	# Check the package
+	R CMD check ${tarball}
+	
+	# Install the package
+	R CMD INSTALL ${tarball}
+	
+done
 
 # Time scripts ends
 echo "Completed $(date +"%T %d-%m-%Y")."
