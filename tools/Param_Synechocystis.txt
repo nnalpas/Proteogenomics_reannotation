@@ -13,12 +13,12 @@ DbBlasting=0
 BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
-ProteinCoordinate=1
-ProteinAnnotation=1
+ProteinCoordinate=0
+ProteinAnnotation=0
 BSgenomeForge=0
-GRangeCreate=1
-PepNoveltyReason=1
-PeptideCoordinate=1
+GRangeCreate=0
+PepNoveltyReason=0
+PeptideCoordinate=0
 OperonCoordinate=0
 SangerCoordinate=0
 OrfNoveltyReason=1
@@ -67,6 +67,7 @@ AnnotKey="MainID"
 
 # BSgenomeParam
 SEED="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/seed"
+PKGNAME="BSgenome.Synechocystis.Rostock.092020"
 
 # GRangesParam
 GenomeName="NC_000911"

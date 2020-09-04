@@ -448,6 +448,7 @@ if [ $OrfNoveltyReason == 1 ]; then
 		-s ${ProjDir}/GRanges/Sanger_seq_grange.RDS \
 		-g ${ProjDir}/GRanges/Genome_grange.RDS \
 		-a "${AddRBS}" \
+		-b ${PKGNAME} \
 		-t ${THREADS} \
 		-o ${ProjDir}/NoveltyExplain > ${LogDir}/OrfNoveltyReason.log 2>&1
 
