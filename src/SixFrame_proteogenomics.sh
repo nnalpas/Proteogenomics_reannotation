@@ -289,7 +289,8 @@ if [ $BSgenomeForge == 1 ]; then
     ${PBS_O_HOME}/bin/BSgenomeForge.sh \
 		-o ${ProjDir}/BSgenome \
 		-s ${SEED} \
-		-x ${GENOME} > ${LogDir}/BSgenomeForge.log 2>&1
+		-x ${GENOME}\
+		-c ${Circular} > ${LogDir}/BSgenomeForge.log 2>&1
 	
 fi
 
@@ -304,21 +305,18 @@ if [ $GRangeCreate == 1 ]; then
 	
 	${PBS_O_HOME}/bin/GRanges_generation.R \
 		-g ${GENOME} \
-		-n ${GenomeName} \
-		-t ${Circular} \
+		-b ${PKGNAME} \
 		-o ${ProjDir}/GRanges/Genome_grange.RDS > ${LogDir}/GRangesGeneration.log 2>&1
     ${PBS_O_HOME}/bin/GRanges_generation.R \
 		-c ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt \
 		-g ${GENOME} \
-		-n ${GenomeName} \
-		-t ${Circular} \
+		-b ${PKGNAME} \
 		-a ${ProjDir}/ProtAnnotation/Ref_prot_annotations.txt \
 		-o ${ProjDir}/GRanges/Ref_prot_grange.RDS >> ${LogDir}/GRangesGeneration.log 2>&1
 	${PBS_O_HOME}/bin/GRanges_generation.R \
 		-c ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt \
 		-g ${GENOME} \
-		-n ${GenomeName} \
-		-t ${Circular} \
+		-b ${PKGNAME} \
 		-a ${ProjDir}/ProtAnnotation/Orf_prot_annotations.txt \
 		-o ${ProjDir}/GRanges/Orf_prot_grange.RDS >> ${LogDir}/GRangesGeneration.log 2>&1
 	
@@ -363,8 +361,7 @@ if [ $PeptideCoordinate == 1 ]; then
 	${PBS_O_HOME}/bin/GRanges_generation.R \
 		-c ${ProjDir}/PeptPosition/Pept_seq_coordinates.txt \
 		-g ${GENOME} \
-		-n ${GenomeName} \
-		-t ${Circular} \
+		-b ${PKGNAME} \
 		-o ${ProjDir}/GRanges/Pept_seq_grange.RDS >> ${LogDir}/PeptideCoordinate.log 2>&1
 	
 fi
