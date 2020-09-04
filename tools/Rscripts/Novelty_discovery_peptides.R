@@ -291,8 +291,8 @@ novel_pep <- evid %>%
 # Compile all reciprocal best hits
 reciprocal_blast_all <- dplyr::bind_rows(
     data.frame(DB = "Reference", reciprocal_blast_ref, stringsAsFactors = F),
-    data.frame(DB = "UniProt", reciprocal_blast_uniprot, stringsAsFactors = F),
-    data.frame(DB = "NCBI", reciprocal_blast_ncbi, stringsAsFactors = F))
+    data.frame(DB = "NCBI", reciprocal_blast_uniprot, stringsAsFactors = F),
+    data.frame(DB = "NCBI_env", reciprocal_blast_ncbi, stringsAsFactors = F))
 
 # Determine the novelty reasons for each peptide
 novelty_reasons <- purrr::map(
@@ -332,10 +332,12 @@ evid_reason %<>%
     dplyr::mutate(
         .,
         group = dplyr::case_when(
+            is.na(group) ~ "Known",
             (!is.na(NoveltyReason) & NoveltyReason == "Not novel") ~ "Known",
             (is.na(NoveltyReason) & group == "Novel") ~ "Reverse",
             TRUE ~ group),
         Database = dplyr::case_when(
+            is.na(Database) ~ "Target",
             (!is.na(NoveltyReason) & NoveltyReason == "Not novel") ~ "Target",
             (is.na(NoveltyReason) & Database == "Novel") ~ "Decoy",
             TRUE ~ Database))
@@ -345,8 +347,8 @@ evid_reason %<>%
 ### Focus on high quality novel peptide ----------------------------------
 
 # Define value for PEP filterig of the novel evidences
-pep_class1 <- median(evid[evid$Database == "Target", "PEP"])
-pep_class2 <- median(evid[evid$Database == "Novel", "PEP"])
+pep_class1 <- median(x = evid[evid$Database == "Target", "PEP"], na.rm = TRUE)
+pep_class2 <- median(x = evid[evid$Database == "Novel", "PEP"], na.rm = TRUE)
 
 # Add a column for the soft PEP filtering (based on median known evidence PEP)
 evid_reason %<>%
