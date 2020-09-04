@@ -289,8 +289,8 @@ if [ $BSgenomeForge == 1 ]; then
     ${PBS_O_HOME}/bin/BSgenomeForge.sh \
 		-o ${ProjDir}/BSgenome \
 		-s ${SEED} \
-		-x ${GENOME}\
-		-c ${Circular} > ${LogDir}/BSgenomeForge.log 2>&1
+		-c ${Circular} \
+		-x ${GENOME} > ${LogDir}/BSgenomeForge.log 2>&1
 	
 fi
 
