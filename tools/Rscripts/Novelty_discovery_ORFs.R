@@ -59,7 +59,6 @@ library(foreach)
 library(doParallel)
 library(motifRG)
 library(ggseqlogo)
-library(BSgenome.Srimosus.Strathclyde.062019)
 
 
 
@@ -101,6 +100,9 @@ if (interactive()) {
         pep_class = readline(prompt = paste0(
             "Which PEP class to keep",
             " (separated by space; e.g. 'class 1')")) %>%
+            as.character(),
+        bsgenome = readline(prompt = paste0(
+            "Provide name of the BSgenome package")) %>%
             as.character(),
         threads = readline(prompt = "How many cores to use?") %>% as.integer(),
         output = readline(
@@ -159,6 +161,11 @@ if (interactive()) {
             opt_str = c("-c", "--pep_class"),
             type = "character", default = NULL,
             help = "Which PEP class to keep (separated by space; e.g. 'class 1')",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-b", "--bsgenome"),
+            type = "character", default = NULL,
+            help = "The BSgenome package name for genomic visualisation",
             metavar = "character"),
         make_option(
             opt_str = c("-t", "--threads"),
@@ -277,6 +284,20 @@ if (
 }
 registerDoParallel(cores = opt$threads)
 print(paste("Number of threads registered:", getDoParWorkers()))
+
+# Load the BSgenome
+if (
+    identical(opt$bsgenome, NULL) |
+    identical(opt$bsgenome, "") |
+    identical(opt$bsgenome, character(0))) {
+    
+    print_help(opt_parser)
+    stop("The input BSgenome package must be supplied!")
+    
+}
+library(
+    package = eval(opt$bsgenome),
+    character.only = TRUE)
 
 # Check whether output parameter was provided
 if (
@@ -430,7 +451,7 @@ if (exists("operon_grange")) {
 ### RBS motif analysis ---------------------------------------------------
 
 # Get the BSgenome object
-bsgeno <- BSgenome.Srimosus.Strathclyde.062019
+bsgeno <- eval(parse(text = opt$bsgenome))
 
 # Define number of nucleotide after first nucleotide (to define start codon)
 nucleotide_after <- 2
