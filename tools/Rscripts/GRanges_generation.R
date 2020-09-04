@@ -88,7 +88,7 @@ if (interactive()) {
             metavar = "character"),
         make_option(
             opt_str = c("-b", "--bsgenome"),
-            type = "logical", default = "",
+            type = "character", default = "",
             help = "Provide the BSgenome package name",
             metavar = "character"),
         make_option(
