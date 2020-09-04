@@ -15,6 +15,7 @@ display_usage() {
         	-o	[str]	The output directory.
 			-s	[str]	The BSgenome seed file.
 			-x	[]	To split a fasta file containing multiple sequences.
+			-c	[str]	A R vector of circular chromosome (e.g. c('chr1', 'chr2', ...) )
         	-h	[]	To display the help.
 	"
 }
@@ -24,7 +25,7 @@ o_default="`pwd`/BSgenome"
 x_default=false
 
 # Parse user parameters
-while getopts "o:s:xh" opt; do
+while getopts "o:s:c:xh" opt; do
 	case $opt in
 		o)
 			WKDIR=$OPTARG
@@ -37,6 +38,10 @@ while getopts "o:s:xh" opt; do
 			;;
 		x)
             SPLIT=true
+			;;
+		c)
+			CIRCULAR=$OPTARG
+			shift $((OPTIND-1)); OPTIND=1
 			;;
 		h)
 			display_usage
@@ -115,6 +120,11 @@ if [[ `grep "seqs_srcdir" ${WKDIR}/${NEWSEED}` ]]; then
 	exit 1
 fi
 echo "seqs_srcdir: ${WKDIR}" >> ${WKDIR}/${NEWSEED}
+
+# If a list of circular chromosome was provided then include in seed file
+if [[ ! -z "${CIRCULAR}" ]]; then
+	echo "circ_seqs: ${CIRCULAR}" >> ${WKDIR}/${NEWSEED}
+fi
 
 # Use R script to generate all configuration for BSgenome package
 BSgenome_forging.R -s ${WKDIR}/${NEWSEED} -f ${WKDIR} -o ${WKDIR}
