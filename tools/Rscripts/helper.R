@@ -1256,25 +1256,30 @@ plots_orf_genomic <- function(
         as.data.frame(.)
     tmp$value <- rep(x = 1, times = nrow(tmp))
     colnames(tmp)[colnames(tmp) == ref_label] <- "label_name"
-    pl <- autoplot(
-        ref_gr[
-            (start(ref_gr) %in% c(start_region:end_region) |
-                 end(ref_gr) %in% c(start_region:end_region)) &
-                seqnames(ref_gr) == seqname_region],
-        mapping = aes(fill = strand, alpha = Expressed),
-        geom = "arrowrect", layout = "linear", colour = "black") +
-        geom_text(
-            data = tmp,
-            mapping = aes(
-                x = start + ((end - start) / 2),
-                y = value,
-                label = label_name),
-            nudge_y = 0.45,
-            check_overlap = TRUE) +
-        scale_fill_manual(
-            values = c(`+` = track_colour[1], `-` = track_colour[2])) +
-        scale_alpha_manual(
-            values = c("TRUE" = 1, "FALSE" = 0.5))
+    
+    if (nrow(tmp) > 0) {
+        pl <- autoplot(
+            ref_gr[
+                (start(ref_gr) %in% c(start_region:end_region) |
+                     end(ref_gr) %in% c(start_region:end_region)) &
+                    seqnames(ref_gr) == seqname_region],
+            mapping = aes(fill = strand, alpha = Expressed),
+            geom = "arrowrect", layout = "linear", colour = "black") +
+            geom_text(
+                data = tmp,
+                mapping = aes(
+                    x = start + ((end - start) / 2),
+                    y = value,
+                    label = label_name),
+                nudge_y = 0.45,
+                check_overlap = TRUE) +
+            scale_fill_manual(
+                values = c(`+` = track_colour[1], `-` = track_colour[2])) +
+            scale_alpha_manual(
+                values = c("TRUE" = 1, "FALSE" = 0.5))
+    } else {
+        pl <- ggplot()
+    }
     pl_list["Known ORFs"] <- list(pl)
     
     # Loop through all frames from the ORF GRange
