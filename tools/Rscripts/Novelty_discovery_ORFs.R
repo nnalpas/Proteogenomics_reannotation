@@ -1443,32 +1443,36 @@ write.table(
     col.names = TRUE)
 
 # Export operon overlap results (as txt and RDS files)
-saveRDS(
-    object = overlap_operon,
-    file = paste(
-        opt$output, "/", "Overlap_operon.RDS", sep = ""))
-write.table(
-    x = overlap_operon,
-    file = paste(
-        opt$output, "/", "Overlap_operon.txt", sep = ""),
-    quote = FALSE,
-    sep = "\t",
-    row.names = FALSE,
-    col.names = TRUE)
+if (exists("overlap_operon")) {
+    saveRDS(
+        object = overlap_operon,
+        file = paste(
+            opt$output, "/", "Overlap_operon.RDS", sep = ""))
+    write.table(
+        x = overlap_operon,
+        file = paste(
+            opt$output, "/", "Overlap_operon.txt", sep = ""),
+        quote = FALSE,
+        sep = "\t",
+        row.names = FALSE,
+        col.names = TRUE)
+}
 
 # Export RBS motifs results (as txt and RDS files)
-saveRDS(
-    object = rbs_results,
-    file = paste(
-        opt$output, "/", "RBS_motifs_results.RDS", sep = ""))
-write.table(
-    x = rbs_results,
-    file = paste(
-        opt$output, "/", "RBS_motifs_results.txt", sep = ""),
-    quote = FALSE,
-    sep = "\t",
-    row.names = FALSE,
-    col.names = TRUE)
+if (exists("rbs_results")) {
+    saveRDS(
+        object = rbs_results,
+        file = paste(
+            opt$output, "/", "RBS_motifs_results.RDS", sep = ""))
+    write.table(
+        x = rbs_results,
+        file = paste(
+            opt$output, "/", "RBS_motifs_results.txt", sep = ""),
+        quote = FALSE,
+        sep = "\t",
+        row.names = FALSE,
+        col.names = TRUE)
+}
 
 # Export all ORF novelty reason results (as txt and RDS files)
 saveRDS(
