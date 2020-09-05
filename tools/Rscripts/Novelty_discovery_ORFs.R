@@ -740,8 +740,8 @@ if (length(all_rbs_motifs) > 0) {
     
     # For each novel ORF get the minimum peptide start position and
     # maximum peptide end position
-    pep_loc_data_cat <- pep_loc_data[["Novel"]] %>%
-        dplyr::group_by(., prot) %>%
+    pep_loc_data_cat <- pep_loc_data %>%
+        dplyr::group_by(., Proteins) %>%
         dplyr::summarise(
             .,
             minStartPep = min(start, na.rm = T),
@@ -763,7 +763,7 @@ if (length(all_rbs_motifs) > 0) {
     # Combine the peptide and RBS data for each novel ORF and
     # determine whether putative RBS fits the identified peptides position
     rbs_explain <- dplyr::left_join(
-        x = rbs_results_cat, y = pep_loc_data_cat, by = c("id" = "prot")) %>%
+        x = rbs_results_cat, y = pep_loc_data_cat, by = c("id" = "Proteins")) %>%
         dplyr::mutate(
             ., RBS_fits_PeptideId = ifelse(minEndRBS <= minStartPep, TRUE, FALSE))
     
@@ -880,16 +880,18 @@ orf_reason_neighb <- neighbours_analysis %>%
     dplyr::select(., queryID, subjectID, interpr) %>%
     dplyr::group_by(., queryID, interpr) %>%
     dplyr::summarise(., subjectID = paste(subjectID, collapse = ";")) %>%
-    tidyr::spread(
-        data = ., key = interpr, value = subjectID, convert = FALSE) %>%
+    dplyr::mutate(., interpr = factor(x = interpr, levels = c("Five neighbour", "Three neighbour"))) %>%
+    tidyr::complete(., interpr = interpr) %>%
+    tidyr::pivot_wider(
+        data = ., names_from = interpr, values_from = subjectID) %>%
     set_colnames(sub("neighbour", "neighbour (+/-3bp)", colnames(.))) %>%
     dplyr::left_join(
         x = orf_reason_clean, y = ., by = c("Proteins" = "queryID"))
 
 # Include the reference protein ID which match novel ORF if any
 orf_reason_neighb <- as.data.frame(orf_grange, stringsAsFactors = FALSE) %>%
-    dplyr::filter(., !is.na(UNIPROTKB)) %>%
-    dplyr::select(., id, UNIPROTKB) %>%
+    dplyr::filter(., !is.na(MainID)) %>%
+    dplyr::select(., id, MainID) %>%
     dplyr::left_join(
         x = orf_reason_neighb, y = ., by = c("Proteins" = "id"))
 
@@ -1654,11 +1656,12 @@ pl_coverage <- pl_coverage[[1]] +
     annotation_custom(
         grob = tableGrob(
             d = quantiles_toplot, theme = ttheme_minimal(), rows = NULL),
-        xmin = 130, xmax = 150, ymin = 2E5, ymax = 4E5) +
+        xmin = 120, xmax = 150, ymin = 1E5, ymax = 3E5) +
     scale_x_discrete(
         breaks = c(1, seq(20, 160, by = 20)),
         labels = c(1, seq(20, 160, by = 20)))
 plot(pl_coverage)
+dev.off()
 
 # Define a high quality target list
 high_qual_targets <- orf_reason_highqual %>%
@@ -1718,44 +1721,75 @@ for (i in high_qual_targets) {
     #print(pl_genome)
     
     # Plot the peptides and Sanger sequence tracks
-    pl_genome_zoom <- tracks(
-        `Peptide` = my_plots$Peptide,
-        `Sanger` = my_plots$`Sequenced PCR`,
-        `Genome` = my_plots$Genome,
-        heights = c(2, 0.5, 0.2),
-        title = paste0(
-            i,
-            ": zoomed in"),
-        xlab = "Genomic position",
-        label.bg.fill = "grey",
-        label.text.angle = 45,
-        track.bg.color = "grey") +
-        theme_bw() +
-        theme(
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(),
-            axis.text.y =  element_blank(),
-            axis.title.y =  element_blank(),
-            axis.ticks.y = element_blank(),
-            legend.position = "right")
+    pl_genome_test <- tracks(`Genome` = my_plots$Genome)
+    my_test <- try(print(pl_genome_test), silent = TRUE)
+    
+    if (attr(my_test,"class") == "try-error") {
+        warning("Nucleotide sequence not drawn due to incompatible seqname")
+        pl_genome_zoom <- tracks(
+            `Peptide` = my_plots$Peptide,
+            `Sanger` = my_plots$`Sequenced PCR`,
+            heights = c(2, 0.5),
+            title = paste0(
+                i,
+                ": zoomed in"),
+            xlab = "Genomic position",
+            label.bg.fill = "grey",
+            label.text.angle = 45,
+            track.bg.color = "grey") +
+            theme_bw() +
+            theme(
+                panel.grid.major = element_blank(),
+                panel.grid.minor = element_blank(),
+                axis.text.y =  element_blank(),
+                axis.title.y =  element_blank(),
+                axis.ticks.y = element_blank(),
+                legend.position = "right")
+    } else {
+        pl_genome_zoom <- tracks(
+            `Peptide` = my_plots$Peptide,
+            `Sanger` = my_plots$`Sequenced PCR`,
+            `Genome` = my_plots$Genome,
+            heights = c(2, 0.5, 0.2),
+            title = paste0(
+                i,
+                ": zoomed in"),
+            xlab = "Genomic position",
+            label.bg.fill = "grey",
+            label.text.angle = 45,
+            track.bg.color = "grey") +
+            theme_bw() +
+            theme(
+                panel.grid.major = element_blank(),
+                panel.grid.minor = element_blank(),
+                axis.text.y =  element_blank(),
+                axis.title.y =  element_blank(),
+                axis.ticks.y = element_blank(),
+                legend.position = "right")
+    }
+    
     xlim(pl_genome_zoom) <- c(
         genomic_vis_data$region_zoom[["start"]],
         genomic_vis_data$region_zoom[["end"]])
-    #print(pl_genome_zoom)
-    
+
     # Use cowplot to combine the two genome tracks
     g <- as(pl_genome, "grob")
     gz <- as(pl_genome_zoom, "grob")
     pl_genome_merge <- cowplot::plot_grid(
         g, gz, align = "h", axis = "lr", nrow = 2)
-    print(pl_genome_merge)
+    #print(pl_genome_merge)
     
     # Include the plots for current candidate into list
     pl_genome_list[i] <- list(pl_genome_merge)
     
 }
 
-# Close the pdf file
+# 
+# Open a file for plot visualisation
+pdf(
+    file = paste0(opt$output, "/", "ORF_visualisation.pdf"),
+    width = 10, height = 10)
+pl_genome_list
 dev.off()
 
 # Export all plots as RDS file
