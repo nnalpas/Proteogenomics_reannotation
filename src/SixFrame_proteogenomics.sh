@@ -149,7 +149,7 @@ if [ $MakeBlastDbProt == 1 ]; then
 		-y "prot" \
 		-t ${TaxId} \
 		${UNIREFPROT} \
-		${SIXFRAMEPROT} > ${LogDir}/MakeBlastDb.log 2>&1
+		${SIXFRAMEPROT} ${OTHERPROT} > ${LogDir}/MakeBlastDb.log 2>&1
     
 fi
 
@@ -164,7 +164,7 @@ if [ $MakeBlastDbNuc == 1 ]; then
 		-t ${TaxId} \
 		${UNIREFGENE} \
 		${SIXFRAMEGENE} \
-		${GENOME} >> ${LogDir}/MakeBlastDb.log 2>&1
+		${GENOME} ${OTHERGENE} >> ${LogDir}/MakeBlastDb.log 2>&1
 
 fi
 
