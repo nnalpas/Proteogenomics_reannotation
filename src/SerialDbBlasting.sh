@@ -111,6 +111,18 @@ while IFS= read -r line; do
 		exit 1
 	fi
 	
+	# Retrieve blast ids from blast results and the corresponding sequence header
+	echo -E "qseqid\tDescription\tTaxon\tTaxonID" > ${WKDIR}/${array[3]}_recip_header
+	cut -f 1 ${WKDIR}/${array[3]}_recip | blastdbcmd -db ${QUERY} -outfmt "%a;%t;%S;%T" -entry_batch - | tr ';' '\t' >> ${WKDIR}/${array[3]}_recip_header
+	
+	# If the qseqid is identical (after retrieving the header) then concatenate the new columns with the reciprocal results
+	diff_count=`diff <(awk '{print $1}' ${WKDIR}/${array[3]}_recip) <(awk '{print $1}' ${WKDIR}/${array[3]}_recip_header) | wc -l`
+	if (( "$diff_count" == 0 )); then
+		cut -f 2-4 ${WKDIR}/${array[3]}_recip_header > ${WKDIR}/${array[3]}_recip_header.tmp
+		paste -d '\t' ${WKDIR}/${array[3]}_recip ${WKDIR}/${array[3]}_recip_header.tmp > ${WKDIR}/${array[3]}_recip_annot
+		rm ${WKDIR}/${array[3]}_recip_header.tmp
+	fi
+		
 done < ${CROSSMAP}
 
 # Time scripts ends
