@@ -93,7 +93,7 @@ fi
 # Loop through all blast files
 for file in `ls ${BLASTS}`; do
 	rec_pat=`basename $file`
-	rec_file=`find ${RECIPROCALS} -name "${rec_pat}*"`
+	rec_file=`find ${RECIPROCALS} -name "${rec_pat}*_annot"`
 	Reciprocal_best_blast.R \
 		-b ${file} \
 		-r ${rec_file} ${FILTER_ARG} \
