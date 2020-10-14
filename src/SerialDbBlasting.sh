@@ -102,14 +102,14 @@ while IFS= read -r line; do
 	fi
 	
 	# Run the blast for each iteration
-	if [[ "$SOFTWARE" == "Blast" ]]; then
-		${PBS_O_HOME}/bin/BlastDbBlasting.sh $BLASTCMD -t ${THREADS} 2>&1
-	elif [[ "$SOFTWARE" == "Diamond" ]]; then
-		${PBS_O_HOME}/bin/DiamondDbBlasting.sh $BLASTCMD -t ${THREADS} 2>&1
-	else
-		echo "The blasting software must be either 'Blast' or 'Diamond'." >&2
-		exit 1
-	fi
+	#if [[ "$SOFTWARE" == "Blast" ]]; then
+	#	${PBS_O_HOME}/bin/BlastDbBlasting.sh $BLASTCMD -t ${THREADS} 2>&1
+	#elif [[ "$SOFTWARE" == "Diamond" ]]; then
+	#	${PBS_O_HOME}/bin/DiamondDbBlasting.sh $BLASTCMD -t ${THREADS} 2>&1
+	#else
+	#	echo "The blasting software must be either 'Blast' or 'Diamond'." >&2
+	#	exit 1
+	#fi
 	
 	# Retrieve blast ids from blast results and the corresponding sequence header
 	echo -E "qseqid\tDescription\tTaxon\tTaxonID" > ${WKDIR}/${array[3]}_recip_header
