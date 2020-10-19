@@ -900,7 +900,7 @@ novel_pep_classify <- function(
             blast$sseqid, blast$evalue_reciproc,
             blast$score_reciproc, blast$pident_reciproc,
             blast$Description, blast$Taxon,
-            sep = "|")
+            sep = "||")
         
         # Check whether the peptide is within the matching blast positions
         if (
