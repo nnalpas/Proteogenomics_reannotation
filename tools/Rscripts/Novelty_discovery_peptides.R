@@ -275,7 +275,7 @@ reciprocal_blast_all[reciprocal_blast_all$Taxon == "N/A", "Taxon"] <- NA
 all_tax_ids <- unique(
     reciprocal_blast_all[is.na(reciprocal_blast_all$Taxon), "TaxonID"])
 my_taxon <- taxize::id2name(
-    x = all_tax_ids,
+    all_tax_ids,
     db = "ncbi") %>%
     plyr::ldply(., "data.frame", .id = NULL) %>%
     dplyr::select(., TaxonID = id, Taxon = name)
