@@ -56,6 +56,7 @@ library(gridExtra)
 library(purrr)
 library(foreach)
 library(doParallel)
+library(taxize)
 
 
 
@@ -77,15 +78,9 @@ if (interactive()) {
                 "Choose reciprocal best blast file of",
                 "ORF versus Reference protein!"),
             multi = FALSE),
-        reciprocal_blast_uniprot = choose.files(
+        reciprocal_blast_uniprot = choose.dir(
             caption = paste(
-                "Choose reciprocal best blast file of",
-                "ORF versus UniProt!"),
-            multi = FALSE),
-        reciprocal_blast_ncbi = choose.files(
-            caption = paste(
-                "Choose reciprocal best blast file of",
-                "ORF versus NCBI!"),
+                "Choose reciprocal best blast folder!"),
             multi = FALSE),
         peptide_location = choose.files(
             caption = "Choose peptide position (.RDS) file!",
@@ -116,12 +111,7 @@ if (interactive()) {
         make_option(
             opt_str = c("-u", "--reciprocal_blast_uniprot"),
             type = "character", default = NULL,
-            help = "Reciprocal best blast against all uniprot",
-            metavar = "character"),
-        make_option(
-            opt_str = c("-n", "--reciprocal_blast_ncbi"),
-            type = "character", default = NULL,
-            help = "Reciprocal best blast against all uniprot",
+            help = "Reciprocal best blast folder",
             metavar = "character"),
         make_option(
             opt_str = c("-p", "--peptide_location"),
@@ -178,16 +168,7 @@ if (
     identical(opt$reciprocal_blast_uniprot, character(0))) {
     
     print_help(opt_parser)
-    stop("The input reciprocal blast against UniProt must be supplied!")
-    
-}
-if (
-    identical(opt$reciprocal_blast_ncbi, NULL) |
-    identical(opt$reciprocal_blast_ncbi, "") |
-    identical(opt$reciprocal_blast_ncbi, character(0))) {
-    
-    print_help(opt_parser)
-    stop("The input reciprocal blast against NCBI must be supplied!")
+    stop("The input reciprocal blast folder must be supplied!")
     
 }
 if (
@@ -253,25 +234,22 @@ reciprocal_blast_ref <- opt$reciprocal_blast_ref %>%
 
 # Import the reciprocal blast best hits between novel ORFs and
 # all uniprot proteins
-reciprocal_blast_uniprot <- opt$reciprocal_blast_uniprot %>%
+reciprocal_blast_files <- opt$reciprocal_blast_uniprot %>%
     as.character(.) %>%
-    read.table(
-        file = ., header = TRUE, sep = "\t", quote = "",
-        as.is = TRUE, comment.char = "") %>%
-    dplyr::mutate(
-        ., staxid_blast = as.integer(staxid_blast),
-        staxid_reciproc = as.integer(staxid_reciproc))
-
-# Import the reciprocal blast best hits between novel ORFs and
-# all uniprot proteins
-reciprocal_blast_ncbi <- opt$reciprocal_blast_ncbi %>%
-    as.character(.) %>%
-    read.table(
-        file = ., header = TRUE, sep = "\t", quote = "",
-        as.is = TRUE, comment.char = "") %>%
-    dplyr::mutate(
-        ., staxid_blast = as.integer(staxid_blast),
-        staxid_reciproc = as.integer(staxid_reciproc))
+    list.files(
+        path = .,
+        pattern = "Best_Reciproc_Blast_.+_recip_annot",
+        full.names = TRUE) %>%
+    set_names(sub(".+vs_(.+)_recip_annot", "\\1", .)) %>%
+    grep("cross", ., invert = TRUE, value = TRUE)
+reciprocal_blast_all <- lapply(X = reciprocal_blast_files, FUN = function(x) {
+        read.table(
+            file = x, header = TRUE, sep = "\t", quote = "",
+            as.is = TRUE, comment.char = "") %>%
+        dplyr::mutate(
+            ., staxid_blast = as.integer(staxid_blast),
+            staxid_reciproc = as.integer(staxid_reciproc))
+    })
 
 # Import the peptide location within proteins
 pep_loc <- opt$peptide_location %>%
@@ -289,10 +267,21 @@ novel_pep <- evid %>%
 ### Novelty reason determination -----------------------------------------
 
 # Compile all reciprocal best hits
-reciprocal_blast_all <- dplyr::bind_rows(
-    data.frame(DB = "Reference", reciprocal_blast_ref, stringsAsFactors = F),
-    data.frame(DB = "NCBI", reciprocal_blast_uniprot, stringsAsFactors = F),
-    data.frame(DB = "NCBI_env", reciprocal_blast_ncbi, stringsAsFactors = F))
+reciprocal_blast_all %<>%
+    plyr::ldply(., "data.frame", .id = "DB", stringsAsFactors = F)
+
+# Identify missing taxon name
+reciprocal_blast_all[reciprocal_blast_all$Taxon == "N/A", "Taxon"] <- NA
+all_tax_ids <- unique(
+    reciprocal_blast_all[is.na(reciprocal_blast_all$Taxon), "TaxonID"])
+my_taxon <- taxize::id2name(
+    x = all_tax_ids,
+    db = "ncbi") %>%
+    plyr::ldply(., "data.frame", .id = NULL) %>%
+    dplyr::select(., TaxonID = id, Taxon = name)
+reciprocal_blast_all$Taxon <- NULL
+reciprocal_blast_all %<>%
+    dplyr::left_join(x = ., y = my_taxon)
 
 # Determine the novelty reasons for each peptide
 novelty_reasons <- purrr::map(
