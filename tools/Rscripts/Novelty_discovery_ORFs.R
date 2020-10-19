@@ -972,16 +972,14 @@ orf_reason_final <- orf_grange %>%
 blast_info <- orf_reason %>%
     dplyr::filter(., Database == "Novel") %>%
     dplyr::select(., Proteins, blast_ref, blast_best) %>%
-    tidyr::gather(
-        data = ., key = "key", value = "value", -Proteins,
-        na.rm = FALSE, convert = FALSE) %>%
-    cSplit(
-        indt = ., splitCols = "value", sep = ";", direction = "long",
-        fixed = TRUE, drop = TRUE, type.convert = TRUE) %>%
+    tidyr::pivot_longer(
+        data = ., names_to = "key", values_to = "value", cols = -Proteins) %>%
+    tidyr::separate_rows(
+        data = ., value, sep = ";", convert = FALSE) %>%
     tidyr::separate(
         data = ., col = "value",
         into = c("id", "evalue", "score", "pident", "description", "taxon"),
-        sep = "\\|", remove = TRUE, convert = TRUE) %>%
+        sep = "\\|\\|", remove = TRUE, convert = TRUE) %>%
     dplyr::group_by(Proteins, key) %>%
     dplyr::summarise_all(~paste(unique(.), collapse = ";")) %>%
     dplyr::ungroup(.)
