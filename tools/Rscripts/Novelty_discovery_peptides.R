@@ -273,10 +273,16 @@ reciprocal_blast_all %<>%
 # Identify missing taxon name
 reciprocal_blast_all[reciprocal_blast_all$Taxon == "N/A", "Taxon"] <- NA
 all_tax_ids <- unique(
-    reciprocal_blast_all[is.na(reciprocal_blast_all$Taxon), "TaxonID"])
-my_taxon <- taxize::id2name(
-    all_tax_ids,
-    db = "ncbi") %>%
+    reciprocal_blast_all[is.na(reciprocal_blast_all$Taxon), "TaxonID"]) %>%
+    split(x = ., f = ceiling(seq_along(.) / 3))
+
+# Query NCBI for taxon name, without API key only 3 queries per seconds
+# are allowed, therefor include a pause of 2 seconds between query
+my_taxon <- lapply(X = 1:length(all_tax_ids), FUN = function(x) {
+    Sys.sleep(time = 2)
+    taxize::id2name(all_tax_ids[[x]], db = "ncbi")}) %>%
+    unlist(., recursive = FALSE)
+my_taxon %<>%
     plyr::ldply(., "data.frame", .id = NULL) %>%
     dplyr::select(., TaxonID = id, Taxon = name)
 reciprocal_blast_all$Taxon <- NULL
