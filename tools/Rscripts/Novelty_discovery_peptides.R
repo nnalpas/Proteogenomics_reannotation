@@ -284,7 +284,9 @@ my_taxon <- lapply(X = 1:length(all_tax_ids), FUN = function(x) {
     unlist(., recursive = FALSE)
 my_taxon %<>%
     plyr::ldply(., "data.frame", .id = NULL) %>%
-    dplyr::select(., TaxonID = id, Taxon = name)
+    dplyr::mutate(., TaxonID = as.integer(id)) %>%
+    dplyr::select(., TaxonID, Taxon = name)
+
 reciprocal_blast_all$Taxon <- NULL
 reciprocal_blast_all %<>%
     dplyr::left_join(x = ., y = my_taxon)
