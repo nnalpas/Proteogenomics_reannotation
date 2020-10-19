@@ -271,9 +271,8 @@ reciprocal_blast_all %<>%
     plyr::ldply(., "data.frame", .id = "DB", stringsAsFactors = F)
 
 # Identify missing taxon name
-reciprocal_blast_all[reciprocal_blast_all$Taxon == "N/A", "Taxon"] <- NA
 all_tax_ids <- unique(
-    reciprocal_blast_all[is.na(reciprocal_blast_all$Taxon), "TaxonID"]) %>%
+    c(reciprocal_blast_all$TaxonID, reciprocal_blast_ref$TaxonID)) %>%
     split(x = ., f = ceiling(seq_along(.) / 3))
 
 # Query NCBI for taxon name, without API key only 3 queries per seconds
@@ -287,6 +286,10 @@ my_taxon %<>%
     dplyr::mutate(., TaxonID = as.integer(id)) %>%
     dplyr::select(., TaxonID, Taxon = name)
 
+# Merge the taxon name with the reciprocal blast results
+reciprocal_blast_ref$Taxon <- NULL
+reciprocal_blast_ref %<>%
+    dplyr::left_join(x = ., y = my_taxon)
 reciprocal_blast_all$Taxon <- NULL
 reciprocal_blast_all %<>%
     dplyr::left_join(x = ., y = my_taxon)
