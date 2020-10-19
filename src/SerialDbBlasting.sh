@@ -114,7 +114,7 @@ while IFS= read -r line; do
 	# Retrieve blast ids from blast results and the corresponding sequence header
 	echo -e "qseqid\tDescription\tTaxon\tTaxonID" > ${WKDIR}/${array[3]}_header
 	cut -f 1 ${WKDIR}/${array[3]} > ${WKDIR}/${array[3]}_qseqid.txt
-	blastdbcmd -db ${QUERY} -outfmt "%a;%t;%S;%T" -target_only -entry_batch ${WKDIR}/${array[3]}_qseqid.txt | tr ';' '\t' >> ${WKDIR}/${array[3]}_header
+	blastdbcmd -db ${QUERY} -outfmt "%a;%t;%S;%T" -target_only -entry_batch ${WKDIR}/${array[3]}_qseqid.txt | sed 's/;;/\t/g' >> ${WKDIR}/${array[3]}_header
 	rm ${WKDIR}/${array[3]}_qseqid.txt
 	
 	# If the qseqid is identical (after retrieving the header) then concatenate the new columns with the reciprocal results
