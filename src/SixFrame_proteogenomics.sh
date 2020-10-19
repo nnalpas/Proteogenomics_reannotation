@@ -335,8 +335,7 @@ if [ $PepNoveltyReason == 1 ]; then
 		-e ${ProjDir}/Novel_res/Group_evidence.RDS \
 		-f ${UNIREFPROT} \
 		-r ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_ORFprot_vs_Refprot_recip_annot \
-		-u ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_ORFprot_vs_NCBIprot_recip_annot \
-		-n ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_ORFprot_vs_NCBIenvprot_recip_annot \
+		-u ${ProjDir}/ReciprocalBlast \
 		-p ${ProjDir}/Novel_res/Peptides_location.RDS \
 		-t ${THREADS} \
 		-o ${ProjDir}/NoveltyExplain > ${LogDir}/PepNoveltyReason.log 2>&1
