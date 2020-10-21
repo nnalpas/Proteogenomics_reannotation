@@ -380,8 +380,7 @@ if [ $OperonCoordinate == 1 ]; then
 	${PBS_O_HOME}/bin/GRanges_generation.R \
 		-c ${ProjDir}/ProtPosition/Operon_coordinates.txt \
 		-g ${GENOME} \
-		-n ${GenomeName} \
-		-t ${Circular} \
+		-b ${PKGNAME} \
 		-o ${ProjDir}/GRanges/Operon_grange.RDS >> ${LogDir}/OperonCoordinate.log 2>&1
 	
 fi
