@@ -28,7 +28,7 @@ if (interactive()) {
             "C:/Users",
             user,
             "Documents/GitHub/Proteogenomics_reannotation/",
-            "R/6frames_proteogenomics/helper.R",
+            "tools/Rscripts/helper.R",
             sep = "/"))
 } else {
     source(
@@ -39,20 +39,20 @@ if (interactive()) {
 }
 
 # Load the required packages (or install if not already in library)
-load_package("plyr")
-load_package("dplyr")
-load_package("magrittr")
-load_package("data.table")
-load_package("splitstackshape")
-load_package("stringr")
-load_package("optparse")
-load_package("seqinr")
-load_package("bit64")
-load_package("ggplot2")
-load_package("gtable")
-load_package("grid")
-load_package("gridExtra")
-load_package("purrr")
+library(plyr)
+library(dplyr)
+library(magrittr)
+library(data.table)
+library(splitstackshape)
+library(stringr)
+library(optparse)
+library(seqinr)
+library(bit64)
+library(ggplot2)
+library(gtable)
+library(grid)
+library(gridExtra)
+library(purrr)
 
 
 
@@ -119,28 +119,27 @@ dir.create(dirname(opt$output))
 ### Data import, reformatting and export ---------------------------------
 
 # Import the input data
-operon <- read.table(
-    file = opt$operon,
-    header = TRUE,
-    sep = "\t",
-    quote = "",
-    as.is = TRUE)
+operon <- data.table::fread(
+    input = opt$operon, sep = "\t", header = TRUE,
+    stringsAsFactors = FALSE, data.table = FALSE)
 
 # Format the data to be suitable for genomic ranges object creation
 operon_format <- operon %>%
-    dplyr::group_by(., OperonID) %>%
+    dplyr::group_by(., id) %>%
     dplyr::summarise(
         .,
-        GI = toString(x = unique(GI), width = NULL),
-        Synonym = toString(x = unique(Synonym), width = NULL),
-        start = min(Start),
-        end = max(End),
+        start = min(c(Start, End)),
+        end = max(c(Start, End)),
         strand = unique(Strand),
-        length = (end - start),
-        chromosome = "chr1") %>%
+        length = (end - start)+1,
+        chromosome = Chromosome) %>%
     set_colnames(c(
-        "id", "GI", "Synonym", "start", "end",
+        "id", "start", "end",
         "strand", "length", "chromosome"))
+operon_format <- operon %>%
+    dplyr::group_by(., id) %>%
+    summarise_if(., is.character, toString, width = NULL) %>%
+    dplyr::left_join(x = operon_format, y = ., by = "id")
 
 # Export the reformatted data
 write.table(
