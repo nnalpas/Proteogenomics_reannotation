@@ -17,8 +17,8 @@ ProteinCoordinate=0
 ProteinAnnotation=0
 BSgenomeForge=0
 GRangeCreate=0
-PepNoveltyReason=1
-PeptideCoordinate=1
+PepNoveltyReason=0
+PeptideCoordinate=0
 OperonCoordinate=0
 SangerCoordinate=0
 OrfNoveltyReason=1
@@ -42,7 +42,7 @@ NCBIENVPROT="${PBS_O_HOME}/work/BlastDB/env_nr"
 NCBIENVRNA="${PBS_O_HOME}/work/BlastDB/env_nt"
 OTHERPROT="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/micro_proteins_Synechocystis_sp_PCC6803_20180419.fasta"
 OTHERGENE=""
-#OPERON="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/Bsu_operon_01062017.opr"
+OPERON="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/Transccriptional_units_formatted_20201022.txt"
 #SANGER="${PBS_O_HOME}/work/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
 
 # MaxQuantParam
