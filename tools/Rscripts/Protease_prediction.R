@@ -43,4 +43,7 @@ my_coverage <- protease_coverage(
 my_coverage_per_prot <- protease_coverage(
     data = my_proteotypic_df, protease = "Protease", protein = "Proteins")
 
+my_detectable_prot <- plot_covered_protein(
+    data = my_proteotypic_df, protease = "Protease", protein = "Proteins")
+
 
