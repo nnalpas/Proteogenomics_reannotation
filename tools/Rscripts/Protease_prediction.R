@@ -37,13 +37,30 @@ my_plots[["Overall"]] <- lapply(
 my_proteotypic_df <- plyr::ldply(
     my_proteotypic, "data.frame", .id = "Protease")
 
-my_coverage <- protease_coverage(
+my_plots[["Coverage"]] <- protease_coverage(
     data = my_proteotypic_df, protease = "Protease")
 
-my_coverage_per_prot <- protease_coverage(
+my_plots[["Coverage_per_prot"]] <- protease_coverage(
     data = my_proteotypic_df, protease = "Protease", protein = "Proteins")
 
-my_detectable_prot <- plot_covered_protein(
+my_plots[["detectable_prot"]] <- plot_covered_protein(
     data = my_proteotypic_df, protease = "Protease", protein = "Proteins")
+
+my_plots[["protease_combination"]] <- plot_protease_combination(
+    my_proteotypic_df)
+
+outfile <- basename(my_files) %>%
+    sub("\\.fasta$", "", .)
+
+save.image(file = paste0(outfile, ".RData"))
+
+pdf(file = paste0(outfile, "_plots.pdf"), width = 10, height = 10)
+my_plots
+dev.off()
+
+data.table::fwrite(
+    x = my_proteotypic_df, file = paste0(outfile, "_proteotypic.txt"),
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
 
 
