@@ -103,6 +103,7 @@ if [ $MaxquantProc == 1 ]; then
 fi
 
 
+
 ##################
 # Get novel ORFs #
 ##################
@@ -490,6 +491,19 @@ if [ $ConservationBlast == 1 ] ; then
 		-m "${BlastnParam}" \
 		-t 1 \
 		-b "ORFnucl_vs_NCBInt" >> ${LogDir}/ConservationBlast.log 2>&1
+	
+fi
+
+
+
+##################################
+# MaxQuant processing validation #
+##################################
+
+# Check whether to perform the maxquant processing to validate novel ORFs using public data
+if [ $MaxquantValidation == 1 ]; then
+	
+	singularity run $mq_version $mqpar_valid > ${LogDir}/MaxquantValidation.log 2>&1
 	
 fi
 

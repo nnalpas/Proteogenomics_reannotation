@@ -21,9 +21,10 @@ PepNoveltyReason=0
 PeptideCoordinate=0
 OperonCoordinate=0
 SangerCoordinate=0
-OrfNoveltyReason=1
+OrfNoveltyReason=0
 ClustalAlign=0
 ConservationBlast=0
+MaxquantValidation=1
 
 # EmbossParam
 FRAME=6
@@ -83,3 +84,8 @@ Circular="c('chr1','pca2_4','pcb2_4','pcc5_2','psysa','psysg','psysm','psysx')"
 
 # ConservationBlastParam
 BlastnParam=''
+
+# MaxQuantValidationParam
+mqpar_valid="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_validation_novel_ORF/mqpar_posix.xml"
+
+
