@@ -6,7 +6,7 @@ library(ggplot2)
 library(data.table)
 
 my_files <- c(
-    ref = "H:/data/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta")
+    ref = "H:/data/Synechocystis_6frame/Nuc_translation/Find0_Synechocystis_sp_PCC_6803_genome_FIXED_min20-max60length.fasta")
 
 my_fastas <- lapply(X = my_files, FUN = function(x) {
     seqinr::read.fasta(file = x, seqtype = "AA", as.string = T) %>%
@@ -28,10 +28,10 @@ my_proteotypic <- lapply(X = my_digest, FUN = function(x) {
 my_plots <- list()
 
 my_plots[["Overall"]] <- lapply(
-    X = my_proteotypic, FUN = function(x) {
+    X = names(my_proteotypic), FUN = function(x) {
         plot_proteotypic(
-            data = x, pep_seq = "Sequence",
-            prot = "Proteins", stack = "Filter")
+            data = my_proteotypic[[x]], pep_seq = "Sequence",
+            prot = "Proteins", stack = "Filter", title = x)
 })
 
 my_proteotypic_df <- plyr::ldply(
