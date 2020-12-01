@@ -1089,6 +1089,79 @@ mq_rev_con_filt <- function (
 
 ### Plotting wrapper function --------------------------------------------
 
+# Function to describe a dataset via user-specified columns,
+# it calculates a count and then plots the results
+describe_count_plot <- function(
+    my_data, main_id, x, separator = NULL, fill = NULL,
+    xlabel = "Name", ylabel = "Count", gtitle = NULL,
+    threshold = 5, flip = FALSE) {
+    
+    first_grouping <- c(x, fill)
+    second_grouping <- c("Name", fill)
+    
+    if (is.null(separator)) {
+        my_data_format <- my_data
+    } else {
+        my_data_format <- my_data %>%
+            tidyr::separate_rows(data = ., !!as.name(x), sep = separator)
+    }
+    
+    my_data_format %<>%
+        dplyr::group_by_at(., vars(tidyselect::all_of(first_grouping))) %>%
+        dplyr::summarise(
+            ., Count = dplyr::n_distinct(!!as.name(main_id))) %>%
+        dplyr::group_by(., !!as.name(x)) %>%
+        dplyr::mutate(., Name = ifelse(
+            any(Count >= threshold),
+            !!as.name(x),
+            paste0("Others (<=", threshold, ")"))) %>%
+        dplyr::group_by_at(., vars(tidyselect::all_of(second_grouping))) %>%
+        dplyr::summarise(., Count = sum(Count)) %>%
+        dplyr::ungroup(.)
+    
+    if (!is.null(fill)) {
+        my_data_format %<>%
+            tidyr::complete(
+                data = ., Name, !!as.name(fill),
+                fill = list(Count = 0))
+    }
+    
+    my_data_format %<>%
+        dplyr::arrange(., dplyr::desc(Count))
+    
+    my_data_format$Name <- factor(
+        x = my_data_format$Name,
+        levels = unique(my_data_format$Name),
+        ordered = TRUE)
+    
+    if (is.null(fill)) {
+        pl <- ggplot(
+            my_data_format,
+            aes(x = Name, y = Count, label = Count))
+    } else {
+        pl <- ggplot(
+            my_data_format,
+            aes(x = Name, y = Count, fill = !!as.name(fill), label = Count))
+    }
+    
+    pl <- pl +
+        geom_bar(stat = "identity", position = "dodge") +
+        ggpubr::theme_pubr() +
+        ggtitle(gtitle) +
+        xlab(xlabel) +
+        ylab(ylabel)
+    
+    if (flip) {
+        pl + 
+            geom_text(position = position_dodge(width = 0.9), hjust = -0.4) +
+            coord_flip()
+    } else {
+        pl + 
+            geom_text(position = position_dodge(width = 0.9), vjust = -0.4)
+    }
+    
+}
+
 # Function to generate custom histogram for upset attribute plots
 # the key change is the deletion of duplicated entries so that stack bars
 # actually represent the data
