@@ -3,7 +3,7 @@
 my_folder <- "H:/data/Synechocystis_6frame/MaxQuant/combined/txt/"
 my_fasta_file <- "H:/data/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta"
 my_novel_file <- "H:/data/Synechocystis_6frame/NoveltyExplain/ORF_novelty_reason.RDS"
-pep_class
+pep_class <- c("class 1", "class 2")
 
 
 
@@ -56,7 +56,8 @@ my_pg <- data.table::fread(
     stringsAsFactors = FALSE, colClasses = "character")
 
 my_fasta <- seqinr::read.fasta(
-    file = my_fasta_file, seqtype = "AA", as.string = TRUE)
+    file = my_fasta_file, seqtype = "AA",
+    as.string = TRUE, whole.header = TRUE)
 
 my_novel <- readRDS(my_novel_file)
 
@@ -122,5 +123,25 @@ my_plots[["iBAQ_perc_heat"]] <- ggplot(
     ggpubr::theme_pubr() +
     theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
     scale_fill_gradient(low = "#17115C", high = "#C20808", na.value = "grey")
+
+
+
+### Over-representation analysis -----------------------------------------
+
+foreground <- my_identification[
+    my_identification$Identification == "Never identified", ][["Protein IDs"]]
+
+background <- my_identification[["Protein IDs"]]
+
+my_oa_path <- clusterProfiler::enrichKEGG(
+    gene = foreground, organism = "syn", keyType = "kegg",
+    pAdjustMethod = "BH", universe = background,
+    pvalueCutoff = 0.5, qvalueCutoff = 0.5)
+
+my_oa_mod <- clusterProfiler::enrichMKEGG(
+    gene = foreground, organism = "syn", keyType = "kegg",
+    pAdjustMethod = "BH", universe = background,
+    minGSSize = 3,
+    pvalueCutoff = 0.5, qvalueCutoff = 0.5)
 
 
