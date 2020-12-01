@@ -3,6 +3,7 @@
 my_folder <- "H:/data/Synechocystis_6frame/MaxQuant/combined/txt/"
 my_fasta_file <- "H:/data/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta"
 my_novel_file <- "H:/data/Synechocystis_6frame/NoveltyExplain/ORF_novelty_reason.RDS"
+my_path_file <- "D:/Local_databases/X-databases/KEGG/2020-12-01_syn_kegg_pathways.txt"
 pep_class <- c("class 1", "class 2")
 
 
@@ -43,6 +44,7 @@ if (interactive()) {
 # Load the required packages
 library(magrittr)
 library(ggplot2)
+library(dendextend)
 
 my_plots <- list()
 
@@ -61,6 +63,11 @@ my_fasta <- seqinr::read.fasta(
 
 my_novel <- readRDS(my_novel_file)
 
+my_path <- data.table::fread(
+    input = my_path_file,
+    sep = "\t", quote = "", header = TRUE,
+    stringsAsFactors = FALSE, colClasses = "character")
+
 
 
 ### 
@@ -68,13 +75,33 @@ my_novel <- readRDS(my_novel_file)
 my_pg_filt <- my_pg %>%
     dplyr::filter(., Reverse != "+", `Potential contaminant` != "+")
 
+my_path_format <- my_path %>%
+    dplyr::mutate(
+        ., KeggID = sub("syn:", "", KeggID),
+        KeggID = sub("syn:", "", KeggID),
+        UniProtID = sub("up:", "", UniProtID),
+        PathwayID = sub("path:", "", PathwayID),
+        PathwayName = sub(" - Synechocystis sp. PCC 6803", "", PathwayName)) %>%
+    dplyr::group_by(., KeggID) %>%
+    dplyr::summarise_all(~paste0(unique(na.omit(.)), collapse = "|")) %>%
+    dplyr::ungroup(.) %>%
+    dplyr::mutate(., PathwayName = ifelse(PathwayName == "", NA, PathwayName))
+
 id_prot <- my_pg_filt %>%
     strsplit(x = .[["Protein IDs"]], split = ";", fixed = TRUE) %>%
     unlist(.) %>%
     unique(.)
 
 my_identification <- data.table::data.table(
-    `Protein IDs` = names(my_fasta)) %>%
+    Header = names(my_fasta)) %>%
+    tidyr::separate(
+        data = ., col = "Header",
+        into = c("Protein IDs", "Genome", "Header_remain"),
+        sep = " \\| ", extra = "merge") %>%
+    tidyr::separate(
+        data = ., col = "Header_remain",
+        into = c("Description", "Location"),
+        sep = " \\| ", fill = "left") %>%
     dplyr::mutate(., `Identification` = ifelse(
         !`Protein IDs` %in% id_prot, "Never identified", "Identified"))
 
@@ -138,10 +165,37 @@ my_oa_path <- clusterProfiler::enrichKEGG(
     pAdjustMethod = "BH", universe = background,
     pvalueCutoff = 0.5, qvalueCutoff = 0.5)
 
+my_oa_path_df <- my_oa_path@result %>%
+    as.data.frame(.)
+
 my_oa_mod <- clusterProfiler::enrichMKEGG(
     gene = foreground, organism = "syn", keyType = "kegg",
     pAdjustMethod = "BH", universe = background,
     minGSSize = 3,
     pvalueCutoff = 0.5, qvalueCutoff = 0.5)
+
+my_oa_mod_df <- my_oa_mod@result %>%
+    as.data.frame(.)
+
+my_identification_annot <- my_identification %>%
+    dplyr::left_join(
+        x = ., y = my_path_format, by = c("Protein IDs" = "KeggID"))
+
+for (x in c("Description")) {
+    my_plots[[paste0(x, "_count")]] <- describe_count_plot(
+        my_data = my_identification_annot, main_id = "Protein IDs",
+        x = x, fill = "Identification", separator = "\\|",
+        gtitle = x, flip = TRUE,
+        ylabel = "Protein count")
+}
+
+for (x in c("PathwayName")) {
+    my_plots[[paste0(x, "_count")]] <- describe_count_plot(
+        my_data = my_identification_annot, main_id = "Protein IDs",
+        x = x, fill = "Identification", separator = "\\|",
+        gtitle = x, flip = TRUE, threshold = 20,
+        ylabel = "Protein count")
+}
+
 
 
