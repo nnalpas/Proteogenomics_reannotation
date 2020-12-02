@@ -155,7 +155,32 @@ my_oa_path <- clusterProfiler::enrichKEGG(
     pvalueCutoff = 0.5, qvalueCutoff = 0.5)
 
 my_oa_path_df <- my_oa_path@result %>%
-    as.data.frame(.)
+    as.data.frame(.) %>%
+    dplyr::rowwise(.) %>%
+    dplyr::mutate(
+        ., GeneRatioNum = eval(parse(text = GeneRatio)),
+        padjust_log = -log10(p.adjust))
+
+if (nrow(my_oa_path_df) > 0) {
+    max_path <- 10
+    my_plots[["OA_path"]] <- ggplot(
+        data = my_oa_path_df %>%
+            dplyr::arrange(., dplyr::desc(padjust_log)) %>%
+            dplyr::slice(., 1:max_path),
+        mapping = aes(
+            x = GeneRatioNum, y = padjust_log,
+            fill = Count, label = Description)) +
+        geom_point(shape = 21, size = 5) +
+        ggrepel::geom_text_repel() +
+        ggpubr::theme_pubr() +
+        geom_hline(
+            yintercept = -log10(0.05), colour = "gold",
+            linetype = "dashed", size = 1) +
+        scale_fill_gradient(low = "#3C3C82", high = "#A31717") +
+        xlab("Gene ratio") +
+        ylab("-log10 adj. p-value") +
+        ggtitle(paste0("KEGG pathways (top ", max_path, ")"))
+}
 
 my_oa_mod <- clusterProfiler::enrichMKEGG(
     gene = foreground, organism = "syn", keyType = "kegg",
@@ -164,7 +189,32 @@ my_oa_mod <- clusterProfiler::enrichMKEGG(
     pvalueCutoff = 0.5, qvalueCutoff = 0.5)
 
 my_oa_mod_df <- my_oa_mod@result %>%
-    as.data.frame(.)
+    as.data.frame(.) %>%
+    dplyr::rowwise(.) %>%
+    dplyr::mutate(
+        ., GeneRatioNum = eval(parse(text = GeneRatio)),
+        padjust_log = -log10(p.adjust))
+
+if (nrow(my_oa_mod_df) > 0) {
+    max_path <- 10
+    my_plots[["OA_module"]] <- ggplot(
+        data = my_oa_mod_df %>%
+            dplyr::arrange(., dplyr::desc(padjust_log)) %>%
+            dplyr::slice(., 1:max_path),
+        mapping = aes(
+            x = GeneRatioNum, y = padjust_log,
+            fill = Count, label = Description)) +
+        geom_point(shape = 21, size = 5) +
+        ggrepel::geom_text_repel() +
+        ggpubr::theme_pubr() +
+        geom_hline(
+            yintercept = -log10(0.05), colour = "gold",
+            linetype = "dashed", size = 1) +
+        scale_fill_gradient(low = "#3C3C82", high = "#A31717") +
+        xlab("Gene ratio") +
+        ylab("-log10 adj. p-value") +
+        ggtitle(paste0("KEGG modules (top ", max_path, ")"))
+}
 
 
 
