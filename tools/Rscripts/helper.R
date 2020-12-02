@@ -1126,13 +1126,26 @@ describe_count_plot <- function(
                 fill = list(Count = 0))
     }
     
-    my_data_format %<>%
-        dplyr::arrange(., dplyr::desc(Count))
-    
-    my_data_format$Name <- factor(
-        x = my_data_format$Name,
-        levels = unique(my_data_format$Name),
-        ordered = TRUE)
+    if (all(c("ordered", "factor") %in% class(my_data[[x]]))) {
+        
+        my_data_format$Name <- factor(
+            x = my_data_format$Name,
+            levels = c(
+                levels(my_data[[x]]),
+                paste0("Others (<=", threshold, ")")),
+            ordered = TRUE)
+        
+    } else {
+        
+        my_data_format %<>%
+            dplyr::arrange(., dplyr::desc(Count))
+        
+        my_data_format$Name <- factor(
+            x = my_data_format$Name,
+            levels = unique(my_data_format$Name),
+            ordered = TRUE)
+        
+    }
     
     if (is.null(fill)) {
         pl <- ggplot(
