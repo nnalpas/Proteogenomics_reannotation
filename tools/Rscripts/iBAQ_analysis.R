@@ -1,9 +1,11 @@
 
 
+
 my_folder <- "H:/data/Synechocystis_6frame/MaxQuant/combined/txt/"
 my_fasta_file <- "H:/data/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta"
 my_novel_file <- "H:/data/Synechocystis_6frame/NoveltyExplain/ORF_novelty_reason.RDS"
 my_path_file <- "D:/Local_databases/X-databases/KEGG/2020-12-01_syn_kegg_pathways.txt"
+my_tu_file <- "H:/data/Synechocystis_6frame/Kopf_2014_TU/Transcriptional_units_formatted_20201022.txt"
 pep_class <- c("class 1", "class 2")
 
 
@@ -68,9 +70,14 @@ my_path <- data.table::fread(
     sep = "\t", quote = "", header = TRUE,
     stringsAsFactors = FALSE, colClasses = "character")
 
+my_tu <- data.table::fread(
+    input = my_tu_file,
+    sep = "\t", header = TRUE,
+    stringsAsFactors = FALSE, colClasses = "character")
 
 
-### 
+
+### Data formatting ------------------------------------------------------
 
 my_pg_filt <- my_pg %>%
     dplyr::filter(., Reverse != "+", `Potential contaminant` != "+")
@@ -102,54 +109,36 @@ my_identification <- data.table::data.table(
         data = ., col = "Header_remain",
         into = c("Description", "Location"),
         sep = " \\| ", fill = "left") %>%
-    dplyr::mutate(., `Identification` = ifelse(
-        !`Protein IDs` %in% id_prot, "Never identified", "Identified"))
+    dplyr::mutate(
+        ., Location = sub("join\\{(.+)\\}", "\\1", Location) %>%
+            sub("\\:.+\\:", ":", .) %>%
+            gsub("\\[|\\)", "", .) %>%
+            sub("](", ":", ., fixed = TRUE)) %>%
+    tidyr::separate(
+        data = ., col = "Location",
+        into = c("Start", "End", "Strand"),
+        sep = "\\:", convert = TRUE) %>%
+    dplyr::mutate(
+        ., `Identification` = ifelse(
+            !`Protein IDs` %in% id_prot, "Never identified", "Identified"),
+        Location = round(x = Start, digits = -4)) %>%
+    tidyr::unite(
+        data = ., col = "Genome_loc", Genome, Location,
+        sep = "_", remove = FALSE)
 
-my_pg_format <- my_pg_filt %>%
+my_identification$Genome_loc <- factor(
+    x = my_identification$Genome_loc,
+    levels = unique(my_identification$Genome_loc),
+    ordered = TRUE)
+
+my_tu_format <- my_tu %>%
+    tidyr::separate_rows(data = ., Gene_name, sep = ", ") %>%
     dplyr::select(
-        ., `Protein IDs`, `Majority protein IDs`,
-        dplyr::starts_with("iBAQ")) %>%
-    tidyr::pivot_longer(
-        data = ., cols = dplyr::starts_with("iBAQ"),
-        names_to = "Experiment", values_to = "iBAQ") %>%
-    dplyr::mutate(
-        ., Label = sub(";.+", "", `Majority protein IDs`),
-        Experiment = sub("^iBAQ ", "", Experiment),
-        iBAQ = as.double(iBAQ)) %>%
-    dplyr::filter(., !grepl("^peptides", Experiment)) %>%
-    dplyr::group_by(., Experiment) %>%
-    dplyr::mutate(
-        ., iBAQ_sum = sum(iBAQ, na.rm = T),
-        iBAQ_perc = iBAQ / iBAQ_sum * 100,
-        iBAQ_log10 = log10(iBAQ + 1)) %>%
-    dplyr::ungroup(.)
-
-my_plots[["iBAQ_raw"]] <- ggplot(
-    my_pg_format, aes(x = Experiment, y = iBAQ_log10)) +
-    geom_boxplot() +
-    ggpubr::theme_pubr() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
-
-my_plots[["iBAQ_perc"]] <- ggplot(
-    my_pg_format, aes(x = Experiment, y = iBAQ_perc)) +
-    geom_boxplot() +
-    ggpubr::theme_pubr() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
-    scale_y_log10()
-
-my_plots[["iBAQ_heat"]] <- ggplot(
-    my_pg_format, aes(x = Experiment, y = Label, fill = iBAQ_log10)) +
-    geom_tile() +
-    ggpubr::theme_pubr() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
-    scale_fill_gradient(low = "#17115C", high = "#C20808", na.value = "grey")
-
-my_plots[["iBAQ_perc_heat"]] <- ggplot(
-    my_pg_format, aes(x = Experiment, y = Label, fill = iBAQ_perc)) +
-    geom_tile() +
-    ggpubr::theme_pubr() +
-    theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
-    scale_fill_gradient(low = "#17115C", high = "#C20808", na.value = "grey")
+        ., TU_id = id, `Protein IDs` = Gene_name,
+        TU_description = Gene_description, TU_type) %>%
+    dplyr::group_by(., `Protein IDs`) %>%
+    dplyr::summarise_all(~paste0(unique(na.omit(.)), collapse = "|")) %>%
+    dplyr::filter(., !is.na(`Protein IDs`) & `Protein IDs` != "")
 
 
 
@@ -177,11 +166,17 @@ my_oa_mod <- clusterProfiler::enrichMKEGG(
 my_oa_mod_df <- my_oa_mod@result %>%
     as.data.frame(.)
 
+
+
+### Additional characterisation through histogram ------------------------
+
 my_identification_annot <- my_identification %>%
     dplyr::left_join(
-        x = ., y = my_path_format, by = c("Protein IDs" = "KeggID"))
+        x = ., y = my_path_format, by = c("Protein IDs" = "KeggID")) %>%
+    dplyr::left_join(
+        x = ., y = my_tu_format)
 
-for (x in c("Description")) {
+for (x in c("Description", "Genome", "Genome_loc", "TU_id")) {
     my_plots[[paste0(x, "_count")]] <- describe_count_plot(
         my_data = my_identification_annot, main_id = "Protein IDs",
         x = x, fill = "Identification", separator = "\\|",
@@ -189,13 +184,14 @@ for (x in c("Description")) {
         ylabel = "Protein count")
 }
 
-for (x in c("PathwayName")) {
+for (x in c("PathwayName", "TU_type")) {
     my_plots[[paste0(x, "_count")]] <- describe_count_plot(
         my_data = my_identification_annot, main_id = "Protein IDs",
         x = x, fill = "Identification", separator = "\\|",
         gtitle = x, flip = TRUE, threshold = 20,
         ylabel = "Protein count")
 }
+
 
 
 
