@@ -285,6 +285,11 @@ my_tu_format <- my_tu %>%
     dplyr::summarise_all(~paste0(unique(na.omit(.)), collapse = "|")) %>%
     dplyr::filter(., !is.na(`Protein IDs`) & `Protein IDs` != "")
 
+never_id_prot <- my_identification[
+    my_identification$Identification == "Never identified", ][["Protein IDs"]]
+my_fasta_filt <- my_fasta[which(
+    sub(" .+", "", names(my_fasta)) %in% never_id_prot)]
+
 
 
 ### Over-representation analysis -----------------------------------------
@@ -412,6 +417,12 @@ write.table(
     file = paste0(opt$output, "/", "Never_identified.txt"),
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
+
+# Export fasta file of never identified proteins
+seqinr::write.fasta(
+    sequences = my_fasta_filt, names = names(my_fasta_filt),
+    file.out = paste0(opt$output, "/", "Never_identified.fasta"),
+    open = "w", nbchar = 60, as.string = TRUE)
 
 # Save the session
 save.image(paste0(opt$output, "/", "Never_identified.RData"))
