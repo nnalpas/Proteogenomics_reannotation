@@ -6,7 +6,7 @@ library(ggplot2)
 library(data.table)
 
 my_files <- c(
-    ref = "H:/data/Synechocystis_6frame/2020-12-02_Never_identified/Never_identified.fasta")
+    ref = "L:/Software/AndromedaDatabases/Pseudomonas_aeruginosa/UP000002438_208964_complete_2019-12-11.fasta")
 
 my_fastas <- lapply(X = my_files, FUN = function(x) {
     seqinr::read.fasta(file = x, seqtype = "AA", as.string = T) %>%
