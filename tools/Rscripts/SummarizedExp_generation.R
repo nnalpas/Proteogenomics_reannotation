@@ -54,6 +54,7 @@ opt <- list(
     my_folder = "H:/data/Synechocystis_6frame/Kopf_2014_TU",
     my_expr = NULL,
     my_pheno = NULL,
+    my_title = "",
     output = "C:/Users/kxmna01/Desktop/2021-01-13_SummarizedExp"
 )
 
@@ -63,7 +64,8 @@ if (
     identical(opt$output, "") |
     identical(opt$output, character(0))) {
     
-    opt$output <- dirname(opt$novel_reason)
+    opt$output <- ifelse(
+        is.null(opt$my_folder), dirname(opt$my_expr), opt$my_folder)
     warning(paste0("Output results to ", opt$output, "!"))
     
 }
@@ -116,5 +118,22 @@ all_summexp <- apply(X = my_files, MARGIN = 1, FUN = function(x) {
     set_names(my_files[["Name"]])
 
 # Provisional code to generate a multi assay object
-# tmp <- MultiAssayExperiment(all_summexp)
+multi_assay <- MultiAssayExperiment(all_summexp)
+
+
+
+### Exporting results ----------------------------------------------------
+
+# Export all summarized experiment object for later re-use
+for (x in names(all_summexp)) {
+    saveRDS(
+        object = all_summexp[[x]],
+        file = paste0(opt$output, "/", x, "_SummExp.RDS"))
+}
+
+# Export all summarized experiment object for later re-use
+saveRDS(
+    object = multi_assay,
+    file = paste0(opt$output, "/", opt$my_title, "MultiAssay.RDS"))
+
 
