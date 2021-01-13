@@ -417,6 +417,33 @@ best_blast <- function(
 
 ### Utility function for data reformatting -------------------------------
 
+# Function to generate a single summarized experiment object
+make_SummarizedExperiment <- function(name, assay, coldata) {
+    
+    my_expr <- data.table::fread(
+        input = assay, sep = "\t", quote = "",
+        stringsAsFactors = FALSE,
+        colClasses = "character", header = TRUE)
+    my_pheno <- data.table::fread(
+        input = coldata, sep = "\t", quote = "",
+        stringsAsFactors = FALSE,
+        colClasses = "character", header = TRUE)
+    
+    my_assay <- my_expr %>%
+        dplyr::select(., ID, my_pheno$SampleName) %>%
+        tibble::column_to_rownames(.data = ., var = "ID") %>%
+        dplyr::mutate_at(., my_pheno$SampleName, as.double) %>%
+        list(.) %>%
+        set_names(name)
+    my_coldata <- my_pheno %>%
+        dplyr::mutate(., ID = SampleName) %>%
+        tibble::column_to_rownames(.data = ., var = "ID")
+    
+    SummarizedExperiment(
+        assays = my_assay, colData = my_coldata)
+    
+}
+
 # Function to clean up the UniProt IDs (in case regular expression
 # was missing in andromeda)
 uni_id_clean <- function(x) {
