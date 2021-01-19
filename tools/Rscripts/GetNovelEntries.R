@@ -187,6 +187,21 @@ fasta <- c(Known = opt$reference, Novel = opt$novel) %>%
 names(fasta$Known) %<>%
     uni_id_clean(.)
 
+# Import all sites data
+site_files <- list.files(
+    path = opt$maxquant, pattern = "Sites.txt", full.names = TRUE) %>%
+    set_names(sub("Sites\\.txt", "", basename(.)))
+if (length(site_files) > 0) {
+    sites <- lapply(X = site_files, function(x) {
+        mq_read(
+            path = dirname(x),
+            name = basename(x) %>%
+                sub("\\(", "\\\\(", .) %>%
+                sub("\\)", "\\\\)", .),
+            integer64 = "double")
+    })
+}
+
 
 
 ### Novel peptide identification -----------------------------------------
@@ -323,6 +338,94 @@ print(paste(
 print(table(pep_match$group, useNA = "always"))
 pep_match %<>%
     dplyr::filter(., !is.na(group))
+
+
+
+### Sites identification -------------------------------------------------
+
+# In case there are sites
+if (exists("sites")) {
+    
+    for (x in names(sites)) {
+        
+        site_id <- paste(x, "site IDs")
+        ids_cross_map <- evid %>%
+            dplyr::select(
+                ., `Evidence IDs` = id, `Site IDs` = !!as.name(site_id)) %>%
+            dplyr::filter(
+                ., !is.na(`Site IDs`) & `Site IDs` != "") %>%
+            tidyr::separate_rows(
+                data = ., `Site IDs`, sep = ";", convert = TRUE)
+        ids_cross_map <- sites[[x]] %>%
+            dplyr::select(., `Site IDs` = id, `Evidence IDs`) %>%
+            dplyr::filter(
+                ., !is.na(`Evidence IDs`) & `Evidence IDs` != "") %>%
+            tidyr::separate_rows(
+                data = ., `Evidence IDs`, sep = ";", convert = TRUE) %>%
+            dplyr::bind_rows(ids_cross_map, .) %>%
+            unique(.)
+        ids_cross_map_format <- evid_match %>%
+            dplyr::select(
+                ., `Evidence IDs` = id, Sequence, OnlyIdBySite,
+                group, Database) %>%
+            unique(.) %>%
+            dplyr::left_join(x = ids_cross_map, y = ., by = "Evidence IDs") %>%
+            dplyr::mutate(
+                ., `Peptide details` = paste0(Sequence, " (", group, ")")) %>%
+            dplyr::group_by(., `Site IDs`) %>%
+            dplyr::summarise(
+                ., `Peptide details` = paste0(
+                    unique(`Peptide details`), collapse = ";"),
+                group = dplyr::case_when(
+                    any(group == "Known") ~ "Known",
+                    any(group == "Contaminant") ~ "Contaminant",
+                    any(group == "Novel") ~ "Novel",
+                    any(group == "Reverse") ~ "Reverse",
+                    TRUE ~ NA_character_
+                ),
+                Database = dplyr::case_when(
+                    any(Database == "Target") ~ "Target",
+                    any(Database == "Decoy") ~ "Decoy",
+                    any(Database == "Novel") ~ "Novel",
+                    TRUE ~ NA_character_
+                ))
+        
+        site_pos <- ids_cross_map_format %>%
+            dplyr::rename(., `id` = `Site IDs`) %>%
+            dplyr::left_join(
+                x = sites[[x]], y = ., by = c("id"))
+        
+        # Prepare sites location info
+        site_pos %<>%
+            dplyr::mutate(
+                ., Proteins = ifelse(Proteins == "", Protein, Proteins),
+                `Positions within proteins` = ifelse(
+                    `Positions within proteins` == "",
+                    Position, `Positions within proteins`)) %>%
+            tidyr::separate_rows(
+                data = ., Proteins, `Positions within proteins`, sep = ";") %>%
+            dplyr::mutate(
+                ., `Site ID` = paste(
+                    Proteins, `Positions within proteins`,
+                    `Amino acid`, sep = "~")) %>%
+            dplyr::mutate(
+                ., start = `Positions within proteins`,
+                end = `Positions within proteins`) %>%
+            dplyr::select(
+                ., `Site ID`, start, end, `Peptide details`, group, Database,
+                `Amino acid`, `Localization prob`, PEP, Score,
+                `Sequence window`, dplyr::ends_with("Probabilities"),
+                dplyr::starts_with("Intensity"))
+        
+        # Save the peptide location data
+        saveRDS(
+            object = site_pos,
+            file = paste(
+                opt$output, "/", x, "_location.RDS", sep = ""))
+        
+    }
+    
+}
 
 
 
