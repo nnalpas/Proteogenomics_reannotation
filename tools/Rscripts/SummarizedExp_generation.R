@@ -51,11 +51,11 @@ my_plots <- list()
 
 #
 opt <- list(
-    my_folder = "H:/data/Synechocystis_6frame/Kopf_2014_TU",
+    my_folder = "H:/data/Synechocystis_6frame/SummarizedExp",
     my_expr = NULL,
     my_pheno = NULL,
     my_title = "",
-    output = "C:/Users/kxmna01/Desktop/2021-01-13_SummarizedExp"
+    output = NULL
 )
 
 # Check whether output parameter was provided
