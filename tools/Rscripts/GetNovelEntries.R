@@ -212,8 +212,8 @@ digest_rule <- digestion_rule(
 
 # Define missed cleavages rule
 mc <- c(min(
-    pep[, grep("Missed cleavages", colnames(pep))]):max(
-        pep[, grep("Missed cleavages", colnames(pep))]))
+    pep[, grep("Missed cleavages", colnames(pep))]):(max(
+        pep[, grep("Missed cleavages", colnames(pep))])+2))
 
 # Digest all proteins into peptide to get their location and
 # their database of origin
@@ -280,7 +280,8 @@ missing_pep <- evid %>%
 pep_pos <- dplyr::bind_rows(digest_datab, missing_pep) %>%
     dplyr::select(., -id) %>%
     dplyr::filter(
-        ., Sequence %in% unique(c(evid[["Sequence"]], pep[["Sequence"]])))
+        ., Sequence %in% unique(c(evid[["Sequence"]], pep[["Sequence"]]))) %>%
+    dplyr::mutate(., id = Sequence)
 
 # Compile peptide type info for each peptide sequence
 pep_comp <- pep_pos %>%
@@ -313,7 +314,7 @@ evid_match <- evid %>%
 pep_pos <- evid_match %>%
     dplyr::select(., Sequence, OnlyIdBySite, group, Database) %>%
     unique(.) %>%
-    dplyr::left_join(x = pep_pos, y = .)
+    dplyr::left_join(x = pep_pos, y = ., by = "Sequence")
 
 # Add the group and database info back into the main peptide table
 pep_match <- evid_match %>%
@@ -412,9 +413,10 @@ if (exists("sites")) {
                 ., start = `Positions within proteins`,
                 end = `Positions within proteins`) %>%
             dplyr::select(
-                ., `Site ID`, start, end, `Peptide details`, group, Database,
-                `Amino acid`, `Localization prob`, PEP, Score,
-                `Sequence window`, dplyr::ends_with("Probabilities"),
+                ., id = `Site ID`, start, end, `Peptide details`,
+                group, Database, Sequence = `Amino acid`,
+                `Localization prob`, PEP, Score, `Sequence window`,
+                dplyr::ends_with("Probabilities"),
                 dplyr::starts_with("Intensity"))
         
         # Save the peptide location data
