@@ -238,30 +238,32 @@ pep_coord %<>%
     dplyr::filter(., !is.na(start)) %>%
     unique(.)
 
-# Concatenate peptide with same sequence and coordinates (duplicate)
+# Concatenate peptide with same id and coordinates (duplicate)
 # we are now looking at genomic position so this is independent of protein name
 pep_coord %<>%
-    dplyr::group_by(., Sequence, start, end) %>%
-    dplyr::summarise_all(funs(toString(x = unique(.), width = NULL)))
+    dplyr::group_by(., id, start, end) %>%
+    dplyr::summarise_all(funs(toString(x = unique(.), width = NULL))) %>%
+    dplyr::ungroup(.)
 
 # Rename the pep column to id (id is a mandatory column for GRange script)
-colnames(pep_coord)[colnames(pep_coord) == "Sequence"] <- "id"
+#colnames(pep_coord)[colnames(pep_coord) == "Sequence"] <- "id"
 
-# Include for each peptide its novelty reason 
-pep_coord %<>%
-    dplyr::ungroup(.) %>%
-    dplyr::left_join(
-        x = .,
-        y = evid_reason %>%
-            dplyr::select(., Sequence, NoveltyReason) %>%
-            unique(.),
-        by = c("id" = "Sequence"))# %>%
+# Include for each peptide its novelty reason providing 'Sequence' exists
+if ("Sequence" %in% colnames(pep_coord)) {
+    pep_coord <- evid_reason %>%
+        dplyr::select(., Sequence, NoveltyReason) %>%
+        unique(.) %>%
+        dplyr::left_join(
+            x = pep_coord,
+            y = .,
+            by = "Sequence")# %>%
     #dplyr::mutate(
     #    .,
     #    Database = ifelse(
     #        !is.na(NoveltyReason) & NoveltyReason == "Not novel",
     #        "Known", Dbuniqueness) %>%
     #        sub("^(Known).*", "\\1", .))
+}
 
 
 
