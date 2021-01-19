@@ -167,8 +167,7 @@ dir.create(dirname(opt$output))
 ### Data import ----------------------------------------------------------
 
 # Import the peptide location
-pep_loc <- readRDS(file = opt$peptide)# %>%
-    #plyr::ldply(.data = ., .fun = "data.frame", .id = "Database")
+pep_loc <- readRDS(file = opt$peptide)
 
 # Import the peptide novelty explanation
 evid_reason <- readRDS(file = opt$novel_reason)
@@ -196,7 +195,8 @@ print(paste(
 # Filter out all peptides that do not have a location within their associated
 # proteins
 pep_loc %<>%
-    dplyr::filter(., !is.na(start))
+    dplyr::filter(., !is.na(start))# %>%
+    #dplyr::select(., -Database)
 
 # Compile genomic coordinates of known and ORF proteins
 coordinates <- dplyr::bind_rows(known_prot, orf_prot)
@@ -205,18 +205,19 @@ coordinates <- dplyr::bind_rows(known_prot, orf_prot)
 pep_loc %<>%
     dplyr::mutate(
         .,
-        startAA = start,
-        endAA = end) %>%
-    dplyr::mutate(
-        .,
         start_nucl = as.integer(start) * 3 - 2,
-        end_nucl = as.integer(end) * 3)
+        end_nucl = as.integer(end) * 3) %>%
+    dplyr::rename(
+        .,
+        startAA = start,
+        endAA = end)
 
 # Compute the genomic coordinates for each peptide
-pep_coord <- pep_loc %>%
+pep_coord <- coordinates %>%
+    dplyr::rename(., start_prot = start, end_prot = end) %>%
     dplyr::left_join(
-        x = ., y = coordinates,
-        by = c("Proteins" = "id"), suffix = c("_pep", "_prot")) %>%
+        x = pep_loc, y = .,
+        by = c("Proteins" = "id")) %>%
     dplyr::mutate(
         .,
         start = ifelse(
@@ -233,12 +234,12 @@ pep_coord <- pep_loc %>%
 # Keep only required columns and remove peptides without coordinates
 pep_coord %<>%
     dplyr::select(
-        ., Sequence, chromosome, strand, frame, start, end, nucl_length,
-        aa_length, Proteins, startAA, endAA, ExactCoord, Comment, Dbuniqueness) %>%#Database) %>%
+        ., -start_nucl, -end_nucl, -start_prot, -end_prot) %>%
     dplyr::filter(., !is.na(start)) %>%
     unique(.)
 
 # Concatenate peptide with same sequence and coordinates (duplicate)
+# we are now looking at genomic position so this is independent of protein name
 pep_coord %<>%
     dplyr::group_by(., Sequence, start, end) %>%
     dplyr::summarise_all(funs(toString(x = unique(.), width = NULL)))
@@ -254,13 +255,13 @@ pep_coord %<>%
         y = evid_reason %>%
             dplyr::select(., Sequence, NoveltyReason) %>%
             unique(.),
-        by = c("id" = "Sequence")) %>%
-    dplyr::mutate(
-        .,
-        Database = ifelse(
-            !is.na(NoveltyReason) & NoveltyReason == "Not novel",
-            "Known", Dbuniqueness) %>%#Database) %>%
-            sub("^(Known).*", "\\1", .))
+        by = c("id" = "Sequence"))# %>%
+    #dplyr::mutate(
+    #    .,
+    #    Database = ifelse(
+    #        !is.na(NoveltyReason) & NoveltyReason == "Not novel",
+    #        "Known", Dbuniqueness) %>%
+    #        sub("^(Known).*", "\\1", .))
 
 
 
