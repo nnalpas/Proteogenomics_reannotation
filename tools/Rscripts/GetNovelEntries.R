@@ -447,7 +447,7 @@ if (exists("sites")) {
                 ., start = `Positions within proteins`,
                 end = `Positions within proteins`) %>%
             dplyr::select(
-                ., id = `Site ID`, start, end, `Peptide details`,
+                ., id = `Site ID`, Proteins, start, end, `Peptide details`,
                 group, Database, Sequence = `Amino acid`,
                 `Localization prob`, PEP, Score, `Sequence window`,
                 dplyr::ends_with("Probabilities"),
