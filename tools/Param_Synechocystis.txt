@@ -86,6 +86,5 @@ Circular="c('chr1','pca2_4','pcb2_4','pcc5_2','psysa','psysg','psysm','psysx')"
 BlastnParam=''
 
 # MaxQuantValidationParam
-#mqpar_valid="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_validation_novel_ORF/mqpar_posix.xml"
 mqpar_valid="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_validation_novel_ORF_TMT/mqpar_posix.xml"
 
