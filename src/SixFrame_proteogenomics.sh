@@ -350,19 +350,17 @@ fi
 ##################################
 
 # Check whether to perform peptide coordinate identification
-if [ $PeptideCoordinate == 1 ]; then
+if [ $SequencesCoordinate == 1 ]; then
 
-    ${PBS_O_HOME}/bin/Genomic_position_for_peptides.R \
-		-p ${ProjDir}/Novel_res/Peptides_location.RDS \
-		-r ${ProjDir}/NoveltyExplain/Sequence_novelty_reason.RDS \
-		-k ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt \
-		-n ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt \
-		-o ${ProjDir}/PeptPosition/Peptides_coordinates.txt > ${LogDir}/PeptideCoordinate.log 2>&1
-	${PBS_O_HOME}/bin/GRanges_generation.R \
-		-c ${ProjDir}/PeptPosition/Peptides_coordinates.txt \
+	${PBS_O_HOME}/bin/SequenceGrange.sh \
+		-o ${ProjDir}/GRanges \
+		-c ${ProjDir}/PeptPosition \
+		-n ${ProjDir}/NoveltyExplain/Sequence_novelty_reason.RDS \
+		-r ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt \
+		-f ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt \
 		-g ${GENOME} \
 		-b ${PKGNAME} \
-		-o ${ProjDir}/GRanges >> ${LogDir}/PeptideCoordinate.log 2>&1
+		${ProjDir}/Novel_res >> ${LogDir}/SequencesCoordinate.log 2>&1
 	
 fi
 
