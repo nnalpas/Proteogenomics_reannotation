@@ -129,8 +129,11 @@ for file in `find ${inputs[@]} -name "*_location.RDS"`; do
 		-k ${REF} \
 		-n ${ORF} \
 		-o ${INTERDIR}
+	
+	coord_file=`basename $file | sed "s/_location.RDS/_coordinates.txt/"`
+	
 	GRanges_generation.R \
-		-c ${ProjDir}/PeptPosition/Peptides_coordinates.txt \
+		-c ${INTERDIR}/${coord_file} \
 		-g ${GENOME} \
 		-b ${BSGENOME} \
 		-o ${WKDIR}
