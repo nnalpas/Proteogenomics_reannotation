@@ -241,6 +241,9 @@ if (any(nchar(pep$`Amino acid before`) > 1)) {
         "The peptide table column 'Amino acid before' contains more than",
         "one character, this is not allowed!"))
 }
+evid <- pep %>%
+    dplyr::select(., Sequence, `Amino acid before`) %>%
+    dplyr::left_join(x = evid, y = ., by = "Sequence")
 
 # List all peptide sequence (including sequence with aa before)
 # this is the MAIN data.frame that will be used to define each peptide type
@@ -280,7 +283,6 @@ digest_datab_missing <- data.table::data.table()
 if (any(is.na(pep_comp$Dbuniqueness))) {
     missing_seq <- pep_comp %>%
         dplyr::filter(., is.na(Dbuniqueness)) %>%
-        #mq_rev_con_filt(.) %>%
         .[["DigestSeq"]] %>%
         unique(.)
     digest_datab_missing <- unique_to_database(
