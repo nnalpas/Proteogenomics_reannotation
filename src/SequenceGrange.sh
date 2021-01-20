@@ -124,7 +124,7 @@ fi
 for file in `find ${inputs[@]} -name "*_location.RDS"`; do
 	
 	Genomic_position_from_within_proteins.R \
-		-p ${file} \
+		-p "${file}" \
 		-r ${NOVELTY} \
 		-k ${REF} \
 		-n ${ORF} \
@@ -133,7 +133,7 @@ for file in `find ${inputs[@]} -name "*_location.RDS"`; do
 	coord_file=`basename $file | sed "s/_location.RDS/_coordinates.txt/"`
 	
 	GRanges_generation.R \
-		-c ${INTERDIR}/${coord_file} \
+		-c "${INTERDIR}/${coord_file}" \
 		-g ${GENOME} \
 		-b ${BSGENOME} \
 		-o ${WKDIR}
