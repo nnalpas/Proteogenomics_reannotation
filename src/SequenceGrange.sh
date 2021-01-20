@@ -124,20 +124,20 @@ fi
 find ${INPUTS[@]} -type f -name "*_location.RDS" -print0 | 
 while IFS= read -r -d '' file; do
     
-	echo "Genomic_position_from_within_proteins.R \
-		-p ${file} \
+	Genomic_position_from_within_proteins.R \
+		-p "${file}" \
 		-r ${NOVELTY} \
 		-k ${REF} \
 		-n ${ORF} \
-		-o ${INTERDIR}"
+		-o ${INTERDIR}
 	
 	coord_file=`basename "$file" | sed "s/_location.RDS/_coordinates.txt/"`
 	
-	echo "GRanges_generation.R \
-		-c ${INTERDIR}/${coord_file} \
+	GRanges_generation.R \
+		-c "${INTERDIR}/${coord_file}" \
 		-g ${GENOME} \
 		-b ${BSGENOME} \
-		-o ${WKDIR}"
+		-o ${WKDIR}
 	
 done
 
