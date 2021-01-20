@@ -177,9 +177,13 @@ genome <- seqinr::read.fasta(
 
 # Check whether coordinates data are present
 if (!is.null(opt$coordinates)) {
+    outname <- sub(
+        "_coordinates.txt$", "_grange.RDS", basename(opt$coordinates))
     coordinates <- data.table::fread(
         input = opt$coordinates, sep = "\t", header = TRUE,
         stringsAsFactors = FALSE, quote = "")
+} else {
+    outname <- "Genome_grange.RDS"
 }
 
 # Check whether annotations data are present
@@ -313,7 +317,7 @@ saveRDS(
     object = grange,
     file = paste0(
         opt$output, "/",
-        sub("_coordinates.txt$", "_grange.RDS", basename(opt$coordinates))))
+        outname))
 
 # Define end time
 print(paste("Complete", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
