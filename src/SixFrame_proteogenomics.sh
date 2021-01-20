@@ -307,19 +307,19 @@ if [ $GRangeCreate == 1 ]; then
 	${PBS_O_HOME}/bin/GRanges_generation.R \
 		-g ${GENOME} \
 		-b ${PKGNAME} \
-		-o ${ProjDir}/GRanges/Genome_grange.RDS > ${LogDir}/GRangesGeneration.log 2>&1
+		-o ${ProjDir}/GRanges > ${LogDir}/GRangesGeneration.log 2>&1
     ${PBS_O_HOME}/bin/GRanges_generation.R \
 		-c ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt \
 		-g ${GENOME} \
 		-b ${PKGNAME} \
 		-a ${ProjDir}/ProtAnnotation/Ref_prot_annotations.txt \
-		-o ${ProjDir}/GRanges/Ref_prot_grange.RDS >> ${LogDir}/GRangesGeneration.log 2>&1
+		-o ${ProjDir}/GRanges >> ${LogDir}/GRangesGeneration.log 2>&1
 	${PBS_O_HOME}/bin/GRanges_generation.R \
 		-c ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt \
 		-g ${GENOME} \
 		-b ${PKGNAME} \
 		-a ${ProjDir}/ProtAnnotation/Orf_prot_annotations.txt \
-		-o ${ProjDir}/GRanges/Orf_prot_grange.RDS >> ${LogDir}/GRangesGeneration.log 2>&1
+		-o ${ProjDir}/GRanges >> ${LogDir}/GRangesGeneration.log 2>&1
 	
 fi
 
@@ -357,12 +357,12 @@ if [ $PeptideCoordinate == 1 ]; then
 		-r ${ProjDir}/NoveltyExplain/Sequence_novelty_reason.RDS \
 		-k ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt \
 		-n ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt \
-		-o ${ProjDir}/PeptPosition/Pept_seq_coordinates.txt > ${LogDir}/PeptideCoordinate.log 2>&1
+		-o ${ProjDir}/PeptPosition/Peptides_coordinates.txt > ${LogDir}/PeptideCoordinate.log 2>&1
 	${PBS_O_HOME}/bin/GRanges_generation.R \
-		-c ${ProjDir}/PeptPosition/Pept_seq_coordinates.txt \
+		-c ${ProjDir}/PeptPosition/Peptides_coordinates.txt \
 		-g ${GENOME} \
 		-b ${PKGNAME} \
-		-o ${ProjDir}/GRanges/Pept_seq_grange.RDS >> ${LogDir}/PeptideCoordinate.log 2>&1
+		-o ${ProjDir}/GRanges >> ${LogDir}/PeptideCoordinate.log 2>&1
 	
 fi
 
@@ -382,7 +382,7 @@ if [ $OperonCoordinate == 1 ]; then
 		-c ${ProjDir}/ProtPosition/Operon_coordinates.txt \
 		-g ${GENOME} \
 		-b ${PKGNAME} \
-		-o ${ProjDir}/GRanges/Operon_grange.RDS >> ${LogDir}/OperonCoordinate.log 2>&1
+		-o ${ProjDir}/GRanges >> ${LogDir}/OperonCoordinate.log 2>&1
 	
 fi
 
@@ -421,7 +421,7 @@ if [ $SangerCoordinate == 1 ]; then
 		-g ${GENOME} \
 		-n ${GenomeName} \
 		-t ${Circular} \
-		-o ${ProjDir}/GRanges/Sanger_seq_grange.RDS >> ${LogDir}/SangerCoordinate.log 2>&1
+		-o ${ProjDir}/GRanges >> ${LogDir}/SangerCoordinate.log 2>&1
 	
 fi
 
@@ -440,7 +440,7 @@ if [ $OrfNoveltyReason == 1 ]; then
 		-n ${ProjDir}/GRanges/Orf_prot_grange.RDS \
 		-p ${ProjDir}/GRanges/Operon_grange.RDS \
 		-e ${ProjDir}/Novel_res/Peptides_location.RDS \
-		-d ${ProjDir}/GRanges/Pept_seq_grange.RDS \
+		-d ${ProjDir}/GRanges/Peptides_grange.RDS \
 		-s ${ProjDir}/GRanges/Sanger_seq_grange.RDS \
 		-g ${ProjDir}/GRanges/Genome_grange.RDS \
 		-a "${AddRBS}" \
