@@ -121,7 +121,7 @@ if [ ! -d ${INTERDIR} ] ; then
 fi
 
 # Loop through all location files
-find ${inputs[@]} -type f -name "*_location.RDS" -print0 | 
+find ${INPUTS[@]} -type f -name "*_location.RDS" -print0 | 
 while IFS= read -r -d '' file; do
     
 	echo "Genomic_position_from_within_proteins.R \
@@ -131,7 +131,7 @@ while IFS= read -r -d '' file; do
 		-n ${ORF} \
 		-o ${INTERDIR}"
 	
-	coord_file=`basename $file | sed "s/_location.RDS/_coordinates.txt/"`
+	coord_file=`basename "$file" | sed "s/_location.RDS/_coordinates.txt/"`
 	
 	echo "GRanges_generation.R \
 		-c ${INTERDIR}/${coord_file} \
