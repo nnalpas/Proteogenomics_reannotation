@@ -171,14 +171,8 @@ pg <- mq_read(
     integer64 = "double")
 
 # Keep evidence IDs for all protein groups that are NOT only identified by site
-pg_not_sites <- pg %>%
-    dplyr::filter(., `Only identified by site` == "") %>%
-    cSplit(
-        indt = ., splitCols = "Evidence IDs",
-        sep = ";", direction = "long") %>%
-    .[["Evidence IDs"]] %>%
-    as.integer(.) %>%
-    unique(.)
+pg_not_sites <- unique(as.integer(
+    pg[pg$`Only identified by site` == "", ][["id"]]))
 
 # Import the fasta files
 fasta <- c(Known = opt$reference, Novel = opt$novel) %>%
@@ -240,61 +234,100 @@ if (all(!prot_ids %in% digest_db$Proteins)) {
         " IDs are missing!"))
 }
 
-# Define all peptide sequence identified and include peptide
-# that lost the first methionine
-evid <- pep %>%
-    dplyr::select(., Sequence, `Amino acid before`) %>%
-    dplyr::left_join(x = evid, y = ., by = "Sequence")
+# Make sure that the 'amino acid before' column contains a single character
+# since a single character is removed via substring later on
+if (any(nchar(pep$`Amino acid before`) > 1)) {
+    stop(paste(
+        "The peptide table column 'Amino acid before' contains more than",
+        "one character, this is not allowed!"))
+}
 
 # List all peptide sequence (including sequence with aa before)
-all_possible_pep <- unique(c(
-    evid[["Sequence"]],
-    paste0(
-        evid[["Amino acid before"]],
-        evid[["Sequence"]])))
+# this is the MAIN data.frame that will be used to define each peptide type
+pep_comp <- dplyr::bind_rows(
+    data.table(
+        table = "evid",
+        evid[, c(
+            "Sequence", "Amino acid before", "Proteins", "Leading proteins",
+            "Reverse", "Potential contaminant", "Protein group IDs")],
+        stringsAsFactors = FALSE),
+    data.table(
+        table = "pep",
+        pep[!pep$Sequence %in% evid$Sequence, c(
+            "Sequence", "Amino acid before", "Proteins", "Leading razor protein",
+            "Reverse", "Potential contaminant", "Protein group IDs")],
+        stringsAsFactors = FALSE) %>%
+        dplyr::rename(., `Leading proteins` = `Leading razor protein`)
+) %>%
+    unique(.) %>%
+    dplyr::mutate(
+        ., DigestSeq = paste0(`Amino acid before`, Sequence))
 
 # Digest all proteins into peptide to get their location and
 # their database of origin
 digest_datab <- unique_to_database(
     digest = digest_db,
-    pep = all_possible_pep)
-
-# Clean up the environment of most memory hungry variables
-# should be uncommented in case of RAM run out
-#rm(digest_db)
+    pep = pep_comp$Sequence)
 
 # Retrieve the peptide location for those peptide that are missing
 # the amino acid before (typically a methionine)
-missing_pep <- evid %>%
-    dplyr::filter(., !Sequence %in% digest_datab$Sequence) %>%
-    mq_rev_con_filt(.) %>%
-    dplyr::mutate(
-        ., DigestSeq = paste0(`Amino acid before`, Sequence)) %>%
-    dplyr::select(., Sequence, DigestSeq) %>%
+pep_comp %<>%
     dplyr::left_join(
-        x = ., y = digest_datab,
-        by = c("DigestSeq" = "Sequence")) %>%
-    dplyr::filter(., !is.na(id)) %>%
-    dplyr::mutate(., start = start + 1) %>%
-    dplyr::select(., -DigestSeq)
-pep_pos <- dplyr::bind_rows(digest_datab, missing_pep) %>%
+        x = ., y = unique(digest_datab[, c("Sequence", "Dbuniqueness")]))
+
+# Check if some peptides are missing
+digest_datab_missing <- data.table::data.table()
+if (any(is.na(pep_comp$Dbuniqueness))) {
+    missing_seq <- pep_comp %>%
+        dplyr::filter(., is.na(Dbuniqueness)) %>%
+        #mq_rev_con_filt(.) %>%
+        .[["DigestSeq"]] %>%
+        unique(.)
+    digest_datab_missing <- unique_to_database(
+        digest = digest_db,
+        pep = missing_seq)
+    pep_comp <- digest_datab_missing %>%
+        dplyr::select(., Sequence, Dbuniqueness_miss = Dbuniqueness) %>%
+        unique(.) %>%
+        dplyr::left_join(
+            x = pep_comp, y = ., by = c("DigestSeq" = "Sequence")) %>%
+        tidyr::unite(
+            data = ., col = "Dbuniqueness", Dbuniqueness, Dbuniqueness_miss,
+            sep = ";", remove = TRUE, na.rm = TRUE) %>%
+        dplyr::mutate(
+            ., Dbuniqueness = ifelse(
+                Dbuniqueness == "", NA_character_, Dbuniqueness))
+}
+
+# Check that the value in Dbuniqueness are valid
+if (any(
+    !na.omit(pep_comp$Dbuniqueness) %in% unique(digest_datab$Dbuniqueness))) {
+    not_allowed <- pep_comp$Dbuniqueness %>%
+        unique(.) %>%
+        na.omit(.) %>%
+        .[!. %in% unique(digest_datab$Dbuniqueness)] %>%
+        paste0(., collapse = " - ")
+    stop(paste0("The Dbuniqueness value is not allowed: ", not_allowed, "!"))
+}
+
+# Compile all peptide positions
+pep_pos <- digest_datab_missing %>%
+    dplyr::mutate(., Sequence = substring(Sequence, 2), start = start + 1) %>%
+    dplyr::bind_rows(digest_datab, .) %>%
     dplyr::select(., -id) %>%
-    dplyr::filter(
-        ., Sequence %in% unique(c(evid[["Sequence"]], pep[["Sequence"]]))) %>%
     dplyr::mutate(., id = Sequence)
 
 # Compile peptide type info for each peptide sequence
-pep_comp <- pep_pos %>%
-    dplyr::group_by(., Sequence) %>%
-    dplyr::summarise(
-        ., DatabID = paste(sort(unique(Dbuniqueness)), collapse = "-")) %>%
-    dplyr::ungroup(.)
-
-# New dataframe to hold info about fasta of origin for each sequence
-evid_match <- evid %>%
-    dplyr::left_join(x = ., y = pep_comp, by = "Sequence") %>%
+pep_comp %<>%
+    dplyr::ungroup(.) %>%
+    dplyr::rename(., DatabID = Dbuniqueness)
+if (length(pep_comp$Sequence) != length(unique(pep_comp$Sequence))) {
+    stop("Duplicate sequence value in 'pep_comp'!")
+}
+pep_comp %<>%
     dplyr::mutate(
-        ., OnlyIdBySite = ifelse(id %in% pg_not_sites, TRUE, FALSE),
+        ., OnlyIdBySite = ifelse(
+            `Protein group IDs` %in% pg_not_sites, TRUE, FALSE),
         group = dplyr::case_when(
             grepl("Known", DatabID) ~ "Known",
             grepl("CON__", Proteins) ~ "Contaminant",
@@ -310,17 +343,16 @@ evid_match <- evid %>%
             TRUE ~ NA_character_
         ))
 
-# Add the group and database info back into the peptide position
-pep_pos <- evid_match %>%
+# Add the group and database info back into all main tables
+evid_match <- pep_comp %>%
     dplyr::select(., Sequence, OnlyIdBySite, group, Database) %>%
-    unique(.) %>%
+    dplyr::left_join(x = evid, y = ., by = "Sequence")
+pep_match <- pep_comp %>%
+    dplyr::select(., Sequence, OnlyIdBySite, group, Database) %>%
+    dplyr::left_join(x = pep, y = ., by = "Sequence")
+pep_pos <- pep_comp %>%
+    dplyr::select(., Sequence, OnlyIdBySite, group, Database) %>%
     dplyr::left_join(x = pep_pos, y = ., by = "Sequence")
-
-# Add the group and database info back into the main peptide table
-pep_match <- evid_match %>%
-    dplyr::select(., Sequence, OnlyIdBySite, group, Database) %>%
-    unique(.) %>%
-    dplyr::left_join(x = pep, y = .)
 
 # Print warning for unidentified sequence origin
 print(paste(
@@ -380,8 +412,8 @@ if (exists("sites")) {
                 group = dplyr::case_when(
                     any(group == "Known") ~ "Known",
                     any(group == "Contaminant") ~ "Contaminant",
-                    any(group == "Novel") ~ "Novel",
                     any(group == "Reverse") ~ "Reverse",
+                    any(group == "Novel") ~ "Novel",
                     TRUE ~ NA_character_
                 ),
                 Database = dplyr::case_when(
