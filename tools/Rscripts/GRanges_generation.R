@@ -70,7 +70,7 @@ if (interactive()) {
             caption = "Choose an annotations file!",
             multi = FALSE),
         output = readline(
-            prompt = "Define the output filename (with .RDS extension)!"))
+            prompt = "Define the output folder!"))
     
 } else {
     
@@ -98,8 +98,8 @@ if (interactive()) {
             metavar = "character"),
         make_option(
             opt_str = c("-o", "--output"),
-            type = "character", default = "", 
-            help = "Output file name [default= %default]",
+            type = "character", default = "GRanges", 
+            help = "Output folder name [default= %default]",
             metavar = "character"))
     
     # Parse the parameters provided on command line by user
@@ -152,18 +152,20 @@ if (
 }
 
 # Check whether output parameter was provided
-if (
+if (identical(opt$output, NULL) |
     identical(opt$output, "") |
-    identical(opt$output, character(0)) |
-    length(grep("\\.RDS$", opt$output)) == 0) {
+    identical(opt$output, character(0))) {
     
-    print_help(opt_parser)
-    stop(paste("Output filename is required (with .RDS extension)!"))
+    opt$output <- "./GRanges"
+    warning(paste0(
+        "Output results to '",
+        opt$output,
+        "'!"))
     
 }
 
 # Create output directory if not already existing
-dir.create(dirname(opt$output))
+dir.create(opt$output)
 
 
 
@@ -309,7 +311,9 @@ names(grange) <- grange_data$id
 # Export the grange for reuse at later stage
 saveRDS(
     object = grange,
-    file = opt$output)
+    file = paste0(
+        opt$output, "/",
+        sub("_coordinates.txt$", "_grange.RDS", basename(opt$coordinates))))
 
 # Define end time
 print(paste("Complete", format(Sys.time(), "%Y-%m-%d %H:%M:%S")))
