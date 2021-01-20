@@ -120,23 +120,24 @@ if [ ! -d ${INTERDIR} ] ; then
 	mkdir ${INTERDIR}
 fi
 
-# Loop through
-for file in `find ${inputs[@]} -name "*_location.RDS"`; do
-	
-	Genomic_position_from_within_proteins.R \
-		-p "${file}" \
+# Loop through all location files
+find ${inputs[@]} -type f -name "*_location.RDS" -print0 | 
+while IFS= read -r -d '' file; do
+    
+	echo "Genomic_position_from_within_proteins.R \
+		-p ${file} \
 		-r ${NOVELTY} \
 		-k ${REF} \
 		-n ${ORF} \
-		-o ${INTERDIR}
+		-o ${INTERDIR}"
 	
 	coord_file=`basename $file | sed "s/_location.RDS/_coordinates.txt/"`
 	
-	GRanges_generation.R \
-		-c "${INTERDIR}/${coord_file}" \
+	echo "GRanges_generation.R \
+		-c ${INTERDIR}/${coord_file} \
 		-g ${GENOME} \
 		-b ${BSGENOME} \
-		-o ${WKDIR}
+		-o ${WKDIR}"
 	
 done
 
