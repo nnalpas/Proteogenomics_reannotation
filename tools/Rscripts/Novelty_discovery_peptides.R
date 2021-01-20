@@ -327,19 +327,20 @@ warning(paste(
     "evidence entries were reclassified as 'Not novel'!"))
 warning(paste(
     "Exactly", length(which(is.na(evid_reason$NoveltyReason) & evid_reason$group == "Novel")),
-    "evidence entries were reclassified as 'Reverse'!"))
+    "evidence entries were reclassified as 'Unknown'!",
+    "These will require manual annotation!"))
 evid_reason %<>%
     dplyr::mutate(
         .,
         group = dplyr::case_when(
             is.na(group) ~ "Known",
             (!is.na(NoveltyReason) & NoveltyReason == "Not novel") ~ "Known",
-            (is.na(NoveltyReason) & group == "Novel") ~ "Reverse",
+            (is.na(NoveltyReason) & group == "Novel") ~ "Unknown",
             TRUE ~ group),
         Database = dplyr::case_when(
             is.na(Database) ~ "Target",
             (!is.na(NoveltyReason) & NoveltyReason == "Not novel") ~ "Target",
-            (is.na(NoveltyReason) & Database == "Novel") ~ "Decoy",
+            (is.na(NoveltyReason) & Database == "Novel") ~ "Unknown",
             TRUE ~ Database))
 
 
@@ -389,16 +390,18 @@ textsize <- 20
 # Visualise the PEP for evidences between databases as density
 evid_reason$Database <- factor(
     x = evid_reason$Database,
-    levels = c("Target", "Decoy", "Novel"),
+    levels = c("Target", "Decoy", "Novel", "Unknown"),
     ordered = TRUE)
 
 # Define colour code for database
 database_colours <- c(
-    `Target` = "#2180FC", `Decoy` = "#ABA9A9", `Novel` = "#F23D3D")
+    `Target` = "#2180FC", `Decoy` = "#ABA9A9",
+    `Novel` = "#F23D3D")
 
 # 
 toplot <- evid_reason %>%
-    dplyr::filter(., PEP < 1)
+    dplyr::filter(., PEP < 1) %>%
+    dplyr::filter(., Database != "Unknown")
 toplot$Database <- factor(
     x = toplot$Database,
     levels = c("Decoy", "Novel", "Target"),
