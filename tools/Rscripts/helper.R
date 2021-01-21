@@ -415,7 +415,29 @@ best_blast <- function(
 
 
 
-### Utility function for data reformatting -------------------------------
+### Functions connected to generation of summarizedExperiment ------------
+
+# Function to generate a phenodata file using exact column names
+required_file_summExp <- function(my_data, my_col, input_path) {
+    
+    sample_name <- grep(my_col, colnames(my_data), value = TRUE) %>%
+        grep("( peptides|___(1|2|3))$", ., value = TRUE, invert = TRUE)
+    
+    if (length(sample_name) == 0) {
+        stop(paste0(
+            "The columns '", j,
+            "' are non-existing in the dataset: ",
+            input_path))
+    }
+    
+    data.table::data.table(
+        SampleName = sample_name,
+        Description = sample_name,
+        SummExpSplit = my_col,
+        stringsAsFactors = FALSE
+    )
+    
+}
 
 # Function to generate a single summarized experiment object
 make_SummarizedExperiment <- function(name, assay, coldata) {
@@ -443,6 +465,10 @@ make_SummarizedExperiment <- function(name, assay, coldata) {
         assays = my_assay, colData = my_coldata)
     
 }
+
+
+
+### Utility function for data reformatting -------------------------------
 
 # Function to clean up the UniProt IDs (in case regular expression
 # was missing in andromeda)
