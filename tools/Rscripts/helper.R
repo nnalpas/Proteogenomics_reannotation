@@ -442,27 +442,47 @@ required_file_summExp <- function(my_data, my_col, input_path) {
 # Function to generate a single summarized experiment object
 make_SummarizedExperiment <- function(name, assay, coldata) {
     
-    my_expr <- data.table::fread(
-        input = assay, sep = "\t", quote = "",
-        stringsAsFactors = FALSE,
-        colClasses = "character", header = TRUE)
+    # Import and format the phenodata
     my_pheno <- data.table::fread(
         input = coldata, sep = "\t", quote = "",
         stringsAsFactors = FALSE,
         colClasses = "character", header = TRUE)
-    
-    my_assay <- my_expr %>%
-        dplyr::select(., ID, my_pheno$SampleName) %>%
-        tibble::column_to_rownames(.data = ., var = "ID") %>%
-        dplyr::mutate_at(., my_pheno$SampleName, as.double) %>%
-        list(.) %>%
-        set_names(name)
     my_coldata <- my_pheno %>%
-        dplyr::mutate(., ID = SampleName) %>%
-        tibble::column_to_rownames(.data = ., var = "ID")
+        dplyr::mutate(., id = SampleName) %>%
+        tibble::column_to_rownames(.data = ., var = "id")
     
-    SummarizedExperiment(
-        assays = my_assay, colData = my_coldata)
+    # Collect expression from grange metadata or directly from file
+    is_grange <- grepl("RDS$", assay)
+    if (is_grange) {
+        my_expr <- readRDS(assay)
+        my_assay <- my_expr %>%
+            values(.) %>%
+            .[, c("id", my_pheno$SampleName)] %>%
+            set_rownames(.[["id"]])
+        my_assay$id <- NULL
+        my_assay %<>%
+            list(.) %>%
+            set_names(name)
+        my_rowRanges <- my_expr
+        values(my_rowRanges) <- my_rowRanges %>%
+            values(.) %>%
+            .[, !(colnames(.) %in% my_pheno$SampleName)]
+        SummarizedExperiment(
+            assays = my_assay, rowRanges = my_rowRanges, colData = my_coldata)
+    } else {
+        my_expr <- data.table::fread(
+            input = assay, sep = "\t", quote = "",
+            stringsAsFactors = FALSE,
+            colClasses = "character", header = TRUE)
+        my_assay <- my_expr %>%
+            dplyr::select(., id, my_pheno$SampleName) %>%
+            tibble::column_to_rownames(.data = ., var = "id") %>%
+            dplyr::mutate_at(., my_pheno$SampleName, as.double) %>%
+            list(.) %>%
+            set_names(name)
+        SummarizedExperiment(
+            assays = my_assay, colData = my_coldata)
+    }
     
 }
 
