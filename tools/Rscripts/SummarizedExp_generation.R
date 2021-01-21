@@ -42,21 +42,82 @@ if (interactive()) {
 # Load the required packages
 library(magrittr)
 library(MultiAssayExperiment)
-
-my_plots <- list()
+library(optparse)
 
 
 
 ### Parameters setting up ------------------------------------------------
 
-#
-opt <- list(
-    my_folder = "H:/data/Synechocystis_6frame/SummarizedExp",
-    my_expr = NULL,
-    my_pheno = NULL,
-    my_title = "",
-    output = NULL
-)
+# Define input parameters (interactively or from command line)
+if (interactive()) {
+    
+    # Define the list of input parameters
+    opt <- list(
+        my_folder = readline(
+            prompt = "Define the input folder (containing multiple expr and pheno files!"),
+        my_expr = choose.files(
+            caption = "Choose an expression value file!",
+            multi = FALSE),
+        my_pheno = choose.files(
+            caption = "Choose a phenodata file!",
+            multi = FALSE),
+        prefix = readline(
+            prompt = "Define a prefix name for the output multi assay file!"),
+        output = readline(
+            prompt = "Define the output folder!"))
+    
+} else {
+    
+    # Define the list of command line parameters
+    option_list <- list(
+        make_option(
+            opt_str = c("-i", "--my_folder"),
+            type = "character", default = "",
+            help = "Input folder (containing multiple expr and pheno files)",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-e", "--my_expr"),
+            type = "character", default = "",
+            help = "Input expr file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-x", "--my_pheno"),
+            type = "character", default = "",
+            help = "Input pheno file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-p", "--prefix"),
+            type = "character", default = "", 
+            help = "Define a prefix for the multi assay file",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-o", "--output"),
+            type = "character", default = "SummarizedExp", 
+            help = "Output folder name [default= %default]",
+            metavar = "character"))
+    
+    # Parse the parameters provided on command line by user
+    opt_parser <- OptionParser(option_list = option_list)
+    opt <- parse_args(opt_parser)
+    
+}
+
+# Check whether input parameter was provided
+if ((identical(opt$my_folder, NULL) |
+     identical(opt$my_folder, "") |
+     identical(opt$my_folder, character(0))) &
+    ((identical(opt$my_expr, NULL) |
+      identical(opt$my_expr, "") |
+      identical(opt$my_expr, character(0))) |
+     (identical(opt$my_pheno, NULL) |
+      identical(opt$my_pheno, "") |
+      identical(opt$my_pheno, character(0))))) {
+    
+    print_help(opt_parser)
+    stop(paste(
+        "Either a input folder or both expr and pheno inputs are required!"))
+    
+}
 
 # Check whether output parameter was provided
 if (
@@ -80,14 +141,14 @@ dir.create(opt$output)
 # Identify all files to import
 if (!is.null(opt[["my_folder"]])) {
     my_exprs <- list.files(
-        path = opt[["my_folder"]], pattern = "*_expr.txt", all.files = TRUE,
+        path = opt[["my_folder"]], pattern = "*_expr\\.(txt|RDS)", all.files = TRUE,
         full.names = TRUE, recursive = TRUE) %>%
         data.frame(
-            Name = basename(.) %>% sub("_expr.txt", "", .),
+            Name = basename(.) %>% sub("_expr\\.(txt|RDS)", "", .),
             Expr = .,
             stringsAsFactors = FALSE)
     my_phenos <- list.files(
-        path = opt[["my_folder"]], pattern = "*pheno.txt", all.files = TRUE,
+        path = opt[["my_folder"]], pattern = "*pheno\\.txt", all.files = TRUE,
         full.names = TRUE, recursive = TRUE) %>%
         data.frame(
             Name = basename(.) %>% sub("_pheno.txt", "", .),
@@ -96,7 +157,9 @@ if (!is.null(opt[["my_folder"]])) {
     my_files <- dplyr::full_join(x = my_exprs, y = my_phenos)
 } else {
     my_files <- data.frame(
-        Name = opt[["my_expr"]] %>% basename(.) %>% sub("_expr.txt", "", .),
+        Name = opt[["my_expr"]] %>%
+            basename(.) %>%
+            sub("_expr\\.(txt|RDS)", "", .),
         Expr = opt[["my_expr"]],
         Pheno = opt[["my_pheno"]],
         stringsAsFactors = FALSE)
@@ -134,6 +197,6 @@ for (x in names(all_summexp)) {
 # Export all summarized experiment object for later re-use
 saveRDS(
     object = multi_assay,
-    file = paste0(opt$output, "/", opt$my_title, "MultiAssay.RDS"))
+    file = paste0(opt$output, "/", opt$prefix, "MultiAssay.RDS"))
 
 
