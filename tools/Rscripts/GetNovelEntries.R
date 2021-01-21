@@ -457,7 +457,7 @@ if (exists("sites")) {
         saveRDS(
             object = site_pos,
             file = paste(
-                opt$output, "/", x, "_location.RDS", sep = ""))
+                opt$output, "/", x, "Sites_location.RDS", sep = ""))
         
     }
     
