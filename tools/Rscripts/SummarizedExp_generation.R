@@ -1,5 +1,3 @@
-
-
 #!/usr/bin/env Rscript
 
 # This script generates a SummarizedExperiment object from inputs
