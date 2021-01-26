@@ -461,6 +461,7 @@ make_SummarizedExperiment <- function(name, assay, coldata) {
             set_rownames(.[["id"]])
         my_assay$id <- NULL
         my_assay %<>%
+			as.matrix(.) %>%
             list(.) %>%
             set_names(name)
         my_rowRanges <- my_expr
@@ -478,6 +479,7 @@ make_SummarizedExperiment <- function(name, assay, coldata) {
             dplyr::select(., id, my_pheno$SampleName) %>%
             tibble::column_to_rownames(.data = ., var = "id") %>%
             dplyr::mutate_at(., my_pheno$SampleName, as.double) %>%
+			as.matrix(.) %>%
             list(.) %>%
             set_names(name)
         SummarizedExperiment(
