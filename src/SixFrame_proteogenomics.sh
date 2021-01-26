@@ -524,10 +524,10 @@ if [ $SummarizedExp == 1 ]; then
 	
 	SummarizedExpPreparation.sh \
 		-o ${ProjDir}/SummarizedExp \
-		${ProjDir}/ORF_validation ${ProjDir}/MaxQuant ${ProjDir}/GRanges
+		${ProjDir}/ORF_validation ${ProjDir}/MaxQuant ${ProjDir}/GRanges > ${LogDir}/SummarizedExp.log 2>&1
 	SummarizedExp_generation.R \
 		-i ${ProjDir}/SummarizedExp \
-		-o ${ProjDir}/SummarizedExp
+		-o ${ProjDir}/SummarizedExp >> ${LogDir}/SummarizedExp.log 2>&1
 	
 fi
 
