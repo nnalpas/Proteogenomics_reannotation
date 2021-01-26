@@ -54,8 +54,6 @@ if (interactive()) {
         input = choose.files(
             caption = "Choose input MaxQuant txt file or GRange RDS file!",
             multi = FALSE),
-        prefix = readline(
-            prompt = "Define a prefix for the output filenames!"),
         grange = readline(
             prompt = "The input is a GRange object (logical)!") %>%
             as.logical(.),
@@ -70,11 +68,6 @@ if (interactive()) {
             opt_str = c("-i", "--input"),
             type = "character", default = "",
             help = "Input MaxQuant txt file or GRange RDS file (containing abundance columns)",
-            metavar = "character"),
-        make_option(
-            opt_str = c("-p", "--prefix"),
-            type = "character", default = "", 
-            help = "Define a prefix for the output filenames",
             metavar = "character"),
         make_option(
             opt_str = c("-g", "--grange"),
@@ -212,8 +205,6 @@ if (!opt[["grange"]]) {
 # Define output filename
 out_name <- opt[["input"]] %>%
     basename(.) %>%
-    c(opt[["prefix"]], .) %>%
-    paste0(., collapse = "_") %>%
     paste0(opt[["output"]], "/", .) %>%
     sub("\\.(txt|RDS)", "", .)
 
