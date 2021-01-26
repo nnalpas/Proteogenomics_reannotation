@@ -41,7 +41,7 @@ if (interactive()) {
 # Load the required packages (or install if not already in library)
 library(magrittr)
 library(optparse)
-
+library(data.table)
 
 
 ### Parameters setting up ------------------------------------------------
