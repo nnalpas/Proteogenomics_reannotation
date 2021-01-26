@@ -69,7 +69,7 @@ find ${INPUTS[@]} -type f \( -name "*proteinGroups.txt" -o -name "*Sites_grange.
 while IFS= read -r -d '' file; do
     
 	ext=`basename "$file" | sed 's/.+\.//'`
-	prefix=`basename "$file" | sed 's/(.+)_.+/\1/'`
+	#prefix=`basename "$file" | sed -E 's/(.+)_.+/\1/'`
 	isgrange="FALSE"
 	
 	if [[ "${ext}" == "RDS" ]]; then
@@ -78,7 +78,7 @@ while IFS= read -r -d '' file; do
 	
 	SummarizedExp_MQ_preparation.R \
 		-i "${file}" \
-		-p "${prefix}" \
+		-p "" \
 		-g "${isgrange}" \
 		-o ${WKDIR}
 	
