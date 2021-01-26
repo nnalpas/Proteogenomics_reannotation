@@ -503,6 +503,32 @@ if [ $MaxquantValidation == 1 ]; then
 	
 	singularity run $mq_version $mqpar_valid > ${LogDir}/MaxquantValidation.log 2>&1
 	
+	find ${ProjDir}/ORF_validation/ -type f -name "proteinGroups.txt" -print0 | 
+	while IFS= read -r -d '' file; do
+		prefix=`dirname "$file" | xargs dirname | xargs dirname | xargs basename`
+		outdir=`dirname "$file"`
+		outname=`basename "$file" | sed "s/^/${prefix}_/"`
+		mv "${file}" "${outdir}/${outname}"
+	done
+	
+fi
+
+
+
+###################################
+# SummarizedExperiment generation #
+###################################
+
+# Check whether to generate the summarizedExperiment for all datasets
+if [ $SummarizedExp == 1 ]; then
+	
+	SummarizedExpPreparation.sh \
+		-o ${ProjDir}/SummarizedExp \
+		${ProjDir}/ORF_validation ${ProjDir}/MaxQuant ${ProjDir}/GRanges
+	SummarizedExp_generation.R \
+		-i ${ProjDir}/SummarizedExp \
+		-o ${ProjDir}/SummarizedExp
+	
 fi
 
 
