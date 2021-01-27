@@ -5,7 +5,7 @@ TaxId="1148"
 # ProcessSteps
 GetOrf=0
 MaxquantProc=0
-GetNovelEntries=1
+GetNovelEntries=0
 GetNCBIBlastDb=0
 MakeBlastDbProt=0
 MakeBlastDbNuc=0
@@ -18,7 +18,7 @@ ProteinAnnotation=0
 BSgenomeForge=0
 GRangeCreate=0
 PepNoveltyReason=0
-SequencesCoordinate=1
+SequencesCoordinate=0
 OperonCoordinate=0
 SangerCoordinate=0
 OrfNoveltyReason=0
