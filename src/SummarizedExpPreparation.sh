@@ -68,7 +68,7 @@ fi
 find ${INPUTS[@]} -type f \( -name "*proteinGroups.txt" -o -name "*Sites_grange.RDS" \) -print0 | 
 while IFS= read -r -d '' file; do
     
-	ext=`basename "$file" | sed 's/.+\.//'`
+	ext=`basename "$file" | sed -E 's/.+\.//'`
 	isgrange="FALSE"
 	
 	if [[ "${ext}" == "RDS" ]]; then
