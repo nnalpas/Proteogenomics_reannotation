@@ -467,7 +467,8 @@ make_SummarizedExperiment <- function(name, assay, coldata) {
         my_rowRanges <- my_expr
         GenomicRanges::values(my_rowRanges) <- my_rowRanges %>%
             GenomicRanges::values(.) %>%
-            .[, !(colnames(.) %in% my_pheno$SampleName)]
+            .[, !(colnames(.) %in% my_pheno$SampleName)] %>%
+            .[, grep("___(1|2|3)$", colnames(.), invert = TRUE)]
         SummarizedExperiment(
             assays = my_assay, rowRanges = my_rowRanges, colData = my_coldata)
     } else {
@@ -477,8 +478,8 @@ make_SummarizedExperiment <- function(name, assay, coldata) {
             colClasses = "character", header = TRUE)
         my_assay <- my_expr %>%
             dplyr::select(., id, my_pheno$SampleName) %>%
-            tibble::column_to_rownames(.data = ., var = "id") %>%
             dplyr::mutate_at(., my_pheno$SampleName, as.double) %>%
+            tibble::column_to_rownames(.data = ., var = "id") %>%
 			as.matrix(.) %>%
             list(.) %>%
             set_names(name)
