@@ -146,7 +146,7 @@ if (length(my_file_type) != 1) {
 # Import the expression data
 if (opt[["grange"]]) {
     my_data <- readRDS(opt[["input"]]) %>%
-        values(.)
+        GenomicRanges::values(.)
 } else {
     my_data <- data.table::fread(
         input = opt[["input"]], sep = "\t", quote = "", header = TRUE,

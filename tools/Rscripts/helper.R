@@ -456,7 +456,7 @@ make_SummarizedExperiment <- function(name, assay, coldata) {
     if (is_grange) {
         my_expr <- readRDS(assay)
         my_assay <- my_expr %>%
-            values(.) %>%
+            GenomicRanges::values(.) %>%
             .[, c("id", my_pheno$SampleName)] %>%
             set_rownames(.[["id"]])
         my_assay$id <- NULL
@@ -465,8 +465,8 @@ make_SummarizedExperiment <- function(name, assay, coldata) {
             list(.) %>%
             set_names(name)
         my_rowRanges <- my_expr
-        values(my_rowRanges) <- my_rowRanges %>%
-            values(.) %>%
+        GenomicRanges::values(my_rowRanges) <- my_rowRanges %>%
+            GenomicRanges::values(.) %>%
             .[, !(colnames(.) %in% my_pheno$SampleName)]
         SummarizedExperiment(
             assays = my_assay, rowRanges = my_rowRanges, colData = my_coldata)
