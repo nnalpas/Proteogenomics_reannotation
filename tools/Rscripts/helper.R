@@ -461,7 +461,7 @@ make_SummarizedExperiment <- function(name, assay, coldata) {
             set_rownames(.[["id"]])
         my_assay$id <- NULL
         my_assay %<>%
-			as.matrix(.) %>%
+            as.matrix(.) %>%
             list(.) %>%
             set_names(name)
         my_rowRanges <- my_expr
