@@ -542,7 +542,8 @@ fi
 if [ $InterproScan == 1 ]; then
 	
 	InterproScan.sh \
-		-o test \
+		-o ${ProjDir}/InterPro \
+		-t ${THREADS} \
 		${UNIREFPROT} ${OTHERPROT} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/InterproScan.log 2>&1
 	
 fi
