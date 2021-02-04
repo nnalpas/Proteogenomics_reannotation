@@ -12,10 +12,10 @@ display_usage() {
 		Usage: $0 [Options] <Input FASTA 1> <...> <FASTA N>"
 	echo "
 		Options:
-        	-o	[str]	The output directory.
+			-o	[str]	The output directory.
 			-s	[str]	The type of the input sequences (dna/rna (n) or protein (p) [default]).
 			-t	[int]	The number of threads.
-        	-h	[]	To display the help.
+			-h	[]	To display the help.
 	"
 }
 
@@ -80,7 +80,7 @@ fi
 
 # Loop through all proteinGroups or sites files
 ls -1 ${INPUTS[@]} | 
-while IFS= read -r -d '' file; do
+while read file; do
     
 	outfile=`echo "$file" | sed -E 's/(.+)\..+?/\1/'`
 	
