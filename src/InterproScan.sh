@@ -82,18 +82,18 @@ fi
 ls -1 ${INPUTS[@]} | 
 while read file; do
     
-	outfile=`echo "$file" | sed -E 's/(.+)\..+?/\1/'`
+	outfile=`basename "$file" | sed -E 's/(.+)\..+?/\1/'`
 	
 	interproscan.sh \
-	--output-file-base "${outfile}" \
-	--input "${file}" \
-	--goterms \
-	--pathways \
-	--seqtype ${SEQTYPE} \
-	--tempdir "${WKDIR}/TMP" \
-	--cpu ${THREADS}
+		--output-file-base "${WKDIR}/${outfile}" \
+		--input "${file}" \
+		--goterms \
+		--pathways \
+		--seqtype ${SEQTYPE} \
+		--tempdir "${WKDIR}/TMP" \
+		--cpu ${THREADS}
 
-	sed -iE "Protein accession\tSequence MD5 digest\tSequence length\tAnalysis\tSignature accession\tSignature description\tStart location\tStop location\tScore\tStatus\tDate\tInterPro accession\tInterPro description\tGO annotations\tPathways annotations" ${outfile}.tsv
+	sed -iE "1 i\Protein accession\tSequence MD5 digest\tSequence length\tAnalysis\tSignature accession\tSignature description\tStart location\tStop location\tScore\tStatus\tDate\tInterPro accession\tInterPro description\tGO annotations\tPathways annotations" ${outfile}.tsv
 	
 done
 
