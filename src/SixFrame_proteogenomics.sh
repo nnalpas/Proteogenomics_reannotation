@@ -533,3 +533,18 @@ if [ $SummarizedExp == 1 ]; then
 fi
 
 
+
+###########################
+# InterProScan annotation #
+###########################
+
+# Check whether to get annotation via InterProScan for all fasta files
+if [ $InterproScan == 1 ]; then
+	
+	InterproScan.sh \
+		-o test \
+		${UNIREFPROT} ${OTHERPROT} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/InterproScan.log 2>&1
+	
+fi
+
+
