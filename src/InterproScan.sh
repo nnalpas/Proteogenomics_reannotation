@@ -93,7 +93,7 @@ while read file; do
 		--tempdir "${WKDIR}/TMP" \
 		--cpu ${THREADS}
 
-	sed -iE "1 i\Protein accession\tSequence MD5 digest\tSequence length\tAnalysis\tSignature accession\tSignature description\tStart location\tStop location\tScore\tStatus\tDate\tInterPro accession\tInterPro description\tGO annotations\tPathways annotations" ${outfile}.tsv
+	sed -iE "1 i\Protein accession\tSequence MD5 digest\tSequence length\tAnalysis\tSignature accession\tSignature description\tStart location\tStop location\tScore\tStatus\tDate\tInterPro accession\tInterPro description\tGO annotations\tPathways annotations" "${WKDIR}/${outfile}.tsv"
 	
 done
 
