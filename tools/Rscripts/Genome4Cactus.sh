@@ -24,17 +24,26 @@ for infile in `find /home/tu/tu_tu/tu_kxmna01/work/Synechocystis_6frame/Synteny 
 	grep $mypattern assembly_summary_taxon_complete_genomes.txt | awk -v f=$infile '{print f "\t" $0}'  >> downloaded_assembly.txt
 done
 
-# Use vim to clean up the organism name (remove parentheses '()' and make all names unique (i.e. 'Synechococcus sp. WH 8101', 'Synechocystis sp. PCC 6803'). This can be automatised as well.
+# Use vim to clean up the organism name (remove parentheses '()' or '[]', slashes '/', equal '=' and make all names unique (i.e. 'Synechococcus sp. WH 8101', 'Synechocystis sp. PCC 6803'). This can be automatised as well.
 
 # Replace all space by underscore in organisms name
 awk -F "\t" '{OFS = "\t"; gsub(/ /,"_",$9); print}' downloaded_assembly.txt > downloaded_assembly_format.txt
 
-# Create the Newick/map file required for Cactus
+# Create the Newick file required for Cactus
 echo -n "(" > evolverCyanobacteria.txt
 cut -f9 downloaded_assembly_format.txt | sed ':a;N;$!ba;s/\n/:1.0,/g' >> evolverCyanobacteria.txt
-#awk -F "\t" '{OFS=":1.0,"; print}'
 sed -i "s/$/:1.0);/" evolverCyanobacteria.txt
 echo "" >> evolverCyanobacteria.txt
-awk -F '\t' '{print $9 " " $1}' downloaded_assembly_format.txt >> evolverCyanobacteria.txt
 
+# Keep only the first sequence for each organism (make sure this is the chromosome sequence and not plasmid) and format the header within each fasta
+cut -f1,9 downloaded_assembly_format.txt |
+while IFS=$'\t' read -r -a myArray; do
+	file=`basename ${myArray[0]} | sed "s/\\.gz$//"`
+	outfile="`pwd`/${myArray[1]}.fasta"
+	awk -v RS='>' 'NR>1 { gsub("\n", ";", $0); sub(";$", "", $0); print ">"$0 }' "${file}" | head -n 1 | tr ';' '\n' | grep -vE "^>" > ${myArray[1]}.fasta
+	sed -i "1i >${myArray[1]}" "${myArray[1]}.fasta"
+	echo "${myArray[1]} ${outfile}" >> evolverCyanobacteria.txt
+done
 
+mkdir ./Synteny/TMP
+nohup cactus ./Synteny/jobStore ./Synteny/evolverCyanobacteria.txt ./Synteny/evolverCyanobacteria.hal --stats --binariesMode local --logDebug --workDir ./Synteny/TMP --buildAvgs > ./Synteny/cactus.log 2>&1 &
