@@ -46,6 +46,6 @@ while IFS=$'\t' read -r -a myArray; do
 done
 
 mkdir ./Synteny/TMP
-nohup cactus ./Synteny/jobStore ./Synteny/evolverCyanobacteria.txt ./Synteny/evolverCyanobacteria.hal --stats --binariesMode local --logDebug --workDir ./Synteny/TMP --buildAvgs --maxMemory 5G --restart > ./Synteny/cactus.log 2>&1 &
+nohup cactus ./Synteny/jobStore ./Synteny/evolverCyanobacteria.txt ./Synteny/evolverCyanobacteria.hal --stats --binariesMode local --logDebug --workDir ./Synteny/TMP --buildAvgs --maxCores 6 --maxMemory 28G --restart > ./Synteny/cactus.log 2>&1 &
 
 
