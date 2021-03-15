@@ -45,7 +45,26 @@ while IFS=$'\t' read -r -a myArray; do
 	echo "${myArray[1]} ${outfile}" >> evolverCyanobacteria.txt
 done
 
-mkdir ./Synteny/TMP
-nohup cactus ./Synteny/jobStore ./Synteny/evolverCyanobacteria.txt ./Synteny/evolverCyanobacteria.hal --stats --binariesMode local --logDebug --workDir ./Synteny/TMP --buildAvgs --maxCores 6 --maxMemory 28G --restart > ./Synteny/cactus.log 2>&1 &
 
+
+
+
+
+
+
+
+# Attempt to run Cactus on my data
+mkdir ./Synteny/TMP
+nohup cactus ./Synteny/jobStore ./Synteny/evolverCyanobacteria.txt ./Synteny/evolverCyanobacteria.hal --stats --binariesMode local --logDebug --workDir ./Synteny/TMP --buildAvgs --defaultMemory 4Gi --defaultCores 2 --defaultDisk 100Gi --restart > ./Synteny/cactus.log 2>&1 &
+
+nohup cactus ./Synteny_2021-03-02/jobStore ./Synteny_2021-03-02/evolverCyanobacteria.txt ./Synteny_2021-03-02/evolverCyanobacteria.hal --stats --binariesMode local --logDebug --workDir ./Synteny_2021-03-02/TMP --buildAvgs --defaultMemory 12Gi --defaultCores 2 --defaultDisk 100Gi > ./Synteny_2021-03-02/cactus.log 2>&1 &
+
+
+nohup singularity exec ./Cactus_docker_1.3.0.sif cactus ./Synteny_2021-03-02/jobStore ./Synteny_2021-03-02/evolverCyanobacteria.txt ./Synteny_2021-03-02/evolverCyanobacteria.hal --stats --binariesMode local --logDebug --workDir ./Synteny_2021-03-02/TMP --buildAvgs > ./Synteny_2021-03-02/cactus.log 2>&1 &
+
+nohup singularity exec ./Cactus_docker_1.3.0.sif cactus ./Synteny_2021-03-02/jobStore ./Synteny_2021-03-02/evolverMycobacterium.txt ./Synteny_2021-03-02/evolverMycobacterium.hal --stats --binariesMode local --logDebug --debugWorker --maxMemory 30Gi --maxDisk 600Gi --maxCores 6 --workDir ./Synteny_2021-03-02/TMP --buildAvgs > ./Synteny_2021-03-02/cactus.log 2>&1 &
+nohup singularity exec ./Cactus_docker_1.3.0.sif cactus ./Synteny_2021-03-02/jobStore ./Synteny_2021-03-02/evolverMycobacterium.txt ./Synteny_2021-03-02/evolverMycobacterium.hal --stats --binariesMode local --logDebug --debugWorker --maxMemory 30Gi --maxDisk 600Gi --maxCores 6 --workDir ./Synteny_2021-03-02/TMP --buildAvgs --restart > ./Synteny_2021-03-02/cactus.log 2>&1 &
+
+
+singularity exec /mnt/vol1000/Cactus_docker_1.3.0.sif cactus-prepare examples/evolverMammals.txt --outDir steps-output --outSeqFile steps-output/evolverMammals.txt --outHal steps-output/evolverMammals.hal --jobStore jobstore
 
