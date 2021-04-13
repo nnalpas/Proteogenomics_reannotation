@@ -556,7 +556,7 @@ fi
 ######################
 
 # Check whether to predict signal sequence via signalp for all fasta files
-if [ SignalpPrediction == 1 ]; then
+if [ $SignalpPrediction == 1 ]; then
 	
 	mkdir -p ${ProjDir}/Signalp
 	signalp \
