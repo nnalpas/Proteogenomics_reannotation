@@ -50,6 +50,7 @@ module load emboss/6.6.0
 module load devel/perl/5.26
 module load diamond/2.0.2
 module load interproscan/5.48-83.0
+module load signalp/5.0b
 
 # Create project directory
 ProjDir=${PBS_O_INITDIR}/${ProjectName}
