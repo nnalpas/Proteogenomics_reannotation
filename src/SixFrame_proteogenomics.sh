@@ -549,3 +549,24 @@ if [ $InterproScan == 1 ]; then
 fi
 
 
+
+######################
+# Signalp prediction #
+######################
+
+# Check whether to predict signal sequence via signalp for all fasta files
+if [ SignalpPrediction == 1 ]; then
+	
+	mkdir -p ${ProjDir}/Signalp
+	signalp \
+		-fasta ${ProjDir}/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta \
+		-format "long" \
+		-gff3 \
+		-mature \
+		-org ${Organism} \
+		-prefix ${ProjDir}/Signalp/Synechocystis_sp_PCC_6803_cds_aa
+		-stdout \ > ${LogDir}/SignalpPrediction.log 2>&1
+	
+fi
+
+

@@ -25,8 +25,9 @@ OrfNoveltyReason=0
 ClustalAlign=0
 ConservationBlast=0
 MaxquantValidation=0
-SummarizedExp=1
+SummarizedExp=0
 InterproScan=0
+SignalpPrediction=1
 
 # EmbossParam
 FRAME=6
@@ -89,4 +90,8 @@ BlastnParam=''
 
 # MaxQuantValidationParam
 mqpar_valid="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_validation_novel_ORF_TMT/mqpar_posix.xml"
+
+# SignalpParam
+Organism="gram-"
+
 
