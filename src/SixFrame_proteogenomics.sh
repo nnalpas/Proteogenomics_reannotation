@@ -565,8 +565,7 @@ if [ $SignalpPrediction == 1 ]; then
 		-gff3 \
 		-mature \
 		-org ${Organism} \
-		-prefix ${ProjDir}/Signalp/Synechocystis_sp_PCC_6803_cds_aa
-		-stdout \ > ${LogDir}/SignalpPrediction.log 2>&1
+		-prefix ${ProjDir}/Signalp/Synechocystis_sp_PCC_6803_cds_aa > ${LogDir}/SignalpPrediction.log 2>&1
 	
 fi
 
