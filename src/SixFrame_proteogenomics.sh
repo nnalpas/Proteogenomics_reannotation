@@ -559,7 +559,7 @@ fi
 if [ $SignalpPrediction == 1 ]; then
 	
 	mkdir -p ${ProjDir}/Signalp
-	MY_FASTA="Find0_Synechocystis_sp_PCC_6803_genome_FIXED_filter"
+	MY_FASTA="Nuc_translation/Find0_Synechocystis_sp_PCC_6803_genome_FIXED_filter"
 	signalp \
 		-fasta ${ProjDir}/${MY_FASTA}.fasta \
 		-format "long" \
