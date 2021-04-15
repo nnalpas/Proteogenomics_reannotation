@@ -152,7 +152,7 @@ if [ $MakeBlastDbProt == 1 ]; then
 		-y "prot" \
 		-t ${TaxId} \
 		${UNIREFPROT} \
-		${SIXFRAMEPROT} ${OTHERPROT} > ${LogDir}/MakeBlastDb.log 2>&1
+		${SIXFRAMEPROT} ${OTHERPROT[@]} > ${LogDir}/MakeBlastDb.log 2>&1
     
 fi
 
@@ -545,7 +545,7 @@ if [ $InterproScan == 1 ]; then
 	InterproScan.sh \
 		-o ${ProjDir}/InterPro \
 		-t ${THREADS} \
-		${UNIREFPROT} ${OTHERPROT} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/InterproScan.log 2>&1
+		${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/InterproScan.log 2>&1
 	
 fi
 
