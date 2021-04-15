@@ -118,7 +118,9 @@ dir.create(opt$output)
 # Vector holding the file(s) to import and the quantification
 # columns of interest (can be more than one type of columns)
 what_to_look_for <- list(
-    proteinGroups = c("iBAQ", "Intensity"),
+    proteinGroups = c(
+        #"iBAQ",
+        "Intensity"),
     Sites = c("Intensity")
 )
 
