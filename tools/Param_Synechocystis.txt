@@ -9,7 +9,7 @@ GetNovelEntries=0
 GetNCBIBlastDb=0
 MakeBlastDbProt=0
 MakeBlastDbNuc=0
-DbBlasting=0
+DbBlasting=1
 BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
@@ -27,7 +27,7 @@ ConservationBlast=0
 MaxquantValidation=0
 SummarizedExp=0
 InterproScan=0
-SignalpPrediction=1
+SignalpPrediction=0
 
 # EmbossParam
 FRAME=6
@@ -61,7 +61,7 @@ InputType="fasta"
 
 # BlastParam
 BlastSoftware="Diamond"
-SerialBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Blast_iterations.txt"
+SerialBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Blast_iterations_2021-04-15.txt"
 
 # ReciprocalBlastParam
 SerialRecipBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Recip_Blast_iterations.txt"
