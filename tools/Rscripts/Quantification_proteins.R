@@ -7,14 +7,17 @@ library(magrittr)
 library(MultiAssayExperiment)
 library(ggplot2)
 
+var_to_ignore <- c("Intensity", "Intensity L", "Intensity M", "Intensity H")
+
 my_plots <- list()
 
-my_file <- "H:/data/Synechocystis_6frame/SummarizedExp/MultiAssay.RDS"
+my_file <- "C:/Users/kxmna01/Desktop/SummarizedExp/MultiAssay.RDS"
 my_f_files <- c(
     ref = "H:/data/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta",
     micro_prot = "H:/data/Synechocystis_6frame/Genome/micro_proteins_Synechocystis_sp_PCC6803_20180419.fasta",
     never_id = "H:/data/Synechocystis_6frame/2020-12-02_Never_identified/Never_identified.fasta",
-    novel_id = "H:/data/Synechocystis_6frame/Nuc_translation/Find0_Synechocystis_sp_PCC_6803_genome_FIXED_filter.fasta")
+    novel_id = "H:/data/Synechocystis_6frame/Nuc_translation/Find0_Synechocystis_sp_PCC_6803_genome_FIXED_filter.fasta",
+    wh_id = "H:/data/Synechocystis_6frame/Nuc_translation/Find0_Synechocystis_sp_PCC_6803_genome_FIXED_filter_Wolfgang_Hess_ORFs.fasta")
 
 my_data <- readRDS(my_file)
 
@@ -34,6 +37,7 @@ for (x in 1:length(experiments(my_data))) {
         as.data.frame(.) %>%
         tibble::rownames_to_column(.data = ., var = "ID") %>%
         tidyr::pivot_longer(data = ., cols = -ID) %>%
+        dplyr::filter(., !name %in% var_to_ignore) %>%
         dplyr::group_by(., name) %>%
         dplyr::mutate(
             ., zscore = (value - mean(value, na.rm = TRUE))/sd(value, na.rm = TRUE)) %>%
@@ -46,7 +50,7 @@ for (x in 1:length(experiments(my_data))) {
         ggpubr::theme_pubr() +
         #scale_y_continuous(trans = "log10") +
         theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
-        ggtitle(paste0(names(experiments(my_data)[x]), ": RAW"))
+        ggtitle(paste0(names(experiments(my_data)[x]), ": raw abundance"))
     my_plots[[paste(names(experiments(my_data)[x]), "abund zscr")]] <- ggplot(
         toplot,
         aes(x = name, y = zscore)) +
@@ -54,7 +58,7 @@ for (x in 1:length(experiments(my_data))) {
         ggpubr::theme_pubr() +
         scale_y_continuous(trans = "log10") +
         theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
-        ggtitle(paste0(names(experiments(my_data)[x]), ": zscore"))
+        ggtitle(paste0(names(experiments(my_data)[x]), ": zscored abundance"))
     
     toplot_summ <- toplot %>%
         dplyr::filter(., !name %in% c("iBAQ", "Intensity"))
@@ -135,7 +139,12 @@ my_plots
 dev.off()
 
 data.table::fwrite(
-    x = protein_df_spread, file = "Quantif_2_conditions.txt",
+    x = protein_df, file = "Quantif_2_conditions.txt",
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
+
+data.table::fwrite(
+    x = protein_df_spread, file = "Quantif_2_conditions_spread.txt",
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
 
