@@ -11,7 +11,7 @@ var_to_ignore <- c("Intensity", "Intensity L", "Intensity M", "Intensity H")
 
 my_plots <- list()
 
-my_file <- "C:/Users/kxmna01/Desktop/SummarizedExp/MultiAssay.RDS"
+my_file <- "H:/data/Synechocystis_6frame/SummarizedExp/MultiAssay.RDS"
 my_f_files <- c(
     ref = "H:/data/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta",
     micro_prot = "H:/data/Synechocystis_6frame/Genome/micro_proteins_Synechocystis_sp_PCC6803_20180419.fasta",
@@ -38,6 +38,7 @@ for (x in 1:length(experiments(my_data))) {
         tibble::rownames_to_column(.data = ., var = "ID") %>%
         tidyr::pivot_longer(data = ., cols = -ID) %>%
         dplyr::filter(., !name %in% var_to_ignore) %>%
+        dplyr::filter(., !is.na(value) & value != 0) %>%
         dplyr::group_by(., name) %>%
         dplyr::mutate(
             ., zscore = (value - mean(value, na.rm = TRUE))/sd(value, na.rm = TRUE)) %>%
