@@ -50,8 +50,8 @@ OTHERGENE=""
 #SANGER="${PBS_O_HOME}/work/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
 
 # MaxQuantParam
-mq_version="${PBS_O_HOME}/ws/kxmna01-MQ_1680-0/MaxQuant_1.6.8.0.sif"
-mqpar="${PBS_O_HOME}/ws/kxmna01-MQ_1680-0/Processing_MaxQuant/mqpar.xml"
+mq_version="${PBS_O_HOME}/ws/kxmna01-MQ_16140-0/MaxQuant_1.6.14.0.sif"
+mqpar="${PBS_O_HOME}/ws/tu_kxmna01-MQ_16140-0/Srim_6frame/mqpar.xml"
 
 # NCBIBlastDB
 BlastDbs='env_nr env_nt nr nt'
