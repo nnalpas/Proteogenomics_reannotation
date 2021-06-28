@@ -36,15 +36,15 @@ MINSIZE=1
 CIRCULAR="No"
 
 # ReferenceDatabase (for the genome make sure the chromosome name is all in lowercase for Ensembl compatibility)
-GENOME="${PBS_O_HOME}/work/Streptomyces_rimosus/Genome/Srim_G7_assembly.fasta"
-UNIREFPROT="${PBS_O_HOME}/work/Streptomyces_rimosus/Genome/Streptomyces_rimosus_allStrains_2019-02-13.fasta"
+GENOME="${PBS_O_HOME}/work/Streptomyces_rimosus/Genome/CP023688_genome.fasta"
+UNIREFPROT="${PBS_O_HOME}/work/Streptomyces_rimosus/Genome/CP023688_protein.fasta"
 UNIREFGENE=""
 #ALLUNIPROT="${PBS_O_HOME}/work/BlastDB/uniprot_sprot_trembl.fasta"
 ALLNCBIPROT="${PBS_O_HOME}/work/BlastDB/nr"
 ALLNCBIRNA="${PBS_O_HOME}/work/BlastDB/nt"
 NCBIENVPROT="${PBS_O_HOME}/work/BlastDB/env_nr"
 NCBIENVRNA="${PBS_O_HOME}/work/BlastDB/env_nt"
-OTHERPROT=( "${PBS_O_HOME}/work/Streptomyces_rimosus/Genome/Strathclyde_protein.fasta" "${PBS_O_HOME}/work/Synechocystis_6frame/Genome/CP023688_protein.fasta" )
+OTHERPROT=( "${PBS_O_HOME}/work/Streptomyces_rimosus/Genome/Strathclyde_protein.fasta" "${PBS_O_HOME}/work/Synechocystis_6frame/Genome/Streptomyces_rimosus_allStrains_2020-10-07.fasta" )
 OTHERGENE=""
 #OPERON="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Bsu_operon_01062017.opr"
 #SANGER="${PBS_O_HOME}/work/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
