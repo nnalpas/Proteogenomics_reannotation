@@ -3,9 +3,10 @@ ProjectName="Srim_6frame"
 TaxId="1927"
 
 # ProcessSteps
-GetOrf=0
+GetOrf=1
 MaxquantProc=0
 GetNovelEntries=0
+GetNCBIBlastDb=0
 MakeBlastDbProt=0
 MakeBlastDbNuc=0
 BlastDbBlasting=0
@@ -22,7 +23,11 @@ OperonCoordinate=0
 SangerCoordinate=0
 OrfNoveltyReason=0
 ClustalAlign=0
-ConservationBlast=1
+ConservationBlast=0
+MaxquantValidation=0
+SummarizedExp=0
+InterproScan=0
+SignalpPrediction=0
 
 # EmbossParam
 FRAME=6
@@ -31,14 +36,16 @@ MINSIZE=1
 CIRCULAR="No"
 
 # ReferenceDatabase (for the genome make sure the chromosome name is all in lowercase for Ensembl compatibility)
-GENOME="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Srim_G7_assembly.fasta"
-UNIREFPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Streptomyces_rimosus_allStrains_2019-02-13.fasta"
+GENOME="${PBS_O_HOME}/work/Streptomyces_rimosus/Genome/Srim_G7_assembly.fasta"
+UNIREFPROT="${PBS_O_HOME}/work/Streptomyces_rimosus/Genome/Streptomyces_rimosus_allStrains_2019-02-13.fasta"
 UNIREFGENE=""
-ALLUNIPROT="${PBS_O_HOME}/work/BlastDB/uniprot_sprot_trembl.fasta"
-ALLNCBIPROT="${PBS_O_HOME}/work/BlastDB/refseq_protein"
-NCBInt="${PBS_O_HOME}/work/BlastDB/nt"
-STRATHPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Strathclyde_protein.fasta"
-#ALLNCBIRNA="${PBS_O_HOME}/work/BlastDB/refseq_rna"
+#ALLUNIPROT="${PBS_O_HOME}/work/BlastDB/uniprot_sprot_trembl.fasta"
+ALLNCBIPROT="${PBS_O_HOME}/work/BlastDB/nr"
+ALLNCBIRNA="${PBS_O_HOME}/work/BlastDB/nt"
+NCBIENVPROT="${PBS_O_HOME}/work/BlastDB/env_nr"
+NCBIENVRNA="${PBS_O_HOME}/work/BlastDB/env_nt"
+OTHERPROT=( "${PBS_O_HOME}/work/Streptomyces_rimosus/Genome/Strathclyde_protein.fasta" "${PBS_O_HOME}/work/Synechocystis_6frame/Genome/CP023688_protein.fasta" )
+OTHERGENE=""
 #OPERON="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Bsu_operon_01062017.opr"
 #SANGER="${PBS_O_HOME}/work/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
 
@@ -46,21 +53,30 @@ STRATHPROT="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/Strathclyde_protein.f
 mq_version="${PBS_O_HOME}/ws/kxmna01-MQ_1680-0/MaxQuant_1.6.8.0.sif"
 mqpar="${PBS_O_HOME}/ws/kxmna01-MQ_1680-0/Processing_MaxQuant/mqpar.xml"
 
+# NCBIBlastDB
+BlastDbs='env_nr env_nt nr nt'
+
 # BlastDatab
 InputType="fasta"
 
 # BlastParam
-Eval=0.1
-NumAlign=100
-#TblastnParam='-word_size 7'
-TblastnParam=''
+BlastSoftware="Diamond"
+SerialBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Blast_iterations.txt"
+
+# ReciprocalBlastParam
+SerialRecipBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Recip_Blast_iterations.txt"
+
+# ProteinAnnotationParam
+AnnotColumn="GENE-NAME,CHR-VERSION,PROTEIN-NAME"
+AnnotSeparator=" \\| "
+AnnotKey="MainID"
 
 # BSgenomeParam
 SEED="${PBS_O_HOME}/work/Genome/Streptomyces_rimosus/seed"
 
 # GRangesParam
-GenomeName="AL0091263"
-Circular=FALSE
+#GenomeName="AL0091263"
+#Circular=FALSE
 
 # RBSanalysis
 
