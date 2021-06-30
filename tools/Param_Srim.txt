@@ -4,10 +4,10 @@ TaxId="1927"
 
 # ProcessSteps
 GetOrf=0
-MaxquantProc=1
-GetNovelEntries=0
+MaxquantProc=0
+GetNovelEntries=1
 GetNCBIBlastDb=0
-MakeBlastDbProt=0
+MakeBlastDbProt=1
 MakeBlastDbNuc=0
 DbBlasting=0
 BestBlast=0
