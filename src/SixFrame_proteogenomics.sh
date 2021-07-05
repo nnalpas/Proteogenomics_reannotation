@@ -231,7 +231,7 @@ if [ $ReciprocalBestBlast == 1 ]; then
     ${PBS_O_HOME}/bin/ReciprocalBestBlasts.sh \
 		-o ${ProjDir}/ReciprocalBlast \
 		-r ${ProjDir}/ReciprocalBlast \
-		${ProjDir}/ReciprocalBlast/ORFprot_vs_*_annot > ${LogDir}/ReciprocalBestBlast.log 2>&1
+		${ProjDir}/Blast/ORFprot_vs_*_annot > ${LogDir}/ReciprocalBestBlast.log 2>&1
     
 fi
 
