@@ -198,7 +198,7 @@ fi
 if [ $BestBlast == 1 ]; then
 
     ${PBS_O_HOME}/bin/BestBlasts.sh \
-		-o ${ProjDir}/Blast ${ProjDir}/Blast/ORFprot_vs_* > ${LogDir}/BestBlast.log 2>&1
+		-o ${ProjDir}/Blast ${ProjDir}/Blast/ORFprot_vs_*_annot > ${LogDir}/BestBlast.log 2>&1
     
 fi
 
