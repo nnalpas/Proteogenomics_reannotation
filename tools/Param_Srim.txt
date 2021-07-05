@@ -37,7 +37,7 @@ CIRCULAR="No"
 
 # ReferenceDatabase (for the genome make sure the chromosome name is all in lowercase for Ensembl compatibility)
 GENOME="${PBS_O_HOME}/work/Srim_6frame/Genome/CP023688_genome.fasta"
-UNIREFPROT="${PBS_O_HOME}/work/Srim_6frame/Genome/CP023688_protein.fasta"
+UNIREFPROT="${PBS_O_HOME}/work/Srim_6frame/Genome/CP023688_protein_FIXED.fasta"
 UNIREFGENE=""
 #ALLUNIPROT="${PBS_O_HOME}/work/BlastDB/uniprot_sprot_trembl.fasta"
 ALLNCBIPROT="${PBS_O_HOME}/work/BlastDB/nr"
