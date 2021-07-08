@@ -7,14 +7,14 @@ GetOrf=0
 MaxquantProc=0
 GetNovelEntries=0
 GetNCBIBlastDb=0
-MakeBlastDbProt=0
+MakeBlastDbProt=1
 MakeBlastDbNuc=0
-DbBlasting=0
+DbBlasting=1
 BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
-ProteinCoordinate=1
-ProteinAnnotation=1
+ProteinCoordinate=0
+ProteinAnnotation=0
 BSgenomeForge=0
 GRangeCreate=0
 PepNoveltyReason=0
@@ -67,7 +67,7 @@ SerialBlastMap="${PBS_O_HOME}/work/Srim_6frame/Phenodata/Blast_iterations.txt"
 SerialRecipBlastMap="${PBS_O_HOME}/work/Srim_6frame/Phenodata/Recip_Blast_iterations.txt"
 
 # ProteinAnnotationParam
-AnnotColumn="GENE-NAME,CHR-VERSION,PROTEIN-NAME"
+AnnotColumn="LOCUS-TAG,GENE-ID,PROTEIN-NAME,PROTEIN-ID,IS-PSEUDOGENE"
 AnnotSeparator=" \\| "
 AnnotKey="MainID"
 
