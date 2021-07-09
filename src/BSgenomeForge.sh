@@ -115,7 +115,7 @@ seqnames=`echo $seqnames | sed -E "s/,$//"`
 echo "seqnames: c(${seqnames})" >> ${WKDIR}/${NEWSEED}
 
 # If a list of circular chromosome was provided then include in seed file
-if [[ ! -z "${CIRCULAR}" ]]; then
+if [[ "${CIRCULAR}" != "c()" ]]; then
 	echo "circ_seqs: ${CIRCULAR}" >> ${WKDIR}/${NEWSEED}
 fi
 
