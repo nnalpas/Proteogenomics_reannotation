@@ -73,10 +73,8 @@ AnnotKey="MainID"
 
 # BSgenomeParam
 SEED="${PBS_O_HOME}/work/Srim_6frame/Genome/seed"
+PKGNAME="BSgenome.Srimosus.CP023688.1"
 Circular='c()'
-
-# GRangesParam
-#GenomeName="AL0091263"
 
 # RBSanalysis
 
@@ -89,3 +87,11 @@ AddRBS='aaaggaggtgt agaggtggtgt atattaagaggaggag agagaacaaggagggg'
 
 # ConservationBlastParam
 BlastnParam=''
+
+# MaxQuantValidationParam
+#mqpar_valid="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_validation_novel_ORF_TMT/mqpar_posix.xml"
+
+# SignalpParam
+Organism="gram+"
+
+
