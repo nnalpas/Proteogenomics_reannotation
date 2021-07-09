@@ -272,7 +272,7 @@ if [ $ProteinAnnotation == 1 ]; then
 		-s ${AnnotSeparator} \
 		-o ${ProjDir}/ProtAnnotation/Ref_prot_annotations.txt > ${LogDir}/ProteinAnnotation.log 2>&1
 	${PBS_O_HOME}/bin/Transfer_annotation.R \
-		-c ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_cross-map_ORFprot_vs_Refprot_recip \
+		-c ${ProjDir}/ReciprocalBlast/Best_Reciproc_Blast_cross-map_ORFprot_vs_Refprot_recip_annot \
 		-a ${ProjDir}/ProtAnnotation/Ref_prot_annotations.txt \
 		-k ${AnnotKey} \
 		-r "sseqid" \
