@@ -73,10 +73,10 @@ AnnotKey="MainID"
 
 # BSgenomeParam
 SEED="${PBS_O_HOME}/work/Srim_6frame/Genome/seed"
+Circular=""
 
 # GRangesParam
 #GenomeName="AL0091263"
-#Circular=FALSE
 
 # RBSanalysis
 
