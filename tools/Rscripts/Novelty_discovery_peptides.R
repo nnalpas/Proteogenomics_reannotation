@@ -272,11 +272,11 @@ reciprocal_blast_all %<>%
 
 # Identify missing taxon name
 all_tax_ids <- unique(
-    c(reciprocal_blast_all$TaxonID, reciprocal_blast_ref$TaxonID)) %>%
+    c(reciprocal_blast_all$TaxonID_reciproc, reciprocal_blast_ref$TaxonID_reciproc)) %>%
     split(x = ., f = ceiling(seq_along(.) / 3))
 
 # Query NCBI for taxon name, without API key only 3 queries per seconds
-# are allowed, therefor include a pause of 2 seconds between query
+# are allowed, therefore include a pause of 2 seconds between query
 my_taxon <- lapply(X = 1:length(all_tax_ids), FUN = function(x) {
     Sys.sleep(time = 2)
     taxize::id2name(all_tax_ids[[x]], db = "ncbi")}) %>%
@@ -287,11 +287,13 @@ my_taxon %<>%
     dplyr::select(., TaxonID, Taxon = name)
 
 # Merge the taxon name with the reciprocal blast results
-reciprocal_blast_ref$Taxon <- NULL
+reciprocal_blast_ref$Taxon_reciproc <- NULL
 reciprocal_blast_ref %<>%
+    dplyr::rename(., TaxonID = TaxonID_reciproc) %>%
     dplyr::left_join(x = ., y = my_taxon)
-reciprocal_blast_all$Taxon <- NULL
+reciprocal_blast_all$Taxon_reciproc <- NULL
 reciprocal_blast_all %<>%
+    dplyr::rename(., TaxonID = TaxonID_reciproc) %>%
     dplyr::left_join(x = ., y = my_taxon)
 
 # Determine the novelty reasons for each peptide
