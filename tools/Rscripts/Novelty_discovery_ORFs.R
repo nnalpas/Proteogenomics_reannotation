@@ -349,9 +349,9 @@ pep_grange <- opt$pep_grange %>%
 
 # Import the Sanger seq genomic ranges file
 if (
-    identical(opt$sanger_grange, NULL) |
-    identical(opt$sanger_grange, "") |
-    identical(opt$sanger_grange, character(0)) |
+    identical(opt$sanger_grange, NULL) ||
+    identical(opt$sanger_grange, "") ||
+    identical(opt$sanger_grange, character(0)) ||
     !file.exists(opt$sanger_grange)) {
     sanger_grange <- GRanges()
     seqinfo(sanger_grange) <- seqinfo(genome_grange)
@@ -1597,7 +1597,7 @@ plot(pl_circos)
 
 # Get all peptide associated nucleotide position
 coverage_pep <- gr_nucleotide_pos(
-    grange = pep_grange, filter = 'grepl("Known", Database)')
+    grange = pep_grange, filter = 'grepl("Known|Target", Database)')
 
 # Convert to dataframe
 coverage_nucl <- coverage_pep %>%
@@ -1615,8 +1615,8 @@ coverage_nucl_count <- evid_reason %>%
 # Format dataframe count column to factor
 coverage_nucl_count$Count <- factor(
     x = coverage_nucl_count$Count,
-    levels = seq(1, max(coverage_nucl_count$Count)),
-    labels = seq(1, max(coverage_nucl_count$Count)),
+    levels = seq(1, max(coverage_nucl_count$Count, na.rm = TRUE)),
+    labels = seq(1, max(coverage_nucl_count$Count, na.rm = TRUE)),
     ordered = TRUE)
 
 # Calculate overall nucleotide coverage frequencies
@@ -1629,13 +1629,13 @@ toplot <- coverage_nucl_count %>%
 # Calculate the quantiles of count frequencies
 quantiles_toplot <- quantile(
     x = as.integer(as.character(coverage_nucl_count$Count)),
-    probs = c(0, 0.25, 0.5, 0.75, 1)) %>%
+    probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE) %>%
     as.data.frame(.) %>%
     set_colnames("Values") %>%
     dplyr::mutate(., Quartiles = row.names(.))
 quantiles_toplot <- data.frame(
     Quartiles = "Mean",
-    Values = mean(as.integer(as.character(coverage_nucl_count$Count)))) %>%
+    Values = base::mean(as.integer(as.character(coverage_nucl_count$Count)), na.rm = TRUE)) %>%
     dplyr::bind_rows(quantiles_toplot, .) %>%
     dplyr::select(., Quartiles, Values) %>%
     dplyr::mutate(., Values = round(x = Values, digits = 1))
@@ -1689,7 +1689,8 @@ for (i in high_qual_targets) {
         orf_gr = orf_grange_expr,
         pep_gr = pep_grange_unique,
         sanger_gr = sanger_grange,
-        ref_label = "GENE.NAME")
+        #ref_label = "GENE.NAME")
+        ref_label = "PROTEIN.ID")
     
     # Plot the known entries and 6-frames ORFs tracks
     my_plots <- genomic_vis_data[["plots"]]
@@ -1786,7 +1787,6 @@ for (i in high_qual_targets) {
     
 }
 
-# 
 # Open a file for plot visualisation
 pdf(
     file = paste0(opt$output, "/", "ORF_visualisation.pdf"),
