@@ -44,7 +44,7 @@ plots_rectvenn <- function(
     
     # Get all peptide associated nucleotide position
     cover_nuc <- gr_nucleotide_pos(
-        grange = pep, filter = 'grepl("Known", Database)')
+        grange = pep, filter = 'grepl("Known|Target", Database)')
     
     # Plot a square venn diagram of chromosome coverage
     plot.new()
@@ -1566,7 +1566,10 @@ plots_orf_genomic <- function(
                 check_overlap = TRUE) +
             scale_fill_manual(
                 name = "Database",
-                values = c(`Known` = track_colour[5], `Novel` = track_colour[6]))
+                values = c(
+                    `Known` = track_colour[5],
+                    `Target` = track_colour[5],
+                    `Novel` = track_colour[6]))
         
     } else {
         pl <- ggplot()
