@@ -520,20 +520,37 @@ write.table(
     col.names = TRUE)
 
 # Export complete evidence info for these novel evidence
+my_id_novels <- evid_match %>%
+    dplyr::filter(., group == "Novel") %>%
+    cSplit(
+        indt = ., splitCols = "Proteins", sep = ";",
+        direction = "long", fixed = TRUE) %>%
+    .[["Proteins"]] %>%
+    unique(.) %>%
+    as.character(.)
 write.table(
-    x = evid_match %>%
-        dplyr::filter(., group == "Novel") %>%
-        cSplit(
-            indt = ., splitCols = "Proteins", sep = ";",
-            direction = "long", fixed = TRUE) %>%
-        .[["Proteins"]] %>%
-        unique(.),
+    x = my_id_novels,
     file = paste(
         opt$output, "/", "Novel_ORF.txt", sep = ""),
     quote = FALSE,
     sep = "\t",
     row.names = FALSE,
     col.names = FALSE)
+
+# Save subset fasta file for identified novel entries
+my_novel_fasta <- seqinr::read.fasta(
+    file = opt$novel, seqtype = "AA", as.string = TRUE)
+my_novel_fasta_id <- my_novel_fasta[my_id_novels]
+seqinr::write.fasta(
+    sequences = my_novel_fasta_id,
+    names = unlist(lapply(my_novel_fasta_id, function(x) {
+        sub("^>", "", attr(x = x, which = "Annot"))
+    })),
+    file.out = paste(
+        opt$output, "/",
+        sub(".fasta", "_identified.fasta", basename(opt$novel)),
+        sep = ""),
+    open = "w", nbchar = 60, as.string = TRUE)
 
 # Save session
 save.image(paste(
