@@ -545,7 +545,8 @@ if [ $InterproScan == 1 ]; then
 	InterproScan.sh \
 		-o ${ProjDir}/InterPro \
 		-t ${THREADS} \
-		${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/InterproScan.log 2>&1
+		#${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta
+		${ProjDir}/Genome/CP023688_protein_FIXED_FILT.fasta > ${LogDir}/InterproScan.log 2>&1
 	
 fi
 
