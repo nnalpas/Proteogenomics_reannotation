@@ -545,8 +545,7 @@ if [ $InterproScan == 1 ]; then
 	InterproScan.sh \
 		-o ${ProjDir}/InterPro \
 		-t ${THREADS} \
-		${ProjDir}/Genome/CP023688_protein_FIXED_FILT.fasta > ${LogDir}/InterproScan.log 2>&1
-		#${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta
+		${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/InterproScan.log 2>&1
 	
 fi
 
@@ -559,15 +558,11 @@ fi
 # Check whether to predict signal sequence via signalp for all fasta files
 if [ $SignalpPrediction == 1 ]; then
 	
-	mkdir -p ${ProjDir}/Signalp
-	MY_FASTA="Find0_Synechocystis_sp_PCC_6803_genome_FIXED_filter"
-	signalp \
-		-fasta ${ProjDir}/Nuc_translation/${MY_FASTA}.fasta \
-		-format "long" \
-		-gff3 \
-		-mature \
-		-org ${Organism} \
-		-prefix ${ProjDir}/Signalp/${MY_FASTA} > ${LogDir}/SignalpPrediction.log 2>&1
+	SignalpCheck.sh \
+		-o ${ProjDir}/Signalp \
+		-x ${Organism} \
+		-t ${THREADS} \
+		${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/SignalpPrediction.log 2>&1
 	
 fi
 
