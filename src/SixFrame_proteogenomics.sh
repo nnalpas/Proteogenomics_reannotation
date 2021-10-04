@@ -151,8 +151,6 @@ if [ $MakeBlastDbProt == 1 ]; then
 		-i ${InputType} \
 		-y "prot" \
 		-t ${TaxId} \
-		#${UNIREFPROT} \
-		#${SIXFRAMEPROT} 
 		${OTHERPROT[@]} > ${LogDir}/MakeBlastDb.log 2>&1
     
 fi
