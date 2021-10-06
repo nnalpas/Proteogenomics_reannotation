@@ -3,7 +3,7 @@ ProjectName="Srim_6frame"
 TaxId="1927"
 
 # ProcessSteps
-GetOrf=0
+GetOrf=1
 MaxquantProc=0
 GetNovelEntries=0
 GetNCBIBlastDb=0
@@ -12,7 +12,7 @@ MakeBlastDbNuc=0
 DbBlasting=0
 BestBlast=0
 ReciprocalBlast=0
-ReciprocalBestBlast=1
+ReciprocalBestBlast=0
 ProteinCoordinate=0
 ProteinAnnotation=0
 BSgenomeForge=0
@@ -36,16 +36,15 @@ MINSIZE=1
 CIRCULAR="No"
 
 # ReferenceDatabase (for the genome make sure the chromosome name is all in lowercase for Ensembl compatibility)
-GENOME="${PBS_O_HOME}/work/Srim_6frame/Genome/CP023688_genome.fasta"
-UNIREFPROT="${PBS_O_HOME}/work/Srim_6frame/Genome/CP023688_protein_FIXED.fasta"
+GENOME="${PBS_O_HOME}/work/Srim_6frame/Genome/CP048261_CP048262_genome_sequence.fasta"
+UNIREFPROT="${PBS_O_HOME}/work/Srim_6frame/Genome/CP048261_CP048262_prot_sequence_FIXED.fasta"
 UNIREFGENE=""
 #ALLUNIPROT="${PBS_O_HOME}/work/BlastDB/uniprot_sprot_trembl.fasta"
 ALLNCBIPROT="${PBS_O_HOME}/work/BlastDB/nr"
 ALLNCBIRNA="${PBS_O_HOME}/work/BlastDB/nt"
 NCBIENVPROT="${PBS_O_HOME}/work/BlastDB/env_nr"
 NCBIENVRNA="${PBS_O_HOME}/work/BlastDB/env_nt"
-#OTHERPROT=( "${PBS_O_HOME}/work/Srim_6frame/Genome/Strathclyde_protein.fasta" "${PBS_O_HOME}/work/Srim_6frame/Genome/Streptomyces_rimosus_allStrains_2020-10-07.fasta" )
-OTHERPROT=( "${PBS_O_HOME}/work/Srim_6frame/CrossMap/Strathclyde_protein.fasta" "${PBS_O_HOME}/work/Srim_6frame/CrossMap/CP048261_CP048262_prot_sequence.fasta" )
+OTHERPROT=( "${PBS_O_HOME}/work/Srim_6frame/Genome/Strathclyde_protein.fasta" "${PBS_O_HOME}/work/Srim_6frame/Genome/Streptomyces_rimosus_allStrains_2020-10-07.fasta" )
 OTHERGENE=""
 #OPERON="${PBS_O_HOME}/work/Genome/Srim_6frame/Bsu_operon_01062017.opr"
 #SANGER="${PBS_O_HOME}/work/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
@@ -74,7 +73,7 @@ AnnotKey="MainID"
 
 # BSgenomeParam
 SEED="${PBS_O_HOME}/work/Srim_6frame/Genome/seed"
-PKGNAME="BSgenome.Srimosus.CP023688.1"
+PKGNAME="BSgenome.Srimosus.CP048261.1"
 Circular='c()'
 
 # RBSanalysis
