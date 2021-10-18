@@ -521,7 +521,7 @@ write.table(
 
 # Export complete evidence info for these novel evidence
 my_id_novels <- evid_match %>%
-    dplyr::filter(., group == "Novel") %>%
+    dplyr::filter(., !is.na(group) & group == "Novel") %>%
     cSplit(
         indt = ., splitCols = "Proteins", sep = ";",
         direction = "long", fixed = TRUE) %>%
