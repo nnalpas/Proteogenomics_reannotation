@@ -541,10 +541,10 @@ filter_na <- function(my_data, my_col) {
 
 # Function to identify the digestion rule,
 # e.g. after which amino acid digestion occured
-digestion_rule <- function(x) {
+digestion_rule <- function(x, threshold = 0.05) {
     aa_freq <- table(x)
     my_res <- aa_freq[
-        aa_freq > (sum(aa_freq) * 0.01)] %>%
+        aa_freq > (sum(aa_freq) * threshold)] %>%
         names(.)
     my_res[!my_res %in% c("", "-")] %>%
         paste(., collapse = "|") %>%
