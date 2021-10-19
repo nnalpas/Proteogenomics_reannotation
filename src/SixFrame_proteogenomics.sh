@@ -151,8 +151,7 @@ if [ $MakeBlastDbProt == 1 ]; then
 		-i ${InputType} \
 		-y "prot" \
 		-t ${TaxId} \
-		${UNIREFPROT} \
-		${SIXFRAMEPROT} ${OTHERPROT[@]} > ${LogDir}/MakeBlastDb.log 2>&1
+		"${PBS_O_HOME}/work/Srim_6frame/Genome/Streptomyces_rimosus_allStrains_2020-10-07.fasta" > ${LogDir}/MakeBlastDb.log 2>&1
     
 fi
 
