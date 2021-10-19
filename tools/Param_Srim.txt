@@ -25,9 +25,9 @@ OrfNoveltyReason=0
 ClustalAlign=0
 ConservationBlast=0
 MaxquantValidation=0
-SummarizedExp=1
-InterproScan=1
-SignalpPrediction=1
+SummarizedExp=0
+InterproScan=0
+SignalpPrediction=0
 
 # EmbossParam
 FRAME=6
