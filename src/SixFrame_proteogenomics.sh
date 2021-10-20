@@ -51,6 +51,7 @@ module load devel/perl/5.26
 module load diamond/2.0.2
 module load interproscan/5.48-83.0
 module load signalp/5.0b
+module load eggnog/2.0.5
 
 # Create project directory
 ProjDir=${PBS_O_INITDIR}/${ProjectName}
@@ -563,6 +564,24 @@ if [ $SignalpPrediction == 1 ]; then
 		-x ${Organism} \
 		-t ${THREADS} \
 		${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/SignalpPrediction.log 2>&1
+	
+fi
+
+
+
+###########################
+# EggnogMapper annotation #
+###########################
+
+# Check whether to predict signal sequence via signalp for all fasta files
+if [ $EmapperAnnotation == 1 ]; then
+	
+	EggnogMapper.sh \
+		-o ${ProjDir}/EggnogMapper \
+		-d ${EmapperDbDir} \
+		-i ${EmapperType} \
+		-t ${THREADS} \
+		-a "${emapperParam}" -b "${emapperDBParam}" ${UNIREFPROT} ${SIXFRAMEPROT} > ${LogDir}/EmapperAnnotation.log 2>&1
 	
 fi
 

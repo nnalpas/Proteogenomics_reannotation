@@ -28,6 +28,7 @@ MaxquantValidation=0
 SummarizedExp=1
 InterproScan=1
 SignalpPrediction=1
+EmapperAnnotation=0
 
 # EmbossParam
 FRAME=6
@@ -93,5 +94,11 @@ BlastnParam=''
 
 # SignalpParam
 Organism="gram+"
+
+# EmapperParam
+emapperParam='-m diamond --sensmode ultra-sensitive'
+emapperDBParam=''
+EmapperDbDir="${PBS_O_HOME}/work/Srim_6frame/"
+EmapperType="proteins"
 
 
