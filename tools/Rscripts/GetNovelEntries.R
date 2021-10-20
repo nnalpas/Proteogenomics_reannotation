@@ -538,9 +538,7 @@ write.table(
     col.names = FALSE)
 
 # Save subset fasta file for identified novel entries
-my_novel_fasta <- seqinr::read.fasta(
-    file = opt$novel, seqtype = "AA", as.string = TRUE)
-my_novel_fasta_id <- my_novel_fasta[my_id_novels]
+my_novel_fasta_id <- fasta$Novel[my_id_novels]
 seqinr::write.fasta(
     sequences = my_novel_fasta_id,
     names = unlist(lapply(my_novel_fasta_id, function(x) {
@@ -549,6 +547,37 @@ seqinr::write.fasta(
     file.out = paste(
         opt$output, "/",
         sub(".fasta", "_identified.fasta", basename(opt$novel)),
+        sep = ""),
+    open = "w", nbchar = 60, as.string = TRUE)
+
+# Save subset fasta file for identified reference entries
+all_identified_ids <- pg$`Protein IDs` %>%
+    base::strsplit(x = ., split = ";", fixed = TRUE) %>%
+    unlist(.)
+my_identifed_fasta_id <- fasta$Known[
+    names(fasta$Known) %in% all_identified_ids]
+seqinr::write.fasta(
+    sequences = my_identifed_fasta_id,
+    names = unlist(lapply(my_identifed_fasta_id, function(x) {
+        sub("^>", "", attr(x = x, which = "Annot"))
+    })),
+    file.out = paste(
+        opt$output, "/",
+        sub(".fasta", "_identified.fasta", basename(opt$reference)),
+        sep = ""),
+    open = "w", nbchar = 60, as.string = TRUE)
+
+# Save subset fasta file for non-identified reference entries
+my_notidentifed_fasta_id <- fasta$Known[
+    !(names(fasta$Known) %in% all_identified_ids)]
+seqinr::write.fasta(
+    sequences = my_notidentifed_fasta_id,
+    names = unlist(lapply(my_notidentifed_fasta_id, function(x) {
+        sub("^>", "", attr(x = x, which = "Annot"))
+    })),
+    file.out = paste(
+        opt$output, "/",
+        sub(".fasta", "_NOTidentified.fasta", basename(opt$reference)),
         sep = ""),
     open = "w", nbchar = 60, as.string = TRUE)
 
