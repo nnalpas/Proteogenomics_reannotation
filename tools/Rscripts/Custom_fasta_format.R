@@ -16,7 +16,7 @@ my_data_format <- my_data %>%
         data = ., col = "Header", into = c("ID", "REST"),
         sep = " ", extra = "merge") %>%
     dplyr::mutate(
-        ., ID = sub(".+(_.+?)$", "AL939104.1\\1", ID),
+        ., ID = sub(".+(_.+?)$", "AL939104\\1", ID),
         locus_tag = ifelse(
             grepl("locus_tag", REST),
             sub(".*\\[locus_tag=(.+?)\\].*", "\\1", REST),
@@ -52,8 +52,8 @@ my_data_format$Header <- paste(
     sep = " | ")
 
 # Check that IDs are no more than 15 characters long or provide warning
-if (any(nchar(my_data_format$ID) > 15)) {
-    stop("Some ID are too long (> 15 char.), it's a problem for Diamond!")
+if (any(nchar(my_data_format$ID) > 14)) {
+    stop("Some ID are too long (> 14 char.), it's a problem for Diamond!")
 }
 
 seqinr::write.fasta(
