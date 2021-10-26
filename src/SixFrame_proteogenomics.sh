@@ -152,7 +152,8 @@ if [ $MakeBlastDbProt == 1 ]; then
 		-i ${InputType} \
 		-y "prot" \
 		-t ${TaxId} \
-		${PBS_O_HOME}/work/Srim_6frame/CrossMap_Scoelicolor/Streptomyces_coelicolor_proteome_FIXED.fasta > ${LogDir}/MakeBlastDb.log 2>&1
+		${UNIREFPROT} \
+		${SIXFRAMEPROT} ${OTHERPROT[@]} > ${LogDir}/MakeBlastDb.log 2>&1
     
 fi
 
@@ -198,7 +199,7 @@ fi
 if [ $BestBlast == 1 ]; then
 
     ${PBS_O_HOME}/bin/BestBlasts.sh \
-		-o ${ProjDir}/Blast ${ProjDir}/Blast/Refprot_vs_Scoelico*_annot > ${LogDir}/BestBlast.log 2>&1
+		-o ${ProjDir}/Blast ${ProjDir}/Blast/ORFprot_vs_*_annot > ${LogDir}/BestBlast.log 2>&1
     
 fi
 
@@ -231,7 +232,7 @@ if [ $ReciprocalBestBlast == 1 ]; then
     ${PBS_O_HOME}/bin/ReciprocalBestBlasts.sh \
 		-o ${ProjDir}/ReciprocalBlast \
 		-r ${ProjDir}/ReciprocalBlast \
-		${ProjDir}/Blast/Refprot_vs_Scoelico*_annot > ${LogDir}/ReciprocalBestBlast.log 2>&1
+		${ProjDir}/Blast/ORFprot_vs_*_annot > ${LogDir}/ReciprocalBestBlast.log 2>&1
     
 fi
 
