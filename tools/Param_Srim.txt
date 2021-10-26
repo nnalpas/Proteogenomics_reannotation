@@ -12,7 +12,7 @@ MakeBlastDbNuc=0
 DbBlasting=0
 BestBlast=0
 ReciprocalBlast=0
-ReciprocalBestBlast=1
+ReciprocalBestBlast=0
 ProteinCoordinate=0
 ProteinAnnotation=0
 BSgenomeForge=0
@@ -28,7 +28,7 @@ MaxquantValidation=0
 SummarizedExp=0
 InterproScan=0
 SignalpPrediction=0
-EmapperAnnotation=0
+EmapperAnnotation=1
 
 # EmbossParam
 FRAME=6
