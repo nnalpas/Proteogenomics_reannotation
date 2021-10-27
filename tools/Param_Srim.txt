@@ -26,9 +26,9 @@ ClustalAlign=0
 ConservationBlast=0
 MaxquantValidation=0
 SummarizedExp=0
-InterproScan=0
-SignalpPrediction=0
-EmapperAnnotation=1
+InterproScan=1
+SignalpPrediction=1
+EmapperAnnotation=0
 
 # EmbossParam
 FRAME=6
