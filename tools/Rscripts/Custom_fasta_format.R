@@ -3,10 +3,26 @@
 
 library(magrittr)
 
-my_fasta_f <- "H:/data/Srim_6frame_3rd_analysis/CrossMap_Scoelicolor/Streptomyces_coelicolor_proteome.fasta"
+my_fasta_f <- "H:/data/Srim_6frame_3rd_analysis/Genome/CP048261_CP048262_prot_sequence_FIXED.fasta"
 
 my_fasta <- seqinr::read.fasta(
     file = my_fasta_f, seqtype = "AA", as.string = TRUE, whole.header = TRUE)
+
+# Make sure there are no NA
+if (any(is.na(my_fasta))) {
+    stop("Cannot have NA in fasta sequences!")
+}
+
+# Check for presence of stop sign within sequence (sequence will be removed)
+stop_filter <- grepl(".\\*.", my_fasta)
+if (any(stop_filter)) {
+    
+    warning(paste0(
+        sum(stop_filter),
+        " entries will be deleted due to '*' in the middle of sequence!"))
+    my_fasta <- my_fasta[!stop_filter]
+    
+}
 
 my_data <- names(my_fasta) %>%
     data.frame(Header = ., stringsAsFactors = FALSE)
