@@ -2579,3 +2579,63 @@ report_markdown <- function(
 }
 
 
+
+### Overrepresentation functions -----------------------------------------
+
+# Function to perform overrepresentation analysis using fgsea package
+fora_scored <- function(
+    pathways, genes, universe,
+    minSize = 1, maxSize = Inf, pval = 1, padj = 1) {
+    
+    my_oa <- fgsea::fora(
+        pathways = pathways, genes = genes, universe = universe,
+        minSize = opt$minsize, maxSize = opt$maxsize)
+    
+    if (is.numeric(opt$pval)) {
+        my_oa %<>%
+            dplyr::filter(., pval <= opt$pval)
+    }
+    
+    if (is.numeric(opt$padj)) {
+        my_oa %<>%
+            dplyr::filter(., padj <= opt$padj)
+    }
+    
+    uni_size <- length(universe)
+    gene_size <- length(genes)
+    
+    my_oa %<>%
+        dplyr::mutate(
+            ., `-log10_pval` = -log10(pval), `-log10_padj` = -log10(padj),
+            universe = uni_size, genes = gene_size,
+            expected = genes * (size / universe),
+            representation = ifelse(overlap >= expected, "+", "-"),
+            score = overlap / expected,
+            overlapGenes = sapply(overlapGenes, toString)) %>%
+        dplyr::select(
+            ., pathway, overlap, size,
+            representation, score, pval, padj,
+            `-log10_pval`, `-log10_padj`, universe,
+            genes, expected, overlapGenes) %>%
+        dplyr::arrange(., pval)
+    
+}
+
+# Function to format pathways/function to gene association
+# from dataframe to list format
+fgsea_pathways <- function(annotation, gene, resource) {
+    
+    my_data <- annotation %>%
+        dplyr::select(., dplyr::all_of(c(gene, resource))) %>%
+        tidyr::separate_rows(
+            data = ., as.name(resource), sep = ";", convert = FALSE)
+    
+    my_data %<>%
+        dplyr::filter(
+            ., !is.na(!!as.name(resource)) & !!as.name(resource) != "")
+    
+    my_path <- base::split(x = my_data[[gene]], f = my_data[[resource]])
+    
+}
+
+
