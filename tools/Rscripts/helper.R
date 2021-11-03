@@ -385,20 +385,25 @@ best_blast <- function(
             unique(.) %>%
             length(.)
         data.final %<>%
-            tidyr::unite(
-                data = ., col = Unique_sseqid,
-                sseqid, sstart, send,
-                sep = "_", remove = FALSE) %>%
-            dplyr::group_by(., qseqid) %>%
-            dplyr::arrange(., Unique_sseqid) %>%
-            dplyr::mutate(., rank_s = c(1:n())) %>%
-            dplyr::ungroup() %>%
-            dplyr::group_by(., Unique_sseqid) %>%
-            dplyr::arrange(., qseqid) %>%
-            dplyr::mutate(., rank_q = c(1:n())) %>%
-            dplyr::ungroup() %>%
-            dplyr::filter(., rank_q == rank_s) %>%
-            dplyr::select(., -Unique_sseqid, -rank_q, -rank_s)
+            dplyr::rowwise(.) %>%
+            dplyr::filter(
+                ., best_count == 1 |
+                    grepl(sstart, Description) |
+                    grepl(send, Description))
+            #tidyr::unite(
+            #    data = ., col = Unique_sseqid,
+            #    sseqid, sstart, send,
+            #    sep = "_", remove = FALSE) %>%
+            #dplyr::group_by(., qseqid) %>%
+            #dplyr::arrange(., Unique_sseqid) %>%
+            #dplyr::mutate(., rank_s = c(1:n())) %>%
+            #dplyr::ungroup() %>%
+            #dplyr::group_by(., Unique_sseqid) %>%
+            #dplyr::arrange(., qseqid) %>%
+            #dplyr::mutate(., rank_q = c(1:n())) %>%
+            #dplyr::ungroup() %>%
+            #dplyr::filter(., rank_q == rank_s) %>%
+            #dplyr::select(., -Unique_sseqid, -rank_q, -rank_s)
         retained <- data.final$qseqid %>%
             unique(.) %>%
             length(.)
