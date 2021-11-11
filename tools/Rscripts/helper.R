@@ -345,7 +345,7 @@ best_blast <- function(
         # Filter based on default
         data.filt <- data %>%
             unique(.) %>%
-            dplyr::group_by_(., .dots = col.symb) %>%
+            dplyr::group_by(., .dots = col.symb) %>%
             dplyr::filter(., evalue == min(evalue)) %>%
             dplyr::filter(., score == max(score)) %>%
             dplyr::filter(., pident == max(pident)) %>%
