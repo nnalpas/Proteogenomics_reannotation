@@ -247,7 +247,7 @@ if [ $ProteinCoordinate == 1 ]; then
 
     ${PBS_O_HOME}/bin/Genomic_position_from_blast.R \
 		-f ${UNIREFPROT} \
-		-b ${ProjDir}/Blast/Refnucl_vs_Genome \
+		-b ${ProjDir}/Blast/Refnucl_vs_Genome_annot \
 		-g ${GENOME} \
 		-o ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt > ${LogDir}/ProteinCoordinate.log 2>&1
 	${PBS_O_HOME}/bin/ORF_coordinates.R \
