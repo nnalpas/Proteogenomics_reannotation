@@ -361,7 +361,7 @@ best_blast <- function(
         # Filter based on user provided criteria
         data.filt <- data %>%
             unique(.) %>%
-            dplyr::group_by_(., .dots = col.symb)
+            dplyr::group_by(., col.symb)
         for (x in bb_filter) {
             data.filt %<>%
                 dplyr::filter_(., bb_filter)
