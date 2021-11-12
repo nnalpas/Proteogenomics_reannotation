@@ -2626,6 +2626,37 @@ fora_scored <- function(
     
 }
 
+# Function to perform gene-set enrichment analysis using fgsea package
+fgsea_scored <- function(
+    pathways, stats, minSize = 1, maxSize = Inf, pval = 1, padj = 1) {
+    
+    my_gsea <- fgsea::fgsea(
+        pathways = pathways, stats = stats,
+        minSize = opt$minsize, maxSize = opt$maxsize)
+    
+    if (is.numeric(opt$pval)) {
+        my_gsea %<>%
+            dplyr::filter(., pval <= opt$pval)
+    }
+    
+    if (is.numeric(opt$padj)) {
+        my_gsea %<>%
+            dplyr::filter(., padj <= opt$padj)
+    }
+    
+    stats_size <- length(stats)
+    
+    my_gsea %<>%
+        dplyr::mutate(
+            ., `-log10_pval` = -log10(pval), `-log10_padj` = -log10(padj),
+            genes = stats_size) %>%
+        dplyr::select(
+            ., pathway, pval, padj, log2err, ES, NES, size,
+            `-log10_pval`, `-log10_padj`, genes, leadingEdge) %>%
+        dplyr::arrange(., pval)
+    
+}
+
 # Function to format pathways/function to gene association
 # from dataframe to list format
 fgsea_pathways <- function(annotation, gene, resource) {
