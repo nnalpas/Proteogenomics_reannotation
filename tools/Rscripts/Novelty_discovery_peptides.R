@@ -215,19 +215,28 @@ evid <- opt$evidence %>%
     readRDS(file = .)
 
 # Import the fasta files
-fasta <- c(Known = opt$reference_fasta) %>%
+fasta <- opt$reference_fasta %>%
+    strsplit(x = ., split = ",") %>%
+    unlist(.) %>%
+    #set_names(rep("Known", length.out = length(.))) %>%
+    #c(Known = ) %>%
     purrr::map(
-        .x = ., .f = seqinr::read.fasta, seqtype = "AA", as.string = TRUE)
+        .x = ., .f = seqinr::read.fasta, seqtype = "AA", as.string = TRUE) %>%
+    unlist(., recursive = FALSE) %>%
+    list(Known = .)
 names(fasta$Known) %<>%
     uni_id_clean(.)
 
 # Import the reciprocal blast best hits between ORFs and
 # reference proteins
 reciprocal_blast_ref <- opt$reciprocal_blast_ref %>%
+    strsplit(x = ., split = ",") %>%
+    unlist(.) %>%
     as.character(.) %>%
-    read.table(
-        file = ., header = TRUE, sep = "\t", quote = "",
+    purrr::map(
+        .x = ., .f = read.table, header = TRUE, sep = "\t", quote = "",
         as.is = TRUE, comment.char = "") %>%
+    plyr::ldply(., "data.frame") %>%
     dplyr::mutate(
         ., staxid_blast = as.integer(staxid_blast),
         staxid_reciproc = as.integer(staxid_reciproc))
@@ -270,6 +279,24 @@ novel_pep <- evid %>%
 reciprocal_blast_all %<>%
     plyr::ldply(., "data.frame", .id = "DB", stringsAsFactors = F)
 
+# 
+if (any(colnames(reciprocal_blast_all) == "TaxonID_reciproc")) {
+    reciprocal_blast_all %<>%
+        dplyr::rename(., TaxonID = TaxonID_reciproc)
+}
+if (any(colnames(reciprocal_blast_all) == "Taxon_reciproc")) {
+    reciprocal_blast_all %<>%
+        dplyr::rename(., Taxon = Taxon_reciproc)
+}
+if (any(colnames(reciprocal_blast_ref) == "TaxonID_reciproc")) {
+    reciprocal_blast_ref %<>%
+        dplyr::rename(., TaxonID = TaxonID_reciproc)
+}
+if (any(colnames(reciprocal_blast_ref) == "Taxon_reciproc")) {
+    reciprocal_blast_ref %<>%
+        dplyr::rename(., Taxon = Taxon_reciproc)
+}
+
 # Identify missing taxon name
 all_tax_ids <- unique(
     c(reciprocal_blast_all$TaxonID, reciprocal_blast_ref$TaxonID)) %>%
@@ -289,11 +316,9 @@ my_taxon %<>%
 # Merge the taxon name with the reciprocal blast results
 reciprocal_blast_ref$Taxon <- NULL
 reciprocal_blast_ref %<>%
-    #dplyr::rename(., TaxonID = TaxonID_reciproc) %>%
     dplyr::left_join(x = ., y = my_taxon)
 reciprocal_blast_all$Taxon <- NULL
 reciprocal_blast_all %<>%
-    #dplyr::rename(., TaxonID = TaxonID_reciproc) %>%
     dplyr::left_join(x = ., y = my_taxon)
 
 # Determine the novelty reasons for each peptide
@@ -310,16 +335,47 @@ novelty_reasons <- purrr::map(
 evid_leading <- evid %>%
     dplyr::filter(., Sequence %in% novel_pep) %>%
     dplyr::select(., Sequence, `Leading proteins`) %>%
+    tidyr::separate_rows(data = ., `Leading proteins`, sep = ";") %>%
     unique(.)
+
+novelty_rank <- c(
+    "SAV",
+    "SAVs/InDels",
+    "Potential alternate start",
+    "Potential alternate end",
+    "Potentially novel")
+match_rank <- c(
+    " (exact match elsewhere)",
+    " (SAV match elsewhere)",
+    " (partial match elsewhere)",
+    "")
+explaination_rank <- data.frame(
+    NoveltyReason = paste0(
+        rep(x = novelty_rank, each = length(match_rank)),
+        rep(x = match_rank, times = length(novelty_rank))),
+    stringsAsFactors = FALSE
+) %>%
+    dplyr::mutate(., Rank = 1:dplyr::n())
 
 # Use the leading protein to decide between multi ORFs mapping
 novelty_reasons_format <- novelty_reasons %>%
     dplyr::left_join(x = ., y = evid_leading, by = "Sequence") %>%
-    dplyr::filter(., warning == "" | Proteins == `Leading proteins`)
+    dplyr::filter(., warning == "" | Proteins == `Leading proteins`) %>%
+    dplyr::left_join(x = ., y = explaination_rank, by = "NoveltyReason") %>%
+    tidyr:::separate(
+        data = ., col = "blast_best", into = c("id", "evalue"),
+        sep = '||', remove = FALSE, convert = TRUE, extra = "drop") %>%
+    dplyr::group_by(., Sequence) %>%
+    dplyr::mutate(., Count = dplyr::n()) %>%
+    dplyr::filter(., Count == 1 | Rank == min(Rank)) %>%
+    dplyr::filter(., evalue == min(evalue)) %>%
+    dplyr::ungroup(.)
 
 # Include the novelty reason column to the evidence table
 evid_reason <- novelty_reasons_format %>%
-    dplyr::select(., -Proteins, -`Leading proteins`) %>%
+    dplyr::select(
+        ., -Proteins, -`Leading proteins`,
+        -Rank, -Count, -id, -evalue) %>%
     dplyr::left_join(x = evid, y = ., by = "Sequence")
 
 # Update the evidence table based on novelty explanation, any "Not novel"
@@ -443,7 +499,7 @@ pl <- ggplot(
             #face = "bold",
             size = (textsize * 1.5))) +
     scale_fill_manual(values = database_colours) +
-    scale_colour_manual(guide = FALSE, values = database_colours)
+    scale_colour_manual(guide = "none", values = database_colours)
 pl
 
 # Split and gather the evidence data so that it can be analysed separately
