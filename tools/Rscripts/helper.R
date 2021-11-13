@@ -865,11 +865,15 @@ novel_pep_classify <- function(
     # Get the best blast(s) for current ORF to novel peptide map
     best_blast_all_tmp <- blast_all_tmp %>%
         unique(.) %>%
-        dplyr::group_by(., qseqid) %>%
-        dplyr::filter(., evalue_reciproc == min(evalue_reciproc)) %>%
-        dplyr::filter(., score_reciproc == max(score_reciproc)) %>%
-        dplyr::filter(., pident_reciproc == max(pident_reciproc))
+        dplyr::group_by(., qseqid)
     
+    if (nrow(best_blast_all_tmp) > 0) {
+        best_blast_all_tmp %<>%
+            dplyr::filter(., evalue_reciproc == min(evalue_reciproc)) %>%
+            dplyr::filter(., score_reciproc == max(score_reciproc)) %>%
+            dplyr::filter(., pident_reciproc == max(pident_reciproc))
+    }
+
     # Perform novelty analysis on reference blast
     my_rows <- c(min(1, nrow(blast_ref_tmp)):nrow(blast_ref_tmp))
     ref_novel <- lapply(
@@ -2649,7 +2653,8 @@ fgsea_scored <- function(
     my_gsea %<>%
         dplyr::mutate(
             ., `-log10_pval` = -log10(pval), `-log10_padj` = -log10(padj),
-            genes = stats_size) %>%
+            genes = stats_size,
+            leadingEdge = sapply(leadingEdge, toString)) %>%
         dplyr::select(
             ., pathway, pval, padj, log2err, ES, NES, size,
             `-log10_pval`, `-log10_padj`, genes, leadingEdge) %>%
