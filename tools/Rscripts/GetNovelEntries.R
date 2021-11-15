@@ -538,7 +538,7 @@ write.table(
     col.names = FALSE)
 
 # Save subset fasta file for identified novel entries
-my_novel_fasta_id <- fasta$Novel[my_id_novels]
+my_novel_fasta_id <- fasta$Novel[names(fasta$Novel) %in% my_id_novels]
 seqinr::write.fasta(
     sequences = my_novel_fasta_id,
     names = unlist(lapply(my_novel_fasta_id, function(x) {
