@@ -17,7 +17,7 @@ ProteinCoordinate=0
 ProteinAnnotation=0
 BSgenomeForge=0
 GRangeCreate=0
-PepNoveltyReason=1
+PepNoveltyReason=0
 SequencesCoordinate=1
 OperonCoordinate=0
 SangerCoordinate=0
@@ -79,7 +79,7 @@ Circular="c('chr1','pca2_4','pcb2_4','pcc5_2','psysa','psysg','psysm','psysx')"
 # RBSanalysis
 
 # User provided additional RBS motifs sequence
-#AddRBS='aaaggaggtgt agaggtggtgt atattaagaggaggag agagaacaaggagggg'
+#AddRBS=''
 
 # ClustalParam
 #RBSLOW="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
