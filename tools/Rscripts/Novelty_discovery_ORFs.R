@@ -792,7 +792,7 @@ orf_reason <- evid_reason %>%
     cSplit(
         indt = ., splitCols = "Proteins", sep = ";",
         direction = "long", fixed = TRUE) %>%
-    dplyr::filter(., Proteins %in% targets)
+    dplyr::filter(., Proteins %in% targets_filt)
 
 # Compile info for each novel ORFs based on all sequences (target and novel)
 #orf_reason_cat <- orf_reason %>%
@@ -998,6 +998,19 @@ orf_reason_final <- blast_info %>%
         ., Proteins, best_blast_id = id,
         best_blast_description = description, best_blast_taxon = taxon) %>%
     dplyr::left_join(x = orf_reason_final, y = ., by = "Proteins")
+
+
+
+### Coverage location evidences ------------------------------------------
+
+# Loop through all novel ORFs
+for (x in orf_reason_final$Proteins) {
+    pep_gr_filt <- subset(pep_grange, grepl(paste0(x, "(,|$)"), Proteins))
+    orf_reason_final[orf_reason_final$Proteins == x, "Coverage_start"] <- min(
+        c(start(pep_gr_filt), end(pep_gr_filt)))
+    orf_reason_final[orf_reason_final$Proteins == x, "Coverage_end"] <- max(
+        c(start(pep_gr_filt), end(pep_gr_filt)))
+}
 
 
 
