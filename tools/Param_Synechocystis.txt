@@ -18,7 +18,7 @@ ProteinAnnotation=0
 BSgenomeForge=0
 GRangeCreate=0
 PepNoveltyReason=0
-SequencesCoordinate=1
+SequencesCoordinate=0
 OperonCoordinate=0
 SangerCoordinate=0
 OrfNoveltyReason=0
@@ -26,8 +26,9 @@ ClustalAlign=0
 ConservationBlast=0
 MaxquantValidation=0
 SummarizedExp=0
-InterproScan=0
-SignalpPrediction=0
+InterproScan=1
+SignalpPrediction=1
+EmapperAnnotation=1
 
 # EmbossParam
 FRAME=6
@@ -93,5 +94,11 @@ mqpar_valid="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_validation_novel_ORF_TMT/mqp
 
 # SignalpParam
 Organism="gram-"
+
+# EmapperParam
+emapperParam='-m diamond --sensmode ultra-sensitive'
+emapperDBParam=''
+EmapperDbDir="${PBS_O_HOME}/work/EggnogDB/"
+EmapperType="proteins"
 
 
