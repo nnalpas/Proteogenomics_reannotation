@@ -95,11 +95,11 @@ if (interactive()) {
             multi = FALSE),
         add_rbs = readline(prompt = paste0(
             "Provide additional RBS sequence",
-            " (separated by space)?")) %>%
+            " (separated by comma)?")) %>%
             as.character(),
         pep_class = readline(prompt = paste0(
             "Which PEP class to keep",
-            " (separated by space; e.g. 'class 1')")) %>%
+            " (separated by comma; e.g. 'class 1')")) %>%
             as.character(),
         bsgenome = readline(prompt = paste0(
             "Provide name of the BSgenome package")) %>%
@@ -155,12 +155,12 @@ if (interactive()) {
         make_option(
             opt_str = c("-a", "--add_rbs"),
             type = "character", default = NULL,
-            help = "Additional RBS sequence (separated by space)",
+            help = "Additional RBS sequence (separated by comma)",
             metavar = "character"),
         make_option(
             opt_str = c("-c", "--pep_class"),
             type = "character", default = NULL,
-            help = "Which PEP class to keep (separated by space; e.g. 'class 1')",
+            help = "Which PEP class to keep (separated by comma; e.g. 'class 1')",
             metavar = "character"),
         make_option(
             opt_str = c("-b", "--bsgenome"),
@@ -372,12 +372,21 @@ if (!is.null(opt$operon) & file.exists(opt$operon)) {
 if (!is.null(opt$add_rbs)) {
     user_rbs <- opt$add_rbs %>%
         as.character(.) %>%
-        strsplit(x = ., split = " ", fixed = TRUE) %>%
+        strsplit(x = ., split = ",", fixed = TRUE) %>%
         unlist(.) %>%
         toupper(.) %>%
         unique(.)
 } else {
     user_rbs <- character(0)
+}
+
+# Format the PEP classes if defined
+if (!is.null(opt$pep_class)) {
+    opt$pep_class %<>%
+        as.character(.) %>%
+        strsplit(x = ., split = ",", fixed = TRUE) %>%
+        unlist(.) %>%
+        unique(.)
 }
 
 
