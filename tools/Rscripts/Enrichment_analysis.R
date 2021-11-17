@@ -46,7 +46,7 @@ library(magrittr)
 
 opt <- list(
     annotation = "H:/data/0989LaAn/eggnog/EggNOG_annotation_2_perseus.txt",
-    ranking = "H:/data/0989LaAn/Ranalysis/2021-04_Perseus_analysis/Mix1_directional_p-value.txt",
+    ranking = "H:/data/0989LaAn/Ranalysis/2021-04_Perseus_analysis/Mix1_and_2_iBAQ",
     resource = "Custom_Pathway,best_og_Category,best_og_Subcategory,GOBP Term,GOCC Term,GOMF Term,EC level 1 name,EC level 2 name,EC level 3 name,KEGG_Pathway_Name,KEGG_Module_Name,KEGG_Reaction_Name,KEGG_rclass_Name,KEGG_brite_Name,PFAMs,CAZy,BiGG_Reaction",
     gene = "#query_name",
     leading = as.logical(TRUE),
