@@ -46,17 +46,18 @@ library(magrittr)
 
 opt <- list(
     annotation = "H:/data/0989LaAn/eggnog/EggNOG_annotation_2_perseus.txt",
-    ranking = "H:/data/0989LaAn/Ranalysis/2021-04_Perseus_analysis/Mix1_and_2_iBAQ",
-    resource = "Custom_Pathway,best_og_Category,best_og_Subcategory,GOBP Term,GOCC Term,GOMF Term,EC level 1 name,EC level 2 name,EC level 3 name,KEGG_Pathway_Name,KEGG_Module_Name,KEGG_Reaction_Name,KEGG_rclass_Name,KEGG_brite_Name,PFAMs,CAZy,BiGG_Reaction",
+    ranking = "H:/data/0989LaAn/Ranalysis/2021-04_Perseus_analysis/Mix1_and_2_iBAQ.txt",
+    resource = "Preferred_name,Custom_Pathway,best_og_Category,best_og_Subcategory,GOBP Term,GOCC Term,GOMF Term,EC level 1 name,EC level 2 name,EC level 3 name,KEGG_Pathway_Name,KEGG_Module_Name,KEGG_Reaction_Name,KEGG_rclass_Name,KEGG_brite_Name,PFAMs,CAZy,BiGG_Reaction",
     gene = "#query_name",
     leading = as.logical(TRUE),
-    rankcols = "Protein IDs,Mix1 directional p-value",
+    nozero = as.logical(TRUE),
+    idcol = "Protein IDs",
     pval = 1,
     padj = 1,
     minsize = 1,
     maxsize = Inf,
     threads = 1,
-    output = "H:/data/0989LaAn/Ranalysis/OA_GSEA")
+    output = "H:/data/0989LaAn/Ranalysis/2021-11-18_OA_GSEA")
 
 # Check whether inputs parameters were provided
 if (
@@ -92,7 +93,7 @@ my_annotation <- data.table::fread(
 
 my_ranking <- data.table::fread(
     input = opt$ranking, sep = "\t", quote = "",
-    header = TRUE, stringsAsFactors = FALSE)
+    header = TRUE, stringsAsFactors = FALSE, colClasses = "character")
 
 my_resource <- opt$resource %>%
     base::strsplit(x = ., split = ",", fixed = TRUE) %>%
@@ -104,19 +105,32 @@ my_resource <- opt$resource %>%
 ### Perform gene-set enrichment analysis ---------------------------------
 
 # Check format of the ranking data
-if (!is.null(opt$rankcols)) {
-    my_cols <- unlist(strsplit(x = opt$rankcols, split = ",", fixed = TRUE))
-    my_ranking %<>%
-        dplyr::select(., my_cols)
+if (any(colnames(my_ranking) != opt$idcol)) {
+    
+    my_cols <- colnames(my_ranking)[colnames(my_ranking) != opt$idcol]
     if (opt$leading) {
-        my_ranking[[my_cols[[1]]]] %<>%
+        my_ranking[[opt$idcol]] %<>%
             sub(";.+", "", .)
     } else {
         my_ranking %<>%
-            tidyr::separate_rows(data = ., my_cols[[1]], sep = ";")
+            tidyr::separate_rows(data = ., opt$idcol, sep = ";")
     }
-    stats <- my_ranking[[my_cols[[2]]]] %>%
-        set_names(my_ranking[[my_cols[[1]]]])
+    
+    stats_list <- lapply(my_cols, function (x) {
+        stats <- my_ranking %>%
+            dplyr::select(., !!as.name(opt$idcol), !!as.name(x))
+        stats[[x]] <- as.double(stats[[x]])
+        stats %<>%
+            dplyr::filter(., !is.na(!!as.name(x)))
+        if (opt$nozero) {
+            stats %<>%
+                dplyr::filter(., !!as.name(x) != 0)
+        }
+        stats[[x]] %>%
+            set_names(stats[[opt$idcol]])
+    }) %>%
+        set_names(my_cols)
+    
 }
 
 # Loop through selected resources and perform separate
@@ -126,10 +140,13 @@ my_gsea_combined <- lapply(X = my_resource, FUN = function(x) {
     pathways <- fgsea_pathways(
         annotation = my_annotation, gene = opt$gene, resource = x)
     
-    my_results <- fgsea_scored(
-        pathways = pathways, stats = stats,
-        minSize = opt$minsize, maxSize = opt$maxsize,
-        pval = opt$pval, padj = opt$padj)
+    my_results <- lapply(stats_list, function(stats) {
+        fgsea_scored(
+            pathways = pathways, stats = stats,
+            minSize = opt$minsize, maxSize = opt$maxsize,
+            pval = opt$pval, padj = opt$padj)
+    }) %>%
+        plyr::ldply(., data.table::data.table, .id = "set")
     
 }) %>%
     set_names(my_resource) %>%
