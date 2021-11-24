@@ -84,7 +84,7 @@ while read file; do
 	else
 		add_param+="-taxid ${TAXID} "
 	fi
-	echo "makeblastdb -in ${file} -input_type ${INPUTTYPE} -title ${title} -parse_seqids -dbtype ${DBTYPE} ${add_param}"
+	makeblastdb -in "${file}" -input_type ${INPUTTYPE} -title ${title} -parse_seqids -dbtype ${DBTYPE} ${add_param}
 done
 
 # Time scripts ends
