@@ -26,9 +26,10 @@ ClustalAlign=0
 ConservationBlast=0
 MaxquantValidation=0
 SummarizedExp=0
-InterproScan=1
-SignalpPrediction=1
-EmapperAnnotation=1
+InterproScan=0
+SignalpPrediction=0
+EmapperAnnotation=0
+PhylostratigraphyBlast=1
 
 # EmbossParam
 FRAME=6
@@ -100,5 +101,10 @@ emapperParam='-m diamond --sensmode ultra-sensitive'
 emapperDBParam=''
 EmapperDbDir="${PBS_O_HOME}/work/EggnogDB/"
 EmapperType="proteins"
+
+# PhylostratigraphyBlastParam
+InputTypePhylo="fasta"
+BlastSoftwarePhylo="Blast"
+SerialBlastMapPhylo="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Phylostratigraphy_blasts.txt"
 
 
