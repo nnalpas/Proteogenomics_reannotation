@@ -14,7 +14,7 @@ display_usage() {
 		Options:
         	-i	[str]	The input file format.
 			-y	[str]	The type of the data ('nucl' or 'prot')
-			-t	[int]	The taxon ID for the database(s)
+			-t	[int]	The taxon ID for the database(s) (if unspecified, it must be the name of the input file)
         	-h	[]	To display the help.
 	"
 }
@@ -66,9 +66,7 @@ if [ -z "${DBTYPE}" ]; then
 	exit 1
 fi
 if [ -z "${TAXID}" ]; then
-	echo "The taxon ID must be specified." >&2
-	display_usage
-	exit 1
+	echo "The taxon ID is not specified. Will try to parse from file name." >&2
 fi
 if [ -z "${INPUT}" ]; then
 	echo "At least one path must be specified." >&2
@@ -77,9 +75,13 @@ if [ -z "${INPUT}" ]; then
 fi
 
 # Loop through all submitted fasta
-for file in ${INPUT[@]}; do
-	title=`basename $file | perl -p -e 's/.fasta$//'`
-	makeblastdb -in ${file} -input_type ${INPUTTYPE} -title ${title} -parse_seqids -dbtype ${DBTYPE} -taxid ${TAXID}
+ls -1 ${INPUTS[@]} | 
+while read file; do
+	title=`basename "$file" | perl -p -e 's/.(fasta|faa)$//'`
+	if [ -z "${TAXID}" ]; then
+		TAXID=${title}
+	fi
+	makeblastdb -in "${file}" -input_type ${INPUTTYPE} -title ${title} -parse_seqids -dbtype ${DBTYPE} -taxid ${TAXID}
 done
 
 # Time scripts ends
