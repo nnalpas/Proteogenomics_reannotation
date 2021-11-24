@@ -44,7 +44,7 @@ cd ${PBS_O_WORKDIR}
 #module load curl/7.57.0
 #module load zlib/1.2.11
 module load blast+/2.10.1
-module load math/R/3.5.2-mkl-2018 # the prerequisite GNU is incompatible with blast+ (must find solution)
+#module load math/R/3.5.2-mkl-2018 # the prerequisite GNU is incompatible with blast+ (must find solution)
 #module load clustal_omega/1.2.4
 module load emboss/6.6.0
 module load devel/perl/5.26
@@ -586,3 +586,22 @@ if [ $EmapperAnnotation == 1 ]; then
 fi
 
 
+
+###########################
+# Phylostratigraphy blast #
+###########################
+
+# Check whether to blast selected proteome for pphylostratigraphy analysis
+if [ $PhylostratigraphyBlast == 1 ]; then
+	
+	${PBS_O_HOME}/bin/MakeBlastDb.sh \
+		-i ${InputTypePhylo} \
+		-y "prot" \
+		${ProjDir}/Phylostratigraphy/*.faa > ${LogDir}/PhylostrMakeBlastDb.log 2>&1
+	${PBS_O_HOME}/bin/SerialDbBlasting.sh \
+		-o ${ProjDir}/Phylostratigraphy \
+		-s ${BlastSoftwarePhylo} \
+		-x ${SerialBlastMapPhylo} \
+		-t ${THREADS} > ${LogDir}/PhylostrDbBlasting.log 2>&1
+	
+fi
