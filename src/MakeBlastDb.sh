@@ -52,7 +52,7 @@ while getopts "i:y:t:h" opt; do
 done
 
 # Also get target folders from parameter
-INPUT=${@:1}
+INPUTS=${@:1}
 
 # Check for mandatory parameters
 if [ -z "${INPUTTYPE}" ]; then
@@ -78,10 +78,13 @@ fi
 ls -1 ${INPUTS[@]} | 
 while read file; do
 	title=`basename "$file" | perl -p -e 's/.(fasta|faa)$//'`
+	add_param=""
 	if [ -z "${TAXID}" ]; then
-		TAXID=${title}
+		add_param+="-taxid ${title} "
+	else
+		add_param+="-taxid ${TAXID} "
 	fi
-	makeblastdb -in "${file}" -input_type ${INPUTTYPE} -title ${title} -parse_seqids -dbtype ${DBTYPE} -taxid ${TAXID}
+	echo "makeblastdb -in ${file} -input_type ${INPUTTYPE} -title ${title} -parse_seqids -dbtype ${DBTYPE} ${add_param}"
 done
 
 # Time scripts ends
