@@ -68,7 +68,7 @@ fi
 if [ -z "${TAXID}" ]; then
 	echo "The taxon ID is not specified. Will try to parse from file name." >&2
 fi
-if [ -z "${INPUT}" ]; then
+if [ -z "${INPUTS}" ]; then
 	echo "At least one path must be specified." >&2
 	display_usage
 	exit 1
