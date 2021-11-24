@@ -236,4 +236,77 @@ data.table::fwrite(
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
 
+my_genome_dir <- "T:/User/Nicolas/Phylostratigraphy"
+
+my_genome_files <- list.files(
+    path = my_genome_dir, pattern = "*.faa", full.names = TRUE) %>%
+    data.table::data.table(path = .) %>%
+    dplyr::mutate(
+        ., assembly_accession = sub("^(.+?_.+?)_.+", "\\1", basename(path))) %>%
+    dplyr::left_join(x = ., y = my_ncbi_list_final) %>%
+    dplyr::group_by(., taxid) %>%
+    dplyr::mutate(., Duplication = dplyr::n())
+
+#data.table::fwrite(
+#    x = my_genome_files,
+#    file = "H:/data/Synechocystis_6frame/Phylostratigraphy/Downloaded_representative_genome.txt",
+#    append = FALSE, quote = FALSE, sep = "\t",
+#    row.names = FALSE, col.names = TRUE)
+
+# uncompress and concatenate all proteins per taxon id (check for unique IDs)
+out_dir <- "T:/User/Nicolas/Phylostratigraphy/Formatted"
+dir.create(path = out_dir)
+options(warn = 0)
+for (t in unique(my_genome_files$taxid)) {
+    
+    t_fasta_f <- c(my_genome_files[my_genome_files$taxid == t, ][["path"]])
+    
+    if (length(t_fasta_f) == 1) {
+        file.copy(from = t_fasta_f, to = paste0(out_dir, "/", t, ".faa"))
+    } else {
+        print(paste("Concatenating:", t, "..."))
+        my_seqs <- lapply(t_fasta_f, function(f) {
+            seqinr::read.fasta(
+                file = f, seqtype = "AA",
+                as.string = TRUE, whole.header = TRUE)
+        }) %>%
+            unlist(.)
+        my_seqs_filt <- my_seqs[!duplicated(my_seqs)]
+        seqinr::write.fasta(
+            sequences = my_seqs_filt, names = names(my_seqs_filt),
+            file.out = paste0(out_dir, "/", t, ".faa"),
+            open = "w", nbchar = 80, as.string = TRUE)
+        #for (z in my_seqs_filt) {
+        #    if (!is.character(z)) {
+        #        warning("Not character!")
+        #    }
+        #    if (length(z) != 1) {
+        #        warning("More than one string!")
+        #    }
+        #    my_tmp <- seqinr::s2c(string = z)
+        #}
+        
+    }
+    
+}
+
+# create the serial blast phenodata
+my_serial_blast <- my_genome_files %>%
+    dplyr::ungroup(.) %>%
+    dplyr::select(., taxid) %>%
+    unique(.) %>%
+    dplyr::mutate(
+        ., Task = "blastp",
+        Query = paste0("${PBS_O_HOME}/work/Synechocystis_6frame/Phylostratigraphy/", focal_id, ".faa"),
+        Subject = paste0("${PBS_O_HOME}/work/Synechocystis_6frame/Phylostratigraphy/", taxid, ".faa"),
+        Title = taxid, Selection = "all", threshold = 10, maxhits = 250,
+        Param1 = "", Param2 = "") %>%
+    dplyr::select(., -taxid)
+
+data.table::fwrite(
+    x = my_serial_blast,
+    file = "T:/User/Nicolas/Phylostratigraphy/Phylostratigraphy_blasts.txt",
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = FALSE)
+
 
