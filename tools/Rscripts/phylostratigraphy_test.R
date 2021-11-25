@@ -3,6 +3,7 @@
 
 library(magrittr)
 library(phylostratr)
+library(ggplot2)
 
 focal_id <- "1148"
 
@@ -270,25 +271,32 @@ for (t in unique(my_genome_files$taxid)) {
                 file = f, seqtype = "AA",
                 as.string = TRUE, whole.header = TRUE)
         }) %>%
-            unlist(.)
+            unlist(., recursive = FALSE)
         my_seqs_filt <- my_seqs[!duplicated(my_seqs)]
         seqinr::write.fasta(
             sequences = my_seqs_filt, names = names(my_seqs_filt),
             file.out = paste0(out_dir, "/", t, ".faa"),
             open = "w", nbchar = 80, as.string = TRUE)
-        #for (z in my_seqs_filt) {
-        #    if (!is.character(z)) {
-        #        warning("Not character!")
-        #    }
-        #    if (length(z) != 1) {
-        #        warning("More than one string!")
-        #    }
-        #    my_tmp <- seqinr::s2c(string = z)
-        #}
         
     }
     
 }
+
+toplot <- my_genome_files %>%
+    dplyr::select(., taxid, NodeLabel) %>%
+    unique(.) %>%
+    dplyr::group_by(., NodeLabel) %>%
+    dplyr::summarise(., Count = dplyr::n())
+toplot$NodeLabel <- factor(
+    x = toplot$NodeLabel,
+    levels = levels(tree_statistics$NodeLabel),
+    ordered = TRUE)
+
+ggplot(toplot, aes(x = NodeLabel, y = Count, label = Count)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_text(position = position_dodge(width = 0.9), hjust = -0.1) +
+    ggpubr::theme_pubr() +
+    coord_flip()
 
 # create the serial blast phenodata
 my_serial_blast <- my_genome_files %>%
@@ -308,5 +316,7 @@ data.table::fwrite(
     file = "T:/User/Nicolas/Phylostratigraphy/Phylostratigraphy_blasts.txt",
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = FALSE)
+
+save.image("H:/data/Synechocystis_6frame/Phylostratigraphy/phylo_2021-11-25.RData")
 
 
