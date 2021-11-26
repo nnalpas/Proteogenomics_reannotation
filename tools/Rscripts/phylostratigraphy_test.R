@@ -263,6 +263,7 @@ for (t in unique(my_genome_files$taxid)) {
     t_fasta_f <- c(my_genome_files[my_genome_files$taxid == t, ][["path"]])
     
     if (length(t_fasta_f) == 1) {
+        # will need to change this and read sequences to change duplicate IDs
         file.copy(from = t_fasta_f, to = paste0(out_dir, "/", t, ".faa"))
     } else {
         print(paste("Concatenating:", t, "..."))
