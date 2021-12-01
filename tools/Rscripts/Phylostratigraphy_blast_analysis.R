@@ -10,15 +10,6 @@ my_phylo_blast_folder <- "H:/data/Synechocystis_6frame/Phylostratigraphy/"
 
 strata_uni <- uniprot_strata(taxid = focal_id, from = 1)
 
-lineages <- lapply(
-    1:nleafs(strata_uni@tree), lineage, type = "index", x = strata_uni@tree)
-
-weights <- uniprot_weight_by_ref(clade = 2)
-weights <- weights[strata_uni@tree$tip.label]
-weights[is.na(weights)] <- 1
-
-chosen <- FUN(lineages, 100, weights, strata_uni@tree)
-
 my_blast_f <- list.files(
     path = my_phylo_blast_folder, pattern = "*_annot", full.names = TRUE) %>%
     set_names(sub("_annot", "", basename(.)))
@@ -62,10 +53,6 @@ strata_species@data$besthit <- lapply(my_blast_f[
         dplyr::distinct(., qseqid, staxid, .keep_all = TRUE)
 })
 
-#tmp <- strata_species
-#strata_fold(tmp, function(s) {
-#    do.call(what = rbind, s@data$besthit)})
-
 strata_best <- merge_besthits(strata_species)
 
 strata_final <- stratify(strata_best)
@@ -74,12 +61,7 @@ strata_final <- stratify(strata_best)
 plot_heatmaps(
     hits = strata_best, filename = "Heatmap_phylostratr.pdf",
     tree = strata_species@tree, to_name = TRUE, focal_id = focal_id)
-make_obo_pdf(
-    d = strata_best, file = "Obo_phylostratr.pdf")
 
-
-
-
-save.image("session.RData")
+save.image("Session_phylostratr.RData")
 
 
