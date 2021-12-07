@@ -4,9 +4,12 @@
 library(magrittr)
 library(phylostratr)
 library(ggplot2)
+library(ggtree)
 
 focal_id <- "1148"
 my_phylo_blast_folder <- "H:/data/Synechocystis_6frame/Phylostratigraphy/"
+
+my_plots <- list()
 
 strata_uni <- uniprot_strata(taxid = focal_id, from = 1)
 
@@ -61,6 +64,56 @@ strata_final <- stratify(strata_best)
 plot_heatmaps(
     hits = strata_best, filename = "Heatmap_phylostratr.pdf",
     tree = strata_species@tree, to_name = TRUE, focal_id = focal_id)
+
+toplot <- strata_final %>%
+    dplyr::group_by(., ps, mrca_name) %>%
+    dplyr::summarise(., Count = dplyr::n_distinct(qseqid)) %>%
+    dplyr::ungroup(.) %>%
+    dplyr::mutate(., Label = paste0("ps ", ps , " - ", mrca_name)) %>%
+    dplyr::arrange(., dplyr::desc(ps))
+toplot$Label <- factor(
+    x = toplot$Label, levels = unique(toplot$Label), ordered = TRUE)
+
+my_plots[["ps_count"]] <- ggplot(toplot, aes(x = Label, y = Count, label = Count)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_text(
+        stat = "identity", position = position_dodge(width = 0.9),
+        hjust = -0.3) +
+    ggpubr::theme_pubr() +
+    coord_flip()
+
+toplot_tree <- strata_species@tree
+toplot_tree$tip.label <- partial_id_to_name(toplot_tree$tip.label)
+toplot_tree$node.label <- partial_id_to_name(toplot_tree$node.label)
+toplot_tree$node.label[30:length(toplot_tree$node.label)] <- ""
+
+my_ps_list <- strata_best %>%
+    dplyr::select(., staxid, mrca, ps) %>%
+    unique(.) %>%
+    dplyr::rowwise(.) %>%
+    dplyr::mutate(
+        ., TaxonName = partial_id_to_name(staxid),
+        mrca_name = partial_id_to_name(mrca),
+        Label = paste0("ps ", ps , " - ", mrca_name))
+
+my_group <- split(
+    my_ps_list$TaxonName,
+    my_ps_list$Label)
+
+toplot_tree_grouped <- groupOTU(toplot_tree, my_group)
+
+my_plots[["phylogeny_tree"]] <- ggtree(
+    toplot_tree_grouped, aes(color = group)) +
+    geom_text2(aes(label = label), hjust = .3) +
+    geom_tiplab(size = 1)
+
+my_plots[["phylogeny_circular"]] <- ggtree::ggtree(
+    toplot_tree_grouped, aes(color = group), layout = 'circular') +
+    ggtree::geom_tiplab(size = 1, aes(angle = angle))
+
+pdf("Phylostrata_plots.pdf", 10, 10)
+my_plots
+dev.off()
 
 save.image("Session_phylostratr.RData")
 
