@@ -60,6 +60,13 @@ strata_best <- merge_besthits(strata_species)
 
 strata_final <- stratify(strata_best)
 
+# Organise data for overrepresentation analysis
+strata_final_oa <- strata_final %>%
+    dplyr::mutate(., value = 1, Label = paste0("ps ", ps , " - ", mrca_name)) %>%
+    tidyr::pivot_wider(data = ., names_from = Label, values_from = value) %>%
+    dplyr::select(., -ps, -mrca, -mrca_name) %>%
+    dplyr::mutate_all(~tidyr::replace_na(., replace = 0))
+
 # Plot results
 plot_heatmaps(
     hits = strata_best, filename = "Heatmap_phylostratr.pdf",
@@ -114,6 +121,11 @@ my_plots[["phylogeny_circular"]] <- ggtree::ggtree(
 pdf("Phylostrata_plots.pdf", 10, 10)
 my_plots
 dev.off()
+
+data.table::fwrite(
+    x = strata_final_oa, file = "Phylostrata_for_OA.txt",
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
 
 save.image("Session_phylostratr.RData")
 
