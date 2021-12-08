@@ -45,17 +45,18 @@ library(magrittr)
 ### Parameters setting up ------------------------------------------------
 
 opt <- list(
-    annotation = "H:/data/Srim_6frame_3rd_analysis/EggnogMapper/EggNOG_annotation_2_perseus.txt",
-    foreground = "H:/data/Srim_6frame_3rd_analysis/Novel_res/CP048261_CP048262_prot_sequence_FIXED_NOTidentified.fasta",
-    background = "H:/data/Srim_6frame_3rd_analysis/Genome/CP048261_CP048262_prot_sequence_FIXED.fasta",
-    resource = "best_og_Category,best_og_Subcategory,GOBP Term,GOCC Term,GOMF Term,EC level 1 name,EC level 2 name,EC level 3 name,KEGG_Pathway_Name,KEGG_Module_Name,KEGG_Reaction_Name,KEGG_rclass_Name,KEGG_brite_Name,PFAMs,CAZy,BiGG_Reaction",
+    annotation = "H:/data/Synechocystis_6frame/EggnogMapper/EggNOG_annotation_2_perseus.txt",
+    foreground = "H:/data/Synechocystis_6frame/Phylostratigraphy/Phylostrata_for_OA.txt",
+    background = "H:/data/Synechocystis_6frame/Phylostratigraphy/1148.faa",
+    resource = "best_og_Category,best_og_Subcategory,GOBP Term,GOCC Term,GOMF Term,EC level 1 name,EC level 2 name,EC level 3 name,KEGG_Pathway_Name,KEGG_Module_Name,KEGG_Reaction_Name,KEGG_rclass_Name,KEGG_brite_Name,PFAMs,CAZy,BiGG_Reaction,Custom_annotation",
     gene = "#query_name",
+    idcol = "qseqid",
     pval = 1,
     padj = 1,
     minsize = 1,
     maxsize = Inf,
     threads = 1,
-    output = "H:/data/Srim_6frame_3rd_analysis/OA_GSEA")
+    output = "H:/data/Synechocystis_6frame/OA_GSEA")
 
 # Check whether inputs parameters were provided
 if (
@@ -89,8 +90,22 @@ my_annotation <- data.table::fread(
     input = opt$annotation, sep = "\t", quote = "", header = TRUE,
     stringsAsFactors = FALSE, colClasses = "character")
 
-my_foreground <- seqinr::read.fasta(
-    file = opt$foreground, seqtype = "AA", as.string = TRUE)
+if (!is.na(opt$idcol) & !is.null(opt$idcol) & opt$idcol != "") {
+    my_ranking <- data.table::fread(
+        input = opt$foreground, sep = "\t", quote = "",
+        header = TRUE, stringsAsFactors = FALSE, colClasses = "character") %>%
+        tidyr::pivot_longer(data = ., cols = -as.name(opt$idcol)) %>%
+        dplyr::filter(., !is.na(value) & value == 1) %>%
+        dplyr::mutate(., name = as.factor(name))
+    my_foreground <- split(
+        x = my_ranking[[opt$idcol]], f = my_ranking$name)
+} else {
+    my_foreground <- seqinr::read.fasta(
+        file = opt$foreground, seqtype = "AA", as.string = TRUE) %>%
+        names(.) %>%
+        list(.) %>%
+        set_names(basename(opt$foreground))
+}
 
 my_background <- seqinr::read.fasta(
     file = opt$background, seqtype = "AA", as.string = TRUE)
@@ -107,14 +122,17 @@ my_resource <- opt$resource %>%
 # Loop through selected resources and perform separate
 # overrepresentation analysis
 my_oa_combined <- lapply(X = my_resource, FUN = function(x) {
-    
+
     pathways <- fgsea_pathways(
         annotation = my_annotation, gene = opt$gene, resource = x)
     
-    my_results <- fora_scored(
-        pathways = pathways, genes = names(my_foreground),
-        universe = names(my_background), minSize = opt$minsize,
-        maxSize = opt$maxsize, pval = opt$pval, padj = opt$padj)
+    my_results <- lapply(my_foreground, function(stats) {
+        fora_scored(
+            pathways = pathways, genes = stats,
+            universe = names(my_background), minSize = opt$minsize,
+            maxSize = opt$maxsize, pval = opt$pval, padj = opt$padj)
+    }) %>%
+        plyr::ldply(., data.table::data.table, .id = "set")
     
 }) %>%
     set_names(my_resource) %>%
