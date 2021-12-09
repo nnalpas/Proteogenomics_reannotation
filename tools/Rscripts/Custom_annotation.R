@@ -40,14 +40,14 @@ my_phospho_final <- my_phospho %>%
     dplyr::select(., Proteins, `Localization prob`, Intensity) %>%
     tidyr::separate_rows(data = ., Proteins, sep = ";") %>%
     dplyr::mutate(
-        ., Identified = "Identified",
+        ., Identified = "Identified phospho (STY)",
         #Localised = dplyr::case_when(
         #    `Localization prob` > 0.95 ~ "Localisation prob. > 0.95",
         #    `Localization prob` > 0.75 ~ "Localisation prob. > 0.75",
         #    TRUE ~ "Not localised"),
         Quantified = dplyr::case_when(
-            !is.na(Intensity) & Intensity > 0 ~ "Quantified",
-            TRUE ~ "Not quantified")) %>%
+            !is.na(Intensity) & Intensity > 0 ~ "Quantified phospho (STY)",
+            TRUE ~ "Not quantified phospho (STY)")) %>%
     tidyr::pivot_longer(
         data = ., cols = c(Identified, Quantified))#c(Identified, Localised, Quantified))
 
@@ -103,7 +103,7 @@ my_pg <- lapply(my_pg_files, function(x) {
         header = TRUE, stringsAsFactors = FALSE,
         colClasses = "character")
 }) %>%
-    plyr::ldply(., "data.table", .id = "Processing")
+    plyr::ldply(., data.table::data.table, .id = "Processing")
 
 all_prot <- data.frame(
     Proteins = rep(names(my_fasta), each = length(my_pg_files)),
