@@ -123,6 +123,11 @@ my_plots
 dev.off()
 
 data.table::fwrite(
+    x = strata_final, file = "Phylostrata_proteins.txt",
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
+
+data.table::fwrite(
     x = strata_final_oa, file = "Phylostrata_for_OA.txt",
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
