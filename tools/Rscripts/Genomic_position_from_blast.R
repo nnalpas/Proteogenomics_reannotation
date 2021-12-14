@@ -172,12 +172,12 @@ blast_data <- blast_read(file = opt$blast, blast_format = "6") %>%
 
 # Get the best blast and format sequence as stringset
 blast_data_best <- best_blast(
-    data = blast_data, key = "qseqid", multi_match = "uniquify") %>%
-    dplyr::rowwise() %>%
-    dplyr::mutate(
-        .,
-        qseq = list(Biostrings::AAString(qseq)),
-        sseq = list(Biostrings::AAString(sseq)))
+    data = blast_data, key = "qseqid", multi_match = "uniquify")# %>%
+    #dplyr::rowwise() %>%
+    #dplyr::mutate(
+    #    .,
+    #    qseq = list(Biostrings::AAString(qseq)),
+    #    sseq = list(Biostrings::AAString(sseq)))
 
 # Define genomic strand
 blast_data_best %<>%
@@ -207,32 +207,57 @@ blast_data_best <- get_frame(
     genome_size = geno_size)
 
 # Adjust genomic coordinate if blast is not from start to end of query
-blast_data_best %<>%
-    dplyr::mutate(
-        .,
-        start = ifelse(
-            strand == "+",
-            (sstart - ((qstart - 1) * 3)),
-            (sstart + ((qstart - 1) * 3))),
-        end = ifelse(
-            strand == "+",
-            (send + ((qlen - qend) * 3)),
-            (send - ((qlen - qend) * 3))),
-        nucl_length_qlen = qlen * 3,
-        nucl_length_str_end = abs(end - start) + 1,
-        nucl_length = nucl_length_str_end,
-        Comment = ifelse(
-            nucl_length_qlen != nucl_length_str_end, "Warning", "OK")) %>%
-    base::as.data.frame(., stringsAsFactors = FALSE)
+if (any(grepl("M", blast_data_best$qseq))) {
+    blast_data_best %<>%
+        dplyr::mutate(
+            .,
+            start = ifelse(
+                strand == "+",
+                (sstart - ((qstart - 1) * 3)),
+                (sstart + ((qstart - 1) * 3))),
+            end = ifelse(
+                strand == "+",
+                (send + ((qlen - qend) * 3)),
+                (send - ((qlen - qend) * 3))),
+            nucl_length_qlen = qlen * 3,
+            nucl_length = abs(end - start) + 1,
+            aa_length = qlen,
+            Comment = ifelse(
+                nucl_length_qlen != nucl_length, "Warning", "OK")) %>%
+        base::as.data.frame(., stringsAsFactors = FALSE)
+} else {
+    blast_data_best %<>%
+        dplyr::mutate(
+            .,
+            start = ifelse(
+                strand == "+",
+                (sstart - (qstart - 1)),
+                (sstart + (qstart - 1))),
+            end = ifelse(
+                strand == "+",
+                (send + (qlen - qend)),
+                (send - (qlen - qend))),
+            nucl_length_qlen = qlen,
+            nucl_length = abs(end - start) + 1,
+            aa_length = (qlen/3)+1,
+            Comment = ifelse(
+                nucl_length_qlen != nucl_length, "Warning", "OK")) %>%
+        base::as.data.frame(., stringsAsFactors = FALSE)
+}
+
+# Always check warning and approximate values,
+# this will indicate ORF on replication point for circular genomes
 
 # Keep only required columns (related to genomic coordinates)
 data_final <- blast_data_best %>%
     dplyr::select(
         ., qseqid, sseqid, strand, frame, start, end,
-        nucl_length, qlen, ExactCoord, Comment) %>%
+        nucl_length, aa_length, ExactCoord, Comment) %>%
     set_colnames(c(
         "id", "chromosome", "strand", "frame", "start", "end",
-        "nucl_length", "aa_length", "ExactCoord", "Comment"))
+        "nucl_length", "aa_length", "ExactCoord", "Comment")) %>%
+    dplyr::mutate(
+        ., Comment = ifelse((nucl_length %% 3) != 0, "Warning", Comment))
 
 
 
