@@ -412,7 +412,8 @@ annot_final <- annot_format %>%
     dplyr::left_join(x = ., y = annot_to_pirsf_final, by = "ID") %>%
     dplyr::left_join(x = ., y = annot_to_prosite_final, by = "ID") %>%
     dplyr::left_join(x = ., y = annot_to_tigrfam_final, by = "ID") %>%
-    dplyr::mutate_all(~tidyr::replace_na(data = ., replace = ""))
+    dplyr::mutate_all(~tidyr::replace_na(data = ., replace = "")) %>%
+    dplyr::rename(., `#query_name` = ID)
 
 if (nrow(annot_final) != unique_id) {
     stop("Final number of rows not equal to input!")
