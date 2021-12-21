@@ -3,13 +3,29 @@
 
 library(magrittr)
 
+my_out <- "H:/data/Synechocystis_6frame/Custom_annotation"
 my_fasta_f <- "H:/data/Synechocystis_6frame/Phylostratigraphy/1148.faa"
+my_micro_fasta_f <- "H:/data/Synechocystis_6frame/Genome/micro_proteins_Synechocystis_sp_PCC6803_20180419.fasta"
+my_mq_f <- "H:/data/Synechocystis_6frame/MQ_6frame_valid/combined/txt/"
+my_mq_pride_f <- "H:/data/Synechocystis_6frame/ORF_validation"
+my_novel_f <- "H:/data/Synechocystis_6frame/NoveltyExplain/ORF_novelty_reason.RDS"
+my_position_f <- "H:/data/Synechocystis_6frame/ProtPosition/Ref_and_ORF_prot_coordinates.txt"
+my_tu_f <- "H:/data/Synechocystis_6frame/Kopf_2014_TU/Transcriptional_units_per_gene.txt"
+my_ps_f <- "H:/data/Synechocystis_6frame/EggnogMapper/EggNOG_annotation_2_perseus_PS_parsed.txt"
+
+dir.create(my_out)
+
+
+
+### Import all known and novel ORFs --------------------------------------
 
 my_fasta <- seqinr::read.fasta(
     file = my_fasta_f, seqtype = "AA",
     as.string = TRUE, whole.header = FALSE)
 
-my_novel_f <- "H:/data/Synechocystis_6frame/NoveltyExplain/ORF_novelty_reason.RDS"
+
+
+### Novel ORF annotation -------------------------------------------------
 
 my_novelty <- readRDS(my_novel_f)
 
@@ -24,10 +40,11 @@ my_novelty_final <- my_novelty %>%
         Explanation = sub("( \\(|;|\\||s\\/).*", "", ORFNoveltyReason)) %>%
     tidyr::pivot_longer(data = ., cols = c(Database, Quality, Explanation))
 
-my_mq_f <- "H:/data/Synechocystis_6frame/MQ_6frame_valid/combined/txt/"
-my_mq_pride_f <- "H:/data/Synechocystis_6frame/ORF_validation"
+
+
+### Phosphoprotein identification ----------------------------------------
+
 my_phospho_f <- "Phospho (STY)Sites.txt"
-my_pg_f <- "proteinGroups.txt"
 
 my_phospho <- data.table::fread(
     input = paste0(my_mq_f, my_phospho_f),
@@ -50,6 +67,10 @@ my_phospho_final <- my_phospho %>%
             TRUE ~ "Not quantified phospho (STY)")) %>%
     tidyr::pivot_longer(
         data = ., cols = c(Identified, Quantified))#c(Identified, Localised, Quantified))
+
+
+
+### Kinases annotation ---------------------------------------------------
 
 my_headers <- lapply(my_fasta, function(x) {
     attr(x, "Annot")
@@ -91,7 +112,14 @@ my_kinases_final <- my_kinases %>%
             TRUE ~ "Other kinase")) %>%
     tidyr::pivot_longer(data = ., cols = c(Type, Target, Kinase))
 
-my_pg_files <- list.dirs(path = my_mq_pride_f, full.names = TRUE, recursive = FALSE) %>%
+
+
+### Protein identification -----------------------------------------------
+
+my_pg_f <- "proteinGroups.txt"
+
+my_pg_files <- list.dirs(
+    path = my_mq_pride_f, full.names = TRUE, recursive = FALSE) %>%
     set_names(basename(.)) %>%
     lapply(., function(x) paste(x, "/combined/txt/", my_pg_f, sep = "")) %>%
     unlist(.) %>%
@@ -133,35 +161,83 @@ my_pg_final <- my_pg %>%
         data = .,
         cols = c(Identified_all, Quantified_all, Identified, Quantified))
 
+
+
+### Microproteins annotation ---------------------------------------------
+
+my_micro <- seqinr::read.fasta(
+    file = my_micro_fasta_f, seqtype = "AA",
+    as.string = TRUE, whole.header = FALSE) %>%
+    names(.) %>%
+    data.table::data.table(Proteins = ., value = "Microproteins")
+
+
+
+### Protein genomic position ---------------------------------------------
+
+my_position <- data.table::fread(
+    input = my_position_f,
+    sep = "\t", quote = "",
+    header = TRUE, stringsAsFactors = FALSE,
+    colClasses = "character") %>%
+    dplyr::select(., -ExactCoord, -Comment)
+
+
+
+### Transcriptional units annotation -------------------------------------
+
+my_tu <- data.table::fread(
+    input = my_tu_f,
+    sep = "\t", quote = "",
+    header = TRUE, stringsAsFactors = FALSE,
+    colClasses = "character") %>%
+    tidyr::separate_rows(data = ., `TU ID`, `TU type`, sep = ";") %>%
+    dplyr::group_by(., `Sense tags`) %>%
+    dplyr::summarise_all(~paste0(unique(.), collapse = ";")) %>%
+    dplyr::ungroup(.)
+
+
+
+### SCyCode functional annotation ----------------------------------------
+
+my_ps <- data.table::fread(
+    input = my_ps_f,
+    sep = "\t", quote = "",
+    header = TRUE, stringsAsFactors = FALSE,
+    colClasses = "character")
+
+
+
+### Compile the custom annotation ----------------------------------------
+
 my_custom_annot <- dplyr::bind_rows(
-    my_pg_final, my_phospho_final, my_kinases_final, my_novelty_final) %>%
+    my_pg_final, my_phospho_final, my_kinases_final,
+    my_novelty_final, my_micro) %>%
     dplyr::group_by(., Proteins) %>%
     dplyr::summarise(
-        ., Custom_annotation = paste0(
+        ., Miscellaneous = paste0(
             na.omit(unique(value)), collapse = ";")) %>%
     dplyr::ungroup(.) %>%
-    dplyr::rename(., `#query_name` = Proteins)
-
-
-annot_final <- annot %>%
-    dplyr::select(., `#query_name`, best_og_name, best_og_desc) %>%
-    dplyr::mutate(., best_og_desc = gsub(";", ",", best_og_desc)) %>%
-    dplyr::left_join(x = ., y = annot_to_symbol_final, by = "#query_name") %>%
-    dplyr::left_join(x = ., y = annot_to_ogcat_final, by = "#query_name") %>%
-    dplyr::left_join(x = ., y = annot_to_go_final, by = "#query_name") %>%
-    dplyr::left_join(x = ., y = annot_to_ec_final, by = "#query_name") %>%
-    dplyr::left_join(x = ., y = annot_to_kegg_ko_final, by = "#query_name") %>%
-    dplyr::left_join(x = ., y = annot_to_kegg_path_final, by = "#query_name") %>%
-    dplyr::left_join(x = ., y = annot_to_kegg_module_final, by = "#query_name") %>%
-    dplyr::left_join(x = ., y = annot_to_kegg_reaction_final, by = "#query_name") %>%
-    dplyr::left_join(x = ., y = annot_to_kegg_rclass_final, by = "#query_name") %>%
-    dplyr::left_join(x = ., y = annot_to_kegg_brite_final, by = "#query_name") %>%
-    dplyr::left_join(x = ., y = annot_to_pfam_final, by = "#query_name") %>%
-    dplyr::left_join(x = ., y = annot_to_cazy_final, by = "#query_name") %>%
-    dplyr::left_join(x = ., y = annot_to_bigg_final, by = "#query_name") %>%
-    dplyr::full_join(x = ., y = my_custom_annot, by = "#query_name") %>%
+    dplyr::rename(., `#query_name` = Proteins) %>%
+    dplyr::left_join(x = ., y = my_position, by = c("#query_name" = "id")) %>%
+    dplyr::left_join(x = ., y = my_tu, by = c("#query_name" = "Sense tags")) %>%
+    dplyr::left_join(x = ., y = my_ps, by = "#query_name") %>%
     dplyr::mutate_all(~replace(x = ., list = is.na(.), values = ""))
 
-save.image("session.Rdata")
+
+
+### Export the custom annotation -----------------------------------------
+
+data.table::fwrite(
+    x = my_custom_annot,
+    file = paste(my_out, "2021-12-21_annotation_session.txt", sep = "/"),
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
+
+save.image(paste(my_out, "2021-12-21_annotation_session.RData", sep = "/"))
+
+
+
+### END ------------------------------------------------------------------
 
 
