@@ -1,6 +1,8 @@
 
 
 
+library(magrittr)
+
 my_fasta_f <- "H:/data/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta"
 
 my_f <- "H:/data/Synechocystis_6frame/EggnogMapper/Synechocystis_UniProt_annotation.tab"
@@ -8,6 +10,8 @@ my_f <- "H:/data/Synechocystis_6frame/EggnogMapper/Synechocystis_UniProt_annotat
 my_fasta <- seqinr::read.fasta(
     file = my_fasta_f, seqtype = "AA", as.string = TRUE)
 
+# In case there is an error about 'Discarded single-line footer',
+# it means that not the whole file was downloaded
 my_custom_annot <- data.table::fread(
     input = my_f, sep = "\t", quote = "", header = TRUE,
     stringsAsFactors = FALSE, colClasses = "character")
@@ -105,7 +109,7 @@ my_final_annot <- annot_to_gene %>%
 
 data.table::fwrite(
     x = my_final_annot,
-    file = sub(".tab", "_formatted_2021-12-14.txt", my_f),
+    file = sub(".tab", "_formatted_2021-12-21.tab", my_f),
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
 
