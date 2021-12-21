@@ -5,7 +5,7 @@ library(magrittr)
 library(GO.db)
 
 opt <- list()
-opt$annotation <- "H:/data/Synechocystis_6frame/EggnogMapper/Synechocystis_UniProt_annotation_formatted_2021-12-14.txt"
+opt$annotation <- "H:/data/Synechocystis_6frame/EggnogMapper/Synechocystis_UniProt_annotation_formatted_2021-12-21.txt"
 opt$ecdb <- "D:/Local_databases/X-databases/EC/enzclass.txt"
 opt$output = "H:/data/Synechocystis_6frame/EggnogMapper"
 
@@ -61,7 +61,7 @@ data.table::fwrite(
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
 
-# Perform action as decribed in file
+# Perform action as described in file
 delimiter_actions <- data.table::fread(
     input = "delimiter_check.txt", sep = "\t", quote = "",
     header = TRUE, stringsAsFactors = FALSE, strip.white = FALSE) %>%
