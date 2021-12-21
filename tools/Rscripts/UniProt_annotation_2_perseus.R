@@ -7,7 +7,13 @@ library(GO.db)
 opt <- list()
 opt$annotation <- "H:/data/Synechocystis_6frame/EggnogMapper/Synechocystis_UniProt_annotation_formatted_2021-12-21.txt"
 opt$ecdb <- "D:/Local_databases/X-databases/EC/enzclass.txt"
+opt$interpro = "D:/Local_databases/X-databases/Interpro/interpro_parsed.txt"
+opt$panther = "D:/Local_databases/X-databases/Panther/Panther_parsed.txt"
+opt$pirsf <- "D:/Local_databases/X-databases/PIRSF/pirsfinfo_parsed.txt"
+opt$prosite <- "D:/Local_databases/X-databases/Prosite/2021-12/prosite_parsed.txt"
+opt$tigrfam <- "D:/Local_databases/X-databases/Tigrfam/hmm_PGAP.tsv"
 opt$output = "H:/data/Synechocystis_6frame/EggnogMapper"
+
 
 
 ### Data import ----------------------------------------------------------
@@ -25,10 +31,25 @@ annot <- myfilelist <- opt$annotation %>%
     }) %>%
     plyr::ldply(., dplyr::bind_rows, .id = NULL)
 
-# Import the enzyme commission database
+# Import the different parsed database
 ec <- data.table::fread(
     input = opt$ecdb, sep = NULL, quote = "", header = FALSE,
     stringsAsFactors = FALSE, blank.lines.skip = TRUE)
+interpro <- data.table::fread(
+    input = opt$interpro, sep = "\t", quote = "", header = TRUE,
+    stringsAsFactors = FALSE)
+panther <- data.table::fread(
+    input = opt$panther, sep = "\t", quote = "", header = TRUE,
+    stringsAsFactors = FALSE)
+pirsf <- data.table::fread(
+    input = opt$pirsf, sep = "\t", quote = "", header = TRUE,
+    stringsAsFactors = FALSE)
+prosite <- data.table::fread(
+    input = opt$prosite, sep = "\t", quote = "", header = TRUE,
+    stringsAsFactors = FALSE)
+tigrfam <- data.table::fread(
+    input = opt$tigrfam, sep = "\t", quote = "", header = TRUE,
+    stringsAsFactors = FALSE)
 
 
 
@@ -37,7 +58,7 @@ ec <- data.table::fread(
 unique_id <- length(unique(annot$ID))
 
 delimiters <- apply(annot, 2, function(x) {
-    unique(unlist(na.omit(str_extract_all(x, " |;|,|:|-|\\[|\\.|\\/|\\="))))
+    unique(unlist(na.omit(stringr::str_extract_all(x, " |;|,|:|-|\\[|\\.|\\/|\\="))))
 })
 
 if (any(lengths(delimiters) > 1)) {
@@ -63,8 +84,9 @@ data.table::fwrite(
 
 # Perform action as described in file
 delimiter_actions <- data.table::fread(
-    input = "delimiter_check.txt", sep = "\t", quote = "",
-    header = TRUE, stringsAsFactors = FALSE, strip.white = FALSE) %>%
+    input = "H:/data/Synechocystis_6frame/EggnogMapper/UniProt_delimiter_check.txt",
+    sep = "\t", quote = "", header = TRUE,
+    stringsAsFactors = FALSE, strip.white = FALSE) %>%
     dplyr::filter(., action != "")
 delimiter_actions %<>%
     split(x = ., f = delimiter_actions$column)
@@ -271,12 +293,125 @@ annot_to_go_final <- annot_to_go %>%
 
 
 
+### Formatting Interpro categories ---------------------------------------
+
+my_interpro_format <- interpro %>%
+    set_colnames(sub("ENTRY", "Interpro", colnames(.)))
+
+annot_to_interpro <- annot_format %>%
+    dplyr::select(., ID, InterPro = `Cross-reference (InterPro)`) %>%
+    dplyr::filter(
+        ., !is.na(InterPro) & InterPro != "-" & InterPro != "") %>%
+    tidyr::separate_rows(data = ., InterPro, sep = ";")
+
+annot_to_interpro_final <- dplyr::left_join(
+    x = annot_to_interpro, y = my_interpro_format,
+    by = c("InterPro" = "Interpro_AC")) %>%
+    dplyr::group_by(., ID) %>%
+    dplyr::summarise_all(~paste0(na.omit(.), collapse = ";")) %>%
+    dplyr::ungroup(.)
+
+
+
+### Formatting Panther categories ----------------------------------------
+
+my_panther_format <- panther %>%
+    set_colnames(sub("^", "Panther ", colnames(.)))
+
+annot_to_panther <- annot_format %>%
+    dplyr::select(., ID, Panther = `Cross-reference (PANTHER)`) %>%
+    dplyr::filter(
+        ., !is.na(Panther) & Panther != "-" & Panther != "") %>%
+    tidyr::separate_rows(data = ., Panther, sep = ";")
+
+annot_to_panther_final <- dplyr::left_join(
+    x = annot_to_panther, y = my_panther_format,
+    by = c("Panther" = "Panther PANTHER ID")) %>%
+    dplyr::group_by(., ID) %>%
+    dplyr::summarise_all(~paste0(na.omit(.), collapse = ";")) %>%
+    dplyr::ungroup(.)
+
+
+
+### Formatting PIRSF categories ------------------------------------------
+
+my_pirsf_format <- pirsf %>%
+    dplyr::select(., -curation_status, -parent) %>%
+    set_colnames(sub("^", "PIRSF ", colnames(.)))
+
+annot_to_pirsf <- annot_format %>%
+    dplyr::select(., ID, PIRSF = `Cross-reference (PIRSF)`) %>%
+    dplyr::filter(
+        ., !is.na(PIRSF) & PIRSF != "-" & PIRSF != "") %>%
+    tidyr::separate_rows(data = ., PIRSF, sep = ";")
+
+annot_to_pirsf_final <- dplyr::left_join(
+    x = annot_to_pirsf, y = my_pirsf_format,
+    by = c("PIRSF" = "PIRSF PIRSF_number")) %>%
+    dplyr::group_by(., ID) %>%
+    dplyr::summarise_all(~paste0(na.omit(.), collapse = ";")) %>%
+    dplyr::ungroup(.)
+
+
+
+### Formatting Prosite categories ------------------------------------------
+
+my_prosite_format <- prosite %>%
+    dplyr::select(., -DT) %>%
+    set_colnames(sub("^", "Prosite ", colnames(.)))
+
+annot_to_prosite <- annot_format %>%
+    dplyr::select(., ID, Prosite = `Cross-reference (PROSITE)`) %>%
+    dplyr::filter(
+        ., !is.na(Prosite) & Prosite != "-" & Prosite != "") %>%
+    tidyr::separate_rows(data = ., Prosite, sep = ";")
+
+annot_to_prosite_final <- dplyr::left_join(
+    x = annot_to_prosite, y = my_prosite_format,
+    by = c("Prosite" = "Prosite AC")) %>%
+    dplyr::group_by(., ID) %>%
+    dplyr::summarise_all(~paste0(na.omit(.), collapse = ";")) %>%
+    dplyr::ungroup(.)
+
+
+
+### Formatting TIGRFAM categories ----------------------------------------
+
+my_tigrfam_format <- tigrfam %>%
+    dplyr::select(
+        ., source_identifier, label, family_type, product_name) %>%
+    set_colnames(sub("^", "TIGRFAM ", colnames(.)))
+
+annot_to_tigrfam <- annot_format %>%
+    dplyr::select(., ID, TIGRFAM = `Cross-reference (TIGRFAMs)`) %>%
+    dplyr::filter(
+        ., !is.na(TIGRFAM) & TIGRFAM != "-" & TIGRFAM != "") %>%
+    tidyr::separate_rows(data = ., TIGRFAM, sep = ";")
+
+annot_to_tigrfam_final <- dplyr::left_join(
+    x = annot_to_tigrfam, y = my_tigrfam_format,
+    by = c("TIGRFAM" = "TIGRFAM source_identifier")) %>%
+    dplyr::group_by(., ID) %>%
+    dplyr::summarise_all(~paste0(na.omit(.), collapse = ";")) %>%
+    dplyr::ungroup(.)
+
+
+
 ### Compile all annotations ----------------------------------------------
 
 annot_final <- annot_format %>%
-    dplyr::select(., -`Gene ontology IDs`, -`EC number`) %>%
+    dplyr::select(
+        ., -`Gene ontology IDs`, -`EC number`,
+        -`Cross-reference (InterPro)`, -`Cross-reference (PANTHER)`,
+        -`Cross-reference (PIRSF)`, -`Cross-reference (PROSITE)`,
+        -`Cross-reference (TIGRFAMs)`) %>%
     dplyr::left_join(x = ., y = annot_to_ec_final, by = "ID") %>%
     dplyr::left_join(x = ., y = annot_to_go_final, by = "ID") %>%
+    dplyr::left_join(x = ., y = annot_to_interpro_final, by = "ID") %>%
+    dplyr::left_join(x = ., y = annot_to_panther_final, by = "ID") %>%
+    dplyr::left_join(x = ., y = annot_to_pirsf_final, by = "ID") %>%
+    dplyr::left_join(x = ., y = annot_to_prosite_final, by = "ID") %>%
+    dplyr::left_join(x = ., y = annot_to_tigrfam_final, by = "ID") %>%
     dplyr::mutate_all(~tidyr::replace_na(data = ., replace = ""))
 
 if (nrow(annot_final) != unique_id) {
