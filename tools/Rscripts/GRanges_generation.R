@@ -306,7 +306,7 @@ seqinfo(grange) <- seqinfo(bsgeno)
 # Add values to the created GRanges object
 values(grange) <- grange_data %>%
     dplyr::select(
-        ., -chromosome, -start, -end, -strand)
+        ., -chromosome, -isCircular, -start, -end, -strand)
 
 # Define names of the GRange entries
 names(grange) <- grange_data$id
