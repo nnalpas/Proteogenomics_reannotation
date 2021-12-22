@@ -16,15 +16,16 @@ ReciprocalBestBlast=0
 ProteinCoordinate=0
 ProteinAnnotation=0
 BSgenomeForge=0
-GRangeCreate=1
+GRangeCreate=0
 PepNoveltyReason=0
-SequencesCoordinate=1
+SequencesCoordinate=0
 OperonCoordinate=0
 SangerCoordinate=0
-OrfNoveltyReason=1
+OrfNoveltyReason=0
 ClustalAlign=0
 ConservationBlast=0
 MaxquantValidation=0
+OrfValidation=1
 SummarizedExp=0
 InterproScan=0
 SignalpPrediction=0
@@ -94,7 +95,7 @@ PEPclass='class 1,class 2'
 BlastnParam=''
 
 # MaxQuantValidationParam
-mqpar_valid="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_validation_novel_ORF_TMT/mqpar_posix.xml"
+mq_valid="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/mq_valid.txt"
 
 # SignalpParam
 Organism="gram-"
