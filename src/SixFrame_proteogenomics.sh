@@ -116,7 +116,7 @@ if [ $GetNovelEntries == 1 ]; then
 
     ${PBS_O_HOME}/bin/GetNovelEntries.R \
 		-o ${ProjDir}/Novel_res \
-		-m ${ProjDir}/MaxQuant/combined/txt \
+		-m ${ProjDir}/MQ_6frame/combined/txt \
 		-r ${UNIREFPROT} \
 		-n ${SIXFRAMEPROT} \
 		-t ${THREADS} > ${LogDir}/GetNovelEntries.log 2>&1
@@ -527,7 +527,7 @@ if [ $SummarizedExp == 1 ]; then
 	
 	SummarizedExpPreparation.sh \
 		-o ${ProjDir}/SummarizedExp \
-		${ProjDir}/ORF_validation ${ProjDir}/MaxQuant ${ProjDir}/GRanges > ${LogDir}/SummarizedExp.log 2>&1
+		${ProjDir}/ORF_validation ${ProjDir}/MQ_6frame ${ProjDir}/GRanges > ${LogDir}/SummarizedExp.log 2>&1
 	SummarizedExp_generation.R \
 		-i ${ProjDir}/SummarizedExp \
 		-o ${ProjDir}/SummarizedExp >> ${LogDir}/SummarizedExp.log 2>&1
