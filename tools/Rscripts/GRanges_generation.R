@@ -249,24 +249,27 @@ if (!exists("coordinates")) {
         
     }
     
-    # Format the start-end position so that start is always inferior to end
+    # Account for entries spanning the replication origin of circular genome
     grange_data %<>%
-        dplyr::mutate(., start_tmp = start, end_tmp = end) %>%
-        dplyr::rowwise(.) %>%
+        dplyr::left_join(
+            x = ., y = chromos[, c("chromosome", "isCircular")]) %>%
         dplyr::mutate(
-            .,
-            start = min(start_tmp, end_tmp),
-            end = max(start_tmp, end_tmp))
+            ., start_tmp = start, end_tmp = end) %>%
+        dplyr::mutate(
+            ., start = dplyr::case_when(
+                strand == "-" ~ end_tmp,
+                TRUE ~ start),
+            end = dplyr::case_when(
+                strand == "-" ~ start_tmp,
+                TRUE ~ end)) %>%
+        dplyr::rowwise(.) %>%
+        dplyr::mutate(., end = dplyr::case_when(
+            isCircular & end < start ~ (start+nucl_length-1L),
+            TRUE ~ end))
     
-    # Check whether entries on + strand had their start-end inverted
-    if (
-        grange_data %>%
-        dplyr::filter(., strand == "+" & start_tmp != start) %>%
-        nrow(.) %>%
-        is_greater_than(., 0)) {
-        
-        warning("Positive strand entries had their start-end inverted!")
-        
+    # Format the start-end position so that start is always inferior to end
+    if (any(grange_data$start > grange_data$end)) {
+        stop("Some entries have inverted start-end, to check!")
     }
     
     # Clean up the grange data
