@@ -274,7 +274,7 @@ if (!exists("coordinates")) {
     
     # Clean up the grange data
     grange_data %<>%
-        dplyr::select(., -end_tmp, -start_tmp)
+        dplyr::select(., -isCircular, -end_tmp, -start_tmp)
     
 }
 
@@ -306,7 +306,7 @@ seqinfo(grange) <- seqinfo(bsgeno)
 # Add values to the created GRanges object
 values(grange) <- grange_data %>%
     dplyr::select(
-        ., -chromosome, -isCircular, -start, -end, -strand)
+        ., -chromosome, -start, -end, -strand)
 
 # Define names of the GRange entries
 names(grange) <- grange_data$id
