@@ -83,6 +83,9 @@ Circular="c('chr1','pca2_4','pcb2_4','pcc5_2','psysa','psysg','psysm','psysx')"
 # User provided additional RBS motifs sequence
 #AddRBS=''
 
+# OrfNoveltyReasonParam
+PEPclass='class 1,class 2'
+
 # ClustalParam
 #RBSLOW="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
 #RBSHIGH="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
