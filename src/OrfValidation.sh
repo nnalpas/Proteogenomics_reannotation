@@ -154,23 +154,23 @@ while IFS=$'\t' read -r prefix path; do
 		-r ${REFFASTA} \
 		-n ${ORFFASTA} \
 		-t ${THREADS}
-	Novelty_discovery_peptides.R \
-		-e ${WKDIR}/${prefix}/Group_evidence.RDS \
-		-f ${REFFASTA} \
-		-r ${REFRECIP} \
-		-u ${RECIP} \
-		-p ${WKDIR}/${prefix}/Peptides_location.RDS \
-		-t ${THREADS} \
-		-o ${WKDIR}/${prefix}
-	SequenceGrange.sh \
-		-o ${WKDIR}/${prefix} \
-		-c ${WKDIR}/${prefix} \
-		-n ${WKDIR}/${prefix}/Sequence_novelty_reason.RDS \
-		-r ${REFCOORD} \
-		-f ${ORFCOORD} \
-		-g ${GENOME} \
-		-b ${BSGENOME} \
-		${WKDIR}/${prefix}
+	#Novelty_discovery_peptides.R \
+	#	-e ${WKDIR}/${prefix}/Group_evidence.RDS \
+	#	-f ${REFFASTA} \
+	#	-r ${REFRECIP} \
+	#	-u ${RECIP} \
+	#	-p ${WKDIR}/${prefix}/Peptides_location.RDS \
+	#	-t ${THREADS} \
+	#	-o ${WKDIR}/${prefix}
+	#SequenceGrange.sh \
+	#	-o ${WKDIR}/${prefix} \
+	#	-c ${WKDIR}/${prefix} \
+	#	-n ${WKDIR}/${prefix}/Sequence_novelty_reason.RDS \
+	#	-r ${REFCOORD} \
+	#	-f ${ORFCOORD} \
+	#	-g ${GENOME} \
+	#	-b ${BSGENOME} \
+	#	${WKDIR}/${prefix}
    
 done < "$INPUTS"
 
