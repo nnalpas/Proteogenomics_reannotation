@@ -148,21 +148,21 @@ while IFS=$'\t' read -r prefix path; do
 	    mkdir -p ${WKDIR}/${prefix}
     fi
 
-	GetNovelEntries.R \
+	echo "GetNovelEntries.R \
 		-o ${WKDIR}/${prefix} \
 		-m ${path}/combined/txt \
 		-r ${REFFASTA} \
 		-n ${ORFFASTA} \
-		-t ${THREADS}
-	Novelty_discovery_peptides.R \
+		-t ${THREADS}"
+	echo "Novelty_discovery_peptides.R \
 		-e ${WKDIR}/${prefix}/Group_evidence.RDS \
 		-f ${REFFASTA} \
 		-r ${REFRECIP} \
 		-u ${RECIP} \
 		-p ${WKDIR}/${prefix}/Peptides_location.RDS \
 		-t ${THREADS} \
-		-o ${WKDIR}/${prefix}
-	${PBS_O_HOME}/bin/SequenceGrange.sh \
+		-o ${WKDIR}/${prefix}"
+	echo "${PBS_O_HOME}/bin/SequenceGrange.sh \
 		-o ${WKDIR}/${prefix} \
 		-c ${WKDIR}/${prefix} \
 		-n ${WKDIR}/${prefix}/Sequence_novelty_reason.RDS \
@@ -170,7 +170,7 @@ while IFS=$'\t' read -r prefix path; do
 		-f ${ORFCOORD} \
 		-g ${GENOME} \
 		-b ${BSGENOME} \
-		${WKDIR}/${prefix}
+		${WKDIR}/${prefix}"
    
 done < "$INPUTS"
 
