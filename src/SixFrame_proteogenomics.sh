@@ -119,7 +119,8 @@ if (( $GetNovelEntries )); then
 		-m ${ProjDir}/MQ_6frame/combined/txt \
 		-r ${UNIREFPROT} \
 		-n ${SIXFRAMEPROT} \
-		-t ${THREADS} > ${LogDir}/GetNovelEntries.log 2>&1
+		-t ${THREADS} \
+		-p "FALSE" > ${LogDir}/GetNovelEntries.log 2>&1
 
 fi
 
