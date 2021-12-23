@@ -107,6 +107,14 @@ my_oa_final <- my_oa %>%
         padj <= 0.01 ~ "<= 0.01",
         padj <= 0.05 ~ "<= 0.05",
         TRUE ~ "> 0.05"
+    )) %>%
+    dplyr::mutate(., Perc_bin = dplyr::case_when(
+        overlap_perc == 0 ~ "0",
+        overlap_perc <= 20 ~ "20",
+        overlap_perc <= 40 ~ "40",
+        overlap_perc <= 60 ~ "60",
+        overlap_perc <= 80 ~ "80",
+        TRUE ~ "100"
     ))
 
 my_oa_final$padj_range <- factor(
@@ -135,25 +143,36 @@ my_oa_final$set <- factor(
         "ps 10 - Synechocystis sp. PCC 6803"),
     ordered = TRUE)
 
+my_fills <- c("#FFFFFF", "#FABFB1", "#FA7F7D", "#F5D4A6", "#EBA74D", "#A60D17") %>%
+    set_names(seq(from = 0, to = 100, by = 20))
+my_fills <- c("#FFFFFF", "#EE4540", "#C72B41", "#800834", "#530332", "#2E122D") %>%
+    set_names(seq(from = 0, to = 100, by = 20))
+my_fills <- c("#FFFFFF", "#FFE6E6", "#FFCCCC", "#FF9999", "#FF8080", "#FF4D4D") %>%
+    set_names(seq(from = 0, to = 100, by = 20))
+
 my_plots[["Heatmap_oa_perc"]] <- ggplot(
     my_oa_final,
-    aes(x = set, y = pathway, fill = overlap_perc, colour = padj_range)) +
-    geom_tile() +
+    aes(x = set, y = pathway, fill = Perc_bin, colour = padj_range)) +
+    geom_tile(height = 0.8, width = 0.8, size = 0.6) +
     ggpubr::theme_pubr() +
     theme(
         legend.position = "right",
         axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
     facet_grid(rows = vars(resource), scales = "free_y", space = "free_y") +
+    #scale_colour_manual(
+    #    values = c(
+    #        `<= 0.001` = "black", `<= 0.01` = "#545454",
+    #        `<= 0.05` = "#A8A8A8", `> 0.05` = "white")) +
     scale_colour_manual(
         values = c(
-            `<= 0.001` = "black", `<= 0.01` = "#545454",
-            `<= 0.05` = "#A8A8A8", `> 0.05` = "white")) +
-    scale_fill_gradient(low = "white", high = "darkred")
+            `<= 0.001` = "#545454", `<= 0.01` = "#545454",
+            `<= 0.05` = "#545454", `> 0.05` = "white")) +
+     scale_fill_manual(values = my_fills)
 
 my_date <- Sys.Date()
 pdf(
     file = paste0(my_date, "_phylostratigraphy_OA.pdf"),
-    width = 14, height = 18)
+    width = 10, height = 20)
 my_plots
 dev.off()
 
