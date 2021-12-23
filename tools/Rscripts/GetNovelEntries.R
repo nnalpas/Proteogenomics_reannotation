@@ -147,8 +147,9 @@ dir.create(opt$output)
 # Import the maxquant evidence table
 evid <- mq_read(
     path = opt$maxquant,
-    name = "evidence.txt",
+    name = "^evidence.txt$",
     integer64 = "double")
+warning(paste("Number evidences:", nrow(evid)))
 
 # Keep only evidences with at least 1 MS/MS
 warning(paste(
@@ -161,14 +162,16 @@ evid %<>%
 # Import the maxquant peptide table
 pep <- mq_read(
     path = opt$maxquant,
-    name = "peptides.txt",
+    name = "^peptides.txt$",
     integer64 = "double")
+warning(paste("Number peptides:", nrow(pep)))
 
 # Import the maxquant proteingroups table
 pg <- mq_read(
     path = opt$maxquant,
-    name = "proteinGroups.txt",
+    name = "^proteinGroups.txt$",
     integer64 = "double")
+warning(paste("Number proteins:", nrow(pg)))
 
 # Keep evidence IDs for all protein groups that are NOT only identified by site
 pg_not_sites <- unique(as.integer(
@@ -183,7 +186,7 @@ names(fasta$Known) %<>%
 
 # Import all sites data
 site_files <- list.files(
-    path = opt$maxquant, pattern = "Sites.txt", full.names = TRUE) %>%
+    path = opt$maxquant, pattern = "Sites.txt$", full.names = TRUE) %>%
     set_names(sub("Sites\\.txt", "", basename(.)))
 if (length(site_files) > 0) {
     sites <- lapply(X = site_files, function(x) {
@@ -194,6 +197,8 @@ if (length(site_files) > 0) {
                 sub("\\)", "\\\\)", .),
             integer64 = "double")
     })
+    warning(paste("Number sites:", paste0(lengths(sites), collapse = " & ")))
+    sites <- sites[lengths(sites) > 0]
 }
 
 
@@ -379,7 +384,7 @@ pep_match %<>%
 ### Sites identification -------------------------------------------------
 
 # In case there are sites
-if (exists("sites")) {
+if (exists("sites") & length(sites) > 0) {
     
     for (x in names(sites)) {
         
@@ -468,6 +473,9 @@ if (exists("sites")) {
 ### Results visualisation ------------------------------------------------
 
 # Define path to markdown file
+if (opt[["report"]]) {
+    
+}
 if (interactive()) {
     rmd_file <- paste(
         "C:/Users",
