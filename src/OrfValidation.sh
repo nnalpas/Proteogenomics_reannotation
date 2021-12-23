@@ -162,7 +162,7 @@ while IFS=$'\t' read -r prefix path; do
 		-p ${WKDIR}/${prefix}/Peptides_location.RDS \
 		-t ${THREADS} \
 		-o ${WKDIR}/${prefix}
-	${PBS_O_HOME}/bin/SequenceGrange.sh \
+	SequenceGrange.sh \
 		-o ${WKDIR}/${prefix} \
 		-c ${WKDIR}/${prefix} \
 		-n ${WKDIR}/${prefix}/Sequence_novelty_reason.RDS \
