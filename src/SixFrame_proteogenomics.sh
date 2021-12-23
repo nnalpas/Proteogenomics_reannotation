@@ -435,7 +435,7 @@ fi
 # Check whether to perform the ORF novelty reason explanation
 if (( $OrfNoveltyReason )); then
 	
-	Novelty_discovery_ORFs.sh \
+	Novelty_discovery_ORFs.R \
 		-i ${ProjDir}/NoveltyExplain/Sequence_novelty_reason.RDS \
 		-r ${ProjDir}/GRanges/Ref_prot_grange.RDS \
 		-n ${ProjDir}/GRanges/Orf_prot_grange.RDS \
@@ -528,7 +528,7 @@ fi
 # Check whether to perform the ORF validation across potentially multiple MaxQuant processings
 if (( $OrfValidation )); then
 
-	OrfValidation.R \
+	OrfValidation.sh \
 		-o ${ProjDir}/OrfValidation \
 		-r ${UNIREFPROT} \
 		-n ${SIXFRAMEPROT} \
