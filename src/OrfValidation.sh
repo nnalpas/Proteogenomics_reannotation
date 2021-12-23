@@ -153,7 +153,7 @@ while IFS=$'\t' read -r prefix path; do
 		-m ${path}/combined/txt \
 		-r ${REFFASTA} \
 		-n ${ORFFASTA} \
-		-t ${THREADS}
+		-t ${THREADS} 2>&1
 	#Novelty_discovery_peptides.R \
 	#	-e ${WKDIR}/${prefix}/Group_evidence.RDS \
 	#	-f ${REFFASTA} \
@@ -161,7 +161,7 @@ while IFS=$'\t' read -r prefix path; do
 	#	-u ${RECIP} \
 	#	-p ${WKDIR}/${prefix}/Peptides_location.RDS \
 	#	-t ${THREADS} \
-	#	-o ${WKDIR}/${prefix}
+	#	-o ${WKDIR}/${prefix} 2>&1
 	#SequenceGrange.sh \
 	#	-o ${WKDIR}/${prefix} \
 	#	-c ${WKDIR}/${prefix} \
@@ -170,7 +170,7 @@ while IFS=$'\t' read -r prefix path; do
 	#	-f ${ORFCOORD} \
 	#	-g ${GENOME} \
 	#	-b ${BSGENOME} \
-	#	${WKDIR}/${prefix}
+	#	${WKDIR}/${prefix} 2>&1
    
 done < "$INPUTS"
 
