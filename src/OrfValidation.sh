@@ -70,6 +70,10 @@ while getopts "o:r:n:g:b:w:x:y:z:t:h" opt; do
             ORFCOORD=$OPTARG
             shift $((OPTIND-1)); OPTIND=1
 			;;
+        t)
+            THREADS=$OPTARG
+            shift $((OPTIND-1)); OPTIND=1
+			;;
 		h)
 			display_usage
 			shift $((OPTIND-1)); OPTIND=1
