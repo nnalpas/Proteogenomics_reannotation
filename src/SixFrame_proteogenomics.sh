@@ -529,7 +529,7 @@ fi
 if (( $OrfValidation )); then
 
 	OrfValidation.sh \
-		-o ${ProjDir}/OrfValidation \
+		-o ${ProjDir}/Novel_res_validation \
 		-r ${UNIREFPROT} \
 		-n ${SIXFRAMEPROT} \
 		-g ${GENOME} \
