@@ -129,7 +129,7 @@ while IFS= read -r -d '' file; do
 		-r ${NOVELTY} \
 		-k ${REF} \
 		-n ${ORF} \
-		-o ${INTERDIR}
+		-o ${INTERDIR} 2>&1
 	
 	coord_file=`basename "$file" | sed "s/_location.RDS/_coordinates.txt/"`
 	
@@ -137,7 +137,7 @@ while IFS= read -r -d '' file; do
 		-c "${INTERDIR}/${coord_file}" \
 		-g ${GENOME} \
 		-b ${BSGENOME} \
-		-o ${WKDIR}
+		-o ${WKDIR} 2>&1
 	
 done
 
