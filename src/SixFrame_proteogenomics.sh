@@ -435,7 +435,7 @@ fi
 # Check whether to perform the ORF novelty reason explanation
 if (( $OrfNoveltyReason )); then
 	
-	Novelty_discovery_ORFs.R \
+	Novelty_discovery_ORFs.sh \
 		-i ${ProjDir}/NoveltyExplain/Sequence_novelty_reason.RDS \
 		-r ${ProjDir}/GRanges/Ref_prot_grange.RDS \
 		-n ${ProjDir}/GRanges/Orf_prot_grange.RDS \
