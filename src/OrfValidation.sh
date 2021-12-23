@@ -148,21 +148,21 @@ while IFS=$'\t' read -r prefix path; do
 	    mkdir -p ${WKDIR}/${prefix}
     fi
 
-	#GetNovelEntries.R \
-	#	-o ${WKDIR}/${prefix} \
-	#	-m ${path}/combined/txt \
-	#	-r ${REFFASTA} \
-	#	-n ${ORFFASTA} \
-	#	-t ${THREADS} \
-	#	-p "FALSE" 2>&1
-	#Novelty_discovery_peptides.R \
-	#	-e ${WKDIR}/${prefix}/Group_evidence.RDS \
-	#	-f ${REFFASTA} \
-	#	-r ${REFRECIP} \
-	#	-u ${RECIP} \
-	#	-p ${WKDIR}/${prefix}/Peptides_location.RDS \
-	#	-t ${THREADS} \
-	#	-o ${WKDIR}/${prefix} 2>&1
+	GetNovelEntries.R \
+		-o ${WKDIR}/${prefix} \
+		-m ${path}/combined/txt \
+		-r ${REFFASTA} \
+		-n ${ORFFASTA} \
+		-t ${THREADS} \
+		-p "FALSE" 2>&1
+	Novelty_discovery_peptides.R \
+		-e ${WKDIR}/${prefix}/Group_evidence.RDS \
+		-f ${REFFASTA} \
+		-r ${REFRECIP} \
+		-u ${RECIP} \
+		-p ${WKDIR}/${prefix}/Peptides_location.RDS \
+		-t ${THREADS} \
+		-o ${WKDIR}/${prefix} 2>&1
 	SequenceGrange.sh \
 		-o ${WKDIR}/${prefix} \
 		-c ${WKDIR}/${prefix} \
