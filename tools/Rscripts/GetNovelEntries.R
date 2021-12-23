@@ -82,7 +82,8 @@ if (interactive()) {
         novel = choose.files(
             caption = "Choose fasta file containing ORF proteins!",
             multi = FALSE),
-        threads = readline(prompt = "How many cores to use?") %>% as.integer())
+        threads = readline(prompt = "How many cores to use?") %>% as.integer(),
+        report = readline(prompt = "Generate Pandoc report?") %>% as.logical())
     
 } else {
     
@@ -108,6 +109,11 @@ if (interactive()) {
             opt_str = c("-t", "--threads"),
             type = "integer", default = "",
             help = "Number of cores to use",
+            metavar = "character"),
+        make_option(
+            opt_str = c("-p", "--report"),
+            type = "logical", default = TRUE,
+            help = "Generate Pandoc report?",
             metavar = "character"))
     
     # Parse the parameters provided on command line by user
@@ -119,7 +125,8 @@ if (interactive()) {
 # Check whether inputs parameters were provided
 if (
     is.null(opt$output) | is.null(opt$maxquant) |
-    is.null(opt$reference) | is.null(opt$novel)) {
+    is.null(opt$reference) | is.null(opt$novel) |
+    is.null(opt$report)) {
     
     print_help(opt_parser)
     stop("All arguments must be supplied!")
@@ -474,32 +481,31 @@ if (exists("sites") & length(sites) > 0) {
 
 # Define path to markdown file
 if (opt[["report"]]) {
+    if (interactive()) {
+        rmd_file <- paste(
+            "C:/Users",
+            user,
+            "Documents/GitHub/Proteogenomics_reannotation",
+            "tools/Rscripts/GetNovelEntries.rmd",
+            sep = "/")
+    } else {
+        rmd_file <- paste(
+            Sys.getenv("HOME"),
+            "bin/GetNovelEntries.rmd",
+            sep = "/")
+    }
     
+    # Generate the markdown report
+    report_markdown(
+        rmd_file = rmd_file,
+        params = list(
+            fastas = fasta,
+            pep_match = pep_match,
+            evid_match = evid_match %>%
+                dplyr::filter(., !is.na(group) & !is.na(Database))),
+        format = "html_document",
+        ext = "html")
 }
-if (interactive()) {
-    rmd_file <- paste(
-        "C:/Users",
-        user,
-        "Documents/GitHub/Proteogenomics_reannotation",
-        "tools/Rscripts/GetNovelEntries.rmd",
-        sep = "/")
-} else {
-    rmd_file <- paste(
-        Sys.getenv("HOME"),
-        "bin/GetNovelEntries.rmd",
-        sep = "/")
-}
-
-# Generate the markdown report
-report_markdown(
-    rmd_file = rmd_file,
-    params = list(
-        fastas = fasta,
-        pep_match = pep_match,
-        evid_match = evid_match %>%
-            dplyr::filter(., !is.na(group) & !is.na(Database))),
-    format = "html_document",
-    ext = "html")
 
 
 
