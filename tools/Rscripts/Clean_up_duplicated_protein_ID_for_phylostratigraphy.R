@@ -1,4 +1,8 @@
 
+
+
+library(magrittr)
+
 f <- "T:/User/Nicolas/Phylostratigraphy/Formatted/1232426.faa"
 f <- "T:/User/Nicolas/Phylostratigraphy/Formatted/224911.faa"
 f <- "T:/User/Nicolas/Phylostratigraphy/Formatted/243277.faa"
@@ -9,9 +13,11 @@ my_seqs <- seqinr::read.fasta(
 
 table(duplicated(sub(" .+", "", names(my_seqs))))
 table(duplicated(my_seqs))
+table(duplicated(names(my_seqs)))
 names(my_seqs)[duplicated(sub(" .+", "", names(my_seqs)))]
 
-my_seqs_filt <- my_seqs
+my_filt <- (!duplicated(sub(" .+", "", names(my_seqs))) & !duplicated(my_seqs))
+my_seqs_filt <- my_seqs[my_filt]
 names(my_seqs_filt)[duplicated(sub(" .+", "", names(my_seqs_filt)))] %<>%
     sub("\\.1 ", ".d ", .)
 
