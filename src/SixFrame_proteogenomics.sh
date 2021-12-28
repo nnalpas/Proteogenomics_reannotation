@@ -54,7 +54,7 @@ module load signalp/5.0b
 module load eggnog/2.0.5
 
 # Create project directory
-ProjDir=${PBS_O_INITDIR}/${ProjectName}
+ProjDir=${PBS_O_WORKDIR}/${ProjectName}
 
 # Create the log folder
 DateStart=$(date +%F_%H-%M)
