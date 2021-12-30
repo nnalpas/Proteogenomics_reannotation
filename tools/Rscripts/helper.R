@@ -12,23 +12,24 @@
 
 # Function to draw rectangular venn diagram of the genomic coverage
 plots_rectvenn <- function(
-    ideo = NULL,
-    ref = NULL,
-    pep = NULL) {
+    ideo,
+    ref,
+    pep,
+    set = c("Chromosome", "Protein-coding", "Expressed protein", "Detected reference peptide", "Detected novel peptide"),
+    colour = NULL) {
     
-    # Check whether the correct variables have been submitted by users
-    if (is.null(ideo)) {
-        stop("Error: No ideogram GRange object was provided!")
-    }
-    if (is.null(ref)) {
-        stop("Error: No reference GRange object was provided!")
-    }
-    if (is.null(pep)) {
-        stop("Error: No peptide GRange object was provided!")
+    set <- match.arg(
+        arg = set,
+        choices = c("Chromosome", "Protein-coding", "Expressed protein", "Detected reference peptide", "Detected novel peptide"),
+        several.ok = TRUE)
+    
+    if (is.null(colour)) {
+        colour <- c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c", "#404040")
     }
     
-    # Select venn set colours
-    venn_colours <- c("#a6cee3", "#1f78b4", "#b2df8a", "#33a02c")
+    if (length(set) < length(colour)) {
+        stop("Not enough colours defined!")
+    }
     
     # Get all chromosome nucleotide position
     chrom_nuc <- gr_nucleotide_pos(
@@ -39,98 +40,276 @@ plots_rectvenn <- function(
         grange = ref)
     
     # Get all expressed protein associated nucleotide position
+    if (!"Expressed" %in% colnames(values(ref))) {
+        expr_known <- pep$Proteins %>%
+            strsplit(x = ., split = ", ", fixed = TRUE) %>%
+            unlist(.) %>%
+            unique(.) %>%
+            data.frame(id = ., Expressed = TRUE) %>%
+            dplyr::left_join(
+                x = data.frame(id = names(ref)), y = ., by = "id") %>%
+            dplyr::mutate(
+                ., Expressed = ifelse(is.na(Expressed), FALSE, Expressed)) %>%
+            set_rownames(.[["id"]]) %>%
+            dplyr::select(., -id)
+        values(ref) <- cbind(
+            values(ref), expr_known)
+    }
     exprs_nuc <- gr_nucleotide_pos(
         grange = ref, filter = "Expressed == TRUE")
     
     # Get all peptide associated nucleotide position
-    cover_nuc <- gr_nucleotide_pos(
+    cover_nuc_ref <- gr_nucleotide_pos(
         grange = pep, filter = 'grepl("Known|Target", Database)')
+    cover_nuc_novel <- gr_nucleotide_pos(
+        grange = pep, filter = 'grepl("^Novel$", Database)')
+    
+    set_list <- list(
+        chrom_nuc,
+        coding_nuc,
+        exprs_nuc,
+        cover_nuc_ref,
+        cover_nuc_novel
+    ) %>%
+        set_names(set)
     
     # Plot a square venn diagram of chromosome coverage
     plot.new()
-    rect(
-        xleft = 0,
-        ybottom = 0,
-        xright = 1,
-        ytop = 1,
-        border = venn_colours[1],
-        lwd = 2)
-    text(
-        x = 0.015,
-        y = 1.02,
-        labels = paste(
-            "Chromosome", round(length(unique(unlist(chrom_nuc))) / 1000000, 1),
-            "Mb", sep = " "),
-        col = venn_colours[1], cex = 1.0, adj = 0)
-    rect(
-        xleft = 0.01,
-        ybottom = 0.01,
-        xright = sqrt(
-            length(unique(unlist(coding_nuc))) /
-                length(unique(unlist(chrom_nuc)))) + 0.01,
-        ytop = sqrt(
-            length(unique(unlist(coding_nuc))) /
-                length(unique(unlist(chrom_nuc)))) + 0.01,
-        border = venn_colours[2],
-        lwd = 2)
-    text(
-        x = 0.025,
-        y = sqrt(
-            length(unique(unlist(coding_nuc))) /
-                length(unique(unlist(chrom_nuc)))) + 0.032,
-        labels = paste(
-            "Protein-coding",
-            round(length(unique(unlist(coding_nuc))) / 1000000, 1),
-            "Mb", sep = " "),
-        col = venn_colours[2], cex = 1.0, adj = 0)
-    rect(
-        xleft = 0.02,
-        ybottom = 0.02,
-        xright = sqrt(
-            length(unique(unlist(exprs_nuc))) /
-                length(unique(unlist(chrom_nuc)))) + 0.02,
-        ytop = sqrt(
-            length(unique(unlist(exprs_nuc))) /
-                length(unique(unlist(chrom_nuc)))) + 0.02,
-        border = venn_colours[3],
-        lwd = 2)
-    text(
-        x = 0.035,
-        y = sqrt(
-            length(unique(unlist(exprs_nuc))) /
-                length(unique(unlist(chrom_nuc)))) + 0.04,
-        labels = paste(
-            "Expressed protein",
-            round(length(unique(unlist(exprs_nuc))) / 1000000, 1),
-            "Mb", sep = " "),
-        col = venn_colours[3], cex = 1.0, adj = 0)
-    rect(
-        xleft = 0.03,
-        ybottom = 0.03,
-        xright = sqrt(
-            length(unique(unlist(cover_nuc))) /
-                length(unique(unlist(chrom_nuc)))) + 0.03,
-        ytop = sqrt(
-            length(unique(unlist(cover_nuc))) /
-                length(unique(unlist(chrom_nuc)))) + 0.03,
-        border = venn_colours[4],
-        lwd = 2)
-    text(
-        x = 0.045,
-        y = sqrt(
-            length(unique(unlist(cover_nuc))) /
-                length(unique(unlist(chrom_nuc)))) + 0.05,
-        labels = paste(
-            "Detected peptide",
-            round(length(unique(unlist(cover_nuc))) / 1000000, 1),
-            "Mb", sep = " "),
-        col = venn_colours[4], cex = 1.0, adj = 0)
+    for (i in 1:length(set_list)) {
+        area <- sqrt(
+            length(unique(unlist(set_list[i]))) /
+                length(unique(unlist(set_list[["Chromosome"]]))))
+        rect(
+            xleft = (i/100),
+            ybottom = (i/100),
+            xright = area + (i/100),
+            ytop = area + (i/100),
+            border = colour[i],
+            lwd = 2)
+        text(
+            x = (i/100),
+            y = area + (i/100) + 0.02,
+            labels = paste(
+                names(set_list)[i],
+                round(length(unique(unlist(set_list[i]))) / 1000000, 3),
+                "Mb", sep = " "),
+            col = colour[i], cex = 1.0, adj = 0)
+    }
     
-    # Recored the plot
+    # Recorded the plot
     pl <- recordPlot()
     
     # Return the plot result
     return(pl)
+    
+}
+
+# Function to visualise nucleotide coverage depth for known and novel ORF
+plot_nuc_coverage <- function(
+    pep,
+    count,
+    set = c("Known|Target", "Novel"),
+    colour = NULL) {
+    
+    set <- match.arg(
+        arg = set,
+        choices = c("Known|Target", "Novel"),
+        several.ok = TRUE)
+    
+    if (is.null(colour)) {
+        colour <- c("#387eb8", "#e21e25")
+    }
+    
+    if (length(set) < length(colour)) {
+        stop("Not enough colours defined!")
+    }
+    
+    toplot <- data.frame(Count = as.character(c(0:50)))
+    quantiles_toplot <- data.frame(
+        Quartiles = c("0%", "25%", "50%", "75%", "100%", "Mean"))
+    
+    for (i in 1:length(set)) {
+        
+        # Get all peptide associated nucleotide position
+        coverage_pep <- gr_nucleotide_pos(
+            grange = pep, filter = paste0('grepl("', set[i], '", Database)'))
+        
+        # Convert to dataframe
+        coverage_nucl <- coverage_pep %>%
+            plyr::ldply(., "data.frame") %>%
+            set_colnames(c("Sequence", "Nucl_pos")) %>%
+            dplyr::filter(., !is.na(Nucl_pos))
+        
+        # Compute msms count for each peptide sequence
+        coverage_nucl_count <- count %>%
+            dplyr::select(., Sequence, `MS/MS count`) %>%
+            dplyr::filter(., !is.na(`MS/MS count`)) %>%
+            dplyr::group_by(., Sequence) %>%
+            dplyr::summarise(., Count = sum(`MS/MS count`)) %>%
+            dplyr::inner_join(coverage_nucl, ., by = "Sequence")
+        coverage_nucl_count$Count <- factor(
+            x = coverage_nucl_count$Count,
+            levels = unique(coverage_nucl_count$Count),
+            ordered = TRUE)
+        
+        # Calculate overall nucleotide coverage frequencies
+        toplot <- data.frame(
+            table(coverage_nucl_count$Count)) %>%
+            set_colnames(c("Count", set[i])) %>%
+            dplyr::full_join(x = toplot, y = ., by = "Count")
+        
+        # Calculate the quantiles of count frequencies
+        quantiles_toplot_i <- quantile(
+            x = as.integer(as.character(coverage_nucl_count$Count)),
+            probs = c(0, 0.25, 0.5, 0.75, 1), na.rm = TRUE) %>%
+            as.data.frame(.) %>%
+            set_colnames("Values") %>%
+            dplyr::mutate(., Quartiles = row.names(.))
+        quantiles_toplot_i <- data.frame(
+            Quartiles = "Mean",
+            Values = base::mean(
+                as.integer(as.character(coverage_nucl_count$Count)),
+                na.rm = TRUE)) %>%
+            dplyr::bind_rows(quantiles_toplot_i, .) %>%
+            dplyr::select(., Quartiles, Values) %>%
+            dplyr::mutate(., Values = round(x = Values, digits = 1)) %>%
+            set_colnames(c("Quartiles", set[i]))
+        
+        quantiles_toplot <- dplyr::full_join(
+            x = quantiles_toplot, y = quantiles_toplot_i, by = "Quartiles")
+        
+    }
+    
+    toplot %<>%
+        dplyr::mutate_all(~tidyr::replace_na(data = ., replace = 0)) %>%
+        tidyr::pivot_longer(
+            data = ., cols = -Count, names_to = "Set", values_to = "Freq") %>%
+        dplyr::mutate(
+            ., Count = ifelse(
+                as.integer(as.character(Count)) >= 50,
+                "50+", as.character(Count))) %>%
+        dplyr::group_by(., Count, Set) %>%
+        dplyr::summarise(., Freq = sum(Freq)) %>%
+        dplyr::ungroup(.)
+    toplot$Count <- factor(
+        x = toplot$Count, levels = c(0:49, "50+"), ordered = TRUE)
+    
+    ggplot(
+        toplot,
+        aes(x = Count, y = Freq, group = Set, fill = Set)) +
+        geom_bar(stat = "identity", position = position_dodge(width = 0)) +
+        ggpubr::theme_pubr() +
+        xlab("MS/MS counts") +
+        ylab("Nucleotide counts") +
+        ggtitle("Coverage per nucleotide") +
+        annotation_custom(
+            grob = gridExtra::tableGrob(
+                d = quantiles_toplot,
+                theme = gridExtra::ttheme_minimal(), rows = NULL),
+            xmin = 20, xmax = 50, ymin = 1E5, ymax = max(toplot$Freq)) +
+        scale_x_discrete(
+            breaks = c(seq(0, 49, 5), "50+"),
+            limits = c(seq(0, 49, 1), "50+")) +
+        scale_fill_manual(values = colour)
+    
+}
+
+# Function to visualise location of expressed known and novel ORFs on circos
+plot_circos <- function(
+    ideo,
+    ref,
+    orf,
+    pep,
+    set = c("Known ORF (+)", "Known ORF (-)", "Reannotated ORF (+)", "Reannotated ORF (-)"),
+    colour = NULL) {
+    
+    set <- match.arg(
+        arg = set,
+        choices = c("Known ORF (+)", "Known ORF (-)", "Reannotated ORF (+)", "Reannotated ORF (-)"),
+        several.ok = TRUE)
+    
+    if (is.null(colour)) {
+        colour <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36")
+    }
+    
+    if (length(set) < length(colour)) {
+        stop("Not enough colours defined!")
+    }
+    
+    # Get all expressed protein associated nucleotide position
+    if (!"Expressed" %in% colnames(values(ref))) {
+        expr_known <- subset(x = pep, grepl("Known|Target", Database)) %>%
+            .$Proteins %>%
+            strsplit(x = ., split = ", ", fixed = TRUE) %>%
+            unlist(.) %>%
+            unique(.) %>%
+            data.frame(id = ., Expressed = TRUE) %>%
+            dplyr::left_join(
+                x = data.frame(id = names(ref)), y = ., by = "id") %>%
+            dplyr::mutate(
+                ., Expressed = ifelse(is.na(Expressed), FALSE, Expressed)) %>%
+            set_rownames(.[["id"]]) %>%
+            dplyr::select(., -id)
+        values(ref) <- cbind(
+            values(ref), expr_known)
+    }
+    if (!"Expressed" %in% colnames(values(orf))) {
+        expr_known <- subset(x = pep, grepl("Novel", Database)) %>%
+            .$Proteins %>%
+            strsplit(x = ., split = ", ", fixed = TRUE) %>%
+            unlist(.) %>%
+            unique(.) %>%
+            data.frame(id = ., Expressed = TRUE) %>%
+            dplyr::left_join(
+                x = data.frame(id = names(orf)), y = ., by = "id") %>%
+            dplyr::mutate(
+                ., Expressed = ifelse(is.na(Expressed), FALSE, Expressed)) %>%
+            set_rownames(.[["id"]]) %>%
+            dplyr::select(., -id)
+        values(orf) <- cbind(
+            values(orf), expr_known)
+    }
+    
+    # Use ggbio extension to plot ORF location on genome as a circos graph
+    ggplot() +
+        #ggtitle(label = title) +
+        ggbio::layout_circle(
+            ideo, geom = "ideo", fill = "gray70",
+            radius = 30, trackWidth = 2) +
+        ggbio::layout_circle(
+            ideo, geom = "scale", size = 4,
+            radius = 33, trackWidth = 2) +
+        ggbio::layout_circle(
+            ideo, geom = "text", size = 7, aes(label = seqnames),
+            angle = 0, radius = 37, trackWidth = 5) +
+        ggbio::layout_circle(
+            subset(x = ref, strand == "+" & Expressed),
+            geom = "rect", color = colour[1],
+            radius = 26, trackWidth = 4) +
+        annotate(
+            geom = "text", x = -6, y = 6, hjust = 0,
+            label = set[1], colour = colour[1]) +
+        ggbio::layout_circle(
+            subset(x = ref, strand == "-" & Expressed),
+            geom = "rect", color = colour[2],
+            radius = 22, trackWidth = 4) +
+        annotate(
+            geom = "text", x = -6, y = 2, hjust = 0,
+            label = set[2], colour = colour[2]) +
+        ggbio::layout_circle(
+            subset(x = orf, strand == "+" & Expressed),
+            geom = "rect", color = colour[3],
+            radius = 18, trackWidth = 4) +
+        annotate(
+            geom = "text", x = -6, y = -2, hjust = 0,
+            label = set[3], colour = colour[3]) +
+        ggbio::layout_circle(
+            subset(x = orf, strand == "-" & Expressed),
+            geom = "rect", color = colour[4],
+            radius = 14, trackWidth = 4) +
+        annotate(
+            geom = "text", x = -6, y = -6, hjust = 0,
+            label = set[4], colour = colour[4])
     
 }
 
@@ -1955,7 +2134,7 @@ plots_hist <- function(
     myplot <- list()
     
     # Check whether the data values are integer64 or not numeric class
-    if (is.integer64(data[[value]])) {
+    if (bit64::is.integer64(data[[value]])) {
         
         # Give warning that values are integer64
         warning(paste(
