@@ -11,7 +11,8 @@ source("C:/Users/kxmna01/Documents/GitHub/Metaproteomics/tools/Rscripts/helper_m
 
 my_plots <- list()
 
-my_data_f <- "H:/data/Synechocystis_6frame/MQ_6frame_valid/combined/txt/proteinGroups.txt"
+#my_data_f <- "H:/data/Synechocystis_6frame/MQ_6frame_valid/combined/txt/proteinGroups.txt"
+my_data_f <- "H:/data/Synechocystis_6frame/2022-01-05_Normalisation_pg/PG_normalised.txt"
 ids_col <- "Protein IDs"
 
 my_data <- data.table::fread(
@@ -19,14 +20,16 @@ my_data <- data.table::fread(
     stringsAsFactors = FALSE, colClasses = "character", na.strings = "NaN")
 
 my_data_format <- my_data
+my_data_format <- my_data_format[
+    !grepl("CON__|REV__", my_data_format$`Protein IDs`), ]
+rows <- my_data_format[[ids_col]]
 my_data_format[[ids_col]] <- NULL
 my_data_format <- as.data.frame(apply(my_data_format, 2, as.double))
-rownames(my_data_format) <- my_data[[ids_col]]
 my_data_format[!is.na(my_data_format) & my_data_format == 0] <- NA
+rownames(my_data_format) <- rows
 
 my_pheno <- data.frame(
     Samples = colnames(my_data_format),
-    Conditions = sub("iBAQ ", "", colnames(my_data_format)),
     stringsAsFactors = FALSE
 ) %>%
     set_rownames(.[["Samples"]])
@@ -52,11 +55,14 @@ my_plots[["Entries_valid"]] <- ggplot(
     my_valid_entries, aes(x = Cols, y = Rows, fill = value, label = value)) + 
     geom_tile() +
     geom_text() +
-    scale_fill_gradient(low = "white", high = "blue") +
     ggpubr::theme_pubr() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+    scale_fill_gradientn(
+        colours = grDevices::hcl.colors(n = 20, palette = "Fall"))
 
 my_palette <- colorRampPalette(c("#387eb8", "#d1d2d4", "#e21e25"))(n = 30)
+my_palette <- grDevices::hcl.colors(n = 20, palette = "Fall")
+
 ms_cor <- cor(
     x = my_data_format, use = "pairwise.complete.obs", method = "spearman")
 corrplot::corrplot(
@@ -120,7 +126,7 @@ my_data_filt <- my_data_filt[,
     apply(
         X = my_data_filt,
         MARGIN = 2,
-        FUN = function(x) { sum(!is.na(x)) >= 950})]
+        FUN = function(x) { sum(!is.na(x)) >= 1000})]
 
 threshold <- 0.70
 my_data_filt <- my_data_filt[
@@ -171,8 +177,24 @@ my_plots[["Entries_na_freq"]] <- ggplot(
     scale_colour_identity()
 
 my_data_filt %<>%
-    log10(.) %>%
-    scale(x = ., center = TRUE, scale = FALSE)
+    log10(.)# %>%
+    #scale(x = ., center = TRUE, scale = FALSE)
+
+
+my_freq_filt_entries_transform <- my_data_filt %>%
+    tibble::rownames_to_column(.data = ., var = "id") %>%
+    tidyr::pivot_longer(data = ., cols = -id) %>%
+    dplyr::filter(., !is.na(value)) %>%
+    dplyr::left_join(x = ., y = my_samples_charact)
+
+my_plots[["Entries_filt_transform_freq"]] <- ggplot(
+    my_freq_filt_entries_transform,
+    aes(x = value, group = name, colour = colour, linetype = shape)) + 
+    geom_line(stat = "density", size = 1) +
+    scale_x_log10() +
+    ggpubr::theme_pubr() +
+    scale_linetype_identity() +
+    scale_color_identity()
 
 nb <- missMDA::estim_ncpPCA(X = t(my_data_filt), ncp.max = 5)
 my_data_imput <- missMDA::imputePCA(X = t(my_data_filt), ncp = 3, scale = TRUE)
@@ -214,7 +236,7 @@ axis_lim <- max(abs(ind$coord))
 my_plots[["PCA_biplot"]] <- factoextra::fviz_pca_biplot(
     res_pca, repel = FALSE, axes = c(1, 2),
     col.var = "cos2",
-    gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+    gradient.cols = my_palette,
     select.var = list(cos2 = 30), max.overlaps = 5) +
     xlim(-axis_lim, axis_lim) +
     ylim(-axis_lim, axis_lim)
@@ -235,7 +257,7 @@ data.table::fwrite(
 my_data_split <- my_data %>%
     tidyr::separate_rows(data = ., `Protein IDs`, sep = ";", convert = FALSE)
 data.table::fwrite(
-    x = my_data_split, file = "ibaq_values.txt",
+    x = my_data_split, file = "pca_values_imputed.txt",
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
 
