@@ -183,7 +183,7 @@ pg_toplot <- pg_scaled %>%
 pg_toplot %<>%
     dplyr::group_by(., k_cluster) %>%
     dplyr::mutate(
-        ., count = n_distinct(id)) %>%
+        ., count = dplyr::n_distinct(id)) %>%
     dplyr::ungroup(.) %>%
     dplyr::mutate(
         ., Cluster_Label = paste0("Cluster ", k_cluster, " (", count, " proteins)"))
