@@ -219,20 +219,32 @@ my_plots[["Entries_imput_freq"]] <- ggplot(
 res_pca <- FactoMineR::PCA(X = my_data_imput$completeObs, ncp = 5)
 eigen <- factoextra::get_eig(res_pca)
 factoextra::fviz_screeplot(res_pca, addlabels = TRUE)
+
 var <- factoextra::get_pca_var(res_pca)
-factoextra::fviz_pca_var(
+
+my_plots[["PCA_var"]] <- factoextra::fviz_pca_var(
     res_pca, col.var = "contrib", axes = c(1, 2),
     gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
     repel = TRUE, select.var = list(contrib = 100))
+
 factoextra::fviz_contrib(res_pca, choice = "var", axes = 1, top = 100)
 factoextra::fviz_contrib(res_pca, choice = "var", axes = 2, top = 100)
 factoextra::fviz_contrib(res_pca, choice = "var", axes = 3, top = 100)
+
 ind <- factoextra::get_pca_ind(res_pca)
-factoextra::fviz_pca_ind(
+axis_lim <- max(abs(ind$coord))
+
+factoextra::fviz_contrib(res_pca, choice = "ind", axes = 1)
+factoextra::fviz_contrib(res_pca, choice = "ind", axes = 2)
+factoextra::fviz_contrib(res_pca, choice = "ind", axes = 3)
+
+my_plots[["PCA_ind"]] <- factoextra::fviz_pca_ind(
     res_pca, col.ind = "cos2", axes = c(1, 2),
     gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-    repel = TRUE, max.overlaps = 5)
-axis_lim <- max(abs(ind$coord))
+    repel = TRUE, max.overlaps = 5) +
+    xlim(-axis_lim, axis_lim) +
+    ylim(-axis_lim, axis_lim)
+
 my_plots[["PCA_biplot"]] <- factoextra::fviz_pca_biplot(
     res_pca, repel = FALSE, axes = c(1, 2),
     col.var = "cos2",
@@ -240,6 +252,34 @@ my_plots[["PCA_biplot"]] <- factoextra::fviz_pca_biplot(
     select.var = list(cos2 = 30), max.overlaps = 5) +
     xlim(-axis_lim, axis_lim) +
     ylim(-axis_lim, axis_lim)
+
+theo_contrib <- 100/length(unique(rownames(ind$coord)))
+
+toplot <- ind$coord %>%
+    data.frame(.) %>%
+    tibble::rownames_to_column(.data = ., var = "sample") %>%
+    tidyr::pivot_longer(
+        data = ., cols = -sample,
+        names_to = "Dimension", values_to = "Coordinates")
+toplot <- ind$contrib %>%
+    data.frame(.) %>%
+    tibble::rownames_to_column(.data = ., var = "sample") %>%
+    tidyr::pivot_longer(
+        data = ., cols = -sample,
+        names_to = "Dimension", values_to = "Contribution") %>%
+    dplyr::left_join(x = toplot, y = ., by = c("sample", "Dimension")) %>%
+    dplyr::mutate(
+        ., y = 1, colour = ifelse(Contribution > theo_contrib, "#722730", "#2D2D2D"))
+
+my_plots[["PCA_all_dim"]] <- ggplot(
+    toplot,
+    aes(x = Coordinates, y = y, label = sample, colour = colour)) +
+    geom_hline(yintercept = 1, linetype = "solid", color = "black") +
+    geom_point(size = 3) +
+    ggrepel::geom_text_repel(box.padding = 0.5, max.overlaps = Inf) +
+    ggpubr::theme_pubr() +
+    scale_colour_identity() +
+    facet_grid(rows = vars(Dimension))
 
 pdf(file = "QC_corr_pca.pdf", width = 8, height = 8)
 my_plots
