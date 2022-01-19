@@ -17,8 +17,7 @@ my_cols <- c("#387eb8", "#d1d2d4", "#e21e25", "#fbaf3f", "#3B3B3B", "#834F96")
 # 
 my_pg_f <- "H:/data/Synechocystis_6frame/2022-01-05_Normalisation_pg/PG_normalised.txt"
 my_annot_f <- "H:/data/Synechocystis_6frame/Custom_annotation/2021-12-21_Custom_Uniprot_Eggnog_annotations.txt"
-#my_evid_f <- "H:/data/Synechocystis_6frame/Novel_res/Group_evidence.RDS"
-#my_novel_f <- "H:/data/Synechocystis_6frame/2021-12-29_ORF_validation/Venn_ORF_validation.txt"
+my_novel_f <- "H:/data/Synechocystis_6frame/2021-12-29_ORF_validation/Venn_ORF_validation.txt"
 normalisation <- "zscore"
 nmb_k <- 5
 nmb_h <- 1
@@ -50,6 +49,10 @@ feature %<>%
 my_data <- data.table::fread(
     input = my_pg_f, sep = "\t", quote = "", header = TRUE,
     stringsAsFactors = FALSE, colClasses = "character", na.strings = "NaN")
+
+my_novel <- data.table::fread(
+    input = my_novel_f, sep = "\t", quote = "", header = TRUE,
+    stringsAsFactors = FALSE, colClasses = "character")
 
 
 
@@ -182,7 +185,10 @@ pg_toplot %<>%
 prot_label <- data.frame(Proteins = rownames(my_data_scaled)) %>%
     dplyr::left_join(
         x = ., y = feature[, c("Proteins", "MainID")],
-        by = "Proteins")
+        by = "Proteins") %>%
+    dplyr::mutate(., MainID = dplyr::case_when(
+        is.na(MainID) ~ sub("(.*;|^)(s.+?)(;.*|$)", "\\2", Proteins),
+        TRUE ~ MainID))
 prot_label <- prot_label[["MainID"]] %>%
     set_names(prot_label[["Proteins"]])
 
@@ -192,9 +198,38 @@ my_data_scaled[my_data_scaled == 0] <- NA
 
 ### Functional annotation stats ------------------------------------------
 
-function_annot_stats <- pg_toplot %>%
+identification_annot_stats <- feature %>%
     dplyr::select(
-        ., id, Family_Characterised = `Protein families`,
+        ., id = Proteins, `TU ID`) %>%
+    dplyr::rowwise(.) %>%
+    dplyr::mutate(., `MS ID` = ifelse(
+        any(grepl(paste0(id, "(;|$)"), rownames(my_data_scaled))),
+        grep(paste0(id, "(;|$)"), rownames(my_data_scaled), value = TRUE),
+        ""))
+
+toplot <- apply(identification_annot_stats, 2, function(x) {x != ""}) %>%
+    as.data.frame(.) %>%
+    lapply(., table) %>%
+    plyr::ldply(., data.frame) %>%
+    set_colnames(c("Category", "Type", "Count")) %>%
+    dplyr::filter(., Type == TRUE)
+
+my_plots[["Identification_datasets"]] <- ggplot(
+    toplot, aes(
+        x = Category, y = Count, fill = Category, colour = Category,
+        label = Count)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_text(
+        stat = "identity", position = position_dodge(width = 0.9),
+        vjust = -0.3) +
+    ggpubr::theme_pubr() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+    scale_fill_manual(values = my_cols[1:length(unique(toplot$Category))]) +
+    scale_colour_manual(values = my_cols[1:length(unique(toplot$Category))])
+
+function_annot_stats <- feature %>%
+    dplyr::select(
+        ., id = Proteins, Family_Characterised = `Protein families`,
         Family_Reannotated = Interpro_NAME,
         GOBP_Characterised = `GOBP Term`,
         GOCC_Characterised = `GOCC Term`,
@@ -231,8 +266,9 @@ toplot$Annotation <- factor(
 my_plots[["Functional_annotation_cat"]] <- ggplot(
     toplot, aes(
         x = Annotation, y = Count, fill = Category, colour = Category,
-        alpha = Annotation, label = Count)) +
-    geom_bar(stat = "identity", position = "dodge") +
+        #alpha = Annotation,
+        label = Count, linetype = Annotation)) +
+    geom_bar(stat = "identity", position = "dodge", colour = "black") +
     geom_text(
         stat = "identity", position = position_dodge(width = 0.9),
         vjust = -0.3) +
@@ -241,8 +277,10 @@ my_plots[["Functional_annotation_cat"]] <- ggplot(
     facet_grid(cols = vars(Category)) +
     scale_fill_manual(values = my_cols[1:length(unique(toplot$Category))]) +
     scale_colour_manual(values = my_cols[1:length(unique(toplot$Category))]) +
-    scale_alpha_manual(
-        values = c(Characterised = 1, Reannotated = 0.6, Uncharacterised = 0.8))
+    scale_linetype_manual(
+        values = c(Characterised = "solid", Reannotated = "dashed", Uncharacterised = "dotted"))
+    #scale_alpha_manual(
+    #    values = c(Characterised = 1, Reannotated = 0.6, Uncharacterised = 0.8))
 
 my_plots[["Functional_annotation_ann"]] <- ggplot(
     toplot, aes(
@@ -257,6 +295,55 @@ my_plots[["Functional_annotation_ann"]] <- ggplot(
     facet_grid(cols = vars(Category)) +
     scale_fill_manual(values = my_cols[1:length(unique(toplot$Annotation))]) +
     scale_colour_manual(values = my_cols[1:length(unique(toplot$Annotation))])
+
+
+
+### Check novel reannotation ---------------------------------------------
+
+my_novel_and_uncharac <- my_novel %>%
+    dplyr::filter(., MainID %in% feature$Proteins) %>%
+    dplyr::select(
+        ., MainID, `Peptide 2+`, `RBS valid`,
+        `TU valid`, `High quality`, `PX valid`) %>%
+    tidyr::pivot_longer(data = ., cols = -MainID)
+
+my_novel_and_uncharac$name <- factor(
+    x = my_novel_and_uncharac$name,
+    levels = unique(my_novel_and_uncharac$name), ordered = TRUE)
+
+my_cols_heat <- c(
+    `New start` = "#387eb8", `New stop` = "#fbaf3f", `SAV` = "#d1d2d4", `Novel` = "#e21e25",
+    `TRUE` = "darkgrey", `FALSE` = "white",
+    `25%` = "#7F98EB", `50%` = "#263BBF", `75%` = "#EB7775", `100%` = "#B8110E")
+
+my_plots[["Novel_reannotation_heat"]] <- ggplot(
+    my_novel_and_uncharac,
+    aes(x = name, y = MainID, fill = value)) +
+    geom_tile(colour = "white") +
+    ggpubr::theme_pubr() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+    scale_fill_manual(values = my_cols_heat)
+
+toplot <- my_novel_and_uncharac %>%
+    dplyr::group_by(., MainID) %>%
+    dplyr::summarise(., Confidence = ifelse(
+        sum(value == TRUE) >= 2, "High confidence", "Low confidence")) %>%
+    dplyr::group_by(., Confidence) %>%
+    dplyr::summarise(., Count = dplyr::n_distinct(MainID)) %>%
+    dplyr::ungroup(.)
+
+my_plots[["Novel_reannotation_count"]] <- ggplot(
+    toplot, aes(
+        x = Confidence, y = Count, fill = Confidence, colour = Confidence,
+        label = Count)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_text(
+        stat = "identity", position = position_dodge(width = 0.9),
+        vjust = -0.3) +
+    ggpubr::theme_pubr() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)) +
+    scale_fill_manual(values = my_cols[1:length(unique(toplot$Confidence))]) +
+    scale_colour_manual(values = my_cols[1:length(unique(toplot$Confidence))])
 
 
 
@@ -292,5 +379,38 @@ my_plots[["heatmap_scaled"]] <- gplots::heatmap.2(
 my_plots
 
 dev.off()
+
+data.table::fwrite(
+    x = function_annot_stats,
+    file = "Uncharacterised_function_reannotation.txt",
+    append = FALSE, quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+
+#
+to_export <- list(
+    data = pg_toplot,
+    dist = pg_distance,
+    cluster = pg_hcluster,
+    dendo = pg_dendo
+)
+saveRDS(
+    object = to_export,
+    file = paste0(
+        "Clustering_k", nmb_k, "_", x_axis, "_",
+        y_axis, "_", basename(my_pg_f)))
+
+#
+write.table(
+    x = pg_toplot,
+    file = paste0(
+        "Clustering_k", nmb_k, "_", x_axis,
+        "_", y_axis, "_", basename(my_pg_f)),
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
+
+save.image(sub(
+    "\\.txt", ".RData",
+    paste0(
+        "Clustering_k", nmb_k, "_", x_axis,
+        "_", y_axis, "_", basename(my_pg_f))))
 
 
