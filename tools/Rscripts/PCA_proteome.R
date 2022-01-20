@@ -126,7 +126,7 @@ my_data_filt <- my_data_filt[,
     apply(
         X = my_data_filt,
         MARGIN = 2,
-        FUN = function(x) { sum(!is.na(x)) >= 1000})]
+        FUN = function(x) { sum(!is.na(x)) >= 1500})]
 
 threshold <- 0.70
 my_data_filt <- my_data_filt[
@@ -218,7 +218,8 @@ my_plots[["Entries_imput_freq"]] <- ggplot(
 
 res_pca <- FactoMineR::PCA(X = my_data_imput$completeObs, ncp = 5)
 eigen <- factoextra::get_eig(res_pca)
-factoextra::fviz_screeplot(res_pca, addlabels = TRUE)
+my_plots[["PCA_screeplot"]] <- factoextra::fviz_screeplot(
+    res_pca, addlabels = TRUE)
 
 var <- factoextra::get_pca_var(res_pca)
 
