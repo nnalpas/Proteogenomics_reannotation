@@ -1,0 +1,110 @@
+# GeneralParam
+ProjectName="Pae_6frame"
+TaxId="287"
+
+# ProcessSteps
+GetOrf=0
+MaxquantProc=0
+GetNovelEntries=0
+GetNCBIBlastDb=1
+MakeBlastDbProt=0
+MakeBlastDbNuc=0
+DbBlasting=0
+BestBlast=0
+ReciprocalBlast=0
+ReciprocalBestBlast=0
+ProteinCoordinate=0
+ProteinAnnotation=0
+BSgenomeForge=0
+GRangeCreate=0
+PepNoveltyReason=0
+SequencesCoordinate=0
+OperonCoordinate=0
+SangerCoordinate=0
+OrfNoveltyReason=0
+ClustalAlign=0
+ConservationBlast=0
+MaxquantValidation=0
+SummarizedExp=0
+InterproScan=0
+SignalpPrediction=0
+EmapperAnnotation=0
+PhylostratigraphyBlast=0
+
+# EmbossParam
+FRAME=6
+TABLE=11
+MINSIZE=1
+CIRCULAR="Yes"
+
+# ReferenceDatabase (for the genome make sure the chromosome name is all in lowercase for Ensembl compatibility)
+GENOME="${PBS_O_WORKDIR}/Pae_6frame/Genome/GCF_000006765.1_ASM676v1_genomic.fasta"
+UNIREFPROT="${PBS_O_WORKDIR}/Pae_6frame/Genome/GCF_000006765.1_ASM676v1_protein.fasta"
+UNIREFGENE="${PBS_O_WORKDIR}/work/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_gene_nucl.fasta"
+#ALLUNIPROT="${PBS_O_WORKDIR}/work/BlastDB/uniprot_sprot_trembl.fasta"
+ALLNCBIPROT="${PBS_O_WORKDIR}/work/BlastDB/nr"
+ALLNCBIRNA="${PBS_O_WORKDIR}/work/BlastDB/nt"
+NCBIENVPROT="${PBS_O_WORKDIR}/work/BlastDB/env_nr"
+NCBIENVRNA="${PBS_O_WORKDIR}/work/BlastDB/env_nt"
+OTHERPROT=( "${PBS_O_WORKDIR}/work/Synechocystis_6frame/Genome/micro_proteins_Synechocystis_sp_PCC6803_20180419.fasta" "${PBS_O_WORKDIR}/work/Synechocystis_6frame/Genome/Wolfgang_Hess_ORFs_2021-04-15.fasta" )
+OTHERGENE=""
+OPERON="${PBS_O_WORKDIR}/work/Synechocystis_6frame/Genome/Transcriptional_units_formatted_20201022.txt"
+#SANGER="${PBS_O_WORKDIR}/work/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
+
+# MaxQuantParam
+mq_version="${PBS_O_WORKDIR}/MaxQuant_1.6.14.0.sif"
+mqpar="${PBS_O_WORKDIR}/Pae_6frame/MaxQuant/mqpar_posix.xml"
+
+# NCBIBlastDB
+BlastDbs='env_nr env_nt nr nt'
+
+# BlastDatab
+InputType="fasta"
+
+# BlastParam
+BlastSoftware="Diamond"
+SerialBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Blast_iterations.txt"
+
+# ReciprocalBlastParam
+SerialRecipBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Recip_Blast_iterations.txt"
+
+# ProteinAnnotationParam
+AnnotColumn="GENE-NAME,CHR-VERSION,PROTEIN-NAME"
+AnnotSeparator=" \\| "
+AnnotKey="MainID"
+
+# BSgenomeParam
+SEED="${PBS_O_HOME}/work/Synechocystis_6frame/Genome/seed"
+PKGNAME="BSgenome.Synechocystis.Rostock.092020"
+Circular="c('chr1','pca2_4','pcb2_4','pcc5_2','psysa','psysg','psysm','psysx')"
+
+# RBSanalysis
+
+# User provided additional RBS motifs sequence
+#AddRBS=''
+
+# ClustalParam
+#RBSLOW="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
+#RBSHIGH="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
+
+# ConservationBlastParam
+BlastnParam=''
+
+# MaxQuantValidationParam
+mqpar_valid="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_validation_novel_ORF_TMT/mqpar_posix.xml"
+
+# SignalpParam
+Organism="gram-"
+
+# EmapperParam
+emapperParam='-m diamond --sensmode ultra-sensitive'
+emapperDBParam=''
+EmapperDbDir="${PBS_O_HOME}/work/EggnogDB/"
+EmapperType="proteins"
+
+# PhylostratigraphyBlastParam
+InputTypePhylo="fasta"
+BlastSoftwarePhylo="Blast"
+SerialBlastMapPhylo="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Phylostratigraphy_blasts.txt"
+
+
