@@ -23,9 +23,9 @@ if [[ -n "${SCRIPT_FLAGS}" ]] ; then
 elif (( $# == 3 )); then
 	
 	SCRIPT_FLAGS=$1
-	PBS_O_WORKDIR=$2
+	export PBS_O_WORKDIR=$2
 	THREADS=$3
-	PBS_O_HOME=$HOME
+	export PBS_O_HOME=$HOME
 
 else
 	
