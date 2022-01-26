@@ -62,10 +62,10 @@ InputType="fasta"
 
 # BlastParam
 BlastSoftware="Diamond"
-SerialBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Blast_iterations.txt"
+SerialBlastMap="${PBS_O_WORKDIR}/Pae_6frame/Phenodata/Blast_iterations.txt"
 
 # ReciprocalBlastParam
-SerialRecipBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Recip_Blast_iterations.txt"
+SerialRecipBlastMap="${PBS_O_WORKDIR}/Pae_6frame/Phenodata/Recip_Blast_iterations.txt"
 
 # ProteinAnnotationParam
 AnnotColumn="locus_tag,gene_id,protein,protein_id,pseudo,location"
@@ -104,6 +104,6 @@ EmapperType="proteins"
 # PhylostratigraphyBlastParam
 InputTypePhylo="fasta"
 BlastSoftwarePhylo="Blast"
-SerialBlastMapPhylo="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Phylostratigraphy_blasts.txt"
+SerialBlastMapPhylo="${PBS_O_WORKDIR}/Pae_6frame/Phenodata/Phylostratigraphy_blasts.txt"
 
 
