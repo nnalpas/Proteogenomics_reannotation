@@ -6,9 +6,9 @@ TaxId="287"
 GetOrf=0
 MaxquantProc=0
 GetNovelEntries=0
-GetNCBIBlastDb=1
-MakeBlastDbProt=0
-MakeBlastDbNuc=0
+GetNCBIBlastDb=0
+MakeBlastDbProt=1
+MakeBlastDbNuc=1
 DbBlasting=0
 BestBlast=0
 ReciprocalBlast=0
@@ -40,15 +40,14 @@ CIRCULAR="Yes"
 # ReferenceDatabase (for the genome make sure the chromosome name is all in lowercase for Ensembl compatibility)
 GENOME="${PBS_O_WORKDIR}/Pae_6frame/Genome/GCF_000006765.1_ASM676v1_genomic.fasta"
 UNIREFPROT="${PBS_O_WORKDIR}/Pae_6frame/Genome/GCF_000006765.1_ASM676v1_protein.fasta"
-UNIREFGENE="${PBS_O_WORKDIR}/work/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_gene_nucl.fasta"
-#ALLUNIPROT="${PBS_O_WORKDIR}/work/BlastDB/uniprot_sprot_trembl.fasta"
-ALLNCBIPROT="${PBS_O_WORKDIR}/work/BlastDB/nr"
-ALLNCBIRNA="${PBS_O_WORKDIR}/work/BlastDB/nt"
-NCBIENVPROT="${PBS_O_WORKDIR}/work/BlastDB/env_nr"
-NCBIENVRNA="${PBS_O_WORKDIR}/work/BlastDB/env_nt"
-OTHERPROT=( "${PBS_O_WORKDIR}/work/Synechocystis_6frame/Genome/micro_proteins_Synechocystis_sp_PCC6803_20180419.fasta" "${PBS_O_WORKDIR}/work/Synechocystis_6frame/Genome/Wolfgang_Hess_ORFs_2021-04-15.fasta" )
-OTHERGENE=""
-OPERON="${PBS_O_WORKDIR}/work/Synechocystis_6frame/Genome/Transcriptional_units_formatted_20201022.txt"
+UNIREFGENE="${PBS_O_WORKDIR}/Pae_6frame/Genome/GCF_000006765.1_ASM676v1_cds_from_genomic.fasta"
+ALLNCBIPROT="${PBS_O_WORKDIR}/BlastDB/nr"
+ALLNCBIRNA="${PBS_O_WORKDIR}/BlastDB/nt"
+NCBIENVPROT="${PBS_O_WORKDIR}/BlastDB/env_nr"
+NCBIENVRNA="${PBS_O_WORKDIR}/BlastDB/env_nt"
+OTHERPROT=()
+OTHERGENE=()
+#OPERON="${PBS_O_WORKDIR}/work/Synechocystis_6frame/Genome/Transcriptional_units_formatted_20201022.txt"
 #SANGER="${PBS_O_WORKDIR}/work/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
 
 # MaxQuantParam

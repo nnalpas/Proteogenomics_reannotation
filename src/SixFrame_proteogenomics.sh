@@ -49,7 +49,7 @@ module load blast+/2.12.0
 #module load clustal_omega/1.2.4
 module load emboss/6.6.0
 #module load devel/perl/5.26
-#module load diamond/2.0.2
+module load diamond/2.0.13
 #module load interproscan/5.48-83.0
 #module load signalp/5.0b
 #module load eggnog/2.0.5
