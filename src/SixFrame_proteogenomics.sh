@@ -43,15 +43,16 @@ cd ${PBS_O_WORKDIR}
 # Load the required modules
 #module load curl/7.57.0
 #module load zlib/1.2.11
-module load blast+/2.10.1
-module load math/R/3.5.2-mkl-2018 # the prerequisite GNU is incompatible with blast+ (must find solution)
+#module load blast+/2.10.1
+module load blast+/2.12.0
+#module load math/R/3.5.2-mkl-2018 # the prerequisite GNU is incompatible with blast+ (must find solution)
 #module load clustal_omega/1.2.4
 module load emboss/6.6.0
-module load devel/perl/5.26
-module load diamond/2.0.2
-module load interproscan/5.48-83.0
-module load signalp/5.0b
-module load eggnog/2.0.5
+#module load devel/perl/5.26
+#module load diamond/2.0.2
+#module load interproscan/5.48-83.0
+#module load signalp/5.0b
+#module load eggnog/2.0.5
 
 # Create project directory
 ProjDir=${PBS_O_WORKDIR}/${ProjectName}
@@ -134,7 +135,7 @@ fi
 if (( $GetNCBIBlastDb )); then
     
     BlastUpdate.sh \
-		-o ${PBS_O_INITDIR}/BlastDB \
+		-o ${PBS_O_WORKDIR}/BlastDB \
 		-t ${THREADS} \
 		"${BlastDbs}" > ${LogDir}/GetNCBIBlastDb.log 2>&1
     
