@@ -40,7 +40,7 @@ CIRCULAR="Yes"
 # ReferenceDatabase (for the genome make sure the chromosome name is all in lowercase for Ensembl compatibility)
 GENOME="${PBS_O_WORKDIR}/Pae_6frame/Genome/GCF_000006765.1_ASM676v1_genomic.fasta"
 UNIREFPROT="${PBS_O_WORKDIR}/Pae_6frame/Genome/GCF_000006765.1_ASM676v1_protein.fasta"
-UNIREFGENE="${PBS_O_WORKDIR}/Pae_6frame/Genome/GCF_000006765.1_ASM676v1_cds_from_genomic.fasta"
+UNIREFGENE="${PBS_O_WORKDIR}/Pae_6frame/Genome/GCF_000006765.1_ASM676v1_cds_from_genomic_sep.fasta"
 ALLNCBIPROT="${PBS_O_WORKDIR}/BlastDB/nr"
 ALLNCBIRNA="${PBS_O_WORKDIR}/BlastDB/nt"
 NCBIENVPROT="${PBS_O_WORKDIR}/BlastDB/env_nr"
@@ -68,7 +68,7 @@ SerialBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Blast_iteratio
 SerialRecipBlastMap="${PBS_O_HOME}/work/Synechocystis_6frame/Phenodata/Recip_Blast_iterations.txt"
 
 # ProteinAnnotationParam
-AnnotColumn="GENE-NAME,CHR-VERSION,PROTEIN-NAME"
+AnnotColumn="locus_tag,gene_id,protein,protein_id,pseudo,location"
 AnnotSeparator=" \\| "
 AnnotKey="MainID"
 
