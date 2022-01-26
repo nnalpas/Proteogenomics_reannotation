@@ -95,6 +95,14 @@ export SIXFRAMEGENE=`basename $GENOME | perl -p -e "s%^%${ProjDir}\\/Nuc_transla
 
 
 
+##########################
+# Format reference FASTA #
+##########################
+
+# Must implement this step using Rscript 'Custom_fasta_format.R'
+
+
+
 #######################
 # MaxQuant processing #
 #######################
