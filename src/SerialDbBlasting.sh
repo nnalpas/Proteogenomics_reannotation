@@ -103,9 +103,9 @@ while IFS= read -r line; do
 	
 	# Run the blast for each iteration
 	if [[ "$SOFTWARE" == "Blast" ]]; then
-		${PBS_O_HOME}/bin/BlastDbBlasting.sh $BLASTCMD -t ${THREADS} 2>&1
+		BlastDbBlasting.sh $BLASTCMD -t ${THREADS} 2>&1
 	elif [[ "$SOFTWARE" == "Diamond" ]]; then
-		${PBS_O_HOME}/bin/DiamondDbBlasting.sh $BLASTCMD -t ${THREADS} 2>&1
+		DiamondDbBlasting.sh $BLASTCMD -t ${THREADS} 2>&1
 	else
 		echo "The blasting software must be either 'Blast' or 'Diamond'." >&2
 		exit 1
