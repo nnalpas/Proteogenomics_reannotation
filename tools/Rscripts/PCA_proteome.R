@@ -12,8 +12,9 @@ source("C:/Users/kxmna01/Documents/GitHub/Metaproteomics/tools/Rscripts/helper_m
 my_plots <- list()
 
 #my_data_f <- "H:/data/Synechocystis_6frame/MQ_6frame_valid/combined/txt/proteinGroups.txt"
-my_data_f <- "H:/data/Synechocystis_6frame/2022-01-05_Normalisation_pg/PG_normalised.txt"
-ids_col <- "Protein IDs"
+#my_data_f <- "H:/data/Synechocystis_6frame/2022-01-05_Normalisation_pg/PG_normalised.txt"
+my_data_f <- "H:/data/Synechocystis_6frame/2022-01-27_Copy_numbers/Scy004_copy_numbers_norm.txt"
+ids_col <- "Proteins"
 
 my_data <- data.table::fread(
     input = my_data_f, sep = "\t", quote = "", header = TRUE,
@@ -21,7 +22,7 @@ my_data <- data.table::fread(
 
 my_data_format <- my_data
 my_data_format <- my_data_format[
-    !grepl("CON__|REV__", my_data_format$`Protein IDs`), ]
+    !grepl("CON__|REV__", my_data_format[[ids_col]]), ]
 rows <- my_data_format[[ids_col]]
 my_data_format[[ids_col]] <- NULL
 my_data_format <- as.data.frame(apply(my_data_format, 2, as.double))
@@ -296,7 +297,7 @@ data.table::fwrite(
     row.names = FALSE, col.names = TRUE)
 
 my_data_split <- my_data %>%
-    tidyr::separate_rows(data = ., `Protein IDs`, sep = ";", convert = FALSE)
+    tidyr::separate_rows(data = ., as.name(ids_col), sep = ";", convert = FALSE)
 data.table::fwrite(
     x = my_data_split, file = "pca_values_imputed.txt",
     append = FALSE, quote = FALSE, sep = "\t",

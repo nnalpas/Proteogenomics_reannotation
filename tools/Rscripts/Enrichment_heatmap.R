@@ -14,7 +14,9 @@ my_plots <- list()
 
 #my_oa_f <- "H:/data/Synechocystis_6frame/2022-01-20_PCA/pca_var_loadings.txt.GSEA.txt"
 
-my_oa_f <- "H:/data/Synechocystis_6frame/Kopf_2014_TU/Transcriptional_units_expr.txt.GSEA_withZeroes.txt"
+#my_oa_f <- "H:/data/Synechocystis_6frame/Kopf_2014_TU/Transcriptional_units_expr.txt.GSEA_withZeroes.txt"
+
+my_oa_f <- "H:/data/Synechocystis_6frame/2022-01-27_Copy_numbers/pca_var_loadings.txt.GSEA.txt"
 
 my_oa <- data.table::fread(
     input = my_oa_f, sep = "\t", quote = "",
