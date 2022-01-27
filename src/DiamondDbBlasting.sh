@@ -156,7 +156,7 @@ if [[ ! -e ${DATABASE}.dmnd ]] &&  [[ ! -e ${dir}/DiamondDB/${base}.dmnd ]]; the
 		#if [[ "${MAKEDB_ADD[$i]}" == '--taxonmap' ]] && [[ ! "${MAKEDB_ADD[$j]}" =~ "prot.accession2taxid.gz$" ]]; then
 		if [[ "${MAKEDB_ADD[$i]}" == '--taxonmap' ]] && [[ ! "${MAKEDB_ADD[$j]}" =~ "prot.accession2taxid.FULL.gz$" ]]; then
 			#grep -E "^>" ${DATABASE} | sed 's/^>//' | sed 's/ .*//' | awk -v taxid="${MAKEDB_ADD[$j]}" '{ print $1, "\t", $1, "\t", taxid, "\t", 0 }' > ${DATABASE}.prot.accession2taxid
-			echo "accession.version\ttaxid" > ${dir}/DiamondDB/${base}.prot.accession2taxid.FULL
+			echo -E "accession.version\ttaxid" > ${dir}/DiamondDB/${base}.prot.accession2taxid.FULL
 			grep -E "^>" ${DATABASE} | sed 's/^>//' | sed 's/ .*//' | awk -v taxid="${MAKEDB_ADD[$j]}" '{ print $1, "\t", taxid }' >> ${dir}/DiamondDB/${base}.prot.accession2taxid.FULL
 			#gzip ${DATABASE}.prot.accession2taxid
 			gzip ${dir}/DiamondDB/${base}.prot.accession2taxid.FULL
