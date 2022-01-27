@@ -146,24 +146,28 @@ if [ ! -d ${WKDIR} ] ; then
 fi
 
 # Make a database for the query if it does not already exists
-if [ ! -e ${DATABASE}.dmnd ] ; then
+dir=$( dirname ${DATABASE} )
+base=$( basename ${DATABASE} )
+if [[ ! -e ${DATABASE}.dmnd ]] &&  [[ ! -e ${dir}/DiamondDB/${base}.dmnd ]]; then
+	
+	mkdir ${dir}/DiamondDB
 	for (( i=0; i<$((${#MAKEDB_ADD[@]}-1)); i++ )); do
 		j=$(($i+1))
 		#if [[ "${MAKEDB_ADD[$i]}" == '--taxonmap' ]] && [[ ! "${MAKEDB_ADD[$j]}" =~ "prot.accession2taxid.gz$" ]]; then
 		if [[ "${MAKEDB_ADD[$i]}" == '--taxonmap' ]] && [[ ! "${MAKEDB_ADD[$j]}" =~ "prot.accession2taxid.FULL.gz$" ]]; then
 			#grep -E "^>" ${DATABASE} | sed 's/^>//' | sed 's/ .*//' | awk -v taxid="${MAKEDB_ADD[$j]}" '{ print $1, "\t", $1, "\t", taxid, "\t", 0 }' > ${DATABASE}.prot.accession2taxid
-			echo "accession.version\ttaxid" > ${DATABASE}.prot.accession2taxid.FULL
-			grep -E "^>" ${DATABASE} | sed 's/^>//' | sed 's/ .*//' | awk -v taxid="${MAKEDB_ADD[$j]}" '{ print $1, "\t", taxid }' >> ${DATABASE}.prot.accession2taxid.FULL
+			echo "accession.version\ttaxid" > ${dir}/DiamondDB/${base}.prot.accession2taxid.FULL
+			grep -E "^>" ${DATABASE} | sed 's/^>//' | sed 's/ .*//' | awk -v taxid="${MAKEDB_ADD[$j]}" '{ print $1, "\t", taxid }' >> ${dir}/DiamondDB/${base}.prot.accession2taxid.FULL
 			#gzip ${DATABASE}.prot.accession2taxid
-			gzip ${DATABASE}.prot.accession2taxid.FULL
+			gzip ${dir}/DiamondDB/${base}.prot.accession2taxid.FULL
 			#MAKEDB_ADD[$j]="${DATABASE}.prot.accession2taxid.gz"
-			MAKEDB_ADD[$j]="${DATABASE}.prot.accession2taxid.FULL.gz"
+			MAKEDB_ADD[$j]="${dir}/DiamondDB/${base}.prot.accession2taxid.FULL.gz"
 		elif [[ "${MAKEDB_ADD[$i]}" =~ ^--taxon(nodes|names)$ ]]; then
 			eval MAKEDB_ADD[$j]=${MAKEDB_ADD[$j]}
 		fi
 	done
 	diamond makedb --in ${DATABASE} \
-		--db ${DATABASE}.dmnd ${MAKEDB_ADD[@]}
+		--db ${dir}/DiamondDB/${base}.dmnd ${MAKEDB_ADD[@]}
 fi
 
 # Check whether queries should be filtered
@@ -176,7 +180,7 @@ fi
 blastdbcmd -db ${QUERY} \
        ${entry_retrieval} | \
        eval "diamond ${TASK} \
-       --db ${DATABASE} \
+       --db ${dir}/DiamondDB/${base} \
        --out ${WKDIR}/${BASENAME} \
        --evalue ${EVAL} \
        --max-target-seqs ${NUMALIGN} \
