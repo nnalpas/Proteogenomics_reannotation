@@ -149,10 +149,14 @@ fi
 if [ ! -e ${DATABASE}.dmnd ] ; then
 	for (( i=0; i<$((${#MAKEDB_ADD[@]}-1)); i++ )); do
 		j=$(($i+1))
-		if [[ "${MAKEDB_ADD[$i]}" == '--taxonmap' ]] && [[ ! "${MAKEDB_ADD[$j]}" =~ "prot.accession2taxid.gz$" ]]; then
-			grep -E "^>" ${DATABASE} | sed 's/^>//' | sed 's/ .*//' | awk -v taxid="${MAKEDB_ADD[$j]}" '{ print $1, "\t", $1, "\t", taxid, "\t", 0 }' > ${DATABASE}.prot.accession2taxid
-			gzip ${DATABASE}.prot.accession2taxid
-			MAKEDB_ADD[$j]="${DATABASE}.prot.accession2taxid.gz"
+		#if [[ "${MAKEDB_ADD[$i]}" == '--taxonmap' ]] && [[ ! "${MAKEDB_ADD[$j]}" =~ "prot.accession2taxid.gz$" ]]; then
+		if [[ "${MAKEDB_ADD[$i]}" == '--taxonmap' ]] && [[ ! "${MAKEDB_ADD[$j]}" =~ "prot.accession2taxid.FULL.gz$" ]]; then
+			#grep -E "^>" ${DATABASE} | sed 's/^>//' | sed 's/ .*//' | awk -v taxid="${MAKEDB_ADD[$j]}" '{ print $1, "\t", $1, "\t", taxid, "\t", 0 }' > ${DATABASE}.prot.accession2taxid
+			grep -E "^>" ${DATABASE} | sed 's/^>//' | sed 's/ .*//' | awk -v taxid="${MAKEDB_ADD[$j]}" '{ print $1, "\t", taxid }' > ${DATABASE}.prot.accession2taxid.FULL
+			#gzip ${DATABASE}.prot.accession2taxid
+			gzip ${DATABASE}.prot.accession2taxid.FULL
+			#MAKEDB_ADD[$j]="${DATABASE}.prot.accession2taxid.gz"
+			MAKEDB_ADD[$j]="${DATABASE}.prot.accession2taxid.FULL.gz"
 		elif [[ "${MAKEDB_ADD[$i]}" =~ ^--taxon(nodes|names)$ ]]; then
 			eval MAKEDB_ADD[$j]=${MAKEDB_ADD[$j]}
 		fi
