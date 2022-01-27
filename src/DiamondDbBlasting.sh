@@ -152,7 +152,8 @@ if [ ! -e ${DATABASE}.dmnd ] ; then
 		#if [[ "${MAKEDB_ADD[$i]}" == '--taxonmap' ]] && [[ ! "${MAKEDB_ADD[$j]}" =~ "prot.accession2taxid.gz$" ]]; then
 		if [[ "${MAKEDB_ADD[$i]}" == '--taxonmap' ]] && [[ ! "${MAKEDB_ADD[$j]}" =~ "prot.accession2taxid.FULL.gz$" ]]; then
 			#grep -E "^>" ${DATABASE} | sed 's/^>//' | sed 's/ .*//' | awk -v taxid="${MAKEDB_ADD[$j]}" '{ print $1, "\t", $1, "\t", taxid, "\t", 0 }' > ${DATABASE}.prot.accession2taxid
-			grep -E "^>" ${DATABASE} | sed 's/^>//' | sed 's/ .*//' | awk -v taxid="${MAKEDB_ADD[$j]}" '{ print $1, "\t", taxid }' > ${DATABASE}.prot.accession2taxid.FULL
+			echo "accession.version\ttaxid" > ${DATABASE}.prot.accession2taxid.FULL
+			grep -E "^>" ${DATABASE} | sed 's/^>//' | sed 's/ .*//' | awk -v taxid="${MAKEDB_ADD[$j]}" '{ print $1, "\t", taxid }' >> ${DATABASE}.prot.accession2taxid.FULL
 			#gzip ${DATABASE}.prot.accession2taxid
 			gzip ${DATABASE}.prot.accession2taxid.FULL
 			#MAKEDB_ADD[$j]="${DATABASE}.prot.accession2taxid.gz"
