@@ -112,21 +112,21 @@ while IFS= read -r line; do
 	fi
 	
 	# Retrieve blast ids from blast results and the corresponding sequence header
-	echo -e "qseqid\tDescription\tTaxon\tTaxonID" > ${WKDIR}/${array[3]}_header
-	cut -f 1 ${WKDIR}/${array[3]} > ${WKDIR}/${array[3]}_qseqid.txt
-	blastdbcmd -db ${QUERY} -outfmt "%a;;%t;;%S;;%T" -target_only -entry_batch ${WKDIR}/${array[3]}_qseqid.txt | sed 's/;;/\t/g' >> ${WKDIR}/${array[3]}_header
-	rm ${WKDIR}/${array[3]}_qseqid.txt
+	#echo -e "qseqid\tDescription\tTaxon\tTaxonID" > ${WKDIR}/${array[3]}_header
+	#cut -f 1 ${WKDIR}/${array[3]} > ${WKDIR}/${array[3]}_qseqid.txt
+	#blastdbcmd -db ${QUERY} -outfmt "%a;;%t;;%S;;%T" -target_only -entry_batch ${WKDIR}/${array[3]}_qseqid.txt | sed 's/;;/\t/g' >> ${WKDIR}/${array[3]}_header
+	#rm ${WKDIR}/${array[3]}_qseqid.txt
 	
 	# If the qseqid is identical (after retrieving the header) then concatenate the new columns with the reciprocal results
-	diff_count=`diff <(awk '{print $1}' ${WKDIR}/${array[3]}) <(awk '{print $1}' ${WKDIR}/${array[3]}_header) | wc -l`
-	if (( "$diff_count" == 0 )); then
-		echo "Including annotation into: ${WKDIR}/${array[3]}_annot"
-		cut -f 2-4 ${WKDIR}/${array[3]}_header > ${WKDIR}/${array[3]}_header.tmp
-		paste -d '\t' ${WKDIR}/${array[3]} ${WKDIR}/${array[3]}_header.tmp > ${WKDIR}/${array[3]}_annot
-		rm ${WKDIR}/${array[3]}_header.tmp
-	else
-		echo "Error while retrieving annotation!"
-	fi
+	#diff_count=`diff <(awk '{print $1}' ${WKDIR}/${array[3]}) <(awk '{print $1}' ${WKDIR}/${array[3]}_header) | wc -l`
+	#if (( "$diff_count" == 0 )); then
+	#	echo "Including annotation into: ${WKDIR}/${array[3]}_annot"
+	#	cut -f 2-4 ${WKDIR}/${array[3]}_header > ${WKDIR}/${array[3]}_header.tmp
+	#	paste -d '\t' ${WKDIR}/${array[3]} ${WKDIR}/${array[3]}_header.tmp > ${WKDIR}/${array[3]}_annot
+	#	rm ${WKDIR}/${array[3]}_header.tmp
+	#else
+	#	echo "Error while retrieving annotation!"
+	#fi
 		
 done < ${CROSSMAP}
 
