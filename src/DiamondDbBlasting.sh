@@ -166,8 +166,8 @@ if [[ ! -e ${DATABASE}.dmnd ]] &&  [[ ! -e ${dir}/DiamondDB/${base}.dmnd ]]; the
 			eval MAKEDB_ADD[$j]=${MAKEDB_ADD[$j]}
 		fi
 	done
-	echo "diamond makedb --in ${DATABASE} \
-		--db ${dir}/DiamondDB/${base}.dmnd ${MAKEDB_ADD[@]}"
+	diamond makedb --in ${DATABASE} \
+		--db ${dir}/DiamondDB/${base}.dmnd ${MAKEDB_ADD[@]}
 fi
 
 # Check whether queries should be filtered
@@ -177,9 +177,9 @@ if [ ${ENTRY} == 'all' ]; then
 fi
 
 # All entries retrieval and blasting of retrieved entries against another database
-echo "blastdbcmd -db ${QUERY} \
+blastdbcmd -db ${QUERY} \
        ${entry_retrieval} | \
-       eval diamond ${TASK} \
+       eval "diamond ${TASK} \
        --db ${dir}/DiamondDB/${base} \
        --out ${WKDIR}/${BASENAME} \
        --evalue ${EVAL} \
