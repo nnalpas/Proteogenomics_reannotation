@@ -57,59 +57,93 @@ my_data_format %<>%
 
 ### Regression analysis --------------------------------------------------
 
-all_combi <- expand.grid(
+all_combi_list <- expand.grid(
     colnames(my_data_format), colnames(my_data_format)) %>%
-    set_colnames(c("response", "terms"))
+    set_colnames(c("response", "terms")) %>%
+    split(x = ., f = rep(x = 1:ceiling(nrow(.)/10000), each = 10000))
 
-my_regression <- apply(X = all_combi, MARGIN = 1, FUN = function(x) {
-#for (i in 1:nrow(all_combi)) {
-    #x <- all_combi[i, ]
+for (i in 1:length(all_combi_list)) {
     
-    model <- try(
-        expr = lm(
-            formula = as.formula(
-                paste(x[["response"]], x[["terms"]], sep = "~")),
-            data = my_data_format,
-            na.action = "na.omit"),
-        silent = TRUE)
-    res <- summary(model, correlation = TRUE)
+    all_combi <- all_combi_list[[i]]
     
-    if (
-        x[[1]] == x[[2]] ||
-        class(model) == "try-error" ||
-        class(res) == "try-error" ||
-        nrow(res$coefficients) < 2) {
-        data.table::data.table(Estimate = NA)
-    } else {
-        data.table::data.table(
-            Estimate = res$coefficients[2, 1],
-            `Std. Error` = res$coefficients[2, 2],
-            `t value` = res$coefficients[2, 3],
-            `Pr(>|t|)` = res$coefficients[2, 4],
-            sigma = res$sigma,
-            df = paste0(res$df, collapse = ";"),
-            fstatistic = res$fstatistic[[1]],
-            r.squared = res$r.squared,
-            adj.r.squared = res$adj.r.squared,
-            correlation = res$correlation[2, 1])
+    my_regression <- apply(X = all_combi, MARGIN = 1, FUN = function(x) {
+        
+        model <- try(
+            expr = lm(
+                formula = as.formula(
+                    paste(x[["response"]], x[["terms"]], sep = "~")),
+                data = my_data_format,
+                na.action = "na.omit"),
+            silent = TRUE)
+        res <- summary(model, correlation = TRUE)
+        
+        if (
+            x[[1]] == x[[2]] ||
+            class(model) == "try-error" ||
+            class(res) == "try-error" ||
+            nrow(res$coefficients) < 2) {
+            data.table::data.table(
+                Estimate = NA,
+                `Std. Error` = NA,
+                `t value` = NA,
+                `Pr(>|t|)` = NA,
+                sigma = NA,
+                df = NA,
+                fstatistic = NA,
+                r.squared = NA,
+                adj.r.squared = NA,
+                correlation = NA)
+        } else {
+            data.table::data.table(
+                Estimate = res$coefficients[2, 1],
+                `Std. Error` = res$coefficients[2, 2],
+                `t value` = res$coefficients[2, 3],
+                `Pr(>|t|)` = res$coefficients[2, 4],
+                sigma = res$sigma,
+                df = paste0(res$df, collapse = ";"),
+                fstatistic = res$fstatistic[[1]],
+                r.squared = res$r.squared,
+                adj.r.squared = res$adj.r.squared,
+                correlation = res$correlation[2, 1])
+        }
+        
+    }) %>%
+        plyr::ldply(., dplyr::bind_rows, .id = NULL) %>%
+        dplyr::bind_cols(all_combi, .)
+    
+    add_header <- FALSE
+    if (!file.exists(paste0(my_data_file, ".Regression_lm.txt"))) {
+        add_header <- TRUE
     }
     
-}) %>%
-    plyr::ldply(., dplyr::bind_rows, .id = NULL) %>%
-    dplyr::bind_cols(all_combi, .) %>%
+    data.table::fwrite(
+        x = my_regression,
+        file = paste0(my_data_file, ".Regression_lm.tmp"),
+        quote = FALSE, sep = "\t",
+        row.names = FALSE, col.names = add_header,
+        append = TRUE)
+    
+}
+
+my_regression <- data.table::fread(
+    input = paste0(my_data_file, ".Regression_lm.tmp"),
+    sep = "\t", quote = "", header = TRUE,
+    stringsAsFactors = FALSE, colClasses = "character",
+    data.table = TRUE) %>%
     dplyr::mutate(
         ., BH = p.adjust(p = `Pr(>|t|)`, method = "BH"),
         Bonferroni = p.adjust(p = `Pr(>|t|)`, method = "bonferroni"))
 
 
 
-### Results export -------------------------------------------------------
+### END ------------------------------------------------------------------
 
-#
 data.table::fwrite(
     x = my_regression,
     file = paste0(my_data_file, ".Regression_lm.txt"),
-    quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+    quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE,
+    append = FALSE)
 
 save.image(paste0(my_data_file, ".Regression_lm_session.RData"))
 
