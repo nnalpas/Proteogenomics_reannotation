@@ -162,11 +162,11 @@ if [[ ! -e ${DATABASE}.dmnd ]] &&  [[ ! -e ${dir}/DiamondDB/${base}.dmnd ]]; the
 			gzip ${dir}/DiamondDB/${base}.prot.accession2taxid.FULL
 			#MAKEDB_ADD[$j]="${DATABASE}.prot.accession2taxid.gz"
 			MAKEDB_ADD[$j]="${dir}/DiamondDB/${base}.prot.accession2taxid.FULL.gz"
-		elif [[ "${MAKEDB_ADD[$i]}" =~ ^--taxon(nodes|names)$ ]]; then
-			eval MAKEDB_ADD[$j]=${MAKEDB_ADD[$j]}
+		#elif [[ "${MAKEDB_ADD[$i]}" =~ ^--taxon(nodes|names)$ ]]; then
+		#	eval MAKEDB_ADD[$j]=${MAKEDB_ADD[$j]}
 		fi
 	done
-	echo "diamond makedb --in ${DATABASE} \
+	echo "eval diamond makedb --in ${DATABASE} \
 		--db ${dir}/DiamondDB/${base}.dmnd ${MAKEDB_ADD[@]}"
 fi
 
