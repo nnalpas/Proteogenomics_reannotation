@@ -168,6 +168,7 @@ if [[ ! -e ${DATABASE}.dmnd ]] &&  [[ ! -e ${dir}/DiamondDB/${base}.dmnd ]]; the
 	done
 	diamond makedb --in ${DATABASE} \
 		--db ${dir}/DiamondDB/${base}.dmnd ${MAKEDB_ADD[@]}
+	DATABASE="${dir}/DiamondDB/${base}"
 fi
 
 # Check whether queries should be filtered
@@ -180,7 +181,7 @@ fi
 blastdbcmd -db ${QUERY} \
        ${entry_retrieval} | \
        eval "diamond ${TASK} \
-       --db ${dir}/DiamondDB/${base} \
+       --db ${DATABASE} \
        --out ${WKDIR}/${BASENAME} \
        --evalue ${EVAL} \
        --max-target-seqs ${NUMALIGN} \
