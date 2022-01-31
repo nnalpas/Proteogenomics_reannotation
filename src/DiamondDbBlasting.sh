@@ -178,9 +178,9 @@ if [ ${ENTRY} == 'all' ]; then
 fi
 
 # All entries retrieval and blasting of retrieved entries against another database
-blastdbcmd -db ${QUERY} \
+echo "blastdbcmd -db ${QUERY} \
        ${entry_retrieval} | \
-       eval "diamond ${TASK} \
+       eval diamond ${TASK} \
        --db ${DATABASE} \
        --out ${WKDIR}/${BASENAME} \
        --evalue ${EVAL} \
@@ -189,7 +189,7 @@ blastdbcmd -db ${QUERY} \
        --outfmt 6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qlen qframe qseq qstrand sstart send slen sseq staxids sscinames evalue bitscore score"
 
 # Include column names at start of file
-sed -i '1s/^/qseqid\tsseqid\tpident\tnident\tmismatch\tgaps\tlength\tgapopen\tqstart\tqend\tqlen\tqframe\tqseq\tqstrand\tsstart\tsend\tslen\tsseq\tstaxid\tssciname\tevalue\tbitscore\tscore\n/' ${WKDIR}/${BASENAME}
+#sed -i '1s/^/qseqid\tsseqid\tpident\tnident\tmismatch\tgaps\tlength\tgapopen\tqstart\tqend\tqlen\tqframe\tqseq\tqstrand\tsstart\tsend\tslen\tsseq\tstaxid\tssciname\tevalue\tbitscore\tscore\n/' ${WKDIR}/${BASENAME}
 
 # Time scripts ends
 echo "Completed $(date +"%T %d-%m-%Y")."
