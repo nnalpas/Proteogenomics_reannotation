@@ -257,7 +257,7 @@ if (( $ProteinCoordinate )); then
 
     Genomic_position_from_blast.R \
 		-f ${UNIREFPROT} \
-		-b ${ProjDir}/Blast/Refnucl_vs_Genome_annot \
+		-b ${ProjDir}/Blast/Refnucl_vs_Genome \
 		-g ${GENOME} \
 		-o ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt > ${LogDir}/ProteinCoordinate.log 2>&1
 	ORF_coordinates.R \
