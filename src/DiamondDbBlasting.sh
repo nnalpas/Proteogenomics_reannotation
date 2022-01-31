@@ -178,9 +178,9 @@ if [ ${ENTRY} == 'all' ]; then
 fi
 
 # All entries retrieval and blasting of retrieved entries against another database
-echo "blastdbcmd -db ${QUERY} \
+blastdbcmd -db ${QUERY} \
        ${entry_retrieval} | \
-       eval diamond ${TASK} \
+       eval "diamond ${TASK} \
        --db ${DATABASE} \
        --out ${WKDIR}/${BASENAME} \
        --evalue ${EVAL} \
