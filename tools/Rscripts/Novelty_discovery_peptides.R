@@ -428,14 +428,12 @@ saveRDS(
         opt$output, "/", "Sequence_novelty_reason.RDS", sep = ""))
 
 # Export complete evidence info for these novel evidence
-write.table(
+data.table::fwrite(
     x = evid_reason,
     file = paste(
         opt$output, "/", "Sequence_novelty_reason.txt", sep = ""),
-    quote = FALSE,
-    sep = "\t",
-    row.names = FALSE,
-    col.names = TRUE)
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
 
 # Open a file for plot visualisation
 pdf(
