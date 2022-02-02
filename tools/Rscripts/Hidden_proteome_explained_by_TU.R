@@ -99,6 +99,19 @@ never_identified <- list(
         .[["Proteins"]]
 )
 
+for (x in names(never_identified)) {
+    
+    tmp <- my_fasta[never_identified[[x]]]
+    tmp_names <- lapply(tmp, function(y) {attr(x = y, which = "Annot")}) %>%
+        unlist(.) %>%
+        sub("^>", "", .)
+    seqinr::write.fasta(
+        sequences = tmp, names = tmp_names,
+        file.out = paste0("Never_identified_in_", x, ".fasta"),
+        open = "w", as.string = TRUE)
+    
+}
+
 toplot <- my_data %>%
     dplyr::filter(., Proteins %in% never_identified$unique_PXD) %>%
     dplyr::select(., -Type, -Intensity) %>%
