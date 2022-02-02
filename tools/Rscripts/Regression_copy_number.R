@@ -53,6 +53,9 @@ my_data_format %<>%
     t(.) %>%
     as.data.frame(.)
 
+#my_data_format %<>%
+#    log10(.)
+
 
 
 ### Regression analysis --------------------------------------------------
@@ -118,18 +121,24 @@ for (i in 1:length(all_combi_list)) {
     
     data.table::fwrite(
         x = my_regression,
-        file = paste0(my_data_file, ".Regression_lm.tmp"),
+        file = paste0(my_data_file, ".Regression_lm.tmp", i),
         quote = FALSE, sep = "\t",
         row.names = FALSE, col.names = add_header,
         append = TRUE)
     
 }
 
-my_regression <- data.table::fread(
-    input = paste0(my_data_file, ".Regression_lm.tmp"),
-    sep = "\t", quote = "", header = TRUE,
-    stringsAsFactors = FALSE, colClasses = "character",
-    data.table = TRUE) %>%
+lm_files <- list.files(
+    path = dirname(my_data_file),
+    pattern = ".Regression_lm.tmp", full.names = TRUE)
+
+my_regression <- lapply(X = lm_files, function(x) {
+    data.table::fread(
+        input = x, sep = "\t", quote = "", header = TRUE,
+        stringsAsFactors = FALSE, colClasses = "character",
+        data.table = TRUE)
+}) %>%
+    plyr::ldply(., data.table::data.table, .id = NULL) %>%
     dplyr::mutate(
         ., BH = p.adjust(p = `Pr(>|t|)`, method = "BH"),
         Bonferroni = p.adjust(p = `Pr(>|t|)`, method = "bonferroni"))
