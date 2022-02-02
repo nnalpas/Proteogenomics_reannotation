@@ -256,8 +256,8 @@ fi
 if (( $ProteinCoordinate )); then
 
     Genomic_position_from_blast.R \
-		-f ${UNIREFPROT} \
-		-b ${ProjDir}/Blast/Refnucl_vs_Genome \
+		-f ${UNIREFGENE} \
+		-b ${ProjDir}/Blast/Refnucl_vs_Genome_annot \
 		-g ${GENOME} \
 		-o ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt > ${LogDir}/ProteinCoordinate.log 2>&1
 	ORF_coordinates.R \
@@ -276,7 +276,7 @@ fi
 if (( $ProteinAnnotation )); then
 
     Fasta_annotation.R \
-		-f ${UNIREFPROT} \
+		-f ${UNIREFGENE} \
 		-t ${TaxId} \
 		-c ${AnnotColumn} \
 		-k ${AnnotKey} \
