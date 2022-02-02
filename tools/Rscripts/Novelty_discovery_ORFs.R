@@ -593,8 +593,12 @@ for (i in 1:length(ref_expr_list)) {
     for (x in c(6:12)) {
         
         # Find the motif between foreground and background
-        tmp <- findMotifFgBg(
-            fg.seq = fg_seq, bg.seq = bg_seq,
+        #tmp <- findMotifFgBg(
+        #    fg.seq = fg_seq, bg.seq = bg_seq,
+        #    start.width = x, both.strand = FALSE, flank = 1,
+        #    max.width = 16, enriched.only = TRUE)
+        tmp <- findMotif(
+            category = fg_seq, all.seq = bg_seq,
             start.width = x, both.strand = FALSE, flank = 1,
             max.width = 16, enriched.only = TRUE)
         
