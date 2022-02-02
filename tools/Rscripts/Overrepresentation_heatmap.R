@@ -12,7 +12,7 @@ my_plots <- list()
 
 #my_oa_f <- "H:/data/Synechocystis_6frame/2022-01-07_iBAQ/PG_iBAQ.txt.GSEA.txt"
 
-my_oa_f <- "H:/data/Synechocystis_6frame/2022-01-19_Uncharacterised_TU/2022-01-19_Clustering_k5_Experiment_Normalised intensity_for_OA_Transcriptional_units_expr.txt.OA.txt"
+my_oa_f <- "H:/data/Synechocystis_6frame/2022-02-02_Hidden_proteome/2022-02-02_Hidden_proteome_for_oa_by_type.txt.OA.txt"
 
 my_oa <- data.table::fread(
     input = my_oa_f, sep = "\t", quote = "",
