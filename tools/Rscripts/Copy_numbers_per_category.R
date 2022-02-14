@@ -8,7 +8,8 @@ my_plots <- list()
 
 my_cols <- c("#387eb8", "#404040", "#e21e25", "#fbaf3f", "#d1d2d4")
 
-my_data_f <- "H:/data/Synechocystis_6frame/2022-01-27_Copy_numbers/Scy004_copy_numbers_norm.txt"
+#my_data_f <- "H:/data/Synechocystis_6frame/2022-01-27_Copy_numbers/Scy004_copy_numbers_norm.txt"
+my_data_f <- "H:/data/Synechocystis_6frame/2022-02-14_iBAQ/Scy004_resuscitation_Scy001_iBAQ_norm.txt"
 
 my_data <- data.table::fread(
     input = my_data_f, sep = "\t", quote = "",
@@ -25,6 +26,9 @@ category <- my_annot$best_og_Subcategory %>%
     table(.) %>%
     data.frame(.) %>%
     set_colnames(c("Category", "Count"))
+
+my_data %<>%
+    dplyr::filter(., Proteins %in% my_annot$`#query_name`)
 
 
 
@@ -79,12 +83,23 @@ pl1 <- ggplot(
         mapping = aes(x = Median, y = Simple_Subcategory, fill = Simple_keyword),
         position = position_jitter(height = 0.1),
         shape = 21, size = 2) +
-    ggrepel::geom_text_repel(
+    #ggrepel::geom_text_repel(
+    geom_text(
         data = my_data_format %>%
             dplyr::arrange(., dplyr::desc(Median)) %>%
             dplyr::filter(., Simple_keyword != "Others") %>%
             dplyr::slice(., 1:20),
-        mapping = aes(x = Median, y = Simple_Subcategory, colour = Simple_keyword, label = Preferred_name)) +
+        mapping = aes(
+            x = Median, y = Simple_Subcategory,
+            colour = Simple_keyword, label = Proteins)) +
+    geom_text(
+        data = my_data_format %>%
+            dplyr::arrange(., Median) %>%
+            dplyr::filter(., Simple_keyword != "Others") %>%
+            dplyr::slice(., 1:20),
+        mapping = aes(
+            x = Median, y = Simple_Subcategory,
+            colour = Simple_keyword, label = Proteins)) +
     ggpubr::theme_pubr() +
     scale_x_log10() +
     scale_fill_manual(values = my_target_col) +
@@ -94,7 +109,8 @@ pl1 <- ggplot(
 pl2 <- ggplot(
     my_data_format,
     aes(x = Median, fill = Simple_keyword, colour = Simple_keyword)) +
-    geom_density(alpha = 0.3) +
+    #geom_density(alpha = 0.3) +
+    geom_density(aes(y = ..scaled..), alpha = 0.3) +
     ggpubr::theme_pubr() +
     scale_x_log10() +
     scale_fill_manual(values = c(my_target_col, `Others` = "#246E39")) +
@@ -160,12 +176,24 @@ pl1 <- ggplot(
         mapping = aes(x = Median, y = Simple_Subcategory, fill = Simple_keyword),
         position = position_jitter(height = 0.1),
         shape = 21, size = 2) +
-    ggrepel::geom_text_repel(
+    #ggrepel::geom_text_repel(
+    geom_text(
         data = my_data_format_other %>%
             dplyr::arrange(., Median) %>%
             dplyr::filter(., Simple_keyword != "Others") %>%
-            dplyr::slice(., 1:100),
-        mapping = aes(x = Median, y = Simple_Subcategory, colour = Simple_keyword, label = Preferred_name)) +
+            dplyr::slice(., 1:20),
+        mapping = aes(
+            x = Median, y = Simple_Subcategory,
+            colour = Simple_keyword, label = Proteins)) +#,
+        #max.overlaps = 100) +
+    geom_text(
+        data = my_data_format_other %>%
+            dplyr::arrange(., dplyr::desc(Median)) %>%
+            dplyr::filter(., Simple_keyword != "Others") %>%
+            dplyr::slice(., 1:20),
+        mapping = aes(
+            x = Median, y = Simple_Subcategory,
+            colour = Simple_keyword, label = Proteins)) +
     ggpubr::theme_pubr() +
     scale_x_log10() +
     scale_fill_manual(values = my_target_other_col) +
@@ -175,7 +203,7 @@ pl1 <- ggplot(
 pl2 <- ggplot(
     my_data_format_other,
     aes(x = Median, fill = Simple_keyword, colour = Simple_keyword)) +
-    geom_density(alpha = 0.3) +
+    geom_density(aes(y = ..scaled..), alpha = 0.3) +
     ggpubr::theme_pubr() +
     scale_x_log10() +
     scale_fill_manual(values = c(my_target_other_col, `Others` = "#246E39")) +
@@ -184,8 +212,6 @@ pl2 <- ggplot(
 my_plots[["Copy_number_low"]] <- cowplot::plot_grid(
     pl2, pl1, nrow = 2,
     align = "hv", axis = "tblr", rel_heights = c(1, 4))
-
-
 
 pdf("Copy_numbers_per_category.pdf", 12, 12)
 my_plots
