@@ -264,5 +264,6 @@ data.table::fwrite(
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
 
+save.image("Scy004_resuscitation_Scy001_iBAQ.RData")
 
 
