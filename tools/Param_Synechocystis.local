@@ -15,8 +15,8 @@ opt <- list(
     maxquant = "H:/data/Synechocystis_6frame/MQ_6frame_valid/combined/txt",
     reference = "H:/data/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta",
     novel = "H:/data/Synechocystis_6frame/Nuc_translation/Find0_Synechocystis_sp_PCC_6803_genome_FIXED.fasta",
-    threads = 1)
-
+    threads = 1,
+	report = TRUE)
 
 # EggNOG_annotation_2_perseus.R parameters
 opt <- list(
