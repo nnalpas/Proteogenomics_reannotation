@@ -1,15 +1,15 @@
 # GeneralParam
-ProjectName="Pae_6frame"
-TaxId="287"
+ProjectName="Eco_6frame"
+TaxId="83333"
 
 # ProcessSteps
-GetOrf=0
+GetOrf=1
 MaxquantProc=0
 GetNovelEntries=0
 GetNCBIBlastDb=0
 MakeBlastDbProt=0
 MakeBlastDbNuc=0
-DbBlasting=1
+DbBlasting=0
 BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
@@ -38,9 +38,9 @@ MINSIZE=1
 CIRCULAR="Yes"
 
 # ReferenceDatabase (for the genome make sure the chromosome name is all in lowercase for Ensembl compatibility)
-GENOME="${PBS_O_WORKDIR}/Pae_6frame/Genome/GCF_000006765.1_ASM676v1_genomic.fasta"
-UNIREFPROT="${PBS_O_WORKDIR}/Pae_6frame/Genome/GCF_000006765.1_ASM676v1_protein.fasta"
-UNIREFGENE="${PBS_O_WORKDIR}/Pae_6frame/Genome/GCF_000006765.1_ASM676v1_cds_from_genomic_sep.fasta"
+GENOME="${PBS_O_WORKDIR}/Eco_6frame/Genome/GCF_000005845.2_ASM584v2_genomic.fasta"
+UNIREFPROT="${PBS_O_WORKDIR}/Eco_6frame/Genome/UP000000625_83333_complete_2020-10-07.fasta"
+UNIREFGENE="${PBS_O_WORKDIR}/Eco_6frame/Genome/GCF_000006765.1_ASM676v1_cds_from_genomic_sep.fasta"
 ALLNCBIPROT="${PBS_O_WORKDIR}/BlastDB/nr"
 ALLNCBIRNA="${PBS_O_WORKDIR}/BlastDB/nt"
 NCBIENVPROT="${PBS_O_WORKDIR}/BlastDB/env_nr"
@@ -52,7 +52,7 @@ OTHERGENE=()
 
 # MaxQuantParam
 mq_version="${PBS_O_WORKDIR}/MaxQuant_1.6.14.0.sif"
-mqpar="${PBS_O_WORKDIR}/Pae_6frame/MaxQuant/mqpar_posix.xml"
+mqpar="${PBS_O_WORKDIR}/Eco_6frame/MaxQuant/mqpar_posix.xml"
 
 # NCBIBlastDB
 BlastDbs='env_nr env_nt nr nt'
@@ -62,10 +62,10 @@ InputType="fasta"
 
 # BlastParam
 BlastSoftware="Diamond"
-SerialBlastMap="${PBS_O_WORKDIR}/Pae_6frame/Phenodata/Blast_iterations.txt"
+SerialBlastMap="${PBS_O_WORKDIR}/Eco_6frame/Phenodata/Blast_iterations.txt"
 
 # ReciprocalBlastParam
-SerialRecipBlastMap="${PBS_O_WORKDIR}/Pae_6frame/Phenodata/Recip_Blast_iterations.txt"
+SerialRecipBlastMap="${PBS_O_WORKDIR}/Eco_6frame/Phenodata/Recip_Blast_iterations.txt"
 
 # ProteinAnnotationParam
 AnnotColumn="locus_tag,gene_id,protein,protein_id,pseudo,location"
@@ -73,7 +73,7 @@ AnnotSeparator=" \\| "
 AnnotKey="MainID"
 
 # BSgenomeParam
-SEED="${PBS_O_WORKDIR}/Pae_6frame/Genome/seed"
+SEED="${PBS_O_WORKDIR}/Eco_6frame/Genome/seed"
 PKGNAME="BSgenome.Paeruginosa.PathoGenesis.012022"
 Circular="c('pae1')"
 
@@ -104,6 +104,6 @@ EmapperType="proteins"
 # PhylostratigraphyBlastParam
 InputTypePhylo="fasta"
 BlastSoftwarePhylo="Blast"
-SerialBlastMapPhylo="${PBS_O_WORKDIR}/Pae_6frame/Phenodata/Phylostratigraphy_blasts.txt"
+SerialBlastMapPhylo="${PBS_O_WORKDIR}/Eco_6frame/Phenodata/Phylostratigraphy_blasts.txt"
 
 
