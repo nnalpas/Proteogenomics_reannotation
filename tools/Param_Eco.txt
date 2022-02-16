@@ -1,17 +1,35 @@
 # GeneralParam
-ProjectName="Eco_6frame"
-TaxId="83333"
+ProjectName="Pae_6frame"
+TaxId="287"
 
 # ProcessSteps
 GetOrf=0
+MaxquantProc=0
 GetNovelEntries=0
+GetNCBIBlastDb=0
 MakeBlastDbProt=0
 MakeBlastDbNuc=0
-BlastDbBlasting=0
+DbBlasting=1
 BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
-ProteinCoordinate=1
+ProteinCoordinate=0
+ProteinAnnotation=0
+BSgenomeForge=0
+GRangeCreate=0
+PepNoveltyReason=0
+SequencesCoordinate=0
+OperonCoordinate=0
+SangerCoordinate=0
+OrfNoveltyReason=0
+ClustalAlign=0
+ConservationBlast=0
+MaxquantValidation=0
+SummarizedExp=0
+InterproScan=0
+SignalpPrediction=0
+EmapperAnnotation=0
+PhylostratigraphyBlast=0
 
 # EmbossParam
 FRAME=6
@@ -19,18 +37,73 @@ TABLE=11
 MINSIZE=1
 CIRCULAR="Yes"
 
-# ReferenceDatabase
-GENOME="${PBS_O_HOME}/work/Eco_6frame/Nuc_translation/GCA_001566335.1_15022017.fasta"
-UNIREFPROT="${PBS_O_HOME}/work/Eco_6frame/Nuc_translation/UP000000625_83333_complete_17022017.fasta"
-UNIREFGENE="${PBS_O_HOME}/work/Eco_6frame/Nuc_translation/UP000000625_83333_DNA.fasta"
-ALLUNIPROT="${PBS_O_HOME}/BlastDB/uniprot_sprot_trembl.fasta"
-ALLNCBIPROT="${PBS_O_HOME}/BlastDB/refseq_protein"
-ALLNCBIRNA="${PBS_O_HOME}/BlastDB/refseq_rna"
+# ReferenceDatabase (for the genome make sure the chromosome name is all in lowercase for Ensembl compatibility)
+GENOME="${PBS_O_WORKDIR}/Pae_6frame/Genome/GCF_000006765.1_ASM676v1_genomic.fasta"
+UNIREFPROT="${PBS_O_WORKDIR}/Pae_6frame/Genome/GCF_000006765.1_ASM676v1_protein.fasta"
+UNIREFGENE="${PBS_O_WORKDIR}/Pae_6frame/Genome/GCF_000006765.1_ASM676v1_cds_from_genomic_sep.fasta"
+ALLNCBIPROT="${PBS_O_WORKDIR}/BlastDB/nr"
+ALLNCBIRNA="${PBS_O_WORKDIR}/BlastDB/nt"
+NCBIENVPROT="${PBS_O_WORKDIR}/BlastDB/env_nr"
+NCBIENVRNA="${PBS_O_WORKDIR}/BlastDB/env_nt"
+OTHERPROT=()
+OTHERGENE=()
+#OPERON="${PBS_O_WORKDIR}/work/Synechocystis_6frame/Genome/Transcriptional_units_formatted_20201022.txt"
+#SANGER="${PBS_O_WORKDIR}/work/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
+
+# MaxQuantParam
+mq_version="${PBS_O_WORKDIR}/MaxQuant_1.6.14.0.sif"
+mqpar="${PBS_O_WORKDIR}/Pae_6frame/MaxQuant/mqpar_posix.xml"
+
+# NCBIBlastDB
+BlastDbs='env_nr env_nt nr nt'
 
 # BlastDatab
 InputType="fasta"
 
 # BlastParam
-Eval=0.1
-NumAlign=100
+BlastSoftware="Diamond"
+SerialBlastMap="${PBS_O_WORKDIR}/Pae_6frame/Phenodata/Blast_iterations.txt"
+
+# ReciprocalBlastParam
+SerialRecipBlastMap="${PBS_O_WORKDIR}/Pae_6frame/Phenodata/Recip_Blast_iterations.txt"
+
+# ProteinAnnotationParam
+AnnotColumn="locus_tag,gene_id,protein,protein_id,pseudo,location"
+AnnotSeparator=" \\| "
+AnnotKey="MainID"
+
+# BSgenomeParam
+SEED="${PBS_O_WORKDIR}/Pae_6frame/Genome/seed"
+PKGNAME="BSgenome.Paeruginosa.PathoGenesis.012022"
+Circular="c('pae1')"
+
+# RBSanalysis
+
+# User provided additional RBS motifs sequence
+#AddRBS=''
+
+# ClustalParam
+#RBSLOW="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
+#RBSHIGH="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
+
+# ConservationBlastParam
+BlastnParam=''
+
+# MaxQuantValidationParam
+mqpar_valid="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_validation_novel_ORF_TMT/mqpar_posix.xml"
+
+# SignalpParam
+Organism="gram-"
+
+# EmapperParam
+emapperParam='-m diamond --sensmode ultra-sensitive'
+emapperDBParam=''
+EmapperDbDir="${PBS_O_HOME}/work/EggnogDB/"
+EmapperType="proteins"
+
+# PhylostratigraphyBlastParam
+InputTypePhylo="fasta"
+BlastSoftwarePhylo="Blast"
+SerialBlastMapPhylo="${PBS_O_WORKDIR}/Pae_6frame/Phenodata/Phylostratigraphy_blasts.txt"
+
 
