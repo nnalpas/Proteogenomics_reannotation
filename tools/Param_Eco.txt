@@ -3,13 +3,13 @@ ProjectName="Eco_6frame"
 TaxId="83333"
 
 # ProcessSteps
-GetOrf=1
+GetOrf=0
 MaxquantProc=0
 GetNovelEntries=0
 GetNCBIBlastDb=0
-MakeBlastDbProt=0
+MakeBlastDbProt=1
 MakeBlastDbNuc=0
-DbBlasting=0
+DbBlasting=1
 BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
@@ -40,15 +40,15 @@ CIRCULAR="Yes"
 # ReferenceDatabase (for the genome make sure the chromosome name is all in lowercase for Ensembl compatibility)
 GENOME="${PBS_O_WORKDIR}/Eco_6frame/Genome/GCF_000005845.2_ASM584v2_genomic.fasta"
 UNIREFPROT="${PBS_O_WORKDIR}/Eco_6frame/Genome/UP000000625_83333_complete_2020-10-07.fasta"
-UNIREFGENE="${PBS_O_WORKDIR}/Eco_6frame/Genome/GCF_000006765.1_ASM676v1_cds_from_genomic_sep.fasta"
+UNIREFGENE="${PBS_O_WORKDIR}/Eco_6frame/Genome/"
 ALLNCBIPROT="${PBS_O_WORKDIR}/BlastDB/nr"
 ALLNCBIRNA="${PBS_O_WORKDIR}/BlastDB/nt"
 NCBIENVPROT="${PBS_O_WORKDIR}/BlastDB/env_nr"
 NCBIENVRNA="${PBS_O_WORKDIR}/BlastDB/env_nt"
 OTHERPROT=()
 OTHERGENE=()
-#OPERON="${PBS_O_WORKDIR}/work/Synechocystis_6frame/Genome/Transcriptional_units_formatted_20201022.txt"
-#SANGER="${PBS_O_WORKDIR}/work/work/Bsu_6frame_NEW/Sanger_validation/Sanger_validation.fasta"
+#OPERON="${PBS_O_WORKDIR}/work/Eco_6frame/Genome/Transcriptional_units_formatted_20201022.txt"
+#SANGER="${PBS_O_WORKDIR}/work/work/Eco_6frame/Sanger_validation/Sanger_validation.fasta"
 
 # MaxQuantParam
 mq_version="${PBS_O_WORKDIR}/MaxQuant_1.6.14.0.sif"
@@ -83,8 +83,8 @@ Circular="c('pae1')"
 #AddRBS=''
 
 # ClustalParam
-#RBSLOW="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
-#RBSHIGH="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
+#RBSLOW="${PBS_O_HOME}/work/Eco_6frame/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
+#RBSHIGH="${PBS_O_HOME}/work/Eco_6frame/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
 
 # ConservationBlastParam
 BlastnParam=''
