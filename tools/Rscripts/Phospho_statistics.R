@@ -510,3 +510,41 @@ my_plots[["Phospho_localisation_rank"]] <- ggplot(
 
 
 
+
+tmp <- my_annot_format %>%
+    dplyr::filter(
+        ., Simple_Subcategory == "Transcription")
+
+my_target_phos <- my_data_top %>%
+    tidyr::pivot_wider(data = ., names_from = name, values_from = value)
+
+my_target_phos_exp <- my_phospho_intens_ref %>%
+    dplyr::select(., -name, -value) %>%
+    unique(.) %>%
+    dplyr::group_by(., Proteins) %>%
+    dplyr::summarise(
+        ., Resuscitation_chlorosis_count = sum(
+            Resuscitation_chlorosis %in% c("Unique quanti.", "Shared id.")),
+        Resuscitation_chlorosis_uniq_count = sum(
+            Resuscitation_chlorosis %in% c("Unique quanti.")),
+        SCy004_count = sum(
+            SCy004 %in% c("Unique quanti.", "Shared id.")),
+        SCy004_uniq_count = sum(
+            SCy004 %in% c("Unique quanti.")),
+        SCy015_count = sum(
+            SCy015 %in% c("Unique quanti.", "Shared id.")),
+        SCy015_uniq_count = sum(
+            SCy015 %in% c("Unique quanti.")))
+
+my_target_phos %<>%
+    dplyr::left_join(x = ., y = my_target_phos_exp) %>%
+    dplyr::left_join(x = ., y = my_annot_format, by = c("Proteins" = "#query_name")) %>%
+    dplyr::arrange(., dplyr::desc(Count))
+
+my_uniq_exp_phos <- my_target_phos %>%
+    dplyr::filter(
+        ., Count >= 2 & (Count == Resuscitation_chlorosis_uniq_count |
+            Count == SCy004_uniq_count | Count == SCy015_uniq_count))
+
+
+
