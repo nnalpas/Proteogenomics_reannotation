@@ -1,0 +1,512 @@
+
+
+
+library(magrittr)
+library(ggplot2)
+
+my_plots <- list()
+my_cols <- c("#387eb8", "#d1d2d4", "#e21e25", "#fbaf3f", "#3B3B3B", "#834F96")
+
+
+
+### Phosphosites ---------------------------------------------------------
+
+my_data_f <- "H:/data/Synechocystis_6frame/MQ_6frame_valid/combined/txt/summary/PhosphoSites_nonredundant.txt"
+#my_data_f <- "H:/data/Synechocystis_6frame/MQ_6frame_valid/combined/txt/Phospho (STY)Sites.txt"
+
+my_data <- data.table::fread(
+    input = my_data_f, sep = "\t", quote = "", header = TRUE,
+    stringsAsFactors = FALSE, colClasses = "character")
+
+my_data_filt <- my_data %>%
+    #dplyr::filter(., Reverse != "+" & `Potential contaminant` != "+")
+    dplyr::filter(., Reverse != "+" & Contaminant != "+")
+
+count_phospho_prot <- length(unique(unlist(strsplit(
+    x = my_data_filt$Proteins, split = ";"))))
+
+my_plots[["Localisation_distribution"]] <- ggplot(
+    my_data_filt, aes(x = as.numeric(`Localization.prob`))) +
+    geom_histogram() +
+    ggpubr::theme_pubr()
+
+phospho_stats <- function(x) {
+    
+    my_total_stats <- data.frame()
+    
+    my_total_stats <- x %>%
+        dplyr::mutate(., Category = "Total") %>%
+        dplyr::group_by(., Category) %>%
+        dplyr::summarise(., Count = dplyr::n()) %>%
+        dplyr::bind_rows(my_total_stats, .)
+    
+    my_total_stats <- x %>%
+        dplyr::filter(
+            ., !is.na(`Localization.prob`) & `Localization.prob` > 0.95) %>%
+        dplyr::mutate(., Category = "Localised >0.95") %>%
+        dplyr::group_by(., Category) %>%
+        dplyr::summarise(., Count = dplyr::n()) %>%
+        dplyr::bind_rows(my_total_stats, .)
+    
+    my_total_stats <- x %>%
+        dplyr::mutate(., Category = `Amino.acid`) %>%
+        dplyr::group_by(., Category) %>%
+        dplyr::summarise(., Count = dplyr::n()) %>%
+        dplyr::bind_rows(my_total_stats, .)
+    
+    my_total_stats <- x %>%
+        dplyr::mutate(., Category = `Amino.acid`) %>%
+        dplyr::group_by(., Category) %>%
+        dplyr::summarise(., Count = dplyr::n()) %>%
+        dplyr::bind_rows(my_total_stats, .)
+    
+    my_total_stats %<>%
+        dplyr::ungroup(.) %>%
+        dplyr::arrange(., dplyr::desc(Count))
+    
+    my_total_stats$Category <- factor(
+        x = my_total_stats$Category,
+        levels = unique(my_total_stats$Category),
+        ordered = TRUE)
+    
+    pl <- ggplot(
+        my_total_stats, aes(
+            x = Category, y = Count, fill = Category,
+            colour = Category, label = Count)) +
+        geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +
+        geom_text(
+            stat = "identity", position = position_dodge(width = 0.9),
+            vjust = -0.5) +
+        ggpubr::theme_pubr() +
+        scale_fill_manual(values = my_cols) +
+        scale_colour_manual(values = my_cols)
+    
+    return(list(data = my_total_stats, plot = pl))
+    
+}
+
+all_stats <- phospho_stats(x = my_data_filt)
+
+my_plots[["Phospho_stats_all"]] <- all_stats[["plot"]]
+
+my_gr_phospho_f <- "H:/data/Synechocystis_6frame/GRanges/Phospho (STY)Sites_grange.RDS"
+
+my_gr_phospho <- readRDS(my_gr_phospho_f)
+
+my_gr_ref_f <- "H:/data/Synechocystis_6frame/GRanges/Ref_prot_grange.RDS"
+
+my_gr_ref <- readRDS(my_gr_ref_f)
+
+my_gr_phospho_notref <- IRanges::subsetByOverlaps(
+    x = my_gr_phospho, ranges = my_gr_ref, invert = TRUE)
+
+my_novel_stats <- data.frame(
+    Names = names(my_gr_phospho_notref)) %>%
+    tidyr::separate(
+        data = ., col = Names,
+        into = c("Proteins", "Positions.within.proteins", "Amino.acid"),
+        sep = "~") %>%
+    dplyr::inner_join(x = ., my_data_filt)
+
+all_stats_novel <- phospho_stats(x = my_novel_stats)
+
+my_plots[["Phospho_stats_novel"]] <- all_stats_novel[["plot"]]
+
+my_reason_f <- "H:/data/Synechocystis_6frame/2021-12-29_ORF_validation/Venn_ORF_validation.txt"
+
+my_reason <- data.table::fread(
+    input = my_reason_f, sep = "\t", quote = "", header = TRUE,
+    stringsAsFactors = FALSE, colClasses = "character")
+
+my_novel_hq <- my_reason %>%
+    dplyr::filter(., `High quality` == TRUE) %>%
+    .[["Proteins"]]
+
+my_novel_stats_hq <- my_novel_stats %>%
+    dplyr::filter(., Proteins %in% my_novel_hq)
+
+all_stats_novel_hq <- phospho_stats(x = my_novel_stats_hq)
+
+my_plots[["Phospho_stats_novel_HQ"]] <- all_stats_novel_hq[["plot"]]
+
+
+
+### Phosphopeptides ------------------------------------------------------
+
+my_evid_f <- "H:/data/Synechocystis_6frame/MQ_6frame_valid/combined/txt/evidence.txt"
+
+my_evid <- data.table::fread(
+    input = my_evid_f, sep = "\t", quote = "", header = TRUE,
+    stringsAsFactors = FALSE, colClasses = "character")
+
+my_evid_filt <- my_evid %>%
+    dplyr::filter(., grepl("Phospho", Modifications)) %>%
+    dplyr::select(
+        ., Sequence, `Modified sequence`,
+        `Phospho (STY)`, `Phospho (STY) site IDs`,
+        tidyselect::starts_with("Missed cleavages")) %>%
+    unique(.)
+
+my_evid_filt_long <- my_evid_filt %>%
+    dplyr::mutate(., ID = 1:dplyr::n()) %>%
+    tidyr::separate_rows(data = ., `Phospho (STY) site IDs`, sep = ";") %>%
+    dplyr::filter(., `Phospho (STY) site IDs` %in% my_data$id) %>%
+    dplyr::arrange(., `Phospho (STY) site IDs`)
+
+phospho_evid_stats <- my_evid_filt_long %>%
+    dplyr::group_by(., `Phospho (STY)`) %>%
+    dplyr::summarise(., Count = dplyr::n_distinct(`Modified sequence`)) %>%
+    dplyr::ungroup(.)
+
+my_plots[["Phospho_multi_all"]] <- ggplot(
+    phospho_evid_stats, aes(
+        x = `Phospho (STY)`, y = Count, fill = `Phospho (STY)`,
+        colour = `Phospho (STY)`, label = Count)) +
+    geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +
+    geom_text(
+        stat = "identity", position = position_dodge(width = 0.9),
+        vjust = -0.5) +
+    ggpubr::theme_pubr() +
+    scale_fill_manual(values = my_cols) +
+    scale_colour_manual(values = my_cols)
+
+novel_evid_stats <- my_evid_filt_long %>%
+    dplyr::filter(., `Phospho (STY) site IDs` %in% my_novel_stats$id) %>%
+    dplyr::group_by(., `Phospho (STY)`) %>%
+    dplyr::summarise(., Count = dplyr::n_distinct(`Modified sequence`)) %>%
+    dplyr::ungroup(.)
+
+my_plots[["Phospho_multi_novel"]] <- ggplot(
+    novel_evid_stats, aes(
+        x = `Phospho (STY)`, y = Count, fill = `Phospho (STY)`,
+        colour = `Phospho (STY)`, label = Count)) +
+    geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +
+    geom_text(
+        stat = "identity", position = position_dodge(width = 0.9),
+        vjust = -0.5) +
+    ggpubr::theme_pubr() +
+    scale_fill_manual(values = my_cols) +
+    scale_colour_manual(values = my_cols)
+
+novel_evid_stats_hq <- my_evid_filt_long %>%
+    dplyr::filter(., `Phospho (STY) site IDs` %in% my_novel_stats_hq$id) %>%
+    dplyr::group_by(., `Phospho (STY)`) %>%
+    dplyr::summarise(., Count = dplyr::n_distinct(`Modified sequence`)) %>%
+    dplyr::ungroup(.)
+
+my_plots[["Phospho_multi_novel_hq"]] <- ggplot(
+    novel_evid_stats_hq, aes(
+        x = `Phospho (STY)`, y = Count, fill = `Phospho (STY)`,
+        colour = `Phospho (STY)`, label = Count)) +
+    geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +
+    geom_text(
+        stat = "identity", position = position_dodge(width = 0.9),
+        vjust = -0.5) +
+    ggpubr::theme_pubr() +
+    scale_fill_manual(values = my_cols) +
+    scale_colour_manual(values = my_cols)
+
+
+
+### Phosphorylated proteins ----------------------------------------------
+
+my_pg_phospho <- my_data_filt %>%
+    tidyr::separate_rows(data = ., Proteins, sep = ";") %>%
+    dplyr::left_join(
+        x = .,
+        y = my_reason[, c("Proteins", "ORFNoveltyReason", "High quality")],
+        by = "Proteins")
+
+my_pg_phospho_count <- my_pg_phospho %>%
+    dplyr::group_by(., Proteins) %>%
+    dplyr::summarise(., Count = dplyr::n()) %>%
+    dplyr::ungroup(.) %>%
+    dplyr::arrange(., dplyr::desc(Count))
+
+my_phospho_intens <- my_pg_phospho %>%
+    dplyr::select(
+        ., Proteins, `Positions.within.proteins`, `Amino.acid`,
+        ORFNoveltyReason, `High quality`, `Localization.prob`,
+        tidyselect::matches("Intensity.(Resuscitation|SCy004|SCy015)"))
+
+my_phospho_identi_ref <- my_phospho_intens %>%
+    dplyr::filter(., !grepl("^(c|p)", Proteins)) %>%
+    tidyr::pivot_longer(
+        data = .,
+        cols = tidyselect::matches("Intensity.(Resuscitation|SCy004|SCy015)")) %>%
+    dplyr::filter(., value > 0) %>%
+    dplyr::mutate(., value = TRUE) %>%
+    tidyr::pivot_wider(data = ., names_from = name, values_from = value) %>%
+    #dplyr::left_join(x = complete_proteome, y = .) %>%
+    dplyr::mutate_all(~tidyr::replace_na(data = ., replace = FALSE))
+
+my_plots[["venn_identification_ref"]] <- ggvenn::ggvenn(
+    data = my_phospho_identi_ref,
+    columns = c("Intensity.Resuscitation_chlorosis", "Intensity.SCy004", "Intensity.SCy015"),
+    fill_color = c("#387eb8", "#d1d2d4", "#e21e25"))
+
+my_phospho_intens_ref <- my_phospho_intens %>%
+    dplyr::filter(., !grepl("^(c|p)", Proteins)) %>%
+    tidyr::pivot_longer(
+        data = .,
+        cols = tidyselect::matches("Intensity.(Resuscitation|SCy004|SCy015)")) %>%
+    dplyr::filter(., value > 0) %>%
+    dplyr::group_by(., Proteins, `Positions.within.proteins`, `Amino.acid`) %>%
+    dplyr::mutate(
+        ., Resuscitation_chlorosis = dplyr::case_when(
+            !any(name == "Intensity.Resuscitation_chlorosis") ~ "Not quanti.",
+            all(name == "Intensity.Resuscitation_chlorosis") ~ "Unique quanti.",
+            TRUE ~ "Shared id."
+        ),
+        SCy004 = dplyr::case_when(
+            !any(name == "Intensity.SCy004") ~ "Not quanti.",
+            all(name == "Intensity.SCy004") ~ "Unique quanti.",
+            TRUE ~ "Shared id."
+        ),
+        SCy015 = dplyr::case_when(
+            !any(name == "Intensity.SCy015") ~ "Not quanti.",
+            all(name == "Intensity.SCy015") ~ "Unique quanti.",
+            TRUE ~ "Shared id."
+        ))
+
+my_pg_f <- "H:/data/Synechocystis_6frame/MQ_6frame_valid/combined/txt/proteinGroups.txt"
+
+my_pg <- data.table::fread(
+    input = my_pg_f, sep = "\t", quote = "", header = TRUE,
+    stringsAsFactors = FALSE, colClasses = "character")
+
+my_pg_format <- my_pg %>%
+    dplyr::filter(., Reverse != "+" & `Potential contaminant` != "+") %>%
+    dplyr::select(
+        ., `Protein IDs`,
+        tidyselect::matches("Intensity . (Resuscitation|SCy004|SCy015)")) %>%
+    tidyr::separate_rows(data = ., `Protein IDs`, sep = ";")
+
+my_pg_ibaq <- my_pg_format %>%
+    tidyr::pivot_longer(data = ., cols = -`Protein IDs`) %>%
+    tidyr::separate(
+        data = ., col = name,
+        into = c("Type", "Label", "Experiment"),
+        sep = " ") %>%
+    dplyr::group_by(., `Protein IDs`, Experiment) %>%
+    dplyr::summarise(., Intensity = sum(as.double(value), na.rm = TRUE)) %>%
+    dplyr::ungroup(.)
+
+my_peptidome_f <- "H:/data/Synechocystis_6frame/Genome/Tryptic_digest_peptidome.txt"
+
+my_peptidome <- data.table::fread(
+    input = my_peptidome_f, sep = "\t", quote = "", header = TRUE,
+    stringsAsFactors = FALSE)
+
+my_pg_ibaq %<>%
+    dplyr::rename(., Proteins = `Protein IDs`) %>%
+    dplyr::left_join(
+        x = ., y = my_peptidome) %>%
+    dplyr::mutate(., iBAQ = Intensity/Tryptic_count)
+
+my_phospho_pg_intens_ref <- my_phospho_intens_ref %>%
+    dplyr::select(., -name, -value) %>%
+    unique(.) %>%
+    tidyr::pivot_longer(
+        data = ., cols = c(Resuscitation_chlorosis, SCy004, SCy015),
+        names_to = "Experiment", values_to = "Group") %>%
+    dplyr::left_join(x = ., y = my_pg_ibaq)
+
+my_phospho_pg_intens_ref$Group <- factor(
+    x = my_phospho_pg_intens_ref$Group,
+    levels = unique(my_phospho_pg_intens_ref$Group))
+
+my_plots[["Phospho_pg_density"]] <- ggplot(
+    my_phospho_pg_intens_ref, aes(
+        x = iBAQ, fill = Group, colour = Group)) +
+    geom_density(alpha = 0.3) +
+    #geom_density(aes(y = ..scaled..), alpha = 0.3) +
+    ggpubr::theme_pubr() +
+    facet_grid(rows = vars(Experiment)) +
+    scale_x_log10() +
+    scale_fill_manual(
+        values = my_cols[1:length(unique(my_phospho_pg_intens_ref$Group))]) +
+    scale_colour_manual(
+        values = my_cols[1:length(unique(my_phospho_pg_intens_ref$Group))])
+
+my_plots[["Phospho_pg_hist"]] <- ggplot(
+    my_phospho_pg_intens_ref, aes(
+        x = iBAQ, fill = Group, colour = Group)) +
+    geom_histogram(position = "identity", alpha = 0.3) +
+    ggpubr::theme_pubr() +
+    facet_grid(rows = vars(Experiment)) +
+    scale_x_log10() +
+    scale_fill_manual(
+        values = my_cols[1:length(unique(my_phospho_pg_intens_ref$Group))]) +
+    scale_colour_manual(
+        values = my_cols[1:length(unique(my_phospho_pg_intens_ref$Group))])
+
+my_plots[["Phospho_pg_box"]] <- ggplot(
+    my_phospho_pg_intens_ref, aes(
+        x = Experiment, y = iBAQ, fill = Group, colour = Group)) +
+    geom_boxplot(alpha = 0.6) +
+    ggpubr::theme_pubr() +
+    scale_y_log10() +
+    scale_fill_manual(
+        values = my_cols[1:length(unique(my_phospho_pg_intens_ref$Group))]) +
+    scale_colour_manual(
+        values = my_cols[1:length(unique(my_phospho_pg_intens_ref$Group))])
+
+
+
+### Compiled data --------------------------------------------------------
+
+my_motifs <- my_data_filt %>%
+    dplyr::select(
+        ., id, Proteins, `Amino.acid`, `Positions.within.proteins`,
+        `Sequence.window`, `Localization.prob`) %>%
+    dplyr::left_join(
+        x = .,
+        y = my_reason[, c("Proteins", "ORFNoveltyReason", "High quality")],
+        by = "Proteins") %>%
+    dplyr::mutate(
+        ., Novel = ifelse(id %in% my_novel_stats$id, "+", ""),
+        Novel_hq = ifelse(
+            id %in% my_novel_stats$id & `High quality` == TRUE, "+", ""))
+
+data.table::fwrite(
+    x = my_motifs, file = "Phosphosites_categories.txt", append = FALSE,
+    quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
+
+
+
+### Functional representation --------------------------------------------
+
+my_annot_f <- "H:/data/Synechocystis_6frame/Custom_annotation/2021-12-21_Custom_Uniprot_Eggnog_annotations.txt"
+
+my_annot <- data.table::fread(
+    input = my_annot_f, sep = "\t", quote = "", header = TRUE,
+    stringsAsFactors = FALSE)
+
+category <- unique(unlist(strsplit(my_annot$best_og_Subcategory, split = ";")))
+
+my_annot_format <- my_annot %>%
+    dplyr::mutate(., Simple_Subcategory = dplyr::case_when(
+        grepl(";", best_og_Subcategory) ~ "Multiple categories",
+        is.na(best_og_Subcategory) | best_og_Subcategory == "" ~ "Function unknown",
+        best_og_Subcategory %in% category ~ best_og_Subcategory,
+        TRUE ~ "Other categories"
+    ))
+
+my_motifs_annot <- my_motifs %>%
+    tidyr::separate_rows(data = ., Proteins, sep = ";") %>%
+    dplyr::left_join(
+        x = .,
+        y = my_annot_format[, c("#query_name", "Simple_Subcategory")],
+        by = c("Proteins" = "#query_name")) %>%
+    dplyr::group_by(., id) %>%
+    dplyr::summarise_all(~paste0(unique(.), collapse = ";")) %>%
+    dplyr::ungroup(.)
+
+my_motifs_annot_count <- my_motifs_annot %>%
+    dplyr::group_by(., Simple_Subcategory) %>%
+    dplyr::summarise(
+        ., Phospho_count = dplyr::n_distinct(id),
+        Protein_count = dplyr::n_distinct(Proteins)) %>%
+    dplyr::ungroup(.) %>%
+    dplyr::mutate(., Ratio = Phospho_count/Protein_count) %>%
+    dplyr::arrange(., Phospho_count)
+
+my_motifs_annot_count$Simple_Subcategory <- factor(
+    x = my_motifs_annot_count$Simple_Subcategory,
+    levels = unique(my_motifs_annot_count$Simple_Subcategory), ordered = TRUE)
+
+my_motifs_annot_count %<>%
+    tidyr::pivot_longer(data = ., cols = c(Phospho_count, Protein_count))
+
+my_plots[["Phospho_func_bar"]] <- ggplot(
+    my_motifs_annot_count,
+    aes(
+        x = value, y = Simple_Subcategory,
+        fill = name, colour = name, label = round(x = Ratio, digits = 2))) +
+    geom_bar(
+        stat = "identity",
+        position = position_dodge(width = -0.3), alpha = 0.7) +
+    geom_text(stat = "identity", position = "identity", colour = "black") +
+    ggpubr::theme_pubr() +
+    scale_fill_manual(
+        values = my_cols[c(1, 5)]) +
+    scale_colour_manual(
+        values = my_cols[c(1, 5)])
+
+my_data_top <- my_data %>%
+    tidyr::separate_rows(data = ., Proteins, sep = ";") %>%
+    dplyr::filter(., !grepl("^(c|p)", Proteins)) %>%
+    dplyr::group_by(., Proteins) %>%
+    dplyr::summarise(
+        ., Count = dplyr::n_distinct(id),
+        Count_loc = sum(Localization.prob > 0.95)) %>%
+    dplyr::ungroup(.) %>%
+    dplyr::arrange(., dplyr::desc(Count), dplyr::desc(Count_loc))
+
+top_prot_phos <- my_data_top$Proteins[1:5]
+
+my_data_top$Proteins <- factor(
+    x = my_data_top$Proteins,
+    levels = unique(my_data_top$Proteins),
+    ordered = TRUE)
+
+my_data_top %<>%
+    tidyr::pivot_longer(data = ., cols = c(-Proteins))
+
+my_plots[["Phospho_pg_top"]] <- ggplot(
+    my_data_top %>% dplyr::filter(., Proteins %in% top_prot_phos),
+    aes(
+        x = Proteins, y = value,
+        fill = name, colour = name, label = value)) +
+    geom_bar(
+        stat = "identity",
+        position = "dodge", alpha = 0.7) +
+    geom_text(
+        stat = "identity",
+        position = position_dodge(width = 0.9), vjust = -0.3) +
+    ggpubr::theme_pubr() +
+    scale_fill_manual(
+        values = my_cols[c(1, 5)]) +
+    scale_colour_manual(
+        values = my_cols[c(1, 5)])
+
+my_data_loc <- my_data %>%
+    tidyr::separate_rows(data = ., Proteins, sep = ";") %>%
+    dplyr::filter(., !grepl("^(c|p)", Proteins)) %>%
+    dplyr::select(
+        ., id, Proteins, `Score.for.localization`, `Localization.prob`) %>%
+    dplyr::mutate(
+        ., `Score.for.localization` = as.integer(`Score.for.localization`)) %>%
+    dplyr::arrange(., dplyr::desc(`Score.for.localization`)) %>%
+    dplyr::mutate(
+        ., Rank = 1:dplyr::n(),
+        Localised = ifelse(
+            `Localization.prob` > 0.95, "Localised", "Not localised"),
+        Top_prot = ifelse(Proteins %in% top_prot_phos, "Top", "Others"),
+        Label = ifelse(Proteins %in% top_prot_phos, Proteins, "Others"))
+
+my_plots[["Phospho_localisation_rank"]] <- ggplot(
+    my_data_loc, aes(
+        x = Rank, y = `Score.for.localization`,
+        colour = Localised, fill = Localised,
+        shape = Label,
+        size = Top_prot)) +
+    geom_point() +
+    ggpubr::theme_pubr() +
+    scale_fill_manual(
+        values = my_cols[c(1, 5)]) +
+    scale_colour_manual(
+        values = my_cols[c(1, 5)]) +
+    scale_size_manual(values = c(2, 3)) +
+    scale_shape_manual(values = c(
+        Others = 1,
+        sll1578 = 21,
+        sll1031 = 22,
+        sll0103 = 23,
+        slr1841 = 24,
+        slr0599 = 25
+    ))
+
+
+
