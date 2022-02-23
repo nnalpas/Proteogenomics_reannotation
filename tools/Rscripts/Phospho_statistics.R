@@ -472,10 +472,12 @@ my_plots[["Phospho_pg_top"]] <- ggplot(
         values = my_cols[c(1, 5)])
 
 my_data_loc <- my_data %>%
-    tidyr::separate_rows(data = ., Proteins, sep = ";") %>%
+    tidyr::separate_rows(
+        data = ., Proteins, `Positions.within.proteins`, sep = ";") %>%
     dplyr::filter(., !grepl("^(c|p)", Proteins)) %>%
     dplyr::select(
-        ., id, Proteins, `Score.for.localization`, `Localization.prob`) %>%
+        ., id, Proteins, `Positions.within.proteins`,
+        `Amino.acid`, `Score.for.localization`, `Localization.prob`) %>%
     dplyr::mutate(
         ., `Score.for.localization` = as.integer(`Score.for.localization`)) %>%
     dplyr::arrange(., dplyr::desc(`Score.for.localization`)) %>%
@@ -510,6 +512,7 @@ my_plots[["Phospho_localisation_rank"]] <- ggplot(
 
 
 
+### Interesting phosphorylated target identification ---------------------
 
 tmp <- my_annot_format %>%
     dplyr::filter(
@@ -545,6 +548,130 @@ my_uniq_exp_phos <- my_target_phos %>%
     dplyr::filter(
         ., Count >= 2 & (Count == Resuscitation_chlorosis_uniq_count |
             Count == SCy004_uniq_count | Count == SCy015_uniq_count))
+
+
+
+### Export fasta files for phosphorylated proteins -----------------------
+
+my_fasta_f <- "H:/data/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta"
+
+my_fasta <- seqinr::read.fasta(
+    file = my_fasta_f, seqtype = "AA",
+    as.string = TRUE,
+    whole.header = FALSE)
+
+my_phospho_prot_list <- split(
+    x = my_target_phos$Proteins,
+    f = floor(1:length(my_target_phos$Proteins)/20))
+
+for (x in names(my_phospho_prot_list)) {
+    
+    my_fasta_filt <- my_fasta[names(my_fasta) %in% my_phospho_prot_list[[x]]]
+    headers <- lapply(my_fasta_filt, function(y) {
+        attr(y, "Annot")}) %>%
+        unlist(.) %>%
+        sub("^>", "", .)
+    seqinr::write.fasta(
+        sequences = my_fasta_filt, names = headers,
+        file.out = paste0("Phosphorylated_proteins_20_", x, ".fasta"),
+        open = "w", nbchar = 60, as.string = TRUE)
+    
+}
+
+
+
+### Location of phospho in protein structure -----------------------------
+
+my_netsurfp_f <- "H:/data/Synechocystis_6frame/2022-02-23_NetsurfP/Phosphorylated_proteins_formatted.txt"
+
+my_netsurfp <- data.table::fread(
+    input = my_netsurfp_f, sep = "\t",
+    header = TRUE, stringsAsFactors = FALSE)
+
+my_netsurfp_stats <- my_data_loc %>%
+    dplyr::mutate(
+        ., `Positions.within.proteins` = as.integer(Positions.within.proteins)) %>%
+    dplyr::left_join(
+        x = my_netsurfp, y = ., by = c(
+            "id" = "Proteins", "seq" = "Amino.acid",
+            "n" = "Positions.within.proteins"))
+
+my_big_cols <- c(
+    "#387eb8", "#404040", "#e21e25", "#fbaf3f", "#d1d2d4",
+    "#246E39", "#753B94", "#009DB5")
+
+for (x in c("Class", "q3", "q8")) {
+    
+    my_netsurfp_stats_toplot <- my_netsurfp_stats %>%
+        dplyr::filter(., seq %in% c("S", "T", "Y")) %>%
+        dplyr::group_by(., !!as.name(x)) %>%
+        dplyr::summarise(
+            ., Total = dplyr::n(),
+            Phospho = sum(!is.na(Localised)),
+            Phospho_loc = sum(!is.na(Localised) & Localised == "Localised")) %>%
+        tidyr::pivot_longer(
+            data = ., cols = -!!as.name(x), names_to = "Type", values_to = "Count")
+    
+    my_netsurfp_stats_toplot$Type <- factor(
+        x = my_netsurfp_stats_toplot$Type,
+        levels = unique(my_netsurfp_stats_toplot$Type),
+        ordered = TRUE)
+    
+    my_plots[[paste0("netsufrp_dodge_", x)]] <- ggplot(
+        my_netsurfp_stats_toplot, aes(
+            x = !!as.name(x), y = Count, fill = Type,
+            colour = Type, label = Count)) +
+        geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +
+        geom_text(
+            stat = "identity", position = position_dodge(width = 0.9),
+            vjust = -0.5) +
+        ggpubr::theme_pubr() +
+        scale_fill_manual(values = my_big_cols) +
+        scale_colour_manual(values = my_big_cols)
+    
+    my_plots[[paste0("netsufrp_stack_", x)]] <- ggplot(
+        my_netsurfp_stats_toplot, aes(
+            x = Type, y = Count, fill = !!as.name(x),
+            colour = !!as.name(x), label = Count)) +
+        geom_bar(stat = "identity", position = "fill", alpha = 0.8) +
+        geom_text(
+            stat = "identity", position = "fill",
+            vjust = -0.5) +
+        ggpubr::theme_pubr() +
+        scale_fill_manual(values = my_big_cols) +
+        scale_colour_manual(values = my_big_cols)
+    
+}
+
+for (x in c("rsa", "AlphaProb", "BetaProb", "CoilProb", "disorder")) {
+    
+    my_netsurfp_stats_toplot <- my_netsurfp_stats %>%
+        dplyr::filter(., seq %in% c("S", "T", "Y")) %>%
+        dplyr::mutate(., Type = dplyr::case_when(
+            is.na(Localised) ~ "Not phosphorylated",
+            TRUE ~ Localised
+        ))
+    
+    my_netsurfp_stats_toplot$Type <- factor(
+        x = my_netsurfp_stats_toplot$Type,
+        levels = unique(my_netsurfp_stats_toplot$Type),
+        ordered = TRUE)
+    
+    my_plots[[paste0("netsufrp_violin_", x)]] <- ggplot(
+        my_netsurfp_stats_toplot, aes(
+            x = Type, y = !!as.name(x), fill = Type,
+            colour = Type)) +
+        geom_violin(alpha = 0.4) +
+        geom_boxplot(width = 0.2, alpha = 0.7, size = 1.2) +
+        ggpubr::theme_pubr() +
+        scale_fill_manual(values = my_big_cols) +
+        scale_colour_manual(values = my_big_cols)
+    
+}
+
+pdf("Phosphorylation_statistics.pdf", 10, 10)
+my_plots
+dev.off()
 
 
 
