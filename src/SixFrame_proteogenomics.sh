@@ -253,11 +253,12 @@ fi
 ##################################
 
 # Check whether to perform protein coordinate identification
+[[ -f ${ProjDir}/Blast/Refnucl_vs_Genome_annot ]] && refblast="${ProjDir}/Blast/Refnucl_vs_Genome_annot" || refblast="${ProjDir}/Blast/Refprot_vs_Genome_annot"
+[[ -f ${UNIREFGENE} ]] && refdb="${UNIREFGENE}" || refdb="${UNIREFPROT}"
 if (( $ProteinCoordinate )); then
 
-	[[ -f ${ProjDir}/Blast/Refnucl_vs_Genome_annot ]] && refblast="${ProjDir}/Blast/Refnucl_vs_Genome_annot" || refblast="${ProjDir}/Blast/Refprot_vs_Genome_annot"
 	Genomic_position_from_blast.R \
-			-f ${UNIREFGENE} \
+			-f ${refdb} \
 			-b ${refblast} \
 			-g ${GENOME} \
 			-o ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt > ${LogDir}/ProteinCoordinate.log 2>&1
@@ -277,7 +278,7 @@ fi
 if (( $ProteinAnnotation )); then
 
     Fasta_annotation.R \
-		-f ${UNIREFGENE} \
+		-f ${refdb} \
 		-t ${TaxId} \
 		-c ${AnnotColumn} \
 		-k ${AnnotKey} \
