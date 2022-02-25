@@ -255,11 +255,12 @@ fi
 # Check whether to perform protein coordinate identification
 if (( $ProteinCoordinate )); then
 
-    Genomic_position_from_blast.R \
-		-f ${UNIREFGENE} \
-		-b ${ProjDir}/Blast/Refnucl_vs_Genome_annot \
-		-g ${GENOME} \
-		-o ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt > ${LogDir}/ProteinCoordinate.log 2>&1
+	[[ -f ${ProjDir}/Blast/Refnucl_vs_Genome_annot ]] && refblast="${ProjDir}/Blast/Refnucl_vs_Genome_annot" || refblast="${ProjDir}/Blast/Refprot_vs_Genome_annot"
+	Genomic_position_from_blast.R \
+			-f ${UNIREFGENE} \
+			-b ${refblast} \
+			-g ${GENOME} \
+			-o ${ProjDir}/ProtPosition/Ref_prot_coordinates.txt > ${LogDir}/ProteinCoordinate.log 2>&1
 	ORF_coordinates.R \
 		-f ${SIXFRAMEPROT} \
 		-o ${ProjDir}/ProtPosition/Orf_prot_coordinates.txt >> ${LogDir}/ProteinCoordinate.log 2>&1
