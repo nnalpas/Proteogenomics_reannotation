@@ -7,12 +7,13 @@ library(ggplot2)
 my_plots <- list()
 my_cols <- c("#387eb8", "#d1d2d4", "#e21e25", "#fbaf3f", "#3B3B3B", "#834F96")
 
+wkdir <- "/mnt/storage/kxmna01/data/Synechocystis_6frame/"
+
 
 
 ### Phosphosites ---------------------------------------------------------
 
-my_data_f <- "H:/data/Synechocystis_6frame/MQ_6frame_valid/combined/txt/summary/PhosphoSites_nonredundant.txt"
-#my_data_f <- "H:/data/Synechocystis_6frame/MQ_6frame_valid/combined/txt/Phospho (STY)Sites.txt"
+my_data_f <- paste0(wkdir, "MQ_6frame_valid/combined/txt/summary/PhosphoSites_nonredundant.txt")
 
 my_data <- data.table::fread(
     input = my_data_f, sep = "\t", quote = "", header = TRUE,
@@ -89,11 +90,11 @@ all_stats <- phospho_stats(x = my_data_filt)
 
 my_plots[["Phospho_stats_all"]] <- all_stats[["plot"]]
 
-my_gr_phospho_f <- "H:/data/Synechocystis_6frame/GRanges/Phospho (STY)Sites_grange.RDS"
+my_gr_phospho_f <- paste0(wkdir, "GRanges/Phospho (STY)Sites_grange.RDS")
 
 my_gr_phospho <- readRDS(my_gr_phospho_f)
 
-my_gr_ref_f <- "H:/data/Synechocystis_6frame/GRanges/Ref_prot_grange.RDS"
+my_gr_ref_f <- paste0(wkdir, "GRanges/Ref_prot_grange.RDS")
 
 my_gr_ref <- readRDS(my_gr_ref_f)
 
@@ -112,7 +113,7 @@ all_stats_novel <- phospho_stats(x = my_novel_stats)
 
 my_plots[["Phospho_stats_novel"]] <- all_stats_novel[["plot"]]
 
-my_reason_f <- "H:/data/Synechocystis_6frame/2021-12-29_ORF_validation/Venn_ORF_validation.txt"
+my_reason_f <- paste0(wkdir, "2021-12-29_ORF_validation/Venn_ORF_validation.txt")
 
 my_reason <- data.table::fread(
     input = my_reason_f, sep = "\t", quote = "", header = TRUE,
@@ -133,7 +134,7 @@ my_plots[["Phospho_stats_novel_HQ"]] <- all_stats_novel_hq[["plot"]]
 
 ### Phosphopeptides ------------------------------------------------------
 
-my_evid_f <- "H:/data/Synechocystis_6frame/MQ_6frame_valid/combined/txt/evidence.txt"
+my_evid_f <- paste0(wkdir, "MQ_6frame_valid/combined/txt/evidence.txt")
 
 my_evid <- data.table::fread(
     input = my_evid_f, sep = "\t", quote = "", header = TRUE,
@@ -238,7 +239,10 @@ my_phospho_identi_ref <- my_phospho_intens %>%
     dplyr::mutate(., value = TRUE) %>%
     tidyr::pivot_wider(data = ., names_from = name, values_from = value) %>%
     #dplyr::left_join(x = complete_proteome, y = .) %>%
-    dplyr::mutate_all(~tidyr::replace_na(data = ., replace = FALSE))
+    dplyr::mutate(
+        ., `Intensity.Resuscitation_chlorosis` = tidyr::replace_na(data = `Intensity.Resuscitation_chlorosis`, replace = FALSE),
+        `Intensity.SCy004` = tidyr::replace_na(data = `Intensity.SCy004`, replace = FALSE),
+        `Intensity.SCy015` = tidyr::replace_na(data = `Intensity.SCy015`, replace = FALSE))
 
 my_plots[["venn_identification_ref"]] <- ggvenn::ggvenn(
     data = my_phospho_identi_ref,
@@ -269,7 +273,7 @@ my_phospho_intens_ref <- my_phospho_intens %>%
             TRUE ~ "Shared id."
         ))
 
-my_pg_f <- "H:/data/Synechocystis_6frame/MQ_6frame_valid/combined/txt/proteinGroups.txt"
+my_pg_f <- paste0(wkdir, "MQ_6frame_valid/combined/txt/proteinGroups.txt")
 
 my_pg <- data.table::fread(
     input = my_pg_f, sep = "\t", quote = "", header = TRUE,
@@ -292,7 +296,7 @@ my_pg_ibaq <- my_pg_format %>%
     dplyr::summarise(., Intensity = sum(as.double(value), na.rm = TRUE)) %>%
     dplyr::ungroup(.)
 
-my_peptidome_f <- "H:/data/Synechocystis_6frame/Genome/Tryptic_digest_peptidome.txt"
+my_peptidome_f <- paste0(wkdir, "Genome/Tryptic_digest_peptidome.txt")
 
 my_peptidome <- data.table::fread(
     input = my_peptidome_f, sep = "\t", quote = "", header = TRUE,
@@ -377,7 +381,7 @@ data.table::fwrite(
 
 ### Functional representation --------------------------------------------
 
-my_annot_f <- "H:/data/Synechocystis_6frame/Custom_annotation/2021-12-21_Custom_Uniprot_Eggnog_annotations.txt"
+my_annot_f <- paste0(wkdir, "Custom_annotation/2021-12-21_Custom_Uniprot_Eggnog_annotations.txt")
 
 my_annot <- data.table::fread(
     input = my_annot_f, sep = "\t", quote = "", header = TRUE,
@@ -553,7 +557,7 @@ my_uniq_exp_phos <- my_target_phos %>%
 
 ### Export fasta files for phosphorylated proteins -----------------------
 
-my_fasta_f <- "H:/data/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta"
+my_fasta_f <- paste0(wkdir, "Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta")
 
 my_fasta <- seqinr::read.fasta(
     file = my_fasta_f, seqtype = "AA",
@@ -582,7 +586,7 @@ for (x in names(my_phospho_prot_list)) {
 
 ### Location of phospho in protein structure -----------------------------
 
-my_netsurfp_f <- "H:/data/Synechocystis_6frame/2022-02-23_NetsurfP/Phosphorylated_proteins_formatted.txt"
+my_netsurfp_f <- paste0(wkdir, "2022-02-23_NetsurfP/Phosphorylated_proteins_formatted.txt")
 
 my_netsurfp <- data.table::fread(
     input = my_netsurfp_f, sep = "\t",
