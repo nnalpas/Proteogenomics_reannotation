@@ -3,8 +3,9 @@
 
 library(magrittr)
 
-my_fasta_f <- "H:/data/Pathogens_6frame/Genome/GCF_000006765.1_ASM676v1_cds_from_genomic.fasta"
-id_pattern <- "^lcl\\|NC_002516\\.2_cds_(.+)_.+$"
+my_fasta_f <- "/mnt/storage/kxmna01/data/Eco_6frame/Genome/UP000000625_83333_complete_2020-10-07.fasta"
+#id_pattern <- "^lcl\\|NC_002516\\.2_cds_(.+)_.+$"
+id_pattern <- "^..\\|(.+?)\\|.+$"
 
 my_fasta <- seqinr::read.fasta(
     file = my_fasta_f, seqtype = "AA", as.string = TRUE, whole.header = TRUE)
@@ -39,21 +40,20 @@ my_data_format <- my_data %>%
             sub(".*\\[locus_tag=(.+?)\\].*", "\\1", REST),
             ""),
         gene_id = ifelse(
-            grepl("gene", REST),
-            sub(".*\\[gene=(.+?)\\].*", "\\1", REST),
+            grepl("(gene|GN)", REST),
+            sub(".*(\\[gene|GN)=(.+?)(\\]| ).*", "\\2", REST),
             ""),
-        protein = ifelse(
-            grepl("protein=", REST),
-            sub(".*\\[protein=(.+?)\\].*", "\\1", REST),
-            ""),
-        protein_id = ifelse(
-            grepl("protein_id", REST),
-            sub(".*\\[protein_id=(.+?)\\].*", "\\1", REST),
-            ""),
-        pseudo = ifelse(
-            grepl("pseudo=", REST),
-            sub(".*\\[pseudo=(.+?)\\].*", "\\1", REST),
-            "false"),
+        protein = dplyr::case_when(
+            grepl("protein=", REST) ~ sub(".*\\[protein=(.+?)\\].*", "\\1", REST),
+            grepl("(OS|OX|GN|PE)=", REST) ~ sub(" ..=.+$", "", REST),
+            TRUE ~ ""),
+        protein_id = dplyr::case_when(
+            grepl("protein_id", REST) ~ sub(".*\\[protein_id=(.+?)\\].*", "\\1", REST),
+            grepl("^.+ [[:upper:]][[:lower:]]+[[:upper:]]$", protein) ~ sub("^.+ (.+?)$", "\\1", protein),
+            TRUE ~ ""),
+        pseudo = dplyr::case_when(
+            grepl("pseudo=", REST) ~ sub(".*\\[pseudo=(.+?)\\].*", "\\1", REST),
+            TRUE ~ "false"),
         location = ifelse(
             grepl("location=", REST),
             sub(".*\\[location=(.+?)\\].*", "\\1", REST),
