@@ -14,7 +14,7 @@ BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
 ProteinCoordinate=0
-ProteinAnnotation=0
+ProteinAnnotation=1
 BSgenomeForge=1
 GRangeCreate=0
 PepNoveltyReason=0
@@ -74,8 +74,8 @@ AnnotKey="MainID"
 
 # BSgenomeParam
 SEED="${PBS_O_WORKDIR}/Eco_6frame/Genome/seed"
-PKGNAME="BSgenome.Paeruginosa.PathoGenesis.012022"
-Circular="c('pae1')"
+PKGNAME="BSgenome.Ecoli.NCBI.022022"
+Circular="c('chr1')"
 
 # RBSanalysis
 
