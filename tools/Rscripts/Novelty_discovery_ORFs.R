@@ -1716,6 +1716,7 @@ for (i in high_qual_targets) {
         pep_gr = pep_grange_unique,
         sanger_gr = sanger_grange,
         ref_label = "GENE.NAME")
+        #ref_label = "protein")
         #ref_label = "PROTEIN.ID")
     
     # Plot the known entries and 6-frames ORFs tracks
