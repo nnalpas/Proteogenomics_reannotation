@@ -677,5 +677,6 @@ pdf("Phosphorylation_statistics.pdf", 10, 10)
 my_plots
 dev.off()
 
+save.image("Phosphorylation_statistics.RData")
 
 
