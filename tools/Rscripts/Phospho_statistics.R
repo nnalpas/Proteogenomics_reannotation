@@ -673,6 +673,71 @@ for (x in c("rsa", "AlphaProb", "BetaProb", "CoilProb", "disorder")) {
     
 }
 
+
+
+### Phosphorylated protein coverage --------------------------------------
+
+pl_list <- list()
+
+x <- "sll1577"
+
+prot_to_plot <- data.frame(
+    Protein = x, start = 1, end = nchar(my_fasta[[x]]), y = 0,
+    Sequence = as.character(my_fasta[[x]]))
+
+prot_to_plot <- my_netsurfp %>%
+    dplyr::filter(., id == x) %>%
+    dplyr::mutate(., start = n, end = n, y = 0, Sequence = seq, Structure = q3)
+
+phos_to_plot <- my_data_loc %>%
+    dplyr::filter(., Proteins == x)
+
+pl_list[[paste0("Phospho_", x)]] <- ggplot() +
+    geom_rect(
+        data = prot_to_plot,
+        mapping = aes(
+            xmin = start-0.5,
+            xmax = end+0.5,
+            ymin = y,
+            ymax = (y + -2),
+            fill = Structure,
+            colour = Structure)) +
+    geom_point(
+        data = phos_to_plot,
+        mapping = aes(
+            x = as.integer(`Positions.within.proteins`),
+            y = as.numeric(`Score.for.localization`)),
+        colour = "#3B3B3B", fill = "#3B3B3B",
+        size = 3, shape = 21) +
+    geom_segment(
+        data = phos_to_plot,
+        mapping = aes(
+            x = as.integer(`Positions.within.proteins`),
+            xend = as.integer(`Positions.within.proteins`),
+            y = 0,
+            yend = as.numeric(`Score.for.localization`)),
+        colour = "#3B3B3B") +
+    #scale_fill_manual(
+    #    values = my_cols) +
+    #scale_colour_manual(
+    #    values = my_cols) +
+    ggpubr::theme_pubr() +
+    xlab("Amino acid position") +
+    ylab("Localisation probability")# +
+#theme(
+#    #panel.grid.major = element_blank(),
+#    #panel.grid.minor = element_blank(),
+#    axis.text.y =  element_blank(),
+#    axis.title.y =  element_blank(),
+#    axis.ticks.y = element_blank(),
+#    axis.text.x =  element_blank(),
+#    axis.title.x =  element_blank(),
+#    legend.position = "top")
+
+
+
+### Export files ---------------------------------------------------------
+
 pdf("Phosphorylation_statistics.pdf", 10, 10)
 my_plots
 dev.off()
