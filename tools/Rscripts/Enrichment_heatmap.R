@@ -16,7 +16,9 @@ my_plots <- list()
 
 #my_oa_f <- "H:/data/Synechocystis_6frame/Kopf_2014_TU/Transcriptional_units_expr.txt.GSEA_withZeroes.txt"
 
-my_oa_f <- "H:/data/Synechocystis_6frame/2022-01-27_Copy_numbers/Scy004_copy_numbers_norm.txt.GSEA.txt"
+#my_oa_f <- "H:/data/Synechocystis_6frame/2022-01-27_Copy_numbers/Scy004_copy_numbers_norm.txt.GSEA.txt"
+
+my_oa_f <- "/mnt/storage/kxmna01/data/Synechocystis_6frame/2022-03-02_Phylostrata_codon_characteristics/my_codon_stats.txt.GSEA.txt"
 
 my_oa <- data.table::fread(
     input = my_oa_f, sep = "\t", quote = "",
@@ -79,7 +81,7 @@ my_plots <- lapply(unique(my_oa_final$resource), function(x) {
                 `<= 0.05` = 2)) +
         scale_fill_gradientn(
             colours = grDevices::hcl.colors(n = 9, palette = "Fall"),
-            limits = c(min(my_oa_final$NES), max(my_oa_final$NES))) +
+            limits = c(-max(abs(my_oa_final$NES)), max(abs(my_oa_final$NES)))) +
         ggtitle(x)
 }) %>%
     set_names(unique(my_oa_final$resource))
