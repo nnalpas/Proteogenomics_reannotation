@@ -45,19 +45,19 @@ library(magrittr)
 ### Parameters setting up ------------------------------------------------
 
 opt <- list(
-    annotation = "H:/data/Synechocystis_6frame/Custom_annotation/2021-12-21_Custom_Uniprot_Eggnog_annotations.txt",
-    ranking = "H:/data/Synechocystis_6frame/2022-01-27_Copy_numbers/Scy004_copy_numbers_norm.txt",
+    annotation = "/mnt/storage/kxmna01/data/Synechocystis_6frame/Custom_annotation/2021-12-21_Custom_Uniprot_Eggnog_annotations.txt",
+    ranking = "/mnt/storage/kxmna01/data/Synechocystis_6frame/2022-03-02_Phylostrata_codon_characteristics/my_codon_stats.txt",
     resource = "TU ID,Custom_classification,Active site-note,Binding site-note,Catalytic activity-Reaction,ChEBI,Pathway,Site-note,Keywords,Protein existence,Status,Developmental stage,Induction,Tissue specificity,Subcellular location [CC],Intramembrane,Topological domain-note,Transmembrane-note,Post-translational modification,Modified residue-note,Propeptide-id,Signal peptide-note,Transit peptide,Protein families,Domain [FT]-note,Motif-note,Characterization,EC level 1 name,EC level 2 name,EC level 3 name,GOBP Term,GOCC Term,GOMF Term,Interpro_NAME,Panther Name,Panther Protein class,Panther Pathway,PIRSF name,Prosite,Prosite DE,TIGRFAM label,TIGRFAM product_name,best_og_Category,best_og_Subcategory,GOBP Term.EggNOG,GOCC Term.EggNOG,GOMF Term.EggNOG,EC level 1 name.EggNOG,EC level 2 name.EggNOG,EC level 3 name.EggNOG,KEGG_Pathway_Name,KEGG_Module_Name,KEGG_Reaction_Name,KEGG_rclass_Name,KEGG_brite_Name,pfam_id,pfam_description,pfam_clan_id,pfam_clan_description,CAZy,BiGG_Reaction",
     gene = "#query_name",
     leading = as.logical(TRUE),
-    nozero = as.logical(TRUE),
-    idcol = "Proteins",
+    nozero = as.logical(FALSE),
+    idcol = "qseqid",
     pval = 1,
     padj = 1,
     minsize = 1,
     maxsize = Inf,
     threads = 1,
-    output = "H:/data/Synechocystis_6frame/2022-01-27_Copy_numbers")
+    output = "/mnt/storage/kxmna01/data/Synechocystis_6frame/2022-03-02_Phylostrata_codon_characteristics")
 
 # Check whether inputs parameters were provided
 if (
