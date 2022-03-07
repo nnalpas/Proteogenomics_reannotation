@@ -52,7 +52,7 @@ module load emboss/6.6.0
 module load diamond/2.0.13
 #module load interproscan/5.48-83.0
 #module load signalp/5.0b
-#module load eggnog/2.0.5
+module load eggnog/2.0.5
 
 # Create project directory
 ProjDir=${PBS_O_WORKDIR}/${ProjectName}
@@ -611,15 +611,15 @@ fi
 # EggnogMapper annotation #
 ###########################
 
-# Check whether to predict signal sequence via signalp for all fasta files
+# Check whether to perform functional annotation by orthology blasting
 if (( $EmapperAnnotation )); then
 	
 	EggnogMapper.sh \
-		-o ${ProjDir}/EggnogMapper \
+		-o ${ProjDir}/Cross_species_eggnog \ #-o ${ProjDir}/EggnogMapper \
 		-d ${EmapperDbDir} \
 		-i ${EmapperType} \
 		-t ${THREADS} \
-		-a "${emapperParam}" -b "${emapperDBParam}" ${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/EmapperAnnotation.log 2>&1
+		-a "${emapperParam}" -b "${emapperDBParam}" ${ProjDir}/Cross_species_eggnog/*.fasta > ${LogDir}/EmapperAnnotation.log 2>&1 #${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/EmapperAnnotation.log 2>&1
 	
 fi
 

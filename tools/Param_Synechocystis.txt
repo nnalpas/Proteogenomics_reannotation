@@ -25,11 +25,11 @@ OrfNoveltyReason=0
 ClustalAlign=0
 ConservationBlast=0
 MaxquantValidation=0
-OrfValidation=1
+OrfValidation=0
 SummarizedExp=0
 InterproScan=0
 SignalpPrediction=0
-EmapperAnnotation=0
+EmapperAnnotation=1
 PhylostratigraphyBlast=0
 
 # EmbossParam
