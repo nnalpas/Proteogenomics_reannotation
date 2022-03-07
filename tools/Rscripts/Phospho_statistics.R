@@ -553,6 +553,11 @@ my_uniq_exp_phos <- my_target_phos %>%
         ., Count >= 2 & (Count == Resuscitation_chlorosis_uniq_count |
             Count == SCy004_uniq_count | Count == SCy015_uniq_count))
 
+data.table::fwrite(
+    x = my_target_phos, file = "Phospho_per_conditions.txt",
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
+
 
 
 ### Export fasta files for phosphorylated proteins -----------------------
@@ -679,60 +684,97 @@ for (x in c("rsa", "AlphaProb", "BetaProb", "CoilProb", "disorder")) {
 
 pl_list <- list()
 
-x <- "sll1577"
-
-prot_to_plot <- data.frame(
-    Protein = x, start = 1, end = nchar(my_fasta[[x]]), y = 0,
-    Sequence = as.character(my_fasta[[x]]))
-
 prot_to_plot <- my_netsurfp %>%
-    dplyr::filter(., id == x) %>%
     dplyr::mutate(., start = n, end = n, y = 0, Sequence = seq, Structure = q3)
 
-phos_to_plot <- my_data_loc %>%
-    dplyr::filter(., Proteins == x)
+phos_to_plot <- my_data %>%
+    tidyr::separate_rows(
+        data = ., Proteins, `Positions.within.proteins`, sep = ";") %>%
+    dplyr::filter(., !grepl("^(c|p)", Proteins)) %>%
+    dplyr::select(
+        ., id, Proteins, `Positions.within.proteins`,
+        `Amino.acid`, `Score.for.localization`, `Localization.prob`,
+        tidyselect::matches("Intensity.(Resuscitation|SCy004|SCy015)")) %>%
+    dplyr::mutate(
+        ., `Score.for.localization` = as.integer(`Score.for.localization`)) %>%
+    tidyr::pivot_longer(
+        data = .,
+        cols = tidyselect::matches("Intensity.(Resuscitation|SCy004|SCy015)"),
+        names_to = "samples", values_to = "Intensity") %>%
+    dplyr::group_by(
+        ., id, Proteins, `Positions.within.proteins`, `Amino.acid`,
+        `Score.for.localization`, `Localization.prob`) %>%
+    dplyr::mutate(
+        ., samples = ifelse(
+            as.double(Intensity) > 0,
+            sub("Intensity\\.", "",
+                samples), NA)) %>%
+    dplyr::summarise(., Quantified = paste0(na.omit(samples), collapse = ";")) %>%
+    dplyr::ungroup(.) %>%
+    dplyr::mutate(., Quantified = dplyr::case_when(
+        is.na(Quantified) | Quantified == "" ~ "Not quantified",
+        grepl(";", Quantified) ~ "Shared",
+        TRUE ~ Quantified),
+        Localised = ifelse(
+            `Localization.prob` > 0.95, "Localised", "Not localised"))
 
-pl_list[[paste0("Phospho_", x)]] <- ggplot() +
-    geom_rect(
-        data = prot_to_plot,
-        mapping = aes(
-            xmin = start-0.5,
-            xmax = end+0.5,
-            ymin = y,
-            ymax = (y + -2),
-            fill = Structure,
-            colour = Structure)) +
-    geom_point(
-        data = phos_to_plot,
-        mapping = aes(
-            x = as.integer(`Positions.within.proteins`),
-            y = as.numeric(`Score.for.localization`)),
-        colour = "#3B3B3B", fill = "#3B3B3B",
-        size = 3, shape = 21) +
-    geom_segment(
-        data = phos_to_plot,
-        mapping = aes(
-            x = as.integer(`Positions.within.proteins`),
-            xend = as.integer(`Positions.within.proteins`),
-            y = 0,
-            yend = as.numeric(`Score.for.localization`)),
-        colour = "#3B3B3B") +
-    #scale_fill_manual(
-    #    values = my_cols) +
-    #scale_colour_manual(
-    #    values = my_cols) +
-    ggpubr::theme_pubr() +
-    xlab("Amino acid position") +
-    ylab("Localisation probability")# +
-#theme(
-#    #panel.grid.major = element_blank(),
-#    #panel.grid.minor = element_blank(),
-#    axis.text.y =  element_blank(),
-#    axis.title.y =  element_blank(),
-#    axis.ticks.y = element_blank(),
-#    axis.text.x =  element_blank(),
-#    axis.title.x =  element_blank(),
-#    legend.position = "top")
+for (x in unique(prot_to_plot$id)) {
+    
+    prot_to_plot_tmp <- prot_to_plot %>%
+        dplyr::filter(., id == x)
+    
+    phos_to_plot_tmp <- phos_to_plot %>%
+        dplyr::filter(., Proteins == x)
+    
+    pl_list[[paste0("Phospho_", x)]] <- ggplot() +
+        geom_rect(
+            data = prot_to_plot_tmp,
+            mapping = aes(
+                xmin = start-0.5,
+                xmax = end+0.5,
+                ymin = y,
+                ymax = (y + -4),
+                fill = Structure),
+            colour = "black") +
+        geom_segment(
+            data = phos_to_plot_tmp,
+            mapping = aes(
+                x = as.integer(`Positions.within.proteins`),
+                xend = as.integer(`Positions.within.proteins`),
+                y = 0,
+                yend = as.numeric(`Score.for.localization`),
+                linetype = Localised),
+            colour = "#3B3B3B") +
+        geom_point(
+            data = phos_to_plot_tmp,
+            mapping = aes(
+                x = as.integer(`Positions.within.proteins`),
+                y = as.numeric(`Score.for.localization`),
+                fill = Quantified),
+            colour = "#3B3B3B",
+            size = 7, shape = 21) +
+        geom_text(
+            data = phos_to_plot_tmp,
+            mapping = aes(
+                x = as.integer(`Positions.within.proteins`),
+                y = as.numeric(`Score.for.localization`),
+                label = `Amino.acid`),
+            colour = "white",
+            size = 5) +
+        ggpubr::theme_pubr() +
+        xlab("Amino acid position") +
+        ylab("Localisation probability") +
+        scale_fill_manual(
+            values = c(
+                `Resuscitation_chlorosis` = "#387eb8", `SCy004` = "#e21e25",
+                `SCy015` = "#fbaf3f", `Not quantified` = "#d1d2d4",
+                `Shared` = "#3B3B3B", `C` = "white", `E` = "#d1d2d4",
+                `H` = "#3B3B3B")) +
+        scale_linetype_manual(
+            values = c(`Localised` = "solid", `Not localised` = "dotted")) +
+        ggtitle(x)
+    
+}
 
 
 
@@ -740,6 +782,10 @@ pl_list[[paste0("Phospho_", x)]] <- ggplot() +
 
 pdf("Phosphorylation_statistics.pdf", 10, 10)
 my_plots
+dev.off()
+
+pdf("Phosphorylation_coverage.pdf", 10, 10)
+pl_list
 dev.off()
 
 save.image("Phosphorylation_statistics.RData")
