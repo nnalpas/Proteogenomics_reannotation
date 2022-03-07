@@ -7,8 +7,8 @@ library(ggplot2)
 my_plots <- list()
 my_date <- Sys.Date()
 
-my_f <- "H:/data/Synechocystis_6frame/NoveltyExplain/ORF_novelty_reason_valid.RDS"
-my_dir <- paste0("H:/data/Synechocystis_6frame/", my_date, "_ORF_validation")
+my_f <- "/mnt/storage/kxmna01/data/Synechocystis_6frame/NoveltyExplain/ORF_novelty_reason_valid.RDS"
+my_dir <- paste0("/mnt/storage/kxmna01/data/Synechocystis_6frame/", my_date, "_ORF_validation")
 
 dir.create(my_dir)
 
@@ -35,6 +35,10 @@ my_plots[["venn_noPepCount"]] <- ggvenn::ggvenn(
     data = toplot,
     columns = c("RBS valid", "PX valid", "TU valid", "High quality"),
     fill_color = c("#387eb8", "#d1d2d4", "#e21e25", "#fbaf3f"))
+my_plots[["venn_noPepCountorRNS"]] <- ggvenn::ggvenn(
+    data = toplot,
+    columns = c("PX valid", "TU valid", "High quality"),
+    fill_color = c("#387eb8", "#d1d2d4", "#e21e25"))
 
 my_data_final <- dplyr::left_join(x = my_data, y = toplot, by = "Proteins")
 
