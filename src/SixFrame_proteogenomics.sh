@@ -615,7 +615,8 @@ fi
 if (( $EmapperAnnotation )); then
 	
 	EggnogMapper.sh \
-		-o ${ProjDir}/Cross_species_eggnog \ #-o ${ProjDir}/EggnogMapper \
+		-o ${ProjDir}/Cross_species_eggnog \
+		#-o ${ProjDir}/EggnogMapper \
 		-d ${EmapperDbDir} \
 		-i ${EmapperType} \
 		-t ${THREADS} \
