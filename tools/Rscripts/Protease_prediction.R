@@ -5,8 +5,11 @@ library(magrittr)
 library(ggplot2)
 library(data.table)
 
+# Must source digest.R from Easy package
+
 my_files <- c(
-    ref = "L:/Software/AndromedaDatabases/Pseudomonas_aeruginosa/UP000002438_208964_complete_2019-12-11.fasta")
+    ref = "/mnt/storage/kxmna01/data/Synechocystis_6frame/Phylostratigraphy/1148.faa",
+    hidden = "/mnt/storage/kxmna01/data/Synechocystis_6frame/2022-02-02_Hidden_proteome/Never_identified_in_never.fasta")
 
 my_fastas <- lapply(X = my_files, FUN = function(x) {
     seqinr::read.fasta(file = x, seqtype = "AA", as.string = T) %>%
@@ -62,5 +65,11 @@ data.table::fwrite(
     x = my_proteotypic_df, file = paste0(outfile, "_proteotypic.txt"),
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
+
+data.table::fwrite(
+    x = my_proteotypic_df %>% dplyr::filter(., Filter == "Pass") %>% .["Sequence"],
+    file = paste0(outfile, "_sequence.txt"),
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = FALSE)
 
 
