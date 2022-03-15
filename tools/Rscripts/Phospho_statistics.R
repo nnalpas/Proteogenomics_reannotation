@@ -130,6 +130,14 @@ all_stats_novel_hq <- phospho_stats(x = my_novel_stats_hq)
 
 my_plots[["Phospho_stats_novel_HQ"]] <- all_stats_novel_hq[["plot"]]
 
+my_novel_stats_final <- my_novel_stats %>%
+    dplyr::left_join(x = ., y = my_reason, by = "Proteins")
+
+data.table::fwrite(
+    x = my_novel_stats_final, file = "Phosphorylated_novelORF.txt",
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
+
 
 
 ### Phosphopeptides ------------------------------------------------------
