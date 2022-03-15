@@ -103,6 +103,22 @@ my_ps_list <- strata_best %>%
         mrca_name = partial_id_to_name(mrca),
         Label = paste0("ps ", ps , " - ", mrca_name))
 
+toplot <- my_ps_list %>%
+    dplyr::group_by(., Label) %>%
+    dplyr::summarise(., Count = dplyr::n_distinct(staxid)) %>%
+    dplyr::ungroup(.)
+toplot$Label <- factor(
+    x = toplot$Label, levels = unique(toplot$Label), ordered = TRUE)
+
+my_plots[["ps_org_count"]] <- ggplot(
+    toplot, aes(x = Label, y = Count, label = Count)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_text(
+        stat = "identity", position = position_dodge(width = 0.9),
+        hjust = -0.3) +
+    ggpubr::theme_pubr() +
+    coord_flip()
+
 my_group <- split(
     my_ps_list$TaxonName,
     my_ps_list$Label)
