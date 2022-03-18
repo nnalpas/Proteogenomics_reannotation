@@ -461,7 +461,7 @@ if (exists("operon_grange")) {
 ### RBS motif analysis ---------------------------------------------------
 
 # Get the BSgenome object
-bsgeno <- eval(parse(text = opt$bsgenome))
+my_bsgeno <- eval(parse(text = opt$bsgenome))
 
 # Define number of nucleotide after first nucleotide (to define start codon)
 nucleotide_after <- 2
@@ -484,7 +484,7 @@ start(minus_grange) <- (end(minus_grange) - nucleotide_after)
 start_codon <- c(plus_grange, minus_grange)
 
 # Get the nucleotide sequence associated with the start codon
-start_codon_seq <- getSeq(x = bsgeno, names = start_codon)
+start_codon_seq <- getSeq(x = my_bsgeno, names = start_codon)
 
 # Check frequency of start codon
 start_codon_freq <- trinucleotideFrequency(
@@ -563,7 +563,7 @@ for (i in 1:length(ref_expr_list)) {
     names(fg_grange) <- sub("^", "fg_", fg_grange$id)
     
     # Get the nucleotide sequence associated with the grange object
-    fg_seq <- getSeq(x = bsgeno, names = fg_grange)
+    fg_seq <- getSeq(x = my_bsgeno, names = fg_grange)
     fg_seq_list <- as.vector(fg_seq)
     
     # Create background GRange object (+/- X bp of end)
@@ -584,7 +584,7 @@ for (i in 1:length(ref_expr_list)) {
     names(bg_grange) <- sub("^", "bg_", bg_grange$id)
     
     # Get the nucleotide sequence associated with the grange object
-    bg_seq <- getSeq(x = bsgeno, names = bg_grange)
+    bg_seq <- getSeq(x = my_bsgeno, names = bg_grange)
     bg_seq_list <- as.vector(bg_seq)
     
     # Loop through nucleotide length (for RBS motif)
@@ -699,7 +699,7 @@ if (length(all_rbs_motifs) > 0) {
             names(tmp_grange) <- x
             
             # Get sequence for updated grange
-            tmp_seq <- getSeq(x = bsgeno, names = tmp_grange)
+            tmp_seq <- getSeq(x = my_bsgeno, names = tmp_grange)
             
             # Attempt to locate pattern within the sequence
             tmp <- tmp_seq %>%
@@ -1581,7 +1581,7 @@ values(orf_grange_expr) <- cbind(
 # Use ggbio extension to plot ORF location on genome as a circos graph
 colou <- c("#4682B4", "#BD5E5E", "#437A3C", "#F57C36", "#D58DEB", "#B2B83F")
 pl_circos <- ggplot() +
-    ggtitle(label = organism(bsgeno)) +
+    ggtitle(label = organism(my_bsgeno)) +
     layout_circle(
         genome_grange, geom = "ideo", fill = "gray70",
         radius = 30, trackWidth = 2) +
@@ -1692,7 +1692,7 @@ plot(pl_coverage)
 dev.off()
 
 # Define a high quality target list
-high_qual_targets <- orf_reason_highqual %>%
+all_targets <- orf_reason_final %>%
     #dplyr::filter(., Novel_peptide_count >= 2) %>%
     .[["Proteins"]]
 
@@ -1704,19 +1704,19 @@ pep_grange_unique <- subset(
 # Loop through all high quality candidate ORFs
 warning("Generating genomic visualisation only for high quality ORFs!")
 pl_genome_list <- list()
-for (i in high_qual_targets) {
+for (i in all_targets) {
     
     # Generate all genomic representation for reference and novel entries
     # as well as peptide and sanger sequences
     genomic_vis_data <- plots_orf_genomic(
         x = i,
-        bsgeno = bsgeno,
+        bsgeno = my_bsgeno,
         ref_gr = ref_grange_expr,
         orf_gr = orf_grange_expr,
         pep_gr = pep_grange_unique,
         sanger_gr = sanger_grange,
-        ref_label = "GENE.NAME")
-        #ref_label = "protein")
+        #ref_label = "GENE.NAME")
+        ref_label = "protein")
         #ref_label = "PROTEIN.ID")
     
     # Plot the known entries and 6-frames ORFs tracks

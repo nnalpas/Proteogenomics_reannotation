@@ -1792,9 +1792,15 @@ plots_orf_genomic <- function(
     # The plot of genome sequence for that genomic region
     wh <- orf_gr[x] %>%
         range(.)
+    
+    # Renaming of sequences to be compatible with autoplot (not tested) 
+    seq_rename <- paste0("chr", 1:length(seqnames(bsgeno))) %>%
+        set_names(seqnames(bsgeno))
+    seqlevels(wh) <- seq_rename
+    seqlevels(bsgeno) <- seq_rename
     pl <- autoplot(bsgeno, which = wh, geom = "rect")
     pl_list["Genome"] <- list(pl)
-    
+
     # Return all plots and the coordinate of the genomic region
     return(list(
         plots = pl_list,
