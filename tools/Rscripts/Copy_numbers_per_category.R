@@ -1,6 +1,8 @@
 
 
 
+rm(list = ls())
+
 library(magrittr)
 library(ggplot2)
 
@@ -9,13 +11,13 @@ my_plots <- list()
 my_cols <- c("#387eb8", "#404040", "#e21e25", "#fbaf3f", "#d1d2d4")
 
 #my_data_f <- "H:/data/Synechocystis_6frame/2022-01-27_Copy_numbers/Scy004_copy_numbers_norm.txt"
-my_data_f <- "H:/data/Synechocystis_6frame/2022-02-14_iBAQ/Scy004_resuscitation_Scy001_iBAQ_norm.txt"
+my_data_f <- "/mnt/storage/kxmna01/data/Synechocystis_6frame/2022-02-14_iBAQ/Scy004_resuscitation_Scy001_iBAQ_norm.txt"
 
 my_data <- data.table::fread(
     input = my_data_f, sep = "\t", quote = "",
     header = TRUE, stringsAsFactors = FALSE)
 
-my_annot_f <- "H:/data/Synechocystis_6frame/Custom_annotation/2021-12-21_Custom_Uniprot_Eggnog_annotations.txt"
+my_annot_f <- "/mnt/storage/kxmna01/data/Synechocystis_6frame/Custom_annotation/2021-12-21_Custom_Uniprot_Eggnog_annotations.txt"
 
 my_annot <- data.table::fread(
     input = my_annot_f, sep = "\t", quote = "",
@@ -60,7 +62,7 @@ my_data_format <- my_data %>%
         ., Median = median(value, na.rm = TRUE),
         Mean = mean(value, na.rm = TRUE)) %>%
     dplyr::ungroup(.) %>%
-    dplyr::filter(., Median > 0) %>%
+    dplyr::filter(., Mean > 0) %>%
     dplyr::left_join(
         x = ., y = my_annot_format[, c(
             "#query_name", "Simple_Subcategory", "Simple_keyword", "Preferred_name")],
@@ -75,30 +77,34 @@ my_target_col <- my_cols[1:length(my_target)] %>%
     set_names(my_target)
 
 pl1 <- ggplot(
-    my_data_format, aes(x = Median, y = Simple_Subcategory)) +
+    my_data_format, aes(x = Mean, y = Simple_Subcategory)) +
     geom_boxplot(outlier.shape = NA) +
     geom_jitter(
         data = my_data_format %>%
             dplyr::filter(., Simple_keyword != "Others"),
-        mapping = aes(x = Median, y = Simple_Subcategory, fill = Simple_keyword),
+        mapping = aes(x = Mean, y = Simple_Subcategory, fill = Simple_keyword),
         position = position_jitter(height = 0.1),
         shape = 21, size = 2) +
     #ggrepel::geom_text_repel(
     geom_text(
         data = my_data_format %>%
-            dplyr::arrange(., dplyr::desc(Median)) %>%
+            dplyr::arrange(., dplyr::desc(Mean)) %>%
             dplyr::filter(., Simple_keyword != "Others") %>%
-            dplyr::slice(., 1:20),
+            dplyr::group_by(., Simple_Subcategory) %>%
+            dplyr::filter(., Proteins != "") %>%
+            dplyr::slice(., 1),
         mapping = aes(
-            x = Median, y = Simple_Subcategory,
+            x = Mean, y = Simple_Subcategory,
             colour = Simple_keyword, label = Proteins)) +
     geom_text(
         data = my_data_format %>%
-            dplyr::arrange(., Median) %>%
+            dplyr::arrange(., Mean) %>%
             dplyr::filter(., Simple_keyword != "Others") %>%
-            dplyr::slice(., 1:20),
+            dplyr::group_by(., Simple_Subcategory) %>%
+            dplyr::filter(., Proteins != "") %>%
+            dplyr::slice(., 1),
         mapping = aes(
-            x = Median, y = Simple_Subcategory,
+            x = Mean, y = Simple_Subcategory,
             colour = Simple_keyword, label = Proteins)) +
     ggpubr::theme_pubr() +
     scale_x_log10() +
@@ -108,7 +114,7 @@ pl1 <- ggplot(
 
 pl2 <- ggplot(
     my_data_format,
-    aes(x = Median, fill = Simple_keyword, colour = Simple_keyword)) +
+    aes(x = Mean, fill = Simple_keyword, colour = Simple_keyword)) +
     #geom_density(alpha = 0.3) +
     geom_density(aes(y = ..scaled..), alpha = 0.3) +
     ggpubr::theme_pubr() +
@@ -126,8 +132,7 @@ my_plots[["Copy_number_high"]] <- cowplot::plot_grid(
 
 my_target_other <- c(
     "Transposable element", "Protein kinase",
-    "Potential alternate start", "Potentially novel",
-    "Identified phospho (STY)")
+    "Potential alternate start", "Potentially novel")
 
 my_annot_format_other <- my_annot %>%
     dplyr::mutate(., Simple_Subcategory = dplyr::case_when(
@@ -141,7 +146,6 @@ my_annot_format_other <- my_annot %>%
         grepl(my_target_other[[2]], Miscellaneous, fixed = T) ~ my_target_other[[2]],
         grepl(my_target_other[[3]], Miscellaneous, fixed = T) ~ my_target_other[[3]],
         grepl(my_target_other[[4]], Miscellaneous, fixed = T) ~ my_target_other[[4]],
-        grepl(my_target_other[[5]], Miscellaneous, fixed = T) ~ my_target_other[[5]],
         TRUE ~ "Others"),
     Preferred_name = Preferred_name)
 
@@ -153,7 +157,7 @@ my_data_format_other <- my_data %>%
         ., Median = median(value, na.rm = TRUE),
         Mean = mean(value, na.rm = TRUE)) %>%
     dplyr::ungroup(.) %>%
-    dplyr::filter(., Median > 0) %>%
+    dplyr::filter(., Mean > 0) %>%
     dplyr::left_join(
         x = ., y = my_annot_format_other[, c(
             "#query_name", "Simple_Subcategory", "Simple_keyword", "Preferred_name")],
@@ -168,31 +172,35 @@ my_target_other_col <- my_cols[1:length(my_target_other)] %>%
     set_names(my_target_other)
 
 pl1 <- ggplot(
-    my_data_format_other, aes(x = Median, y = Simple_Subcategory)) +
+    my_data_format_other, aes(x = Mean, y = Simple_Subcategory)) +
     geom_boxplot(outlier.shape = NA) +
     geom_jitter(
         data = my_data_format_other %>%
             dplyr::filter(., Simple_keyword != "Others"),
-        mapping = aes(x = Median, y = Simple_Subcategory, fill = Simple_keyword),
+        mapping = aes(x = Mean, y = Simple_Subcategory, fill = Simple_keyword),
         position = position_jitter(height = 0.1),
         shape = 21, size = 2) +
     #ggrepel::geom_text_repel(
     geom_text(
         data = my_data_format_other %>%
-            dplyr::arrange(., Median) %>%
+            dplyr::arrange(., Mean) %>%
             dplyr::filter(., Simple_keyword != "Others") %>%
-            dplyr::slice(., 1:20),
+            dplyr::group_by(., Simple_Subcategory) %>%
+            dplyr::filter(., Proteins != "") %>%
+            dplyr::slice(., 1),
         mapping = aes(
-            x = Median, y = Simple_Subcategory,
+            x = Mean, y = Simple_Subcategory,
             colour = Simple_keyword, label = Proteins)) +#,
         #max.overlaps = 100) +
     geom_text(
         data = my_data_format_other %>%
-            dplyr::arrange(., dplyr::desc(Median)) %>%
+            dplyr::arrange(., dplyr::desc(Mean)) %>%
             dplyr::filter(., Simple_keyword != "Others") %>%
-            dplyr::slice(., 1:20),
+            dplyr::group_by(., Simple_Subcategory) %>%
+            dplyr::filter(., Proteins != "") %>%
+            dplyr::slice(., 1),
         mapping = aes(
-            x = Median, y = Simple_Subcategory,
+            x = Mean, y = Simple_Subcategory,
             colour = Simple_keyword, label = Proteins)) +
     ggpubr::theme_pubr() +
     scale_x_log10() +
@@ -202,7 +210,7 @@ pl1 <- ggplot(
 
 pl2 <- ggplot(
     my_data_format_other,
-    aes(x = Median, fill = Simple_keyword, colour = Simple_keyword)) +
+    aes(x = Mean, fill = Simple_keyword, colour = Simple_keyword)) +
     geom_density(aes(y = ..scaled..), alpha = 0.3) +
     ggpubr::theme_pubr() +
     scale_x_log10() +
