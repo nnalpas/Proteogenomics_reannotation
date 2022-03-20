@@ -386,6 +386,25 @@ data.table::fwrite(
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
 
+my_oa <- data.table::fread(
+    input = "/mnt/storage/kxmna01/data/Synechocystis_6frame/2022-03-18_Cross_species_abundance/2022-03-18_Synechocystis_ortholog_comparison_forOA.txt.OA_toplot.txt",
+    sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+my_oa$set <- factor(
+    x = my_oa$set,
+    levels = c("All_unique", "Shared_unique", "Photosynthesis_unique", "Core_unique"),
+    ordered = TRUE)
+
+my_plots[["OA"]] <- ggplot(my_oa, aes(x = score, y = pathway, fill = set, colour = set)) +
+    geom_bar(stat = "identity", position = "dodge", alpha = 0.7) +
+    ggpubr::theme_pubr() +
+    facet_grid(rows = vars(set), scales = "free_y", space = "free_y") +
+    scale_fill_manual(values = c("#387eb8", "#d1d2d4", "#e21e25", "#fbaf3f")) +
+    scale_colour_manual(values = c("#387eb8", "#d1d2d4", "#e21e25", "#fbaf3f"))
+
+pdf("2022-03-18_Synechocystis_comparison.pdf", 10, 10)
+my_plots
+dev.off()
+
 save.image("2022-03-18_Synechocystis_comparison.RData")
 
 
