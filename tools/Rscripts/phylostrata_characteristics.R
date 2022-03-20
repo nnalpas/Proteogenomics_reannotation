@@ -152,6 +152,7 @@ my_uco <- lapply(my_nucl_char, function(x) {
 my_codon_stats %<>%
     dplyr::full_join(x = ., my_cai)
 
+my_stats <- data.frame()
 for (x in c(
     "iBAQ", "AT3", "GC3", "GC%", "milc", "bias",
     "enc", "encprime", "mcb", "scuo", "cai")) {
@@ -179,7 +180,38 @@ for (x in c(
         geom_smooth(method='lm', formula= y~x) +
         ggpubr::theme_pubr()
     
+    for (y in c("ps", "iBAQ")) {
+        my_x <- my_codon_stats[[x]]
+        my_y <- as.double(my_codon_stats[[y]])
+        corr <- cor.test(
+            x = my_x, y = my_y, exact = TRUE,
+            alternative = "two.sided", method = "spearman")
+        my_stats <- data.frame(
+            x = x, y = y,
+            Rho = corr$estimate, Pvalue = corr$p.value,
+            stringsAsFactors = FALSE) %>%
+            dplyr::bind_rows(my_stats, .)
+    }
+
 }
+
+my_stats %<>%
+    dplyr::mutate(., Label = dplyr::case_when(
+        Pvalue < 0.001 ~ paste0(round(Rho, 2), " (***)"),
+        Pvalue < 0.01 ~ paste0(round(Rho, 2), " (**)"),
+        Pvalue < 0.05 ~ paste0(round(Rho, 2), " (*)"),
+        TRUE ~ NA_character_))
+
+my_plots[["stats_corr_hist"]] <- ggplot(
+    my_stats,
+    aes(x = x, y = Rho, fill = y, colour = y, label = Label)) +
+    geom_bar(stat = "identity", position = "dodge", alpha = 0.7) +
+    geom_text() +
+    scale_fill_manual(values = my_big_cols) +
+    scale_colour_manual(values = my_big_cols) +
+    ggpubr::theme_pubr() +
+    facet_grid(rows = vars(y)) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
 
 #library(seqinr)
 #data(caitab)
@@ -208,7 +240,8 @@ my_preferred_codon_long$Species <- factor(
 
 my_palette <- grDevices::hcl.colors(n = 9, palette = "Fall")
 my_big_cols <- c(
-    "#387eb8", "#404040", "#e21e25", "#fbaf3f", "#d1d2d4", "#246E39", "#753B94")
+    "#387eb8", "#404040", "#e21e25", "#fbaf3f", "#d1d2d4",
+    "#246E39", "#753B94", "#8b4513")
 
 my_plots[["w_across_species"]] <- ggplot(
     my_preferred_codon_long,
@@ -258,5 +291,7 @@ data.table::fwrite(
     x = my_uco, file = "codon_usage_indices.txt",
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
+
+save.image("Phylostrata_characteristics.RData")
 
 
