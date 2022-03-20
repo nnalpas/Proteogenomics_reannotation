@@ -1702,7 +1702,7 @@ pep_grange_unique <- subset(
     !(id %in% unique(names(pep_grange)[duplicated(names(pep_grange))])))
 
 # Loop through all high quality candidate ORFs
-warning("Generating genomic visualisation only for high quality ORFs!")
+#warning("Generating genomic visualisation only for high quality ORFs!")
 pl_genome_list <- list()
 for (i in all_targets) {
     
@@ -1733,8 +1733,8 @@ for (i in all_targets) {
         title = paste0(
             i,
             ": ",
-            as.character(orf_reason_highqual[
-                orf_reason_highqual$Proteins == i, "ORFNoveltyReason"])),
+            as.character(orf_reason_final[
+                orf_reason_final$Proteins == i, "ORFNoveltyReason"])),
         #xlab = "Genomic position",
         label.bg.fill = "white",
         label.text.angle = 45) +
