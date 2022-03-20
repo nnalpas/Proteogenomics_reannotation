@@ -17,6 +17,7 @@ my_prot_f <- list.files(
     set_names(sub("_top_prot.txt", "", basename(.)))
 
 my_res <- lapply(names(my_fasta_f), function(x) {
+#for (x in names(my_fasta_f)) {
     
     my_nucl_char <- seqinr::read.fasta(
         file = my_fasta_f[[x]], seqtype = "DNA",
@@ -29,7 +30,7 @@ my_res <- lapply(names(my_fasta_f), function(x) {
     my_nucl_char_high <- my_nucl_char[
         grepl(paste0(
             "(", paste0(my_high_exp$ID, collapse = "|"),
-            ")(,|;| |\\]|$)"), names(my_nucl_char))]
+            ")(\\.|,|;| |\\]|$)"), names(my_nucl_char))]
     my_w <- lapply(my_nucl_char_high, function(y) {
         seqinr::uco(
             seq = y, frame = 0, index = "eff")
