@@ -148,6 +148,11 @@ data.table::fwrite(
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
 
+data.table::fwrite(
+    x = my_ps_list, file = "Phylostrata_species.txt",
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
+
 save.image("Session_phylostratr.RData")
 
 
