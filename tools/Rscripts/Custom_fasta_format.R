@@ -3,9 +3,10 @@
 
 library(magrittr)
 
-my_fasta_f <- "/mnt/storage/kxmna01/data/Eco_6frame/Genome/UP000000625_83333_complete_2020-10-07.fasta"
-#id_pattern <- "^lcl\\|NC_002516\\.2_cds_(.+)_.+$"
-id_pattern <- "^..\\|(.+?)\\|.+$"
+my_fasta_f <- "H:/data/T4phage_6frame/Genome/GCA_015709735.1_ASM1570973v1_cds_from_genomic.fasta"
+id_pattern <- "^lcl\\|MT984581\\.1_cds_(.+)_.+$"
+#id_pattern <- "^..\\|(.+?)\\|.+$"
+#id_pattern <- "^(.+?) .*$"
 
 my_fasta <- seqinr::read.fasta(
     file = my_fasta_f, seqtype = "AA", as.string = TRUE, whole.header = TRUE)
@@ -73,7 +74,7 @@ if (any(nchar(my_data_format$ID) > 14)) {
 seqinr::write.fasta(
     sequences = my_fasta,
     names = my_data_format$Header,
-    file.out = sub("\\.fasta", "_sep.fasta", my_fasta_f),
+    file.out = sub("\\.fasta", "_FIXED.fasta", my_fasta_f),
     open = "w", nbchar = 60, as.string = TRUE)
 
 
