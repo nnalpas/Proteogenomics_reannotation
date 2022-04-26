@@ -1,0 +1,109 @@
+# GeneralParam
+ProjectName="T4phage_6frame"
+TaxId=2681598
+
+# ProcessSteps
+GetOrf=1
+MaxquantProc=0
+GetNovelEntries=0
+GetNCBIBlastDb=0
+MakeBlastDbProt=0
+MakeBlastDbNuc=0
+DbBlasting=0
+BestBlast=0
+ReciprocalBlast=0
+ReciprocalBestBlast=0
+ProteinCoordinate=0
+ProteinAnnotation=0
+BSgenomeForge=0
+GRangeCreate=0
+PepNoveltyReason=0
+SequencesCoordinate=0
+OperonCoordinate=0
+SangerCoordinate=0
+OrfNoveltyReason=0
+ClustalAlign=0
+ConservationBlast=0
+MaxquantValidation=0
+SummarizedExp=0
+InterproScan=0
+SignalpPrediction=0
+EmapperAnnotation=0
+PhylostratigraphyBlast=0
+
+# EmbossParam
+FRAME=6
+TABLE=11
+MINSIZE=1
+CIRCULAR="Yes"
+
+# ReferenceDatabase (for the genome make sure the chromosome name is all in lowercase for Ensembl compatibility)
+GENOME="${PBS_O_WORKDIR}/T4phage_6frame/Genome/GCA_015709735.1_ASM1570973v1_genomic.fasta"
+UNIREFPROT="${PBS_O_WORKDIR}/T4phage_6frame/Genome/GCA_015709735.1_ASM1570973v1_protein_FIXED.fasta"
+UNIREFGENE="${PBS_O_WORKDIR}/T4phage_6frame/Genome/GCA_015709735.1_ASM1570973v1_cds_from_genomic_FIXED.fasta"
+ALLNCBIPROT="${PBS_O_WORKDIR}/BlastDB/nr"
+ALLNCBIRNA="${PBS_O_WORKDIR}/BlastDB/nt"
+NCBIENVPROT="${PBS_O_WORKDIR}/BlastDB/env_nr"
+NCBIENVRNA="${PBS_O_WORKDIR}/BlastDB/env_nt"
+OTHERPROT=( "${PBS_O_WORKDIR}/T4phage_6frame/Genome/GCF_013167015.1_ASM1316701v1_protein_FIXED.fasta" )
+OTHERGENE=( "${PBS_O_WORKDIR}/T4phage_6frame/Genome/GCF_013167015.1_ASM1316701v1_cds_from_genomic_FIXED.fasta" )
+#OPERON="${PBS_O_WORKDIR}/work/T4phage_6frame/Genome/Transcriptional_units_formatted_20201022.txt"
+#SANGER="${PBS_O_WORKDIR}/work/work/T4phage_6frame/Sanger_validation/Sanger_validation.fasta"
+
+# MaxQuantParam
+mq_version="${PBS_O_WORKDIR}/MaxQuant_1.6.14.0.sif"
+mqpar="${PBS_O_WORKDIR}/T4phage_6frame/MQ_6frame/mqpar_posix.xml"
+
+# NCBIBlastDB
+BlastDbs='env_nr env_nt nr nt'
+
+# BlastDatab
+InputType="fasta"
+
+# BlastParam
+BlastSoftware="Diamond"
+SerialBlastMap="${PBS_O_WORKDIR}/T4phage_6frame/Phenodata/Blast_iterations.txt"
+
+# ReciprocalBlastParam
+SerialRecipBlastMap="${PBS_O_WORKDIR}/T4phage_6frame/Phenodata/Recip_Blast_iterations.txt"
+
+# ProteinAnnotationParam
+AnnotColumn="locus_tag,gene_id,protein,protein_id,pseudo,location"
+AnnotSeparator=" \\| "
+AnnotKey="MainID"
+
+# BSgenomeParam
+SEED="${PBS_O_WORKDIR}/T4phage_6frame/Genome/seed"
+PKGNAME="BSgenome.Ecoli.NCBI.022022"
+Circular="c('chr1')"
+
+# RBSanalysis
+
+# User provided additional RBS motifs sequence
+#AddRBS=''
+
+# ClustalParam
+#RBSLOW="${PBS_O_HOME}/work/T4phage_6frame/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
+#RBSHIGH="${PBS_O_HOME}/work/T4phage_6frame/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
+
+# ConservationBlastParam
+BlastnParam=''
+
+# MaxQuantValidationParam
+mqpar_valid="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_validation_novel_ORF_TMT/mqpar_posix.xml"
+
+# SignalpParam
+Organism="gram-"
+
+# EmapperParam
+emapperParam='-m diamond --sensmode ultra-sensitive'
+emapperDBParam=''
+EmapperDbDir="${PBS_O_HOME}/work/EggnogDB/"
+EmapperType="proteins"
+
+# PhylostratigraphyBlastParam
+InputTypePhylo="fasta"
+BlastSoftwarePhylo="Blast"
+SerialBlastMapPhylo="${PBS_O_WORKDIR}/T4phage_6frame/Phenodata/Phylostratigraphy_blasts.txt"
+
+
