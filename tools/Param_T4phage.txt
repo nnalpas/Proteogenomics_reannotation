@@ -51,7 +51,7 @@ OTHERGENE=( "${PBS_O_WORKDIR}/T4phage_6frame/Genome/GCF_013167015.1_ASM1316701v1
 #SANGER="${PBS_O_WORKDIR}/work/work/T4phage_6frame/Sanger_validation/Sanger_validation.fasta"
 
 # MaxQuantParam
-mq_version="${PBS_O_WORKDIR}/MaxQuant_1.6.14.0.sif"
+mq_version="${PBS_O_WORKDIR}/T4phage_6frame/MQ_6frame/MaxQuant_1.6.14.0.sif"
 mqpar="${PBS_O_WORKDIR}/T4phage_6frame/MQ_6frame/mqpar_posix.xml"
 
 # NCBIBlastDB
