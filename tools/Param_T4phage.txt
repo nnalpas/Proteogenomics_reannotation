@@ -10,8 +10,8 @@ GetNCBIBlastDb=0
 MakeBlastDbProt=0
 MakeBlastDbNuc=0
 DbBlasting=0
-BestBlast=1
-ReciprocalBlast=0
+BestBlast=0
+ReciprocalBlast=1
 ReciprocalBestBlast=0
 ProteinCoordinate=0
 ProteinAnnotation=0
@@ -74,8 +74,8 @@ AnnotKey="MainID"
 
 # BSgenomeParam
 SEED="${PBS_O_WORKDIR}/T4phage_6frame/Genome/seed"
-PKGNAME="BSgenome.Ecoli.NCBI.022022"
-Circular="c('chr1')"
+PKGNAME="BSgenome.T4phage.NCBI.042022"
+Circular="c('phage1')"
 
 # RBSanalysis
 
