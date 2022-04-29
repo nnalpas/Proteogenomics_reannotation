@@ -13,9 +13,9 @@ DbBlasting=0
 BestBlast=0
 ReciprocalBlast=0
 ReciprocalBestBlast=0
-ProteinCoordinate=1
-ProteinAnnotation=1
-BSgenomeForge=0
+ProteinCoordinate=0
+ProteinAnnotation=0
+BSgenomeForge=1
 GRangeCreate=0
 PepNoveltyReason=0
 SequencesCoordinate=0
@@ -75,7 +75,7 @@ AnnotKey="MainID"
 # BSgenomeParam
 SEED="${PBS_O_WORKDIR}/T4phage_6frame/Genome/seed"
 PKGNAME="BSgenome.T4phage.NCBI.042022"
-Circular="c('phage1')"
+Circular="c('pha1')"
 
 # RBSanalysis
 
@@ -90,7 +90,7 @@ Circular="c('phage1')"
 BlastnParam=''
 
 # MaxQuantValidationParam
-mqpar_valid="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_validation_novel_ORF_TMT/mqpar_posix.xml"
+mqpar_valid="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_validation/mqpar_posix.xml"
 
 # SignalpParam
 Organism="gram-"
