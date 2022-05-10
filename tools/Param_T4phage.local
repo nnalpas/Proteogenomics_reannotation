@@ -12,17 +12,17 @@ opt <- list(
 	
 # GetNovelEntries.R parameters (validation)
 opt <- list(
-    output = "H:/data/T4_6frame/MQ_6frame_valid/combined/txt/Novel_res",
-    maxquant = "H:/data/T4_6frame/MQ_6frame_valid/combined/txt",
-    reference = "H:/data/T4_6frame/Genome/T4_sp_PCC_6803_cds_aa.fasta",
-    novel = "H:/data/T4_6frame/Nuc_translation/Find0_T4_sp_PCC_6803_genome_FIXED.fasta",
+    output = "H:/data/T4phage_6frame/MQ_6frame_valid/combined/txt/Novel_res",
+    maxquant = "H:/data/T4phage_6frame/MQ_6frame_valid/combined/txt",
+    reference = "H:/data/T4phage_6frame/Genome/T4_sp_PCC_6803_cds_aa.fasta",
+    novel = "H:/data/T4phage_6frame/Nuc_translation/Find0_T4_sp_PCC_6803_genome_FIXED.fasta",
     threads = 1,
 	report = TRUE)
 
 # EggNOG_annotation_2_perseus.R parameters
 opt <- list(
-    output = "H:/data/T4_6frame/EggnogMapper",
-    annotation = "H:/data/T4_6frame/EggnogMapper/Find0_T4_sp_PCC_6803_genome_FIXED_identified.emapper.annotations,H:/data/T4_6frame/EggnogMapper/micro_proteins_T4_sp_PCC6803_20180419.emapper.annotations,H:/data/T4_6frame/EggnogMapper/T4_sp_PCC_6803_cds_aa.emapper.annotations",
+    output = "H:/data/T4phage_6frame/EggnogMapper",
+    annotation = "H:/data/T4phage_6frame/EggnogMapper/Find0_T4_sp_PCC_6803_genome_FIXED_identified.emapper.annotations,H:/data/T4phage_6frame/EggnogMapper/micro_proteins_T4_sp_PCC6803_20180419.emapper.annotations,H:/data/T4phage_6frame/EggnogMapper/T4_sp_PCC_6803_cds_aa.emapper.annotations",
     eggnogdb = "D:/Local_databases/X-databases/eggNOG_5.0/Func_categories.txt",
     ecdb = "D:/Local_databases/X-databases/EC/enzclass.txt",
     pfam = "D:/Local_databases/X-databases/PFAM/pfam_and_clan_merge.txt",
@@ -31,63 +31,62 @@ opt <- list(
 
 # Genomic_position_from_blast.R parameters
 opt <- list(
-    fasta = "H:/data/T4_6frame/Genome/T4_sp_PCC_6803_cds_aa.fasta",
-    blast = "H:/data/T4_6frame/Blast/Refnucl_vs_Genome_annot",
-    genome = "H:/data/T4_6frame/Genome/T4_sp_PCC_6803_genome.fasta",
-    output = "H:/data/T4_6frame/ProtPosition/Ref_prot_coordinates2.txt"
+    fasta = "H:/data/T4phage_6frame/Genome/T4_sp_PCC_6803_cds_aa.fasta",
+    blast = "H:/data/T4phage_6frame/Blast/Refnucl_vs_Genome_annot",
+    genome = "H:/data/T4phage_6frame/Genome/T4_sp_PCC_6803_genome.fasta",
+    output = "H:/data/T4phage_6frame/ProtPosition/Ref_prot_coordinates2.txt"
 )
 
 # GRanges_generation.R parameters
 opt <- list(
-    coordinates = "H:/data/T4_6frame/ProtPosition/Ref_prot_coordinates.txt",
-    genome = "H:/data/T4_6frame/Genome/T4_sp_PCC_6803_genome.fasta",
+    coordinates = "H:/data/T4phage_6frame/ProtPosition/Ref_prot_coordinates.txt",
+    genome = "H:/data/T4phage_6frame/Genome/T4_sp_PCC_6803_genome.fasta",
     bsgenome = "BSgenome.T4.Rostock.092020",
-    annotations = "H:/data/T4_6frame/ProtAnnotation/Ref_prot_annotations.txt",
-    output = "H:/data/T4_6frame/GRanges")
+    annotations = "H:/data/T4phage_6frame/ProtAnnotation/Ref_prot_annotations.txt",
+    output = "H:/data/T4phage_6frame/GRanges")
 
 # Fasta_annotation.R parameters
 opt <- list(
-    fasta = "H:/data/T4_6frame/Genome/T4_sp_PCC_6803_cds_aa.fasta",
+    fasta = "H:/data/T4phage_6frame/Genome/T4_sp_PCC_6803_cds_aa.fasta",
     taxon = "1148",
     columns = "GENE-NAME,CHR-VERSION,PROTEIN-NAME",
     key = "MainID",
     separator = " \\| ",
-    output = "H:/data/T4_6frame/ProtAnnotation/Ref_prot_annotations.txt")
+    output = "H:/data/T4phage_6frame/ProtAnnotation/Ref_prot_annotations.txt")
 
 # Novelty_discovery_peptides.R parameters
 opt <- list(
-    evidence = "H:/data/T4_6frame/Novel_res/Group_evidence.RDS",
-    reference_fasta = "H:/data/T4_6frame/Genome/T4_sp_PCC_6803_cds_aa.fasta,H:/data/T4_6frame/Genome/micro_proteins_T4_sp_PCC6803_20180419.fasta",
-    reciprocal_blast_ref = "H:/data/T4_6frame/ReciprocalBlast/Best_Reciproc_Blast_ORFprot_vs_Refprot_recip_annot,H:/data/T4_6frame/ReciprocalBlast/Best_Reciproc_Blast_ORFprot_vs_Refmicroprot_recip_annot",
-    reciprocal_blast_uniprot = "H:/data/T4_6frame/ReciprocalBlast/",
-    peptide_location = "H:/data/T4_6frame/Novel_res/Peptides_location.RDS",
+    evidence = "H:/data/T4phage_6frame/Novel_res/Group_evidence.RDS",
+    reference_fasta = "H:/data/T4phage_6frame/Genome/T4_sp_PCC_6803_cds_aa.fasta,H:/data/T4phage_6frame/Genome/micro_proteins_T4_sp_PCC6803_20180419.fasta",
+    reciprocal_blast_ref = "H:/data/T4phage_6frame/ReciprocalBlast/Best_Reciproc_Blast_ORFprot_vs_Refprot_recip_annot,H:/data/T4phage_6frame/ReciprocalBlast/Best_Reciproc_Blast_ORFprot_vs_Refmicroprot_recip_annot",
+    reciprocal_blast_uniprot = "H:/data/T4phage_6frame/ReciprocalBlast/",
+    peptide_location = "H:/data/T4phage_6frame/Novel_res/Peptides_location.RDS",
     threads = 1,
-    output = "H:/data/T4_6frame/NoveltyExplain/")
+    output = "H:/data/T4phage_6frame/NoveltyExplain/")
 	
 # Novelty_discovery_ORFs.R parameters
 opt <- list(
-    novel_reason = "H:/data/T4_6frame/NoveltyExplain/Sequence_novelty_reason.RDS",
-    ref_grange = "H:/data/T4_6frame/GRanges/Ref_prot_grange.RDS",
-    orf_grange = "H:/data/T4_6frame/GRanges/Orf_prot_grange.RDS",
-    operon_grange = "H:/data/T4_6frame/GRanges/Operon_grange.RDS",
-    pep_pos = "H:/data/T4_6frame/Novel_res/Peptides_location.RDS",
-    pep_grange = "H:/data/T4_6frame/GRanges/Peptides_grange.RDS",
+    novel_reason = "H:/data/T4phage_6frame/NoveltyExplain/Sequence_novelty_reason.RDS",
+    ref_grange = "H:/data/T4phage_6frame/GRanges/Ref_prot_grange.RDS",
+    orf_grange = "H:/data/T4phage_6frame/GRanges/Orf_prot_grange.RDS",
+    operon_grange = NULL,
+    pep_grange = "H:/data/T4phage_6frame/GRanges/Peptides_grange.RDS",
     sanger_grange = NULL,
-    genome_grange = "H:/data/T4_6frame/GRanges/Genome_grange.RDS",
+    genome_grange = "H:/data/T4phage_6frame/GRanges/Genome_grange.RDS",
     add_rbs = NULL,
     pep_class = 'class 1,class 2',
-    bsgenome = "BSgenome.T4.Rostock.092020",
+    bsgenome = "BSgenome.T4phage.NCBI.042022",
     threads = 4,
-    output = "H:/data/T4_6frame/NoveltyExplain")
+    output = "H:/data/T4phage_6frame/NoveltyExplain")
 
 # ORF_interpro_annotation.R parameters
 opt <- list(
-    novel_reason = "H:/data/T4_6frame/NoveltyExplain/ORF_novelty_reason.RDS",
-    interpro = "H:/data/T4_6frame/InterPro",
-    ref_grange = "H:/data/T4_6frame/GRanges/Ref_prot_grange.RDS",
-    orf_grange = "H:/data/T4_6frame/GRanges/Orf_prot_grange.RDS",
-    pep_grange = "H:/data/T4_6frame/GRanges/Peptides_grange.RDS",
-    genome_grange = "H:/data/T4_6frame/GRanges/Genome_grange.RDS",
+    novel_reason = "H:/data/T4phage_6frame/NoveltyExplain/ORF_novelty_reason.RDS",
+    interpro = "H:/data/T4phage_6frame/InterPro",
+    ref_grange = "H:/data/T4phage_6frame/GRanges/Ref_prot_grange.RDS",
+    orf_grange = "H:/data/T4phage_6frame/GRanges/Orf_prot_grange.RDS",
+    pep_grange = "H:/data/T4phage_6frame/GRanges/Peptides_grange.RDS",
+    genome_grange = "H:/data/T4phage_6frame/GRanges/Genome_grange.RDS",
     bsgenome = "BSgenome.T4.Rostock.092020",
     pep_class = 'class 1,class 2',
     threads = 4,
