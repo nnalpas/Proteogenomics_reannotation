@@ -18,17 +18,17 @@ ProteinAnnotation=0
 BSgenomeForge=0
 GRangeCreate=0
 PepNoveltyReason=0
-SequencesCoordinate=1
+SequencesCoordinate=0
 OperonCoordinate=0
 SangerCoordinate=0
-OrfNoveltyReason=1
+OrfNoveltyReason=0
 ClustalAlign=0
 ConservationBlast=0
 MaxquantValidation=0
 SummarizedExp=0
-InterproScan=0
+InterproScan=1
 SignalpPrediction=0
-EmapperAnnotation=0
+EmapperAnnotation=1
 PhylostratigraphyBlast=0
 
 # EmbossParam
