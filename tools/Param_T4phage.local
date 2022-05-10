@@ -73,7 +73,6 @@ opt <- list(
     pep_grange = "H:/data/T4phage_6frame/GRanges/Peptides_grange.RDS",
     sanger_grange = NULL,
     genome_grange = "H:/data/T4phage_6frame/GRanges/Genome_grange.RDS",
-    add_rbs = NULL,
     pep_class = 'class 1,class 2',
     bsgenome = "BSgenome.T4phage.NCBI.042022",
     threads = 4,

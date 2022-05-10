@@ -57,8 +57,8 @@ library(gridExtra)
 library(purrr)
 library(foreach)
 library(doParallel)
-library(motifRG)
-library(ggseqlogo)
+#library(motifRG)
+#library(ggseqlogo)
 
 
 
@@ -90,10 +90,6 @@ if (interactive()) {
         genome_grange = choose.files(
             caption = "Choose genome entry grange (.RDS) file!",
             multi = FALSE),
-        add_rbs = readline(prompt = paste0(
-            "Provide additional RBS sequence",
-            " (separated by comma)?")) %>%
-            as.character(),
         pep_class = readline(prompt = paste0(
             "Which PEP class to keep",
             " (separated by comma; e.g. 'class 1')")) %>%
@@ -143,11 +139,6 @@ if (interactive()) {
             opt_str = c("-g", "--genome_grange"),
             type = "character", default = NULL,
             help = "Genome entry grange file",
-            metavar = "character"),
-        make_option(
-            opt_str = c("-a", "--add_rbs"),
-            type = "character", default = NULL,
-            help = "Additional RBS sequence (separated by comma)",
             metavar = "character"),
         make_option(
             opt_str = c("-c", "--pep_class"),
@@ -237,15 +228,6 @@ if (
     
     print_help(opt_parser)
     stop("The input genome entry grange must be supplied!")
-    
-}
-if (
-    identical(opt$add_rbs, NULL) |
-    identical(opt$add_rbs, "") |
-    identical(opt$add_rbs, character(0))) {
-    
-    opt["add_rbs"] <- list(NULL)
-    warning("No RBS sequence provided by user!")
     
 }
 if (
@@ -346,18 +328,6 @@ if (!is.null(opt$operon) && file.exists(opt$operon)) {
         readRDS(file = .)
 }
 
-# Format the RBS sequences if defined
-if (!is.null(opt$add_rbs)) {
-    user_rbs <- opt$add_rbs %>%
-        as.character(.) %>%
-        strsplit(x = ., split = ",", fixed = TRUE) %>%
-        unlist(.) %>%
-        toupper(.) %>%
-        unique(.)
-} else {
-    user_rbs <- character(0)
-}
-
 # Format the PEP classes if defined
 if (!is.null(opt$pep_class)) {
     opt$pep_class %<>%
@@ -436,7 +406,7 @@ if (exists("operon_grange")) {
 
 
 
-### RBS motif analysis ---------------------------------------------------
+### Possible start analysis ----------------------------------------------
 
 # Get the BSgenome object
 my_bsgeno <- eval(parse(text = opt$bsgenome))
@@ -483,6 +453,14 @@ start_codon_freq %<>%
 used_start <- start_codon_freq %>%
     dplyr::filter(., Percentage > 0.01) %>%
     .[["Codon"]]
+
+# Locate start codon across genome
+find_start_codon <- function(x) {
+    res <- Biostrings::vmatchPattern(
+        pattern = DNAString(x), subject = my_bsgeno)
+    mcols(res) <- data.frame(Start_codon = rep(x = x, times = length(res)))
+    res
+}
 
 start_match <- foreach::foreach(
     x = used_start, .combine = c, .packages = c("Biostrings")) %dopar%

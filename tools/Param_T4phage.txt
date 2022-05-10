@@ -77,11 +77,6 @@ SEED="${PBS_O_WORKDIR}/T4phage_6frame/Genome/seed"
 PKGNAME="BSgenome.T4phage.NCBI.042022"
 Circular="c('pha1')"
 
-# RBSanalysis
-
-# User provided additional RBS motifs sequence
-#AddRBS=''
-
 # ClustalParam
 #RBSLOW="${PBS_O_HOME}/work/T4phage_6frame/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
 #RBSHIGH="${PBS_O_HOME}/work/T4phage_6frame/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
