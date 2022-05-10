@@ -854,6 +854,30 @@ unique_to_database <- function(
     
 }
 
+# Locate start codon across genome
+find_start_codon <- function(x) {
+    res <- Biostrings::vmatchPattern(
+        pattern = DNAString(x), subject = my_bsgeno)
+    mcols(res) <- data.frame(Start_codon = rep(x = x, times = length(res)))
+    res
+}
+
+# Function to determine the translation frame based on start coordinates
+# for grange object (will need to create class)
+calculate_frame <- function(gr) {
+    gr_pos <- subset(gr, strand == "+")
+    mcols(gr_pos) <- ((as.numeric(start(gr_pos)) + 2) / 3) %>%
+        keep_decimals(.) %>%
+        round(x = ((. + 0.33) * 3)) %>%
+        cbind(mcols(gr_pos), Frame = .)
+    gr_neg <- subset(gr, strand == "-")
+    mcols(gr_neg) <- ((as.numeric(end(gr_neg)) + 2) / 3) %>%
+        keep_decimals(.) %>%
+        round(x = ((. + 0.33) * -3)) %>%
+        cbind(mcols(gr_neg), Frame = .)
+    c(gr_pos, gr_neg)
+}
+
 # Function to determine the translation frame based on start coordinates
 get_frame <- function(
     data = NULL,
