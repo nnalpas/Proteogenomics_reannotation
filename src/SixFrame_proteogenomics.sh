@@ -583,7 +583,8 @@ if (( $InterproScan )); then
 	InterproScan.sh \
 		-o ${ProjDir}/InterPro \
 		-t ${THREADS} \
-		${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/InterproScan.log 2>&1
+		${UNIREFPROT} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/InterproScan.log 2>&1
+		#${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/InterproScan.log 2>&1
 	
 fi
 
@@ -618,7 +619,8 @@ if (( $EmapperAnnotation )); then
 		-d ${EmapperDbDir} \
 		-i ${EmapperType} \
 		-t ${THREADS} \
-		-a "${emapperParam}" -b "${emapperDBParam}" ${ProjDir}/Cross_species_eggnog/*.fasta > ${LogDir}/EmapperAnnotation.log 2>&1 #${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/EmapperAnnotation.log 2>&1
+		-a "${emapperParam}" -b "${emapperDBParam}" ${UNIREFPROT} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/EmapperAnnotation.log 2>&1
+		#-a "${emapperParam}" -b "${emapperDBParam}" ${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/EmapperAnnotation.log 2>&1
 	
 fi
 
