@@ -1372,7 +1372,7 @@ pl_coverage <- pl_coverage[[1]] +
     annotation_custom(
         grob = tableGrob(
             d = quantiles_toplot, theme = ttheme_minimal(), rows = NULL),
-        xmin = 120, xmax = 150, ymin = 1E5, ymax = 3E5) +
+        xmin = 120, xmax = 150, ymin = 100, ymax = max(toplot$Freq)) +
     scale_x_discrete(
         breaks = c(1, seq(20, 160, by = 20)),
         labels = c(1, seq(20, 160, by = 20)))
