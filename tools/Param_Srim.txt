@@ -17,7 +17,7 @@ ProteinCoordinate=0
 ProteinAnnotation=0
 BSgenomeForge=0
 GRangeCreate=0
-PepNoveltyReason=0
+PepNoveltyReason=1
 SequencesCoordinate=0
 OperonCoordinate=0
 SangerCoordinate=0
@@ -26,9 +26,10 @@ ClustalAlign=0
 ConservationBlast=0
 MaxquantValidation=0
 SummarizedExp=0
-InterproScan=1
-SignalpPrediction=1
+InterproScan=0
+SignalpPrediction=0
 EmapperAnnotation=0
+PhylostratigraphyBlast=0
 
 # EmbossParam
 FRAME=6
@@ -40,7 +41,6 @@ CIRCULAR="No"
 GENOME="${PBS_O_HOME}/work/Srim_6frame/Genome/CP048261_CP048262_genome_sequence.fasta"
 UNIREFPROT="${PBS_O_HOME}/work/Srim_6frame/Genome/CP048261_CP048262_prot_sequence_FIXED.fasta"
 UNIREFGENE=""
-#ALLUNIPROT="${PBS_O_HOME}/work/BlastDB/uniprot_sprot_trembl.fasta"
 ALLNCBIPROT="${PBS_O_HOME}/work/BlastDB/nr"
 ALLNCBIRNA="${PBS_O_HOME}/work/BlastDB/nt"
 NCBIENVPROT="${PBS_O_HOME}/work/BlastDB/env_nr"
@@ -77,20 +77,15 @@ SEED="${PBS_O_HOME}/work/Srim_6frame/Genome/seed"
 PKGNAME="BSgenome.Srimosus.CP048261.1"
 Circular='c()'
 
-# RBSanalysis
-
-# User provided additional RBS motifs sequence
-AddRBS='aaaggaggtgt agaggtggtgt atattaagaggaggag agagaacaaggagggg'
-
 # ClustalParam
-#RBSLOW="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
-#RBSHIGH="${PBS_O_HOME}/work/Bsu_6frame_NEW/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
+#RBSLOW="${PBS_O_HOME}/work/Srim_6frame/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
+#RBSHIGH="${PBS_O_HOME}/work/Srim_6frame/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
 
 # ConservationBlastParam
 BlastnParam=''
 
 # MaxQuantValidationParam
-#mqpar_valid="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_validation_novel_ORF_TMT/mqpar_posix.xml"
+mqpar_valid="${PBS_O_HOME}/ws/${USER}-MQ_16140-0/MQ_validation_novel_ORF_TMT/mqpar_posix.xml"
 
 # SignalpParam
 Organism="gram+"
@@ -100,5 +95,10 @@ emapperParam='-m diamond --sensmode ultra-sensitive'
 emapperDBParam=''
 EmapperDbDir="${PBS_O_HOME}/work/Srim_6frame/"
 EmapperType="proteins"
+
+# PhylostratigraphyBlastParam
+InputTypePhylo="fasta"
+BlastSoftwarePhylo="Blast"
+SerialBlastMapPhylo="${PBS_O_WORKDIR}/Srim_6frame/Phenodata/Phylostratigraphy_blasts.txt"
 
 
