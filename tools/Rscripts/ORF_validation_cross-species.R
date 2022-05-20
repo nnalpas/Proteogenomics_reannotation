@@ -310,15 +310,26 @@ reciprocal_blast_all <- reciprocal_blast_cross %>%
 
 reciprocal_blast_all %<>%
     dplyr::mutate(., refinestart = dplyr::case_when(
-        grepl("alternate end", ORFNoveltyReason) & !is.na(crossid) ~ crossstart,
-        TRUE ~ crossstart
-    ))
+        grepl("alternate end", ORFNoveltyReason) & !is.na(crossid) & orfcrossend < orfend ~ NA_integer_,
+        grepl("alternate end", ORFNoveltyReason) & !is.na(crossid) ~ as.integer((crossend - (orfcrossend - orfend) - 10)),
+        TRUE ~ crossstart),
+    refineend = dplyr::case_when(
+        grepl("alternate start", ORFNoveltyReason) & !is.na(crossid) & orfcrossstart > orfstart ~ NA_integer_,
+        grepl("alternate start", ORFNoveltyReason) & !is.na(crossid) ~ as.integer(crossstart + (orfstart - orfcrossstart) + 10),
+        TRUE ~ crossend
+    )) %>%
+    dplyr::filter(., !is.na(refinestart) & !is.na(refineend))
 
 
 
 ### Blast view of cross-validation ---------------------------------------
 
 x <- "sco1_166417"
+
+for (x in reciprocal_blast_all$crossid) {
+    
+}
+
 tmp <- reciprocal_blast_cross[reciprocal_blast_cross$sseqid == x, ]
 
 seqs_string <- Biostrings::AAStringSet(x = c(
