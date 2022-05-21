@@ -311,11 +311,11 @@ reciprocal_blast_all <- reciprocal_blast_cross %>%
 reciprocal_blast_all %<>%
     dplyr::mutate(., refinestart = dplyr::case_when(
         grepl("alternate end", ORFNoveltyReason) & !is.na(crossid) & orfcrossend < orfend ~ NA_integer_,
-        grepl("alternate end", ORFNoveltyReason) & !is.na(crossid) ~ as.integer((crossend - (orfcrossend - orfend) - 10)),
+        grepl("alternate end", ORFNoveltyReason) & !is.na(crossid) ~ as.integer((crossend - (orfcrossend - orfend))),
         TRUE ~ crossstart),
     refineend = dplyr::case_when(
         grepl("alternate start", ORFNoveltyReason) & !is.na(crossid) & orfcrossstart > orfstart ~ NA_integer_,
-        grepl("alternate start", ORFNoveltyReason) & !is.na(crossid) ~ as.integer(crossstart + (orfstart - orfcrossstart) + 10),
+        grepl("alternate start", ORFNoveltyReason) & !is.na(crossid) ~ as.integer(crossstart + (orfstart - orfcrossstart)),
         TRUE ~ crossend
     )) %>%
     dplyr::filter(., !is.na(refinestart) & !is.na(refineend))
@@ -324,27 +324,58 @@ reciprocal_blast_all %<>%
 
 ### Blast view of cross-validation ---------------------------------------
 
-x <- "sco1_166417"
-
+orf_reason$PX_novel_sequence <- NA_character_
 for (x in reciprocal_blast_all$crossid) {
+    
+    my_orf <- reciprocal_blast_all[reciprocal_blast_all$crossid == x, ][["orfid"]]
+    my_ref <- reciprocal_blast_all[reciprocal_blast_all$crossid == x, ][["refid"]]
+    my_start <- reciprocal_blast_all[reciprocal_blast_all$crossid == x, ][["refinestart"]]
+    my_end <- reciprocal_blast_all[reciprocal_blast_all$crossid == x, ][["refineend"]]
+    valid_pep <- my_pep_loc[
+        my_pep_loc$Proteins == x &
+            my_pep_loc$start < my_end &
+            my_pep_loc$end > my_start, ]
+    
+    if (nrow(valid_pep) > 0) {
+        
+        orf_reason[
+            orf_reason$Proteins == my_orf, "PX_novel_sequence"] <- paste0(
+            valid_pep$Sequence, collapse = ";")
+        
+        seqs_string <- Biostrings::AAStringSet(x = c(
+            fasta$Novel[[my_orf]],
+            ifelse(is.na(my_ref), "", fasta$Known[[my_ref]]),
+            fasta$Cross[[x]],
+            as.character(valid_pep[["Sequence"]])
+        ))
+        
+        my_alignment <- msa(inputSeqs = seqs_string, order = "input")
+        
+        msaPrettyPrint(
+            x = my_alignment, output = "pdf", showNames = "none",
+            file = paste0(opt$output, "/", my_orf, "_alignment.pdf"),
+            showLogo = "none", askForOverwrite = FALSE, verbose = TRUE)
+        
+    }
     
 }
 
-tmp <- reciprocal_blast_cross[reciprocal_blast_cross$sseqid == x, ]
+orf_reason$`PX valid` <- ifelse(
+    is.na(orf_reason$PX_novel_sequence), FALSE, TRUE)
 
-seqs_string <- Biostrings::AAStringSet(x = c(
-    tmp$qseq_blast,
-    reciprocal_blast_ref_filt[reciprocal_blast_ref_filt$qseqid == tmp$qseqid, ][["sseq_blast"]],
-    tmp$sseq_blast,
-    as.character(my_pep_loc[my_pep_loc$Proteins == x, ][["Sequence"]])
-))
+data.table::fwrite(
+    x = orf_reason,
+    file = paste0(opt$output, "/ORF_validation.txt"),
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
 
-my_alignment <- msa(inputSeqs = seqs_string, order = "input")
+saveRDS(object = orf_reason, file = paste0(opt$output, "/ORF_validation.RDS"))
 
-print(my_alignment, show = "complete")
 
-msaPrettyPrint(
-    x = my_alignment, output = "pdf", showNames = "none",
-    showLogo = "none", askForOverwrite = FALSE, verbose = TRUE)
+
+### END ------------------------------------------------------------------
+
+# Time scripts end
+print(paste("Completed ", format(Sys.time(), "%Y-%m-%d"), sep = ""))
 
 
