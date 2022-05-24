@@ -77,6 +77,9 @@ SEED="${PBS_O_HOME}/work/Srim_6frame/Genome/seed"
 PKGNAME="BSgenome.Srimosus.CP048261.1"
 Circular='c()'
 
+# OrfNoveltyReasonParam
+PEPclass='class 1,class 2'
+
 # ClustalParam
 #RBSLOW="${PBS_O_HOME}/work/Srim_6frame/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
 #RBSHIGH="${PBS_O_HOME}/work/Srim_6frame/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
