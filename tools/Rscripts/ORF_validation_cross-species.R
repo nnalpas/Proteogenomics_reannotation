@@ -268,14 +268,14 @@ my_plots[["venn_validation"]] <- ggvenn::ggvenn(
 ### Localise peptides matching refined ORFs ------------------------------
 
 pep_novel_uniq <- evidence_all %>%
-    dplyr::select(., Sequence, Proteins) %>%
+    dplyr::select(., Processing, Sequence, Proteins) %>%
     tidyr::separate_rows(data = ., Proteins, sep = ";") %>%
     unique(.) %>%
     dplyr::filter(., Proteins %in% names(fasta$Cross))
 
 my_pep_loc <- lapply(X = unique(pep_novel_uniq$Proteins), FUN = function(x) {
-    curr_seqs <- pep_novel_uniq[
-        pep_novel_uniq$Proteins == x, ][["Sequence"]]
+    curr_seqs <- unique(pep_novel_uniq[
+        pep_novel_uniq$Proteins == x, ][["Sequence"]])
     my_pep_loc <- stringr::str_locate_all(
         string = fasta$Cross[[x]],
         pattern = curr_seqs) %>%
@@ -283,7 +283,9 @@ my_pep_loc <- lapply(X = unique(pep_novel_uniq$Proteins), FUN = function(x) {
         plyr::ldply(., data.frame, .id = "Sequence")
 }) %>%
     set_names(unique(pep_novel_uniq$Proteins)) %>%
-    plyr::ldply(., data.frame, .id = "Proteins")
+    plyr::ldply(., data.frame, .id = "Proteins") %>%
+    dplyr::left_join(x = pep_novel_uniq, y = .) %>%
+    dplyr::mutate(., id = 1:nrow(.))
 
 
 
@@ -324,29 +326,45 @@ reciprocal_blast_all %<>%
 
 ### Blast view of cross-validation ---------------------------------------
 
+setwd(opt$output)
+
+orf_reason$PX_datasets <- NA_character_
 orf_reason$PX_novel_sequence <- NA_character_
+orf_reason$PX_novel_peptide_count <- NA_integer_
+my_pep_loc$Group <- "Known"
 for (x in reciprocal_blast_all$crossid) {
     
-    my_orf <- reciprocal_blast_all[reciprocal_blast_all$crossid == x, ][["orfid"]]
-    my_ref <- reciprocal_blast_all[reciprocal_blast_all$crossid == x, ][["refid"]]
-    my_start <- reciprocal_blast_all[reciprocal_blast_all$crossid == x, ][["refinestart"]]
-    my_end <- reciprocal_blast_all[reciprocal_blast_all$crossid == x, ][["refineend"]]
+    my_orf <- reciprocal_blast_all[
+        reciprocal_blast_all$crossid == x, ][["orfid"]]
+    my_ref <- reciprocal_blast_all[
+        reciprocal_blast_all$crossid == x, ][["refid"]]
+    my_start <- reciprocal_blast_all[
+        reciprocal_blast_all$crossid == x, ][["refinestart"]]
+    my_end <- reciprocal_blast_all[
+        reciprocal_blast_all$crossid == x, ][["refineend"]]
     valid_pep <- my_pep_loc[
         my_pep_loc$Proteins == x &
             my_pep_loc$start < my_end &
             my_pep_loc$end > my_start, ]
+    my_pep_loc[my_pep_loc$id %in% valid_pep$id, "Group"] <- "Novel"
     
     if (nrow(valid_pep) > 0) {
         
         orf_reason[
+            orf_reason$Proteins == my_orf, "PX_datasets"] <- paste0(
+                unique(valid_pep$Processing), collapse = ";")
+        orf_reason[
             orf_reason$Proteins == my_orf, "PX_novel_sequence"] <- paste0(
-            valid_pep$Sequence, collapse = ";")
+            unique(valid_pep$Sequence), collapse = ";")
+        orf_reason[
+            orf_reason$Proteins == my_orf, "PX_novel_peptide_count"] <- length(
+                unique(valid_pep[["Sequence"]]))
         
         seqs_string <- Biostrings::AAStringSet(x = c(
             fasta$Novel[[my_orf]],
-            ifelse(is.na(my_ref), "", fasta$Known[[my_ref]]),
+            ifelse(is.na(my_ref), "FAKE", fasta$Known[[my_ref]]),
             fasta$Cross[[x]],
-            as.character(valid_pep[["Sequence"]])
+            as.character(unique(valid_pep[["Sequence"]]))
         ))
         
         my_alignment <- msa(inputSeqs = seqs_string, order = "input")
@@ -370,6 +388,18 @@ data.table::fwrite(
     row.names = FALSE, col.names = TRUE)
 
 saveRDS(object = orf_reason, file = paste0(opt$output, "/ORF_validation.RDS"))
+
+data.table::fwrite(
+    x = my_pep_loc,
+    file = paste0(opt$output, "/Peptide_validation.txt"),
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
+
+data.table::fwrite(
+    x = reciprocal_blast_all,
+    file = paste0(opt$output, "/Reciprocal_blast_validation.txt"),
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
 
 
 
