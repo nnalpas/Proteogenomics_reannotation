@@ -79,6 +79,10 @@ if (interactive()) {
         fasta_cross = choose.files(
             caption = "Choose fasta file containing cross ORF!",
             multi = FALSE),
+        pep_class = readline(prompt = paste0(
+            "Which PEP class to keep",
+            " (separated by comma; e.g. 'class 1')")) %>%
+            as.character(),
         output = readline(
             prompt = "Define the output directory!"))
     
@@ -155,6 +159,15 @@ if (
     
     print_help(opt_parser)
     stop("The input cross ORF fasta file must be supplied!")
+    
+}
+if (
+    identical(opt$pep_class, NULL) |
+    identical(opt$pep_class, "") |
+    identical(opt$pep_class, character(0))) {
+    
+    opt["pep_class"] <- list("class 1")
+    warning("No PEP class provided by user, default to 'class1'!")
     
 }
 
@@ -237,6 +250,15 @@ fasta <- c(
     Cross = opt$fasta_cross) %>%
     purrr::map(
         .x = ., .f = seqinr::read.fasta, seqtype = "AA", as.string = TRUE)
+
+# Format the PEP classes if defined
+if (!is.null(opt$pep_class)) {
+    opt$pep_class %<>%
+        as.character(.) %>%
+        strsplit(x = ., split = ",", fixed = TRUE) %>%
+        unlist(.) %>%
+        unique(.)
+}
 
 
 
@@ -380,6 +402,16 @@ for (x in reciprocal_blast_all$crossid) {
 
 orf_reason$`PX valid` <- ifelse(
     is.na(orf_reason$PX_novel_sequence), FALSE, TRUE)
+
+orf_reason$`High quality` <- ifelse(
+    orf_reason$PEPfilter %in% opt$pep_class & orf_reason$OnlyIdBySite == TRUE,
+    TRUE, FALSE)
+
+orf_reason$`Peptide 2+` <- ifelse(
+    orf_reason$Novel_peptide_count > 1, TRUE, FALSE)
+
+orf_reason$`Start valid` <- ifelse(
+    !is.na(orf_reason$Starts), TRUE, FALSE)
 
 data.table::fwrite(
     x = orf_reason,
