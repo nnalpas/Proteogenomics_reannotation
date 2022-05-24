@@ -618,8 +618,8 @@ if (( $EmapperAnnotation )); then
 		-d ${EmapperDbDir} \
 		-i ${EmapperType} \
 		-t ${THREADS} \
-		-a "${emapperParam}" -b "${emapperDBParam}" ${UNIREFPROT} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/EmapperAnnotation.log 2>&1
-		#-a "${emapperParam}" -b "${emapperDBParam}" ${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/EmapperAnnotation.log 2>&1
+		#-a "${emapperParam}" -b "${emapperDBParam}" ${UNIREFPROT} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/EmapperAnnotation.log 2>&1
+		-a "${emapperParam}" -b "${emapperDBParam}" ${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/EmapperAnnotation.log 2>&1
 	
 fi
 
