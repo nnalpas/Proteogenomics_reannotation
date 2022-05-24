@@ -583,8 +583,7 @@ if (( $InterproScan )); then
 	InterproScan.sh \
 		-o ${ProjDir}/InterPro \
 		-t ${THREADS} \
-		${UNIREFPROT} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/InterproScan.log 2>&1
-		#${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/InterproScan.log 2>&1
+		${UNIREFPROT} ${OTHERPROT[@]} ${ProjDir}/Novel_res/*.fasta > ${LogDir}/InterproScan.log 2>&1
 	
 fi
 
