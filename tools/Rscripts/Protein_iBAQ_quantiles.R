@@ -9,6 +9,7 @@ my_cols <- c("#387eb8", "#d1d2d4", "#e21e25", "#fbaf3f", "#404040")
 
 my_data_f <- "H:/data/Synechocystis_6frame/2022-02-14_iBAQ/Scy004_resuscitation_Scy001_iBAQ_norm.txt"
 my_annot_f <- "H:/data/Synechocystis_6frame/Custom_annotation/2021-12-21_Custom_Uniprot_Eggnog_annotations.txt"
+my_annot_f <- "H:/data/Synechocystis_6frame/Custom_annotation/2021-12-21_Custom_Uniprot_Eggnog_annotations.txt"
 
 my_data <- data.table::fread(
     input = my_data_f, sep = "\t", quote = "", header = TRUE,
@@ -17,6 +18,10 @@ my_data <- data.table::fread(
 my_annot <- data.table::fread(
     input = my_annot_f, sep = "\t", quote = "", header = TRUE,
     stringsAsFactors = FALSE, colClasses = "character", data.table = FALSE)
+
+my_annot <- data.table::fread(
+    input = my_annot_f, sep = "\t", quote = "",
+    header = TRUE, stringsAsFactors = FALSE)
 
 my_data[, which(colnames(my_data) != "Proteins")] %<>% 
     lapply(., as.double)
@@ -49,7 +54,8 @@ my_ranks <- my_data_format %>%
             iBAQ_perc_cum <= 50 ~ 50,
             iBAQ_perc_cum <= 75 ~ 75,
             iBAQ_perc_cum <= 97.5 ~ 97.5,
-            TRUE ~ 100))
+            TRUE ~ 100)) %>%
+    dplyr::left_join(x = ., y = my_annot, by = c("Proteins" = "#query_name"))
 
 my_ranks_stats <- my_ranks %>%
     dplyr::group_by(., iBAQ_perc_quantile) %>%
@@ -104,5 +110,10 @@ my_plots[["iBAQ_perc_top25"]] <- ggplot(
 pdf("Protein_iBAQ_quantiles.pdf", 10, 10)
 my_plots
 dev.off()
+
+data.table::fwrite(
+    x = my_ranks, file = "H:/data/Synechocystis_6frame/2022-02-14_iBAQ/Scy001_iBAQ_percentage.txt",
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
 
 
