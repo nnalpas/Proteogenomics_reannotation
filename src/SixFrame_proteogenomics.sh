@@ -629,7 +629,7 @@ fi
 # Phylostratigraphy blast #
 ###########################
 
-# Check whether to blast selected proteome for pphylostratigraphy analysis
+# Check whether to blast selected proteome for phylostratigraphy analysis
 if (( $PhylostratigraphyBlast )); then
 	
 	MakeBlastDb.sh \
