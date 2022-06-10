@@ -21,8 +21,8 @@ opt <- list(
 
 # EggNOG_annotation_2_perseus.R parameters
 opt <- list(
-    output = "H:/data/T4phage_6frame/EggnogMapper",
-    annotation = "H:/data/T4phage_6frame/EggnogMapper/Find0_T4_sp_PCC_6803_genome_FIXED_identified.emapper.annotations,H:/data/T4phage_6frame/EggnogMapper/micro_proteins_T4_sp_PCC6803_20180419.emapper.annotations,H:/data/T4phage_6frame/EggnogMapper/T4_sp_PCC_6803_cds_aa.emapper.annotations",
+    output = "H:/data/T4phage_6frame/Functional_annotation",
+    annotation = "H:/data/T4phage_6frame/eggnog/Find0_GCA_015709735.1_ASM1570973v1_genomic_FIXED_identified.emapper.annotations,H:/data/T4phage_6frame/eggnog/GCA_015709735.1_ASM1570973v1_protein_FIXED.emapper.annotations",
     eggnogdb = "D:/Local_databases/X-databases/eggNOG_5.0/Func_categories.txt",
     ecdb = "D:/Local_databases/X-databases/EC/enzclass.txt",
     pfam = "D:/Local_databases/X-databases/PFAM/pfam_and_clan_merge.txt",
