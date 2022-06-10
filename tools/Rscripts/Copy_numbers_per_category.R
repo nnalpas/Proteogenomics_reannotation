@@ -11,13 +11,13 @@ my_plots <- list()
 my_cols <- c("#387eb8", "#404040", "#e21e25", "#fbaf3f", "#d1d2d4")
 
 #my_data_f <- "H:/data/Synechocystis_6frame/2022-01-27_Copy_numbers/Scy004_copy_numbers_norm.txt"
-my_data_f <- "/mnt/storage/kxmna01/data/Synechocystis_6frame/2022-02-14_iBAQ/Scy004_resuscitation_Scy001_iBAQ_norm.txt"
+my_data_f <- "H:/data/Synechocystis_6frame/2022-02-14_iBAQ/Scy004_resuscitation_Scy001_iBAQ_norm.txt"
 
 my_data <- data.table::fread(
     input = my_data_f, sep = "\t", quote = "",
     header = TRUE, stringsAsFactors = FALSE)
 
-my_annot_f <- "/mnt/storage/kxmna01/data/Synechocystis_6frame/Custom_annotation/2021-12-21_Custom_Uniprot_Eggnog_annotations.txt"
+my_annot_f <- "H:/data/Synechocystis_6frame/Custom_annotation/2022-06-09_Custom_Uniprot_Eggnog_annotations.txt"
 
 my_annot <- data.table::fread(
     input = my_annot_f, sep = "\t", quote = "",
@@ -132,7 +132,7 @@ my_plots[["Copy_number_high"]] <- cowplot::plot_grid(
 
 my_target_other <- c(
     "Transposable element", "Protein kinase",
-    "Potential alternate start", "Potentially novel")
+    "Potential alternate start", "Potentially novel", "Conflicting annotation")
 
 my_annot_format_other <- my_annot %>%
     dplyr::mutate(., Simple_Subcategory = dplyr::case_when(
@@ -146,11 +146,11 @@ my_annot_format_other <- my_annot %>%
         grepl(my_target_other[[2]], Miscellaneous, fixed = T) ~ my_target_other[[2]],
         grepl(my_target_other[[3]], Miscellaneous, fixed = T) ~ my_target_other[[3]],
         grepl(my_target_other[[4]], Miscellaneous, fixed = T) ~ my_target_other[[4]],
+        grepl(my_target_other[[5]], Miscellaneous, fixed = T) ~ my_target_other[[5]],
         TRUE ~ "Others"),
     Preferred_name = Preferred_name)
 
 my_data_format_other <- my_data %>%
-    #dplyr::filter(., !grepl("^chr|pca|pcb|psy", Proteins)) %>%
     tidyr::pivot_longer(data = ., cols = tidyselect::starts_with("SCy")) %>%
     dplyr::group_by(., Proteins) %>%
     dplyr::summarise(
@@ -160,8 +160,9 @@ my_data_format_other <- my_data %>%
     dplyr::filter(., Mean > 0) %>%
     dplyr::left_join(
         x = ., y = my_annot_format_other[, c(
-            "#query_name", "Simple_Subcategory", "Simple_keyword", "Preferred_name")],
-        by = c("Proteins" = "#query_name"))
+            "#query_name", "Simple_Subcategory", "Simple_keyword", "Preferred_name", "Miscellaneous")],
+        by = c("Proteins" = "#query_name")) %>%
+    dplyr::filter(., !grepl("Low quality", Miscellaneous))
 
 my_data_format_other$Simple_Subcategory <- factor(
     x = my_data_format_other$Simple_Subcategory,
