@@ -8,7 +8,7 @@ my_plots <- list()
 
 #my_oa_f <- "H:/data/Synechocystis_6frame/Phylostratigraphy/Phylostrata_proteins.txt"
 
-my_oa_f <- "/mnt/storage/kxmna01/data/Synechocystis_6frame/OA_GSEA/2021-12-23_Phylostrata_for_OA.txt.OA.txt"
+my_oa_f <- "H:/data/Synechocystis_6frame/2022-03-04_ORF_validation/2022-06-09_Phylostrata_for_OA.txt.OA.txt"
 
 my_oa <- data.table::fread(
     input = my_oa_f, sep = "\t", quote = "",
