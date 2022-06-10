@@ -9,7 +9,6 @@ my_cols <- c("#387eb8", "#d1d2d4", "#e21e25", "#fbaf3f", "#404040")
 
 my_data_f <- "H:/data/Synechocystis_6frame/2022-02-14_iBAQ/Scy004_resuscitation_Scy001_iBAQ_norm.txt"
 my_annot_f <- "H:/data/Synechocystis_6frame/Custom_annotation/2021-12-21_Custom_Uniprot_Eggnog_annotations.txt"
-my_annot_f <- "H:/data/Synechocystis_6frame/Custom_annotation/2021-12-21_Custom_Uniprot_Eggnog_annotations.txt"
 
 my_data <- data.table::fread(
     input = my_data_f, sep = "\t", quote = "", header = TRUE,
@@ -18,10 +17,6 @@ my_data <- data.table::fread(
 my_annot <- data.table::fread(
     input = my_annot_f, sep = "\t", quote = "", header = TRUE,
     stringsAsFactors = FALSE, colClasses = "character", data.table = FALSE)
-
-my_annot <- data.table::fread(
-    input = my_annot_f, sep = "\t", quote = "",
-    header = TRUE, stringsAsFactors = FALSE)
 
 my_data[, which(colnames(my_data) != "Proteins")] %<>% 
     lapply(., as.double)
