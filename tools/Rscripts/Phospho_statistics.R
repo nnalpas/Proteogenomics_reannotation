@@ -155,8 +155,27 @@ my_plots[["Phospho_multi_all"]] <- ggplot(
     scale_fill_manual(values = my_cols) +
     scale_colour_manual(values = my_cols)
 
+phospho_evid_stats_ref <- my_evid_filt_long %>%
+    dplyr::filter(., `Phospho (STY) site IDs` %in% my_phospho_ref$id) %>%
+    dplyr::group_by(., `Phospho (STY)`) %>%
+    dplyr::summarise(., Count = dplyr::n_distinct(`Modified sequence`)) %>%
+    dplyr::ungroup(.)
+
+my_plots[["Phospho_multi_ref"]] <- ggplot(
+    phospho_evid_stats_ref,
+    aes(
+        x = `Phospho (STY)`, y = Count, fill = `Phospho (STY)`,
+        colour = `Phospho (STY)`, label = Count)) +
+    geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +
+    geom_text(
+        stat = "identity", position = position_dodge(width = 0.9),
+        vjust = -0.5) +
+    ggpubr::theme_pubr() +
+    scale_fill_manual(values = my_cols) +
+    scale_colour_manual(values = my_cols)
+
 novel_evid_stats <- my_evid_filt_long %>%
-    dplyr::filter(., `Phospho (STY) site IDs` %in% my_novel_stats$id) %>%
+    dplyr::filter(., `Phospho (STY) site IDs` %in% my_phospho_notref$id) %>%
     dplyr::group_by(., `Phospho (STY)`) %>%
     dplyr::summarise(., Count = dplyr::n_distinct(`Modified sequence`)) %>%
     dplyr::ungroup(.)
