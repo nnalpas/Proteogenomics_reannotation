@@ -1,11 +1,14 @@
 
 
 
+rm(list = ls())
+
 library(magrittr)
 library(ggplot2)
 library(data.table)
 
 my_plots <- list()
+my_cols <- c("#387eb8", "#3B3B3B", "#e21e25", "#fbaf3f", "#d1d2d4", "#834F96")
 
 #my_files <- c(
 #    ref = "H:/data/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta",
@@ -13,10 +16,14 @@ my_plots <- list()
 #    never_id = "H:/data/Synechocystis_6frame/2020-12-02_Never_identified/Never_identified.fasta",
 #    novel_id = "H:/data/Synechocystis_6frame/Nuc_translation/Find0_Synechocystis_sp_PCC_6803_genome_FIXED_filter.fasta")
 
+#my_files <- c(
+#    ref = "H:/data/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta",
+#    ref_micro = "H:/data/Synechocystis_6frame/Genome/micro_proteins_Synechocystis_sp_PCC6803_20180419.fasta",
+#    never_id = "H:/data/Synechocystis_6frame/2022-02-02_Hidden_proteome/Never_identified_in_never.fasta")
+
 my_files <- c(
     ref = "H:/data/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta",
-    ref_micro = "H:/data/Synechocystis_6frame/Genome/micro_proteins_Synechocystis_sp_PCC6803_20180419.fasta",
-    never_id = "H:/data/Synechocystis_6frame/2022-02-02_Hidden_proteome/Never_identified_in_never.fasta")
+    novel = "H:/data/Synechocystis_6frame/Novel_res/Find0_Synechocystis_sp_PCC_6803_genome_FIXED_identified.fasta")
 
 my_fastas <- lapply(X = my_files, FUN = function(x) {
     seqinr::read.fasta(file = x, seqtype = "AA", as.string = T) %>%
@@ -116,20 +123,35 @@ prot_stats_df <- prot_stats %>%
         sep = "\\.", fill = "right") %>%
     dplyr::mutate(., Param = ifelse(is.na(Param), Index, Param))
 
+prot_stats_df$Database <- factor(
+    x = prot_stats_df$Database, levels = names(my_fastas), ordered = TRUE)
+
 for (x in unique(prot_stats_df$Index)) {
     
     toplot <- prot_stats_df %>%
         dplyr::filter(., Index == x)
     
-    my_plots[[x]] <- ggplot(data = toplot,
-           mapping = aes(
-               x = Database, y = Value, fill = Database, colour = Database)) +
+    my_plots[[paste0(x, "_violin")]] <- ggplot(
+        data = toplot,
+        mapping = aes(
+           x = Database, y = Value, fill = Database, colour = Database)) +
         geom_violin(position = "dodge", alpha = 0.5, draw_quantiles = c(0.25, 0.5, 0.75)) +
         facet_wrap(facets = "Param") +
         ggtitle(x) +
         ggpubr::theme_pubr() +
-        scale_fill_manual(values = c("#387eb8", "#404040")) +
-        scale_colour_manual(values = c("#387eb8", "#404040"))
+        scale_fill_manual(values = my_cols[1:length(my_fastas)]) +
+        scale_colour_manual(values = my_cols[1:length(my_fastas)])
+    
+    my_plots[[paste0(x, "_box")]] <- ggplot(
+        data = toplot,
+        mapping = aes(
+            x = Database, y = Value, fill = Database, colour = Database)) +
+        geom_boxplot(position = "dodge", alpha = 0.5) +
+        facet_wrap(facets = "Param") +
+        ggtitle(x) +
+        ggpubr::theme_pubr() +
+        scale_fill_manual(values = my_cols[1:length(my_fastas)]) +
+        scale_colour_manual(values = my_cols[1:length(my_fastas)])
     
 }
 
