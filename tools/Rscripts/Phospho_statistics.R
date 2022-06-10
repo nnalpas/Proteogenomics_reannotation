@@ -114,6 +114,11 @@ my_novel_stats_hq <- my_phospho_notref %>%
 all_stats_novel_hq <- phospho_stats(x = my_novel_stats_hq)
 my_plots[["Phospho_stats_novel_HQ"]] <- all_stats_novel_hq[["plot"]]
 
+data.table::fwrite(
+    x = my_novel_stats_hq, file = "Phosphorylated_novelORF.txt",
+    append = FALSE, quote = FALSE, sep = "\t",
+    row.names = FALSE, col.names = TRUE)
+
 
 
 ### Phosphopeptides ------------------------------------------------------
