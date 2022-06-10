@@ -45,12 +45,12 @@ library(magrittr)
 ### Parameters setting up ------------------------------------------------
 
 opt <- list(
-    annotation = "/mnt/storage/kxmna01/data/Synechocystis_6frame/2022-03-18_Cross_species_abundance/2022-03-18_Cross_species_Eggnog_annotations.txt",
-    foreground = "/mnt/storage/kxmna01/data/Synechocystis_6frame/2022-03-18_Cross_species_abundance/2022-03-18_Synechocystis_ortholog_comparison_forOA.txt",
+    annotation = "H:/data/Synechocystis_6frame/Custom_annotation/2022-06-09_Custom_Uniprot_Eggnog_annotations.txt",
+    foreground = "H:/data/Synechocystis_6frame/Phylostratigraphy/Phylostrata_for_OA.txt",
     background = NULL,
-    resource = "best_og_Subcategory",
-    gene = "ID",
-    idcol = "KEGG_ko",
+    resource = "Miscellaneous,TU ID,Custom_classification,Active site-note,Binding site-note,Catalytic activity-Reaction,ChEBI,Pathway,Site-note,Keywords,Protein existence,Status,Developmental stage,Induction,Tissue specificity,Subcellular location [CC],Intramembrane,Topological domain-note,Transmembrane-note,Post-translational modification,Modified residue-note,Propeptide-id,Signal peptide-note,Transit peptide,Protein families,Domain [FT]-note,Motif-note,Characterization,EC level 1 name,EC level 2 name,EC level 3 name,GOBP Term,GOCC Term,GOMF Term,Interpro_NAME,Panther Name,Panther Protein class,Panther Pathway,PIRSF name,Prosite,Prosite DE,TIGRFAM label,TIGRFAM product_name,best_og_Category,best_og_Subcategory,GOBP Term.EggNOG,GOCC Term.EggNOG,GOMF Term.EggNOG,EC level 1 name.EggNOG,EC level 2 name.EggNOG,EC level 3 name.EggNOG,KEGG_Pathway_Name,KEGG_Module_Name,KEGG_Reaction_Name,KEGG_rclass_Name,KEGG_brite_Name,pfam_id,pfam_description,pfam_clan_id,pfam_clan_description,CAZy,BiGG_Reaction",
+    gene = "#query_name",
+    idcol = "qseqid",
     pval = 1,
     padj = 1,
     minsize = 1,
@@ -111,8 +111,8 @@ if (!is.null(opt$background)) {
     my_background <- seqinr::read.fasta(
         file = opt$background, seqtype = "AA", as.string = TRUE)
 } else {
-    my_background <- unique(my_ranking$KEGG_ko) %>%
-        set_names(unique(my_ranking$KEGG_ko))
+    my_background <- unique(my_ranking[[opt$idcol]]) %>%
+        set_names(unique(my_ranking[[opt$idcol]]))
 }
 
 my_resource <- opt$resource %>%
@@ -148,18 +148,16 @@ my_oa_combined <- lapply(X = my_resource, FUN = function(x) {
 
 ### Export the results data ----------------------------------------------
 
-my_date <- Sys.Date()
-
 # Export annotation usable in Perseus
 write.table(
     x = my_oa_combined,
     file = paste0(
-        opt$output, "/", my_date, "_", basename(opt$foreground), ".OA.txt"),
+        opt$output, "/", date_str, "_", basename(opt$foreground), ".OA.txt"),
     quote = FALSE, sep = "\t", row.names = FALSE, col.names = TRUE)
 
 # Save session
 save.image(paste0(
-    opt$output, "/", my_date, "_", basename(opt$foreground), ".OA.RData"))
+    opt$output, "/", date_str, "_", basename(opt$foreground), ".OA.RData"))
 
 
 
