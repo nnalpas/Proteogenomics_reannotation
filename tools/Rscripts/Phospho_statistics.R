@@ -7,7 +7,7 @@ library(ggplot2)
 my_plots <- list()
 my_cols <- c("#387eb8", "#d1d2d4", "#e21e25", "#fbaf3f", "#3B3B3B", "#834F96")
 
-wkdir <- "/mnt/storage/kxmna01/data/Synechocystis_6frame/"
+wkdir <- "H:/data/Synechocystis_6frame/"
 
 
 
@@ -86,57 +86,33 @@ phospho_stats <- function(x) {
     
 }
 
+# All phospho
 all_stats <- phospho_stats(x = my_data_filt)
-
 my_plots[["Phospho_stats_all"]] <- all_stats[["plot"]]
 
-my_gr_phospho_f <- paste0(wkdir, "GRanges/Phospho (STY)Sites_grange.RDS")
+# All reference phospho
+my_phospho_ref <- my_data_filt %>%
+    dplyr::filter(., grepl("(^s|;s)", Proteins))
+all_stats_ref <- phospho_stats(x = my_phospho_ref)
+my_plots[["Phospho_stats_ref"]] <- all_stats_ref[["plot"]]
 
-my_gr_phospho <- readRDS(my_gr_phospho_f)
-
-my_gr_ref_f <- paste0(wkdir, "GRanges/Ref_prot_grange.RDS")
-
-my_gr_ref <- readRDS(my_gr_ref_f)
-
-my_gr_phospho_notref <- IRanges::subsetByOverlaps(
-    x = my_gr_phospho, ranges = my_gr_ref, invert = TRUE)
-
-my_novel_stats <- data.frame(
-    Names = names(my_gr_phospho_notref)) %>%
-    tidyr::separate(
-        data = ., col = Names,
-        into = c("Proteins", "Positions.within.proteins", "Amino.acid"),
-        sep = "~") %>%
-    dplyr::inner_join(x = ., my_data_filt)
-
-all_stats_novel <- phospho_stats(x = my_novel_stats)
-
+# All novel phospho
+my_phospho_notref <- my_data_filt %>%
+    dplyr::filter(., !grepl("(^s|;s)", Proteins))
+all_stats_novel <- phospho_stats(x = my_phospho_notref)
 my_plots[["Phospho_stats_novel"]] <- all_stats_novel[["plot"]]
 
-my_reason_f <- paste0(wkdir, "2021-12-29_ORF_validation/Venn_ORF_validation.txt")
-
-my_reason <- data.table::fread(
-    input = my_reason_f, sep = "\t", quote = "", header = TRUE,
-    stringsAsFactors = FALSE, colClasses = "character")
-
+# All novel high quality phospho
+my_reason_f <- paste0(wkdir, "2022-03-04_ORF_validation/Venn_ORF_validation_fmeasure.RDS")
+my_reason <- readRDS(file = my_reason_f)
 my_novel_hq <- my_reason %>%
-    dplyr::filter(., `High quality` == TRUE) %>%
+    dplyr::filter(., `Fmeasure valid` == TRUE | `Fmeasure valid` == "TRUE") %>%
     .[["Proteins"]]
-
-my_novel_stats_hq <- my_novel_stats %>%
-    dplyr::filter(., Proteins %in% my_novel_hq)
-
+my_novel_stats_hq <- my_phospho_notref %>%
+    dplyr::filter(., grepl(
+        paste0(my_novel_hq, collapse = "|"), Proteins))
 all_stats_novel_hq <- phospho_stats(x = my_novel_stats_hq)
-
 my_plots[["Phospho_stats_novel_HQ"]] <- all_stats_novel_hq[["plot"]]
-
-my_novel_stats_final <- my_novel_stats %>%
-    dplyr::left_join(x = ., y = my_reason, by = "Proteins")
-
-data.table::fwrite(
-    x = my_novel_stats_final, file = "Phosphorylated_novelORF.txt",
-    append = FALSE, quote = FALSE, sep = "\t",
-    row.names = FALSE, col.names = TRUE)
 
 
 
