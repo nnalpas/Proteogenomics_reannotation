@@ -7,16 +7,28 @@ library(magrittr)
 library(ggplot2)
 
 my_data <- data.table::fread(
-    input = "H:/data/Synechocystis_6frame/2022-03-04_ORF_validation/Venn_ORF_validation.txt",
+    input = "H:/data/Srim_6frame_3rd_analysis/Novel_res_validation/ORF_validation.txt",
     sep = "\t", quote = "\"", header = TRUE,
-    stringsAsFactors = FALSE, colClasses = "character")
+    stringsAsFactors = FALSE)
+
+my_data %<>%
+    dplyr::mutate(., Reason = dplyr::case_when(
+        grepl("match elsewhere", ORFNoveltyReason) ~ "Conflicting annotation",
+        TRUE ~ ORFNoveltyReason
+    ) %>% sub(";.+", "", .)) %>%
+    dplyr::arrange(., dplyr::desc(as.integer(Novel_sum_MSMS_Count)), Novel_min_PEP)
 
 my_data %<>%
     dplyr::mutate(., Manual_validation = dplyr::case_when(
-        grepl("^Likely false positive", Comment) ~ "FP",
-        grepl("^Fit", Comment) ~ "TP",
+        Novel_sum_Intensity == 0 | Novel_sum_MSMS_Count <= 2 | `Start valid` == FALSE ~ "FP",
+        Reason == "Conflicting annotation" ~ "TP",
         TRUE ~ "Uncertain"
     ))
+    #dplyr::mutate(., Manual_validation = dplyr::case_when(
+    #    grepl("^Likely false positive", Comment) ~ "FP",
+    #    grepl("^Fit", Comment) ~ "TP",
+    #    TRUE ~ "Uncertain"
+    #))
 
 my_data$Novel_min_PEP %<>%
     as.numeric(.)
@@ -75,7 +87,10 @@ my_data_format %<>%
     dplyr::ungroup(.)
 
 pep_threshold <- my_data_format[
-    my_data_format$Fmeasure == max(my_data_format$Fmeasure), ][["Novel_min_PEP"]]
+    !is.na(my_data_format$Fmeasure) &
+    my_data_format$Fmeasure == max(my_data_format$Fmeasure, na.rm = TRUE), ] %>%
+    .[["Novel_min_PEP"]] %>%
+    max(.)
 
 my_data_format %<>%
     dplyr::mutate(., `Fmeasure valid` = ifelse(
@@ -111,29 +126,38 @@ my_plots[["Fmeasure"]] <- ggplot(
     scale_x_log10() +
     ggpubr::theme_pubr()
 
+table(my_data_format$`Fmeasure valid`)
+
 my_data_format$`Peptide 2+` %<>%
     as.logical(.)
 my_data_format$`PX valid` %<>%
     as.logical(.)
-my_data_format$`TU valid` %>%
+my_data_format$`Start valid` %>%
     as.logical(.)
 
-my_plots[["venn_noRBS"]] <- ggvenn::ggvenn(
+my_plots[["venn"]] <- ggvenn::ggvenn(
     data = my_data_format,
-    columns = c("Peptide 2+", "PX valid", "TU valid"),
+    columns = c("Peptide 2+", "PX valid", "Start valid"),
     fill_color = c("#387eb8", "#404040", "#e21e25"))
 
-pdf(file = "H:/data/Synechocystis_6frame/2022-03-04_ORF_validation/Fmeasure_threshold.pdf", 8, 8)
+my_date <- Sys.Date()
+outdir <- paste0(
+    "H:/data/Srim_6frame_3rd_analysis/",
+    my_date,
+    "_ORF_validation/")
+dir.create(outdir)
+
+pdf(file = paste0(outdir, "Fmeasure_threshold.pdf"), 8, 8)
 my_plots
 dev.off()
 
 saveRDS(
     object = my_data_format,
-    file = "H:/data/Synechocystis_6frame/2022-03-04_ORF_validation/Venn_ORF_validation_fmeasure.RDS")
+    file = paste0(outdir, "Venn_ORF_validation_fmeasure.RDS"))
 
 data.table::fwrite(
     x = my_data_format,
-    file = "H:/data/Synechocystis_6frame/2022-03-04_ORF_validation/Venn_ORF_validation_fmeasure.txt",
+    file = paste0(outdir, "Venn_ORF_validation_fmeasure.txt"),
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
 
