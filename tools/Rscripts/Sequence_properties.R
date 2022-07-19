@@ -22,8 +22,8 @@ my_cols <- c("#387eb8", "#3B3B3B", "#e21e25", "#fbaf3f", "#d1d2d4", "#834F96")
 #    never_id = "H:/data/Synechocystis_6frame/2022-02-02_Hidden_proteome/Never_identified_in_never.fasta")
 
 my_files <- c(
-    ref = "H:/data/Synechocystis_6frame/Genome/Synechocystis_sp_PCC_6803_cds_aa.fasta",
-    novel = "H:/data/Synechocystis_6frame/Novel_res/Find0_Synechocystis_sp_PCC_6803_genome_FIXED_identified.fasta")
+    ref = "H:/data/Srim_6frame_3rd_analysis/Genome/CP048261_CP048262_prot_sequence_FIXED3.fasta",
+    novel = "H:/data/Srim_6frame_3rd_analysis/Novel_res/Find0_CP048261_CP048262_genome_sequence_FIXED_identified.fasta")
 
 my_fastas <- lapply(X = my_files, FUN = function(x) {
     seqinr::read.fasta(file = x, seqtype = "AA", as.string = T) %>%
