@@ -23,7 +23,8 @@ my_cols <- c("#387eb8", "#3B3B3B", "#e21e25", "#fbaf3f", "#d1d2d4", "#834F96")
 
 my_files <- c(
     ref = "H:/data/Srim_6frame_3rd_analysis/Genome/CP048261_CP048262_prot_sequence_FIXED3.fasta",
-    novel = "H:/data/Srim_6frame_3rd_analysis/Novel_res/Find0_CP048261_CP048262_genome_sequence_FIXED_identified.fasta")
+    novel = "H:/data/Srim_6frame_3rd_analysis/Novel_res/Find0_CP048261_CP048262_genome_sequence_FIXED_identified.fasta",
+    hq_novel = "H:/data/Srim_6frame_3rd_analysis/2022-06-30_ORF_validation/Find0_CP048261_CP048262_genome_sequence_FIXED_Fmeasurevalid.fasta")
 
 my_fastas <- lapply(X = my_files, FUN = function(x) {
     seqinr::read.fasta(file = x, seqtype = "AA", as.string = T) %>%
