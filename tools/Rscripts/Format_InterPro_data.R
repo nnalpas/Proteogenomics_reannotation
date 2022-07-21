@@ -3,7 +3,8 @@
 
 library(magrittr)
 
-my_interproscan_f <- "H:/data/Synechocystis_6frame/InterPro/Find0_Synechocystis_sp_PCC_6803_genome_FIXED_identified.tsv"
+my_interproscan_f <- "H:/data/Srim_6frame_3rd_analysis/InterPro/CP048261_CP048262_prot_sequence_FIXED3.tsv"
+
 my_interproscan <- data.table::fread(
     input = my_interproscan_f, sep = "\t", quote = "", header = TRUE,
     stringsAsFactors = FALSE, fill = TRUE)
@@ -43,7 +44,7 @@ my_interproscan_filter <- my_interproscan_format %>%
 
 data.table::fwrite(
     x = my_interproscan_filter,
-    file = "H:/data/Synechocystis_6frame/InterPro/Find0_Synechocystis_sp_PCC_6803_genome_FIXED_identified_parsed.txt",
+    file = sub(".txt", "parsed.txt", my_interproscan_f),
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
 
