@@ -9,6 +9,9 @@ opt <- list()
 
 opt$novel <- "H:/data/Pathogens_6frame/NoveltyExplain/ORF_novelty_reason.RDS"
 opt$novel_valid <- "H:/data/Pathogens_6frame/Novel_res_validation"
+opt$outdir <- "H:/data/Pathogens_6frame/2022-07-21_ORF_validation"
+
+dir.create(opt$outdir)
 
 orf_reason_final <- readRDS(opt$novel)
 
@@ -54,10 +57,24 @@ if (length(my_validation_f) > 0) {
     orf_reason_final$PX_Coverage_end <- ""
 }
 
-saveRDS(object = orf_reason_final, file = sub(".RDS", "_valid.RDS", opt$novel))
+orf_reason_final$`PX valid` <- ifelse(
+    is.na(orf_reason_final$PX_novel_sequence) | orf_reason_final$PX_novel_sequence == "", FALSE, TRUE)
+
+orf_reason_final$`High quality` <- ifelse(
+    orf_reason_final$PEPfilter %in% opt$pep_class & orf_reason_final$OnlyIdBySite == TRUE,
+    TRUE, FALSE)
+
+orf_reason_final$`Peptide 2+` <- ifelse(
+    orf_reason_final$Novel_peptide_count > 1, TRUE, FALSE)
+
+orf_reason_final$`Start valid` <- ifelse(
+    !is.na(orf_reason_final$Starts), TRUE, FALSE)
+
+saveRDS(object = orf_reason_final, file = paste(opt$outdir, sub(".RDS", "_valid.RDS", basename(opt$novel)), sep = "/"))
 
 data.table::fwrite(
-    x = orf_reason_final, file = sub(".RDS", "_valid.txt", opt$novel),
+    x = orf_reason_final,
+    file = paste(opt$outdir, sub(".RDS", "_valid.txt", basename(opt$novel)), sep = "/"),
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
 
