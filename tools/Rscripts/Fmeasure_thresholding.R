@@ -6,10 +6,17 @@ rm(list = ls())
 library(magrittr)
 library(ggplot2)
 
-my_data <- data.table::fread(
-    input = "H:/data/Srim_6frame_3rd_analysis/Novel_res_validation/ORF_validation.txt",
-    sep = "\t", quote = "\"", header = TRUE,
-    stringsAsFactors = FALSE)
+#my_f <- "H:/data/Srim_6frame_3rd_analysis/Novel_res_validation/ORF_validation.txt"
+my_f <- "H:/data/Pathogens_6frame/2022-07-21_ORF_validation/ORF_novelty_reason_valid.RDS"
+
+my_data <- readRDS(my_f)
+
+outdir <- dirname(my_f)
+
+my_fasta_f <- "H:/data/Pathogens_6frame/Nuc_translation/Find0_GCF_000006765.1_ASM676v1_genomic_FIXED.fasta"
+
+my_fasta <- seqinr::read.fasta(
+    file = my_fasta_f, seqtype = "AA", as.string = TRUE)
 
 my_data %<>%
     dplyr::mutate(., Reason = dplyr::case_when(
@@ -94,7 +101,7 @@ pep_threshold <- my_data_format[
 
 my_data_format %<>%
     dplyr::mutate(., `Fmeasure valid` = ifelse(
-        Novel_min_PEP <= pep_threshold, "TRUE", "FALSE"))
+        Novel_min_PEP <= pep_threshold, TRUE, FALSE))
 
 my_plots[["Precision"]] <- ggplot(
     my_data_format, aes(x = -log(x = Novel_min_PEP, base = 10), y = Precision)) +
@@ -140,25 +147,33 @@ my_plots[["venn"]] <- ggvenn::ggvenn(
     columns = c("Peptide 2+", "PX valid", "Start valid"),
     fill_color = c("#387eb8", "#404040", "#e21e25"))
 
-my_date <- Sys.Date()
-outdir <- paste0(
-    "H:/data/Srim_6frame_3rd_analysis/",
-    my_date,
-    "_ORF_validation/")
-dir.create(outdir)
+my_hq_target <- my_data_format %>%
+    dplyr::filter(., `Fmeasure valid`) %>%
+    .[["Proteins"]]
 
-pdf(file = paste0(outdir, "Fmeasure_threshold.pdf"), 8, 8)
+my_fasta_filter <- my_fasta[which(names(my_fasta) %in% my_hq_target)]
+
+my_headers <- lapply(my_fasta_filter, function(x) { attr(x, "Annot")}) %>%
+    unlist(.) %>%
+    sub("^>", "", .)
+
+pdf(file = paste(outdir, "Fmeasure_threshold.pdf", sep = "/"), 8, 8)
 my_plots
 dev.off()
 
 saveRDS(
     object = my_data_format,
-    file = paste0(outdir, "Venn_ORF_validation_fmeasure.RDS"))
+    file = paste(outdir, "Venn_ORF_validation_fmeasure.RDS", sep = "/"))
 
 data.table::fwrite(
     x = my_data_format,
-    file = paste0(outdir, "Venn_ORF_validation_fmeasure.txt"),
+    file = paste(outdir, "Venn_ORF_validation_fmeasure.txt", sep = "/"),
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
+
+seqinr::write.fasta(
+    sequences = my_fasta_filter, names = my_headers,
+    file.out = paste(outdir, sub(".fasta", "_Fmeasure.fasta", basename(my_fasta_f)), sep = "/"),
+    open = "w", as.string = TRUE)
 
 
