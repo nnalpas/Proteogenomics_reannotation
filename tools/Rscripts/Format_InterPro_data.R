@@ -44,7 +44,7 @@ my_interproscan_filter <- my_interproscan_format %>%
 
 data.table::fwrite(
     x = my_interproscan_filter,
-    file = sub(".txt", "parsed.txt", my_interproscan_f),
+    file = sub(".(txt|tsv)", "_parsed.txt", my_interproscan_f),
     append = FALSE, quote = FALSE, sep = "\t",
     row.names = FALSE, col.names = TRUE)
 
