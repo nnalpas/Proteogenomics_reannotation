@@ -6,6 +6,9 @@
 echo "$0"
 echo "Start $(date +"%T %d-%m-%Y")."
 
+# Load required module
+module load eggnog/2.0.5
+
 # Check for required command line arguments
 if [ $# -lt 6 ]; then
 	echo "Usage: $0 <WorkDir> <FindTransla> <TableTransla> <MinSize> <Circular> <FastaFile>"
