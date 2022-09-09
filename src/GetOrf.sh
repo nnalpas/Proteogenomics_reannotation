@@ -7,7 +7,7 @@ echo "$0"
 echo "Start $(date +"%T %d-%m-%Y")."
 
 # Load required module
-module load eggnog/2.0.5
+module load emboss/6.6.0
 
 # Check for required command line arguments
 if [ $# -lt 6 ]; then

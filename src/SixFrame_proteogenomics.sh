@@ -49,6 +49,7 @@ module load math/R/3.5.2-mkl-2018 # the prerequisite GNU is incompatible with bl
 module load diamond/2.0.9
 module load interproscan/5.48-83.0
 module load signalp/5.0b
+module load eggnog/2.0.5
 
 # Create project directory
 ProjDir=${PBS_O_WORKDIR}/${ProjectName}
