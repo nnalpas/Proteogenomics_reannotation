@@ -7,7 +7,7 @@ echo "$0"
 echo "Start $(date +"%T %d-%m-%Y")."
 
 # Check for required command line arguments
-if [ $# -ne 1 ]; then
+if [ $# -ne 3 ]; then
 	echo "Usage: $0 <MultiRunFile>"
 	exit 1
 fi
