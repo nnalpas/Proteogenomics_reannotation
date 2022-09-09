@@ -24,13 +24,15 @@ while IFS= read -r line; do
 
 	# Create new folders and copy working directory data
 	mkdir -p "$WKDIR/${array[0]}/Genome"; mkdir -p "$WKDIR/${array[0]}/MaxQuant"; mkdir -p "$WKDIR/${array[0]}/Phenodata"
-	cp "$WKDIR/Genome/${array[5]}" "$WKDIR/${array[0]}/Genome/"; cp "$PARAM" "$WKDIR/${array[0]}/Phenodata/"
+	cp "$WKDIR/Genome/${array[5]}" "$WKDIR/${array[0]}/Genome/"; cp "$WKDIR/Genome/*FIXED.fasta" "$WKDIR/${array[0]}/Genome/"; cp "$PARAM" "$WKDIR/${array[0]}/Phenodata/"
 
 	# Edit the parameter file
-	NEWPARAM=`basename $PARAM`
-	sed -ie "s/PROJECT_REPLACE/${array[0]}/g" "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
-	sed -ie "s/GENOME_REPLACE/${array[5]}/g" "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
+	NEWPARAM=`basename $PARAM | sed "s/.txt/_${array[0]}.txt/"`
+	sed -i "s/PROJECT_REPLACE/${array[0]}/g" "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
+	sed -i "s/GENOME_REPLACE/${array[5]}/g" "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
 
+	qsub -d ${HOME}/ws/tu_kxmna01-Proteogenomics-0 -m abe -M nicolas.nalpas@ifiz.uni-tuebingen.de -j eo -V -v SCRIPT_FLAGS="$WKDIR/${array[0]}/Phenodata/$NEWPARAM" -q short -l nodes=1:ppn=1,walltime=2:00:00 -N GetOrf ${HOME}/bin/SixFrame_proteogenomics.sh
+	
 done < ${MULTI}
 
 # Time scripts ends
