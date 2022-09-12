@@ -35,19 +35,16 @@ while IFS= read -r line; do
 	# Source the variable from the parameter file
 	ProjDir="$WKDIR/${array[0]}"
 	source "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
-	echo "Genome: $GENOME"
-	echo "Proteome: $UNIREFPROT"
 
 	# Edit the mqpar file
 	cp "$WKDIR/MaxQuant/${array[4]}" "$WKDIR/${array[0]}/MaxQuant/"; cp "$WKDIR/MaxQuant/mqpar_posix.xml" "$WKDIR/${array[0]}/MaxQuant/";
 	SIXFRAMEPROT=`basename $GENOME | perl -p -e "s%^%${WKDIR}\\/${array[0]}\\/Nuc_translation\\/Find0_%" | perl -p -e "s/\\.fasta/_FIXED.fasta/"`
-	echo "ORF: $SIXFRAMEPROT"
 	sed -i -e "s%ORF_REPLACE%$SIXFRAMEPROT%g" "$WKDIR/${array[0]}/MaxQuant/mqpar_posix.xml"
 	sed -i -e "s%REF_REPLACE%$UNIREFPROT%g" "$WKDIR/${array[0]}/MaxQuant/mqpar_posix.xml"
 	sed -i -e "s%RAW_REPLACE%$WKDIR\\/${array[0]}\\/MaxQuant\\/${array[4]}%g" "$WKDIR/${array[0]}/MaxQuant/mqpar_posix.xml"
 	sed -i -e "s%PROJECT_REPLACE%${array[0]}%g" "$WKDIR/${array[0]}/MaxQuant/mqpar_posix.xml"
 
-	#qsub -d ${HOME}/ws/tu_kxmna01-Proteogenomics-0 -m abe -M nicolas.nalpas@ifiz.uni-tuebingen.de -j eo -V -v SCRIPT_FLAGS="$WKDIR/${array[0]}/Phenodata/$NEWPARAM" -q short -l nodes=1:ppn=1,walltime=24:00:00 -N maxquant ${HOME}/bin/SixFrame_proteogenomics.sh
+	qsub -d ${HOME}/ws/tu_kxmna01-Proteogenomics-0 -m abe -M nicolas.nalpas@ifiz.uni-tuebingen.de -j eo -V -v SCRIPT_FLAGS="$WKDIR/${array[0]}/Phenodata/$NEWPARAM" -q short -l nodes=1:ppn=1,walltime=24:00:00 -N maxquant ${HOME}/bin/SixFrame_proteogenomics.sh
 	
 done < ${MULTI}
 
