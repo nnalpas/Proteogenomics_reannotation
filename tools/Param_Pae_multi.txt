@@ -38,21 +38,21 @@ MINSIZE=1
 CIRCULAR="Yes"
 
 # ReferenceDatabase (for the genome make sure the chromosome name is all in lowercase for Ensembl compatibility)
-GENOME="${ProjDir}/Genome/GENOME_REPLACE"
-UNIREFPROT="${ProjDir}/Genome/GCF_013001005.1_ASM1300100v1_protein_FIXED.fasta"
-UNIREFGENE="${ProjDir}/Genome/GCF_013001005.1_ASM1300100v1_cds_from_genomic_FIXED.fasta"
-ALLNCBIPROT="${PBS_O_WORKDIR}/BlastDB/nr"
-ALLNCBIRNA="${PBS_O_WORKDIR}/BlastDB/nt"
-NCBIENVPROT="${PBS_O_WORKDIR}/BlastDB/env_nr"
-NCBIENVRNA="${PBS_O_WORKDIR}/BlastDB/env_nt"
+GENOME='${ProjDir}/Genome/GENOME_REPLACE'
+UNIREFPROT='${ProjDir}/Genome/GCF_013001005.1_ASM1300100v1_protein_FIXED.fasta'
+UNIREFGENE='${ProjDir}/Genome/GCF_013001005.1_ASM1300100v1_cds_from_genomic_FIXED.fasta'
+ALLNCBIPROT='${PBS_O_WORKDIR}/BlastDB/nr'
+ALLNCBIRNA='${PBS_O_WORKDIR}/BlastDB/nt'
+NCBIENVPROT='${PBS_O_WORKDIR}/BlastDB/env_nr'
+NCBIENVRNA='${PBS_O_WORKDIR}/BlastDB/env_nt'
 OTHERPROT=()
 OTHERGENE=()
-#OPERON="${ProjDir}/Genome/Transcriptional_units_formatted_20201022.txt"
-#SANGER="${ProjDir}/Sanger_validation/Sanger_validation.fasta"
+#OPERON='${ProjDir}/Genome/Transcriptional_units_formatted_20201022.txt'
+#SANGER='${ProjDir}/Sanger_validation/Sanger_validation.fasta'
 
 # MaxQuantParam
-mq_version="${ProjDir}/MaxQuant/MaxQuant_1.6.14.0.sif"
-mqpar="${ProjDir}/MaxQuant/mqpar_posix.xml"
+mq_version='${ProjDir}/MaxQuant/MaxQuant_1.6.14.0.sif'
+mqpar='${ProjDir}/MaxQuant/mqpar_posix.xml'
 
 # NCBIBlastDB
 BlastDbs='env_nr env_nt nr nt'
@@ -62,10 +62,10 @@ InputType="fasta"
 
 # BlastParam
 BlastSoftware="Diamond"
-SerialBlastMap="${ProjDir}/Phenodata/Blast_iterations.txt"
+SerialBlastMap='${ProjDir}/Phenodata/Blast_iterations.txt'
 
 # ReciprocalBlastParam
-SerialRecipBlastMap="${ProjDir}/Phenodata/Recip_Blast_iterations.txt"
+SerialRecipBlastMap='${ProjDir}/Phenodata/Recip_Blast_iterations.txt'
 
 # ProteinAnnotationParam
 AnnotColumn="locus_tag,gene_id,protein,protein_id,pseudo,location"
@@ -73,7 +73,7 @@ AnnotSeparator=" \\| "
 AnnotKey="MainID"
 
 # BSgenomeParam
-SEED="${ProjDir}/Genome/seed"
+SEED='${ProjDir}/Genome/seed'
 PKGNAME="BSgenome.Paeruginosa..092022"
 Circular="c('pae1')"
 
@@ -83,14 +83,14 @@ Circular="c('pae1')"
 #AddRBS=''
 
 # ClustalParam
-#RBSLOW="${ProjDir}/RBS_clustalo/2017-11-09_low_expr_RBS_seq"
-#RBSHIGH="${ProjDir}/RBS_clustalo/2017-11-09_high_expr_RBS_seq"
+#RBSLOW='${ProjDir}/RBS_clustalo/2017-11-09_low_expr_RBS_seq'
+#RBSHIGH='${ProjDir}/RBS_clustalo/2017-11-09_high_expr_RBS_seq'
 
 # ConservationBlastParam
 BlastnParam=''
 
 # MaxQuantValidationParam
-mqpar_valid="${ProjDir}/MaxQuant/mqpar_posix.xml"
+mqpar_valid='${ProjDir}/MaxQuant/mqpar_posix.xml'
 
 # SignalpParam
 Organism="gram-"
@@ -98,12 +98,12 @@ Organism="gram-"
 # EmapperParam
 emapperParam='-m diamond --sensmode ultra-sensitive'
 emapperDBParam=''
-EmapperDbDir="${PBS_O_WORKDIR}/EggnogDB/"
+EmapperDbDir='${PBS_O_WORKDIR}/EggnogDB/'
 EmapperType="proteins"
 
 # PhylostratigraphyBlastParam
 InputTypePhylo="fasta"
 BlastSoftwarePhylo="Blast"
-SerialBlastMapPhylo="${ProjDir}/Phenodata/Phylostratigraphy_blasts.txt"
+SerialBlastMapPhylo='${ProjDir}/Phenodata/Phylostratigraphy_blasts.txt'
 
 
