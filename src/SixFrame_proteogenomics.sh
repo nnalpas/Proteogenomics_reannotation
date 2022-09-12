@@ -35,7 +35,7 @@ else
 fi
 
 # Load all parameters
-source < head -n 2 ${SCRIPT_FLAGS}
+source <(head -n 2 ${SCRIPT_FLAGS})
 
 # Go to workspace
 cd ${PBS_O_WORKDIR}
