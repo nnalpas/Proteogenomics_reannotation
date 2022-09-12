@@ -4,7 +4,7 @@ TaxId="287"
 
 # ProcessSteps
 GetOrf=1
-MaxquantProc=0
+MaxquantProc=1
 GetNovelEntries=0
 GetNCBIBlastDb=0
 MakeBlastDbProt=0
@@ -51,7 +51,7 @@ OTHERGENE=()
 #SANGER="${ProjDir}/Sanger_validation/Sanger_validation.fasta"
 
 # MaxQuantParam
-mq_version="${ProjDir}/MaxQuant/MaxQuant_1.6.14.0.sif"
+mq_version="${PBS_O_WORKDIR}/MaxQuant/MaxQuant_1.6.14.0.sif"
 mqpar="${ProjDir}/MaxQuant/mqpar_posix.xml"
 
 # NCBIBlastDB
