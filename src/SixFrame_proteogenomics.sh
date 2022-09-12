@@ -35,7 +35,7 @@ else
 fi
 
 # Load all parameters
-source ${SCRIPT_FLAGS}
+source < head -n 2 ${SCRIPT_FLAGS}
 
 # Go to workspace
 cd ${PBS_O_WORKDIR}
@@ -53,6 +53,7 @@ module load eggnog/2.0.5
 
 # Create project directory
 export ProjDir=${PBS_O_WORKDIR}/${ProjectName}
+source ${SCRIPT_FLAGS}
 
 # Create the log folder
 DateStart=$(date +%F_%H-%M)
