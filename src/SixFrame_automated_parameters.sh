@@ -25,7 +25,7 @@ while IFS= read -r line; do
 	# Create new folders and copy working directory data
 	#mkdir -p "$WKDIR/${array[0]}/Genome"; mkdir -p "$WKDIR/${array[0]}/MQ_6frame"; mkdir -p "$WKDIR/${array[0]}/Phenodata"
 	#cp "$WKDIR/Genome/${array[5]}" "$WKDIR/${array[0]}/Genome/"
-	#find $WKDIR/Genome/ -name "*FIXED.fasta" -exec cp '{}' $WKDIR/${array[0]}/Genome/ \;
+	find $WKDIR/Genome/ -name "*FIXED.fasta" -exec cp '{}' $WKDIR/${array[0]}/Genome/ \;
 
 	# Edit the parameter file
 	NEWPARAM=`basename $PARAM | sed "s/.txt/_${array[0]}.txt/"`
