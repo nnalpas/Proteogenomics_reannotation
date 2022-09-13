@@ -7,6 +7,7 @@ echo "$0"
 echo "Start $(date +"%T %d-%m-%Y")."
 
 # Load environment module
+module load compiler/gnu/5.2
 module load blast+/2.10.1
 
 # Function holding the usage
