@@ -23,7 +23,7 @@ while IFS= read -r line; do
 	IFS=$'\t' read -r -a array <<< "$line"
 
 	# Create new folders and copy working directory data
-	#NEWPARAM=`basename $PARAM | sed "s/.txt/_${array[0]}.txt/"`
+	NEWPARAM=`basename $PARAM | sed "s/.txt/_${array[0]}.txt/"`
 	#mkdir -p "$WKDIR/${array[0]}/Genome"; mkdir -p "$WKDIR/${array[0]}/MQ_6frame"; mkdir -p "$WKDIR/${array[0]}/Phenodata"
 	#cp "$WKDIR/Genome/${array[5]}" "$WKDIR/${array[0]}/Genome/"; cp "$PARAM" "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
 	#find $WKDIR/Genome/ -name "*FIXED.fasta" -exec cp '{}' $WKDIR/${array[0]}/Genome/ \;
