@@ -7,7 +7,7 @@ echo "$0"
 echo "Start $(date +"%T %d-%m-%Y")."
 
 # Load environment module
-module load blast+/2.10.1
+module load bio/blastplus/2.11.0
 
 # Function holding the usage
 display_usage() { 
