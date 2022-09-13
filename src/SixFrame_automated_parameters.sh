@@ -29,7 +29,7 @@ while IFS= read -r line; do
 
 	# Edit the parameter file
 	NEWPARAM=`basename $PARAM | sed "s/.txt/_${array[0]}.txt/"`
-	cp "$PARAM" "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
+	cp -f "$PARAM" "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
 	sed -i -e "s/PROJECT_REPLACE/${array[0]}/g" "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
 	sed -i -e "s/GENOME_REPLACE/${array[5]}/g" "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
 
@@ -46,7 +46,7 @@ while IFS= read -r line; do
 	#sed -i -e "s%PROJECT_REPLACE%${array[0]}%g" "$WKDIR/${array[0]}/MQ_6frame/mqpar_posix.xml"
 
 	# Edit the serial blast file
-	cp "$WKDIR/Phenodata/Blast_iterations.txt" "$WKDIR/${array[0]}/Phenodata/Blast_iterations.txt"
+	cp -f "$WKDIR/Phenodata/Blast_iterations.txt" "$WKDIR/${array[0]}/Phenodata/Blast_iterations.txt"
 	sed -i -e "s%REF_REPLACE%$UNIREFPROT%g" "$WKDIR/${array[0]}/Phenodata/Blast_iterations.txt"
 	sed -i -e "s%GENOME_REPLACE%$GENOME%g" "$WKDIR/${array[0]}/Phenodata/Blast_iterations.txt"
 	sed -i -e "s%CDS_REPLACE%$UNIREFGENE%g" "$WKDIR/${array[0]}/Phenodata/Blast_iterations.txt"
