@@ -51,8 +51,8 @@ OTHERGENE=()
 #SANGER="${ProjDir}/Sanger_validation/Sanger_validation.fasta"
 
 # MaxQuantParam
-mq_version="${PBS_O_WORKDIR}/Pae_multi_6frame/MaxQuant/MaxQuant_1.6.14.0.sif"
-mqpar="${ProjDir}/MaxQuant/mqpar_posix.xml"
+mq_version="${PBS_O_WORKDIR}/Pae_multi_6frame/MQ_6frame/MaxQuant_1.6.14.0.sif"
+mqpar="${ProjDir}/MQ_6frame/mqpar_posix.xml"
 
 # NCBIBlastDB
 BlastDbs='env_nr env_nt nr nt'
@@ -90,7 +90,7 @@ Circular="c('pae1')"
 BlastnParam=''
 
 # MaxQuantValidationParam
-mqpar_valid="${ProjDir}/MaxQuant/mqpar_posix.xml"
+mqpar_valid="${ProjDir}/MQ_6frame_valid/mqpar_posix.xml"
 
 # SignalpParam
 Organism="gram-"
