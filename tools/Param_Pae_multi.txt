@@ -3,12 +3,12 @@ ProjectName="Pae_multi_6frame/PROJECT_REPLACE"
 TaxId="287"
 
 # ProcessSteps
-GetOrf=1
-MaxquantProc=1
-GetNovelEntries=0
+GetOrf=0
+MaxquantProc=0
+GetNovelEntries=1
 GetNCBIBlastDb=0
-MakeBlastDbProt=0
-MakeBlastDbNuc=0
+MakeBlastDbProt=1
+MakeBlastDbNuc=1
 DbBlasting=0
 BestBlast=0
 ReciprocalBlast=0
