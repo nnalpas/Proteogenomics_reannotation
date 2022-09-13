@@ -41,12 +41,12 @@ source <(head -n 2 ${SCRIPT_FLAGS})
 cd ${PBS_O_WORKDIR}
 
 # Load the required modules
-module load blast+/2.10.1
+#module load blast+/2.10.1
 #module load blast+/2.12.0
 module load math/R/3.5.2-mkl-2018 # the prerequisite GNU is incompatible with blast+ (must find solution)
 #module load emboss/6.6.0
 #module load diamond/2.0.13
-module load diamond/2.0.9
+#module load diamond/2.0.9
 module load interproscan/5.48-83.0
 module load signalp/5.0b
 module load eggnog/2.0.5
