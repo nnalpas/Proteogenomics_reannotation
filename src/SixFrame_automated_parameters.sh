@@ -23,14 +23,15 @@ while IFS= read -r line; do
 	IFS=$'\t' read -r -a array <<< "$line"
 
 	# Create new folders and copy working directory data
-	NEWPARAM=`basename $PARAM | sed "s/.txt/_${array[0]}.txt/"`
 	#mkdir -p "$WKDIR/${array[0]}/Genome"; mkdir -p "$WKDIR/${array[0]}/MQ_6frame"; mkdir -p "$WKDIR/${array[0]}/Phenodata"
-	#cp "$WKDIR/Genome/${array[5]}" "$WKDIR/${array[0]}/Genome/"; cp "$PARAM" "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
+	#cp "$WKDIR/Genome/${array[5]}" "$WKDIR/${array[0]}/Genome/"
 	#find $WKDIR/Genome/ -name "*FIXED.fasta" -exec cp '{}' $WKDIR/${array[0]}/Genome/ \;
 
 	# Edit the parameter file
-	#sed -i -e "s/PROJECT_REPLACE/${array[0]}/g" "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
-	#sed -i -e "s/GENOME_REPLACE/${array[5]}/g" "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
+	NEWPARAM=`basename $PARAM | sed "s/.txt/_${array[0]}.txt/"`
+	cp "$PARAM" "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
+	sed -i -e "s/PROJECT_REPLACE/${array[0]}/g" "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
+	sed -i -e "s/GENOME_REPLACE/${array[5]}/g" "$WKDIR/${array[0]}/Phenodata/$NEWPARAM"
 
 	# Source the variable from the parameter file
 	ProjDir="$WKDIR/${array[0]}"
