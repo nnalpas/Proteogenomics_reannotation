@@ -115,14 +115,14 @@ while IFS= read -r line; do
 	fi
 	
 	# Retrieve blast ids from blast results and the corresponding sequence header
-	#echo -e "qseqid\tDescription\tTaxon\tTaxonID" > ${WKDIR}/${array[3]}_all_annot
 	#cut -f 1 ${WKDIR}/${array[3]} > ${WKDIR}/${array[3]}_qseqid.txt
 	#blastdbcmd -db ${QUERY} -outfmt "%a;;%t;;%S;;%T" -target_only -entry_batch ${WKDIR}/${array[3]}_qseqid.txt | sed 's/;;/\t/g' >> ${WKDIR}/${array[3]}_header
 	#rm ${WKDIR}/${array[3]}_qseqid.txt
 	blastdbcmd -db ${QUERY} -outfmt "%a;;%t;;%S;;%T" -entry 'all' | sed 's/;;/\t/g' > ${WKDIR}/${array[3]}_all_annot
-	sed -i '1s/^/qseqid\tDescription\tTaxon\tTaxonID\n/' ${WKDIR}/${array[3]}_all_annot
+	echo -e "qseqid\tDescription\tTaxon\tTaxonID" > ${WKDIR}/${array[3]}_header
+	#sed -i '1s/^/qseqid\tDescription\tTaxon\tTaxonID\n/' ${WKDIR}/${array[3]}_all_annot
 	cut -f 1 ${WKDIR}/${array[3]} | while IFS= read -r qseqid; do
-		grep "$qseqid"$'\t' ${WKDIR}/${array[3]}_all_annot > ${WKDIR}/${array[3]}_header
+		grep "$qseqid"$'\t' ${WKDIR}/${array[3]}_all_annot >> ${WKDIR}/${array[3]}_header
 	done
 	
 	# If the qseqid is identical (after retrieving the header) then concatenate the new columns with the reciprocal results
