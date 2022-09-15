@@ -115,10 +115,15 @@ while IFS= read -r line; do
 	fi
 	
 	# Retrieve blast ids from blast results and the corresponding sequence header
-	echo -e "qseqid\tDescription\tTaxon\tTaxonID" > ${WKDIR}/${array[3]}_header
-	cut -f 1 ${WKDIR}/${array[3]} > ${WKDIR}/${array[3]}_qseqid.txt
-	blastdbcmd -db ${QUERY} -outfmt "%a;;%t;;%S;;%T" -target_only -entry_batch ${WKDIR}/${array[3]}_qseqid.txt | sed 's/;;/\t/g' >> ${WKDIR}/${array[3]}_header
-	rm ${WKDIR}/${array[3]}_qseqid.txt
+	#echo -e "qseqid\tDescription\tTaxon\tTaxonID" > ${WKDIR}/${array[3]}_all_annot
+	#cut -f 1 ${WKDIR}/${array[3]} > ${WKDIR}/${array[3]}_qseqid.txt
+	#blastdbcmd -db ${QUERY} -outfmt "%a;;%t;;%S;;%T" -target_only -entry_batch ${WKDIR}/${array[3]}_qseqid.txt | sed 's/;;/\t/g' >> ${WKDIR}/${array[3]}_header
+	#rm ${WKDIR}/${array[3]}_qseqid.txt
+	blastdbcmd -db ${QUERY} -outfmt "%a;;%t;;%S;;%T" -entry 'all' | sed 's/;;/\t/g' > ${WKDIR}/${array[3]}_all_annot
+	sed -i '1s/^/qseqid\tDescription\tTaxon\tTaxonID\n/' ${WKDIR}/${array[3]}_all_annot
+	while IFS= read -r qseqid; do
+		echo "$qseqid\t" | grep ${WKDIR}/${array[3]}_all_annot > ${WKDIR}/${array[3]}_header
+	done < $(cut -f 1 ${WKDIR}/${array[3]})
 	
 	# If the qseqid is identical (after retrieving the header) then concatenate the new columns with the reciprocal results
 	diff_count=`diff <(awk '{print $1}' ${WKDIR}/${array[3]}) <(awk '{print $1}' ${WKDIR}/${array[3]}_header) | wc -l`
