@@ -51,7 +51,7 @@ while IFS= read -r line; do
 	sed -i -e "s%GENOME_REPLACE%$GENOME%g" "$WKDIR/${array[0]}/Phenodata/Blast_iterations.txt"
 	sed -i -e "s%CDS_REPLACE%$UNIREFGENE%g" "$WKDIR/${array[0]}/Phenodata/Blast_iterations.txt"
 
-	qsub -d ${HOME}/ws/tu_kxmna01-Proteogenomics-0 -m abe -M nicolas.nalpas@ifiz.uni-tuebingen.de -j eo -V -v SCRIPT_FLAGS="$WKDIR/${array[0]}/Phenodata/$NEWPARAM" -q short -l nodes=1:ppn=4,walltime=24:00:00 -N blast ${HOME}/bin/SixFrame_proteogenomics.sh
+	qsub -d ${HOME}/ws/tu_kxmna01-Proteogenomics-0 -m abe -M nicolas.nalpas@ifiz.uni-tuebingen.de -j eo -V -v SCRIPT_FLAGS="$WKDIR/${array[0]}/Phenodata/$NEWPARAM" -q short -l nodes=1:ppn=7,walltime=12:00:00 -N blast ${HOME}/bin/SixFrame_proteogenomics.sh
 	
 done < ${MULTI}
 
