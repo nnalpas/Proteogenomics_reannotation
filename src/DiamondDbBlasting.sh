@@ -152,8 +152,12 @@ fi
 # Make a database for the query if it does not already exists
 dir=$( dirname ${DATABASE} )
 base=$( basename ${DATABASE} )
-if [[ ! -e ${DATABASE}.dmnd ]] &&  [[ ! -e ${dir}/DiamondDB/${base}.dmnd ]]; then
-	
+if [[ -e ${DATABASE}.dmnd ]]; then
+	echo "Provided database is already formatted for Diamond!"
+elif [[ -e ${dir}/DiamondDB/${base}.dmnd ]]; then
+	echo "Update provided database for Diamond children folder!"
+	DATABASE="${dir}/DiamondDB/${base}"
+else
 	mkdir ${dir}/DiamondDB
 	for (( i=0; i<(${#MAKEDB_ADD[@]}-1); i++ )); do
 		j=$(($i+1))
