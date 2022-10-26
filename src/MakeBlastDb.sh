@@ -7,7 +7,7 @@ echo "$0"
 echo "Start $(date +"%T %d-%m-%Y")."
 
 # Load environment module depending on server
-if [[ `hostname` == *"core-login"* ]]; then
+if [[ `hostname` == *"core-login"* ]] || [[ `hostname` == *"ifb"* ]]; then
 	module load blast/2.12.0
 elif [[ `hostname` == *"binac"* ]]; then
 	module load bio/blastplus/2.11.0
