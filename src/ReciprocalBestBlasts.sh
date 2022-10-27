@@ -6,6 +6,16 @@
 echo "$0"
 echo "Start $(date +"%T %d-%m-%Y")."
 
+# Load environment module depending on server
+if [[ `hostname` == *"core-login"* ]] || [[ `hostname` == *"ifb"* ]]; then
+	module load r/4.1.1
+elif [[ `hostname` == *"binac"* ]]; then
+	module load math/R/3.5.2-mkl-2018
+else
+	echo "Unknown server: $(hostname), do not know what module to load" >&2
+	exit 1
+fi
+
 # Function holding the usage
 display_usage() { 
 	echo "
@@ -94,6 +104,9 @@ fi
 for file in `ls ${BLASTS}`; do
 	rec_pat=`basename $file | sed "s/_annot//"`
 	rec_file=`find ${RECIPROCALS} -name "${rec_pat}*_annot"`
+	if [[ $rec_file == "" ]]; then
+		rec_file=`find ${RECIPROCALS} -name "${rec_pat}*_recip*"`
+	fi
 	Reciprocal_best_blast.R \
 		-b ${file} \
 		-r ${rec_file} ${FILTER_ARG} \
