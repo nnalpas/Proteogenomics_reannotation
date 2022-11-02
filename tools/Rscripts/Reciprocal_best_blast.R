@@ -128,16 +128,16 @@ dir.create(opt$output)
 blast_data <- blast_read(file = opt$blast, blast_format = "6") %>%
     dplyr::mutate(
         .,
-        qseqid = uni_id_clean(qseqid),
-        sseqid = uni_id_clean(sseqid))
+        qseqid = qseqid,
+        sseqid = sseqid)
 
 # Import the reciprocal Blast results
 reciproc_data <- blast_read(
     file = opt$reciprocal_blast, blast_format = "6") %>%
     dplyr::mutate(
         .,
-        qseqid = uni_id_clean(qseqid),
-        sseqid = uni_id_clean(sseqid))
+        qseqid = qseqid,
+        sseqid = sseqid)
 
 
 
