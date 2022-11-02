@@ -689,7 +689,7 @@ uni_id_clean <- function(x) {
             strsplit(x = ., split = ";") %>%
             lapply(X = ., FUN = function(x) {
                 val <- sub(
-                    pattern = "^(REV__)?(gi.+|sp|tr)\\|(.+)\\|.*$",
+                    pattern = "^(REV__)?(gi.+|sp|tr|gb)\\|(.+)\\|.*$",
                     replacement = "\\1\\3",
                     x = x) %>%
                     paste(., collapse = ";")
