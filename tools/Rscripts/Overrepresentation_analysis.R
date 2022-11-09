@@ -45,12 +45,12 @@ library(magrittr)
 ### Parameters setting up ------------------------------------------------
 
 opt <- list(
-    annotation = "H:/data/Synechocystis_6frame/Custom_annotation/2022-06-09_Custom_Uniprot_Eggnog_annotations.txt",
-    foreground = "H:/data/Synechocystis_6frame/Phylostratigraphy/Phylostrata_for_OA.txt",
-    background = NULL,
-    resource = "Miscellaneous,TU ID,Custom_classification,Active site-note,Binding site-note,Catalytic activity-Reaction,ChEBI,Pathway,Site-note,Keywords,Protein existence,Status,Developmental stage,Induction,Tissue specificity,Subcellular location [CC],Intramembrane,Topological domain-note,Transmembrane-note,Post-translational modification,Modified residue-note,Propeptide-id,Signal peptide-note,Transit peptide,Protein families,Domain [FT]-note,Motif-note,Characterization,EC level 1 name,EC level 2 name,EC level 3 name,GOBP Term,GOCC Term,GOMF Term,Interpro_NAME,Panther Name,Panther Protein class,Panther Pathway,PIRSF name,Prosite,Prosite DE,TIGRFAM label,TIGRFAM product_name,best_og_Category,best_og_Subcategory,GOBP Term.EggNOG,GOCC Term.EggNOG,GOMF Term.EggNOG,EC level 1 name.EggNOG,EC level 2 name.EggNOG,EC level 3 name.EggNOG,KEGG_Pathway_Name,KEGG_Module_Name,KEGG_Reaction_Name,KEGG_rclass_Name,KEGG_brite_Name,pfam_id,pfam_description,pfam_clan_id,pfam_clan_description,CAZy,BiGG_Reaction",
-    gene = "#query_name",
-    idcol = "qseqid",
+    annotation = "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/Annotation/Acinetobacter_baumannii_ATCC_17978_full_annotation_2022-11-02.txt",
+    foreground = "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/Analysis/Spectra_check/Trimethylation (K)_multi_software_wide_for_OA.txt",
+    background = "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/DB/ATCC17978_plasmides_20220912_FIXED.fasta",
+    resource = "Subcellular Localization,InterPro Description,Other family Description,KEGG Pathway Name,EC level 1 name,EC level 2 name,EC level 3 name,GOBP Tree Term,GOCC Tree Term,GOMF Tree Term,Virulence Database,Resistance Database",
+    gene = "Locus Tag",
+    idcol = "Locus Tag",
     pval = 1,
     padj = 1,
     minsize = 1,
@@ -95,7 +95,7 @@ if (!is.na(opt$idcol) & !is.null(opt$idcol) & opt$idcol != "") {
         input = opt$foreground, sep = "\t", quote = "",
         header = TRUE, stringsAsFactors = FALSE, colClasses = "character") %>%
         tidyr::pivot_longer(data = ., cols = -as.name(opt$idcol)) %>%
-        dplyr::filter(., !is.na(value) & (value == 1 | isTRUE(value) | value == "TRUE")) %>%
+        dplyr::filter(., !is.na(value) & (value == 1 | isTRUE(value) | value == "TRUE" | value == "Yes")) %>%
         dplyr::mutate(., name = as.factor(name))
     my_foreground <- split(
         x = my_ranking[[opt$idcol]], f = my_ranking$name)
