@@ -6,6 +6,9 @@ rm(list = ls())
 library(magrittr)
 library(ggplot2)
 
+#score <- "NES"
+score <- "score"
+
 my_plots <- list()
 
 #my_oa_f <- "H:/data/Synechocystis_6frame/Phylostratigraphy/Phylostrata_proteins.txt"
@@ -18,20 +21,19 @@ my_plots <- list()
 
 #my_oa_f <- "H:/data/Synechocystis_6frame/2022-01-27_Copy_numbers/Scy004_copy_numbers_norm.txt.GSEA.txt"
 
-my_oa_f <- "/mnt/storage/kxmna01/data/Synechocystis_6frame/2022-03-02_Phylostrata_codon_characteristics/my_codon_stats.txt.GSEA.txt"
+#my_oa_f <- "/mnt/storage/kxmna01/data/Synechocystis_6frame/2022-03-02_Phylostrata_codon_characteristics/my_codon_stats.txt.GSEA.txt"
+
+my_oa_f <- "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/Analysis/Functional_enrichment/2022-11-15_Trimethylation (K)_multi_software_wide_for_OA.txt.OA.txt"
 
 my_oa <- data.table::fread(
     input = my_oa_f, sep = "\t", quote = "",
     header = TRUE, stringsAsFactors = FALSE)
 
-mandatory_path <- my_oa %>%
-    dplyr::filter(., padj <= 0.01) %>%
-    .[["pathway"]] %>%
-    unique(.)
+mandatory_path <- c()
 
 my_oa_final <- my_oa %>%
     dplyr::filter(
-        ., pathway %in% mandatory_path &
+        ., pathway %in% mandatory_path |
             padj <= 0.05) %>%
     dplyr::mutate(., padj_range = dplyr::case_when(
         padj <= 0.001 ~ "<= 0.001",
@@ -40,7 +42,7 @@ my_oa_final <- my_oa %>%
         TRUE ~ NA_character_
     )) %>%
     dplyr::group_by(., pathway) %>%
-    dplyr::mutate(., median = median(NES)) %>%
+    dplyr::mutate(., median = median(!!as.name(score))) %>%
     dplyr::ungroup(.) %>%
     dplyr::arrange(., dplyr::desc(median))
 
@@ -67,7 +69,7 @@ my_palette <- grDevices::hcl.colors(n = 10, palette = "Fall")
 my_plots <- lapply(unique(my_oa_final$resource), function(x) {
     ggplot(
         my_oa_final %>% dplyr::filter(., resource == x),
-        aes(x = set, y = pathway, fill = NES, size = padj_range)) +
+        aes(x = set, y = pathway, fill = !!as.name(score), size = padj_range)) +
         geom_point(colour = "white", shape = 21) +
         ggpubr::theme_pubr() +
         theme(
@@ -81,7 +83,7 @@ my_plots <- lapply(unique(my_oa_final$resource), function(x) {
                 `<= 0.05` = 2)) +
         scale_fill_gradientn(
             colours = grDevices::hcl.colors(n = 9, palette = "Fall"),
-            limits = c(-max(abs(my_oa_final$NES)), max(abs(my_oa_final$NES)))) +
+            limits = c(-max(abs(my_oa_final[[score]])), max(abs(my_oa_final[[score]])))) +
         ggtitle(x)
 }) %>%
     set_names(unique(my_oa_final$resource))
