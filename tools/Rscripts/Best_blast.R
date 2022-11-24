@@ -147,7 +147,7 @@ best_blast_data <- best_blast(
 
 # Export the best hits protein IDs that needs to be reciprocally blasted
 write.table(
-    x = sub("^ref\\|(.+)\\|", "\\1, unique(best_blast_data$sseqid)),
+    x = sub("^ref\\|(.+)\\|", "\\1", unique(best_blast_data$sseqid)),
     file = paste0(opt$output, "/Reciprocal_id_", basename(opt$input)),
     quote = FALSE,
     sep = "\t",
