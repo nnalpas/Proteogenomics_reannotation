@@ -12,7 +12,8 @@ my_plots <- list()
 
 #my_oa_f <- "H:/data/Synechocystis_6frame/2022-01-07_iBAQ/PG_iBAQ.txt.GSEA.txt"
 #my_oa_f <- "H:/data/Synechocystis_6frame/2022-02-14_iBAQ/2022-02-14_Scy004_resuscitation_Scy001_iBAQ_norm_t-test_forOA.txt.OA.txt"
-my_oa_f <- "/mnt/storage/kxmna01/data/Synechocystis_6frame/OA_GSEA/2021-12-23_Phylostrata_for_OA.txt.OA.txt"
+#my_oa_f <- "/mnt/storage/kxmna01/data/Synechocystis_6frame/OA_GSEA/2021-12-23_Phylostrata_for_OA.txt.OA.txt"
+my_oa_f <- "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Salome_Sauvage/Periplasm/Second_analysis/2023-05-17_MaxQuant_for_OA.txt.OA.txt"
 
 my_oa <- data.table::fread(
     input = my_oa_f, sep = "\t", quote = "",

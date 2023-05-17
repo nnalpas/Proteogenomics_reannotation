@@ -45,12 +45,12 @@ library(magrittr)
 ### Parameters setting up ------------------------------------------------
 
 opt <- list(
-    annotation = "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/Annotation/Acinetobacter_baumannii_ATCC_17978_full_annotation_2022-11-02.txt",
-    foreground = "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/Analysis/Spectra_check/Trimethylation (K)_multi_software_wide_for_OA.txt",
-    background = "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/DB/ATCC17978_plasmides_20220912_FIXED.fasta",
-    resource = "Subcellular Localization,InterPro Description,Other family Description,KEGG Pathway Name,EC level 1 name,EC level 2 name,EC level 3 name,GOBP Tree Term,GOCC Tree Term,GOMF Tree Term,Virulence Database,Resistance Database",
+    annotation = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Salome_Sauvage/Annotation/Pseudomonas_aeruginosa_PAO1_2022-09-28/Pseudomonas_aeruginosa_PAO1_(Reference)_full_annotation_2022-10-20.txt",
+    foreground = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Salome_Sauvage/Periplasm/Second_analysis/MaxQuant_for_OA.txt",
+    background = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Salome_Sauvage/Annotation/Pseudomonas_aeruginosa_PAO1_2022-09-28/Pseudomonas_aeruginosa_PAO1_107.faa",
+    resource = "COG Category,GOBP Tree Term,GOMF Tree Term,GOCC Tree Term,Subcellular Localization,KEGG Pathway Name,PseudoCAP Pathway Name,Virulence Database,EC level 1 name,EC level 2 name,EC level 3 name,InterPro Description,Other family Description,PseudoCAP function class",
     gene = "Locus Tag",
-    idcol = "Locus Tag",
+    idcol = "Accession",
     pval = 1,
     padj = 1,
     minsize = 1,
