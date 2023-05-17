@@ -1529,9 +1529,9 @@ plots_box_plotly <- function(my_data, x, y, col_manual, txt_size) {
         dplyr::group_by(., !!as.name(x)) %>%
         dplyr::arrange(., !!as.name(y))
     toplot_outliers <- toplot_sort %>%
-        dplyr::slice(., 1, n())
+        dplyr::slice(., 1, dplyr::n())
     toplot_outliers <- toplot_sort %>%
-        dplyr::slice(., -1, -n()) %>%
+        dplyr::slice(., -1, -dplyr::n()) %>%
         dplyr::sample_n(
             .,
             size = ifelse(
@@ -1566,7 +1566,7 @@ plots_box_plotly <- function(my_data, x, y, col_manual, txt_size) {
         xlab(x) +
         ylab(y) +
         labs(fill = NULL) +
-        theme_pubr() +
+        ggpubr::theme_pubr() +
         theme(text = element_text(size = txt_size)) +
         scale_fill_manual(values = col_manual) +
         scale_colour_manual(guide = FALSE, values = col_manual)
