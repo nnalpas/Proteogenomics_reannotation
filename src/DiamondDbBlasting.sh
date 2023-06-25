@@ -7,8 +7,17 @@ echo "$0"
 echo "Start $(date +"%T %d-%m-%Y")."
 
 # Load environment module
-module load bio/blastplus/2.11.0
-module load diamond/2.0.9
+# Load environment module depending on server
+if [[ `hostname` == *"core-login"* ]] || [[ `hostname` == *"ifb"* ]]; then
+	module load blast/2.12.0
+	module load diamond/2.0.9
+elif [[ `hostname` == *"binac"* ]]; then
+	module load bio/blastplus/2.11.0
+	module load diamond/2.0.13
+else
+	echo "Unknown server: $(hostname), do not know what module to load" >&2
+	exit 1
+fi
 
 # Function holding the usage
 display_usage() { 
