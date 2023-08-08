@@ -7,7 +7,7 @@ echo "$0"
 echo "Start $(date +"%T %d-%m-%Y")."
 
 # Load environment module depending on server
-if [[ `hostname` == *"core-login"* ]] || [[ `hostname` == *"ifb"* ]]; then
+if [[ `hostname` == *"core-login"* ]] || [[ `hostname` == *"ifb"* ]] || [[ `hostname` == *"cpu-node"* ]]; then
 	module load r/4.1.1
 elif [[ `hostname` == *"binac"* ]]; then
 	module load math/R/3.5.2-mkl-2018
