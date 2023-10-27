@@ -21,42 +21,44 @@ user <- Sys.info()[["user"]]
 ### List of required packages -----------------------------------------------
 
 # Source the custom user functions
-if (interactive()) {
-    source(
-        file = paste(
-            "C:/Users",
-            user,
-            "Documents/GitHub/Proteogenomics_reannotation/",
-            "tools/Rscripts/helper.R",
-            sep = "/"))
-} else {
-    source(
-        file = paste(
-            Sys.getenv("HOME"),
-            "bin/helper.R",
-            sep = "/"))
-}
+#if (interactive()) {
+#    source(
+#        file = paste(
+#            "C:/Users",
+#            user,
+#            "Documents/GitHub/Proteogenomics_reannotation/",
+#            "tools/Rscripts/helper.R",
+#            sep = "/"))
+#} else {
+#    source(
+#        file = paste(
+#            Sys.getenv("HOME"),
+#            "bin/helper.R",
+#            sep = "/"))
+#}
 
 # Load the required packages
 library(magrittr)
+library(Easy)
 
 
 
 ### Parameters setting up ------------------------------------------------
 
 opt <- list(
-    annotation = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Salome_Sauvage/Annotation/Pseudomonas_aeruginosa_PAO1_2022-09-28/Pseudomonas_aeruginosa_PAO1_(Reference)_full_annotation_2022-10-20.txt",
-    foreground = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Salome_Sauvage/Periplasm/Second_analysis/MaxQuant_for_OA.txt",
-    background = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Salome_Sauvage/Annotation/Pseudomonas_aeruginosa_PAO1_2022-09-28/Pseudomonas_aeruginosa_PAO1_107.faa",
-    resource = "COG Category,GOBP Tree Term,GOMF Tree Term,GOCC Tree Term,Subcellular Localization,KEGG Pathway Name,PseudoCAP Pathway Name,Virulence Database,EC level 1 name,EC level 2 name,EC level 3 name,InterPro Description,Other family Description,PseudoCAP function class",
+    annotation = "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/Annotation/2023-05-16/Acinetobacter_baumannii_ATCC_17978_full_annotation_2023-05-16.txt",
+    foreground = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Brandon_Robin/Abaumannii_mutants/Analysis/Identified_sites/Condition_Acetyl_for_OA.txt",
+    background = "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/DB/ATCC17978_plasmides_20220912_FIXED.fasta",
+    resource = "COG_function,GOBP Tree Term,GOMF Tree Term,GOCC Tree Term,KEGG Pathway Name,Virulence Database,EC level 1 name,EC level 2 name,EC level 3 name,InterPro Description,Other family Description,Subcellular Localization [b2g]",
     gene = "Locus Tag",
-    idcol = "Accession",
+    idcol = "Accessions ABYAL",
+    substitute = c("\\|.*", ""),
     pval = 1,
     padj = 1,
     minsize = 1,
     maxsize = Inf,
     threads = 1,
-    output = ".")
+    output = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Brandon_Robin/Abaumannii_mutants/Analysis/Functional_annotation/")
 
 # Check whether inputs parameters were provided
 if (
@@ -96,7 +98,8 @@ if (!is.na(opt$idcol) & !is.null(opt$idcol) & opt$idcol != "") {
         header = TRUE, stringsAsFactors = FALSE, colClasses = "character") %>%
         tidyr::pivot_longer(data = ., cols = -as.name(opt$idcol)) %>%
         dplyr::filter(., !is.na(value) & (value == 1 | isTRUE(value) | value == "TRUE" | value == "Yes")) %>%
-        dplyr::mutate(., name = as.factor(name))
+        dplyr::mutate(., name = as.factor(name)) %>%
+        unique(.)
     my_foreground <- split(
         x = my_ranking[[opt$idcol]], f = my_ranking$name)
 } else {
@@ -113,6 +116,15 @@ if (!is.null(opt$background)) {
 } else {
     my_background <- unique(my_ranking[[opt$idcol]]) %>%
         set_names(unique(my_ranking[[opt$idcol]]))
+}
+
+if (!is.null(opt$substitute)) {
+    my_annotation[[opt$gene]] %<>%
+        sub(opt$substitute[1], opt$substitute[2], .)
+    my_foreground %<>%
+        lapply(X = ., function(x) sub(opt$substitute[1], opt$substitute[2], x))
+    names(my_background) %<>%
+        sub(opt$substitute[1], opt$substitute[2], .)
 }
 
 my_resource <- opt$resource %>%
