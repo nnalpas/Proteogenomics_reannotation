@@ -47,8 +47,8 @@ library(Easy)
 
 opt <- list(
     annotation = "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/Annotation/2023-05-16/Acinetobacter_baumannii_ATCC_17978_full_annotation_2023-05-16.txt",
-    foreground = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Brandon_Robin/Abaumannii_mutants/Analysis/Identified_sites/Condition_Acetyl_for_OA.txt",
-    background = "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/DB/ATCC17978_plasmides_20220912_FIXED.fasta",
+    foreground = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Brandon_Robin/Abaumannii_mutants/Analysis/Condition_explanation/Acetyl_proteins_for_OA.txt",
+    background = NULL,
     resource = "COG_function,GOBP Tree Term,GOMF Tree Term,GOCC Tree Term,KEGG Pathway Name,Virulence Database,EC level 1 name,EC level 2 name,EC level 3 name,InterPro Description,Other family Description,Subcellular Localization [b2g]",
     gene = "Locus Tag",
     idcol = "Accessions ABYAL",
@@ -95,13 +95,25 @@ my_annotation <- data.table::fread(
 if (!is.na(opt$idcol) & !is.null(opt$idcol) & opt$idcol != "") {
     my_ranking <- data.table::fread(
         input = opt$foreground, sep = "\t", quote = "",
-        header = TRUE, stringsAsFactors = FALSE, colClasses = "character") %>%
+        header = TRUE, stringsAsFactors = FALSE)
+    check_cols <- colnames(my_ranking)[!colnames(my_ranking) %in% opt$idcol]
+    for (a in check_cols) {
+        if (
+            any(!my_ranking[[a]] %in% c(0, 1, NA_integer_)) &
+            any(!my_ranking[[a]] %in% c(FALSE, TRUE, NA)) &
+            any(!my_ranking[[a]] %in% c("FALSE", "TRUE", NA)) &
+            any(!my_ranking[[a]] %in% c("No", "Yes", NA)) &
+            any(!my_ranking[[a]] %in% c("", "+", NA))) {
+            my_ranking[[a]] <- NULL
+        }
+    }
+    my_ranking_long <- my_ranking %>%
         tidyr::pivot_longer(data = ., cols = -as.name(opt$idcol)) %>%
-        dplyr::filter(., !is.na(value) & (value == 1 | isTRUE(value) | value == "TRUE" | value == "Yes")) %>%
+        dplyr::filter(., !is.na(value) & (value == 1 | isTRUE(value) | value == "TRUE" | value == "Yes" | value == "+")) %>%
         dplyr::mutate(., name = as.factor(name)) %>%
         unique(.)
     my_foreground <- split(
-        x = my_ranking[[opt$idcol]], f = my_ranking$name)
+        x = my_ranking_long[[opt$idcol]], f = my_ranking_long$name)
 } else {
     my_foreground <- seqinr::read.fasta(
         file = opt$foreground, seqtype = "AA", as.string = TRUE) %>%
