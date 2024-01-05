@@ -47,7 +47,7 @@ library(Easy)
 
 opt <- list(
     annotation = "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/Annotation/2023-05-16/Acinetobacter_baumannii_ATCC_17978_full_annotation_2023-05-16.txt",
-    foreground = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Brandon_Robin/Abaumannii_mutants/Analysis/Condition_explanation/Acetyl_proteins_for_OA.txt",
+    foreground = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Brandon_Robin/Abaumannii_mutants/Analysis/Condition_explanation/Succinyl_proteins_for_OA.txt",
     background = NULL,
     resource = "COG_function,GOBP Tree Term,GOMF Tree Term,GOCC Tree Term,KEGG Pathway Name,Virulence Database,EC level 1 name,EC level 2 name,EC level 3 name,InterPro Description,Other family Description,Subcellular Localization [b2g]",
     gene = "Locus Tag",
