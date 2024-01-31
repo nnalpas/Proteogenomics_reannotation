@@ -518,13 +518,28 @@ best_blast <- function(
     # Turn the key column into symbol
     col.symb <- as.symbol(key)
     
+    data.filt <- data %>%
+        unique(.) %>%
+        dplyr::mutate(
+            ., ncover = qend - qstart + 1,
+            pcover = ncover * 100 / qlen) %>%
+        dplyr::group_by(., .dots = col.symb) %>%
+        dplyr::arrange(., evalue, dplyr::desc(score), dplyr::desc(pident)) %>%
+        dplyr::mutate(
+            ., 
+            Devalue = lead(evalue)-evalue,
+            Dbitscore = bitscore - lead(bitscore),
+            Dscore = score - lead(score),
+            Dpident = pident - lead(pident),
+            Dnident = nident - lead(nident),
+            Dpcover = pcover - lead(pcover),
+            Dncover = ncover - lead(ncover))
+    
     # Filter the data with specific fields in sequence
     if (is.null(bb_filter)) {
         
         # Filter based on default
-        data.filt <- data %>%
-            unique(.) %>%
-            dplyr::group_by(., .dots = col.symb) %>%
+        data.filt %<>%
             dplyr::filter(., evalue == min(evalue)) %>%
             dplyr::filter(., score == max(score)) %>%
             dplyr::filter(., pident == max(pident)) %>%
@@ -538,9 +553,6 @@ best_blast <- function(
         bb_filter <- eval(bb_filter)
         
         # Filter based on user provided criteria
-        data.filt <- data %>%
-            unique(.) %>%
-            dplyr::group_by(., col.symb)
         for (x in bb_filter) {
             data.filt %<>%
                 dplyr::filter_(., bb_filter)
