@@ -95,7 +95,6 @@ while getopts "o:l:a:q:d:e:n:x:b:t:h" opt; do
 			;;
 		\?)
 			display_usage
-			exit 1
 			;;
 		:)
 			display_usage
