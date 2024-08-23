@@ -103,7 +103,6 @@ while getopts "o:l:a:q:d:e:n:x:b:t:h" opt; do
 	esac
 done
 
-shift $((OPTIND-1))
 BLAST_ADD=$@
 
 # Setting default values ${VARIABLE=DEFAULT_VALUE}
