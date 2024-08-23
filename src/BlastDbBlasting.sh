@@ -93,9 +93,6 @@ while getopts "o:l:a:q:d:e:n:x:b:t:h" opt; do
 			shift $((OPTIND-1)); OPTIND=1
 			exit 0
 			;;
-		\?)
-			display_usage
-			;;
 		:)
 			display_usage
 			exit 1
@@ -103,7 +100,6 @@ while getopts "o:l:a:q:d:e:n:x:b:t:h" opt; do
 	esac
 done
 
-shift $((OPTIND-1)); OPTIND=1
 BLAST_ADD=$@
 
 # Setting default values ${VARIABLE=DEFAULT_VALUE}
