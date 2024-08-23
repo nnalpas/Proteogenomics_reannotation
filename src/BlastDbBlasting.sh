@@ -93,14 +93,16 @@ while getopts "o:l:a:q:d:e:n:x:b:t:h" opt; do
 			shift $((OPTIND-1)); OPTIND=1
 			exit 0
 			;;
+		\?)
+			display_usage
+			exit 1
+			;;
 		:)
 			display_usage
 			exit 1
 			;;
 	esac
 done
-
-BLAST_ADD=$@
 
 # Setting default values ${VARIABLE=DEFAULT_VALUE}
 # This command will set VARIABLE to DEFAULT_VALUE if it is currently 
