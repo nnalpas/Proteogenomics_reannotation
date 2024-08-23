@@ -104,6 +104,9 @@ while getopts "o:l:a:q:d:e:n:x:b:t:h" opt; do
 	esac
 done
 
+shift $((OPTIND-1))
+BLAST_ADD=$@
+
 # Setting default values ${VARIABLE=DEFAULT_VALUE}
 # This command will set VARIABLE to DEFAULT_VALUE if it is currently 
 # undefined, then return VARIABLE
@@ -148,6 +151,16 @@ if [ ${ENTRY} == 'all' ]; then
 fi
 
 # All entries retrieval and blasting of retrieved entries against another database
+echo "${TASK} \
+       -query - \
+       -task ${TASK} \
+       -db ${DATABASE} \
+       -out ${WKDIR}/${BASENAME} \
+       -evalue ${EVAL} \
+       -num_alignments ${NUMALIGN} \
+       -num_threads ${THREADS} ${BLAST_ADD} \
+       -outfmt '6 qseqid sseqid pident nident mismatch gaps length gapopen qstart qend qlen qframe qseq sstart send slen sframe sseq staxid ssciname sstrand evalue bitscore score'"
+
 blastdbcmd -db ${QUERY} \
        ${entry_retrieval} | \
        eval "${TASK} \

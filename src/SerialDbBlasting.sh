@@ -102,8 +102,8 @@ while IFS= read -r line; do
 	if [[ ! -z "${array[4]}" ]]; then eval LIST=${array[4]}; BLASTCMD+="-l $LIST "; fi;
 	if [[ ! -z "${array[5]}" ]]; then BLASTCMD+="-e ${array[5]} "; fi;
 	if [[ ! -z "${array[6]}" ]]; then BLASTCMD+="-n ${array[6]} "; fi;
-	if [[ ! -z "${array[7]}" ]]; then BLASTCMD+="-x ${array[7]} ; "; fi;
-	if [[ ! -z "${array[8]}" ]]; then BLASTCMD+="-y ${array[8]} ; "; fi;
+	if [[ ! -z "${array[7]}" ]]; then BLASTCMD+="${array[7]}"; fi;
+	#if [[ ! -z "${array[8]}" ]]; then BLASTCMD+="-y ${array[8]} "; fi;
 	
 	# Check software compatibility with selected task
 	if [[ "${array[0]}" != "blastp" ]] && [[ "${array[0]}" != "blastx" ]]; then
@@ -113,7 +113,8 @@ while IFS= read -r line; do
 	
 	# Run the blast for each iteration
 	if [[ "$SOFTWARE" == "Blast" ]]; then
-		BlastDbBlasting.sh $BLASTCMD -t ${THREADS} 2>&1
+		echo "BlastDbBlasting.sh -t ${THREADS} $BLASTCMD"
+		BlastDbBlasting.sh -t ${THREADS} $BLASTCMD 2>&1
 	elif [[ "$SOFTWARE" == "Diamond" ]]; then
 		DiamondDbBlasting.sh $BLASTCMD -t ${THREADS} 2>&1
 	else
