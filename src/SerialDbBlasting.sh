@@ -102,7 +102,7 @@ while IFS= read -r line; do
 	if [[ ! -z "${array[4]}" ]]; then eval LIST=${array[4]}; BLASTCMD+="-l $LIST "; fi;
 	if [[ ! -z "${array[5]}" ]]; then BLASTCMD+="-e ${array[5]} "; fi;
 	if [[ ! -z "${array[6]}" ]]; then BLASTCMD+="-n ${array[6]} "; fi;
-	if [[ ! -z "${array[7]}" ]]; then BLASTCMD+="-x ${array[7]} "; fi;
+	#if [[ ! -z "${array[7]}" ]]; then BLASTCMD+="-x ${array[7]} "; fi;
 	#if [[ ! -z "${array[8]}" ]]; then BLASTCMD+="-y ${array[8]} "; fi;
 	
 	# Check software compatibility with selected task
@@ -112,16 +112,28 @@ while IFS= read -r line; do
 	fi
 	
 	# Run the blast for each iteration
-	if [[ "$SOFTWARE" == "Blast" ]]; then
-		echo "BlastDbBlasting.sh "$BLASTCMD" -t ${THREADS}"
-		BlastDbBlasting.sh "${BLASTCMD}" -t ${THREADS} 2>&1
-	elif [[ "$SOFTWARE" == "Diamond" ]]; then
-		DiamondDbBlasting.sh "${BLASTCMD}" -t ${THREADS} 2>&1
+	if [[ ! -z "${array[7]}" ]]; then
+		if [[ "$SOFTWARE" == "Blast" ]]; then
+			echo "BlastDbBlasting.sh $BLASTCMD -x "${array[7]}" -t ${THREADS}"
+			BlastDbBlasting.sh ${BLASTCMD} -x "${array[7]}" -t ${THREADS} 2>&1
+		elif [[ "$SOFTWARE" == "Diamond" ]]; then
+			DiamondDbBlasting.sh ${BLASTCMD} -x "${array[7]}" -t ${THREADS} 2>&1
+		else
+			echo "The blasting software must be either 'Blast' or 'Diamond'." >&2
+			exit 1
+		fi
 	else
-		echo "The blasting software must be either 'Blast' or 'Diamond'." >&2
-		exit 1
+		if [[ "$SOFTWARE" == "Blast" ]]; then
+			echo "BlastDbBlasting.sh $BLASTCMD -t ${THREADS}"
+			BlastDbBlasting.sh ${BLASTCMD} -t ${THREADS} 2>&1
+		elif [[ "$SOFTWARE" == "Diamond" ]]; then
+			DiamondDbBlasting.sh ${BLASTCMD} -t ${THREADS} 2>&1
+		else
+			echo "The blasting software must be either 'Blast' or 'Diamond'." >&2
+			exit 1
+		fi
 	fi
-	
+
 	# Retrieve blast ids from blast results and the corresponding sequence header
 	#cut -f 1 ${WKDIR}/${array[3]} > ${WKDIR}/${array[3]}_qseqid.txt
 	#blastdbcmd -db ${QUERY} -outfmt "%a;;%t;;%S;;%T" -target_only -entry_batch ${WKDIR}/${array[3]}_qseqid.txt | sed 's/;;/\t/g' >> ${WKDIR}/${array[3]}_header
