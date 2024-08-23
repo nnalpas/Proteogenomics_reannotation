@@ -102,7 +102,7 @@ while IFS= read -r line; do
 	if [[ ! -z "${array[4]}" ]]; then eval LIST=${array[4]}; BLASTCMD+="-l $LIST "; fi;
 	if [[ ! -z "${array[5]}" ]]; then BLASTCMD+="-e ${array[5]} "; fi;
 	if [[ ! -z "${array[6]}" ]]; then BLASTCMD+="-n ${array[6]} "; fi;
-	if [[ ! -z "${array[7]}" ]]; then BLASTCMD+="-x  \"${array[7]}\" "; fi;
+	if [[ ! -z "${array[7]}" ]]; then BLASTCMD+="-x "; BLASTCMD+="${array[7]}"; fi;
 	#if [[ ! -z "${array[8]}" ]]; then BLASTCMD+="-y ${array[8]} "; fi;
 	
 	# Check software compatibility with selected task
