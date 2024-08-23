@@ -87,14 +87,16 @@ fi
 # Loop through all submitted fasta
 ls -1 ${INPUTS[@]} | 
 while read file; do
-	title=`basename "$file" | perl -p -e 's/.(fasta|faa)$//'`
-	add_param=""
-	if [ -z "${TAXID}" ]; then
-		add_param+="-taxid ${title} "
-	else
-		add_param+="-taxid ${TAXID} "
+	if [ ! -f ${file}.pdb ]; then
+		title=`basename "$file" | perl -p -e 's/.(fasta|faa)$//'`
+		add_param=""
+		if [ -z "${TAXID}" ]; then
+			add_param+="-taxid ${title} "
+		else
+			add_param+="-taxid ${TAXID} "
+		fi
+		makeblastdb -in "${file}" -input_type ${INPUTTYPE} -title ${title} -parse_seqids -dbtype ${DBTYPE} ${add_param}
 	fi
-	makeblastdb -in "${file}" -input_type ${INPUTTYPE} -title ${title} -parse_seqids -dbtype ${DBTYPE} ${add_param}
 done
 
 # Time scripts ends
