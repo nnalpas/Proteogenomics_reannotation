@@ -116,7 +116,7 @@ while IFS= read -r line; do
 		echo "BlastDbBlasting.sh "$BLASTCMD" -t ${THREADS}"
 		BlastDbBlasting.sh "${BLASTCMD}" -t ${THREADS} 2>&1
 	elif [[ "$SOFTWARE" == "Diamond" ]]; then
-		DiamondDbBlasting.sh ${BLASTCMD}" -t ${THREADS} 2>&1
+		DiamondDbBlasting.sh "${BLASTCMD}" -t ${THREADS} 2>&1
 	else
 		echo "The blasting software must be either 'Blast' or 'Diamond'." >&2
 		exit 1
