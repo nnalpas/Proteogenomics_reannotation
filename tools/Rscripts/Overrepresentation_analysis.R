@@ -47,18 +47,18 @@ library(Easy)
 
 opt <- list(
     annotation = "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/Annotation/2023-05-16/Acinetobacter_baumannii_ATCC_17978_full_annotation_2024-03-12_manual_review_withOperon_withSir-targets.txt",
-    foreground = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Brandon_Robin/Abaumannii_mutants/Analysis/Condition_explanation/S_windows_for_OA_2024-03-13.txt",
-    background = NULL,
+    foreground = "C:/Users/nalpanic/SynologyDrive/Work/WINNING/Analysis/Drug_characteristics/Drug_targets_for_OA.txt",
+    background = "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/DB/ATCC17978_plasmides_20220912_FIXED.fasta",
     resource = "COG_function,GOBP Tree Term,GOMF Tree Term,GOCC Tree Term,KEGG Pathway Name,Virulence Database,EC level 1 name,EC level 2 name,EC level 3 name,InterPro Description,Other family Description,Subcellular Localization [b2g],OperonID,essentiality",
     gene = "Locus Tag",
-    idcol = "Accessions ABYAL",
+    idcol = "qseqid",
     substitute = c("\\|.*", ""),
     pval = 1,
     padj = 1,
     minsize = 1,
     maxsize = Inf,
     threads = 1,
-    output = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Brandon_Robin/Abaumannii_mutants/Analysis/Functional_annotation/")
+    output = "C:/Users/nalpanic/SynologyDrive/Work/WINNING/Analysis/Drug_characteristics/")
 
 # Check whether inputs parameters were provided
 if (
