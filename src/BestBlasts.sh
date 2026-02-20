@@ -82,7 +82,7 @@ if [ -z "${TARGETFILES}" ]; then
 fi
 FILTER_ARG=""
 if [ -n "${FILTER}" ]; then
-	FILTER_ARG="-f \"${FILTER}\""
+	FILTER_ARG=(-f "$FILTER")
 fi
 
 # Create the output folder
@@ -93,9 +93,9 @@ fi
 # Loop through all blast files
 for file in `ls ${TARGETFILES}`; do
 	Best_blast.R \
-		-i ${file} ${FILTER_ARG} \
-		-m ${MULTI} \
-		-o ${WKDIR} 2>&1
+		-i "${file}" "${FILTER_ARG[@]}" \
+		-m "${MULTI}" \
+		-o "${WKDIR}" 2>&1
 done
 
 # Time scripts ends
