@@ -525,7 +525,7 @@ best_blast <- function(
         dplyr::mutate(
             ., ncover = qend - qstart + 1,
             pcover = ncover * 100 / qlen) %>%
-        dplyr::group_by(., .dots = key) %>%
+        dplyr::group_by(., !!key) %>%
         dplyr::arrange(., evalue, dplyr::desc(score), dplyr::desc(pident)) %>%
         dplyr::mutate(
             ., 
@@ -595,7 +595,7 @@ best_blast <- function(
     
     data.final %<>%
         dplyr::ungroup(.) %>%
-        dplyr::arrange(., key)
+        dplyr::arrange(., !!key)
     
     # Return the best blast data
     return(base::as.data.frame(data.final))
