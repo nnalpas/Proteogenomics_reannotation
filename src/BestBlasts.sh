@@ -82,7 +82,7 @@ if [ -z "${TARGETFILES}" ]; then
 fi
 FILTER_ARG=""
 if [ -n "${FILTER}" ]; then
-	FILTER_ARG="-f ${FILTER}"
+	FILTER_ARG="-f \"${FILTER}\""
 fi
 
 # Create the output folder
