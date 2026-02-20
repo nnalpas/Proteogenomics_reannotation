@@ -516,24 +516,27 @@ best_blast <- function(
     }
     
     # Turn the key column into symbol
-    col.symb <- as.symbol(key)
+    key <- as.symbol(key)
+    
+    eps <- .Machine$double.xmin
     
     data.filt <- data %>%
         unique(.) %>%
         dplyr::mutate(
             ., ncover = qend - qstart + 1,
             pcover = ncover * 100 / qlen) %>%
-        dplyr::group_by(., .dots = col.symb) %>%
+        dplyr::group_by(., .dots = key) %>%
         dplyr::arrange(., evalue, dplyr::desc(score), dplyr::desc(pident)) %>%
         dplyr::mutate(
             ., 
-            Devalue = lead(evalue)-evalue,
-            Dbitscore = bitscore - lead(bitscore),
-            Dscore = score - lead(score),
-            Dpident = pident - lead(pident),
-            Dnident = nident - lead(nident),
-            Dpcover = pcover - lead(pcover),
-            Dncover = ncover - lead(ncover))
+            logevalue = -log((evalue+eps), 10),
+            Devalue = (max(logevalue, na.rm = T)-logevalue)*100/max(logevalue, na.rm = T),
+            Dbitscore = (max(bitscore, na.rm = T)-bitscore)*100/max(bitscore, na.rm = T),
+            Dscore = (max(score, na.rm = T)-score)*100/max(score, na.rm = T),
+            Dpident = (max(pident, na.rm = T)-pident)*100/max(pident, na.rm = T),
+            Dnident = (max(nident, na.rm = T)-nident)*100/max(nident, na.rm = T),
+            Dpcover = (max(pcover, na.rm = T)-pcover)*100/max(pcover, na.rm = T),
+            Dncover = (max(ncover, na.rm = T)-ncover)*100/max(ncover, na.rm = T))
     
     # Filter the data with specific fields in sequence
     if (is.null(bb_filter)) {
@@ -572,7 +575,7 @@ best_blast <- function(
             dplyr::filter(., best_count == 1)
         warning("All multiple blast hits were removed!")
     } else if (multiple == "uniquify") {
-        orig <- data.final$qseqid %>%
+        orig <- data.final[[key]] %>%
             unique(.) %>%
             length(.)
         data.final %<>%
@@ -581,21 +584,7 @@ best_blast <- function(
                 ., best_count == 1 |
                     grepl(sstart, Description) |
                     grepl(send, Description))
-            #tidyr::unite(
-            #    data = ., col = Unique_sseqid,
-            #    sseqid, sstart, send,
-            #    sep = "_", remove = FALSE) %>%
-            #dplyr::group_by(., qseqid) %>%
-            #dplyr::arrange(., Unique_sseqid) %>%
-            #dplyr::mutate(., rank_s = c(1:n())) %>%
-            #dplyr::ungroup() %>%
-            #dplyr::group_by(., Unique_sseqid) %>%
-            #dplyr::arrange(., qseqid) %>%
-            #dplyr::mutate(., rank_q = c(1:n())) %>%
-            #dplyr::ungroup() %>%
-            #dplyr::filter(., rank_q == rank_s) %>%
-            #dplyr::select(., -Unique_sseqid, -rank_q, -rank_s)
-        retained <- data.final$qseqid %>%
+        retained <- data.final[[key]] %>%
             unique(.) %>%
             length(.)
         warning(paste(
@@ -603,6 +592,10 @@ best_blast <- function(
     } else if (multiple == "keep") {
         warning("There may still be entries with multiple blast hits!")
     }
+    
+    data.final %<>%
+        dplyr::ungroup(.) %>%
+        dplyr::arrange(., key)
     
     # Return the best blast data
     return(base::as.data.frame(data.final))
