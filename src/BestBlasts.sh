@@ -80,22 +80,23 @@ if [ -z "${TARGETFILES}" ]; then
 	display_usage
 	exit 1
 fi
-FILTER_ARG=""
-if [ -n "${FILTER}" ]; then
-	FILTER_ARG=(-f "$FILTER")
-fi
 
 # Create the output folder
-if [ ! -d ${WKDIR} ] ; then
-	mkdir ${WKDIR}
+if [ ! -d "${WKDIR}" ] ; then
+	mkdir -p "${WKDIR}"
 fi
 
 # Loop through all blast files
-for file in `ls ${TARGETFILES}`; do
-	Best_blast.R \
-		-i "${file}" "${FILTER_ARG[@]}" \
-		-m "${MULTI}" \
-		-o "${WKDIR}" 2>&1
+for file in ${TARGETFILES}; do
+
+	ARGS=(-i "${file}")
+	if [ -n "${FILTER}" ]; then
+		ARGS+=(-f "$FILTER")
+	fi
+	ARGS+=(-m "${MULTI}" -o "${WKDIR}")
+
+	Best_blast.R "${ARGS[@]}" 2>&1
+
 done
 
 # Time scripts ends
