@@ -47,19 +47,19 @@ library(Easy)
 
 opt <- list(
     annotation = "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/Annotation/2023-05-16/Acinetobacter_baumannii_ATCC_17978_full_annotation_2024-03-12_manual_review_withOperon_withSir-targets.txt",
-    foreground = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Brandon_Robin/Abaumannii_mutants/Analysis/Function_OA/Succinylation_for_OA.txt",
+    foreground = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Julie_Hardouin/All_PTM/v2026-03-02/Published_sites_2026-03-02.txt",
     #background = "C:/Users/nalpanic/SynologyDrive/Work/Abaumannii_trimeth/DB/ATCC17978_plasmides_20220912_FIXED.fasta",
     background = NULL,
-    resource = "COG_function,GOBP Tree Term,GOMF Tree Term,GOCC Tree Term,KEGG Pathway Name,Virulence Database,EC level 1 name,EC level 2 name,EC level 3 name,InterPro Description,Other family Description,Subcellular Localization [b2g],OperonID,essentiality",
+    resource = "COG_function,Subcellular Localization [b2g],OperonID,essentiality,InterPro Description",
     gene = "Locus Tag",
-    idcol = "Accessions ABYAL",
+    idcol = "Protein_ID",
     substitute = c("\\|.*", ""),
     pval = 1,
     padj = 1,
     minsize = 1,
     maxsize = Inf,
     threads = 1,
-    output = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Brandon_Robin/Abaumannii_mutants/Analysis/Function_OA/Background_identification/")
+    output = "C:/Users/nalpanic/SynologyDrive/Work/Colleagues shared work/Julie_Hardouin/All_PTM/v2026-03-02/OA/")
 
 # Check whether inputs parameters were provided
 if (
